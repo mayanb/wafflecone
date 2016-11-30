@@ -50,8 +50,8 @@ class Input(models.Model):
   input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
-  def __str__(self):
-    return self.input_item
+#  def __str__(self):
+#    return self.input_item
 
 class Attribute(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)

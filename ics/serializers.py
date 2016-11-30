@@ -52,6 +52,13 @@ class InputSerializer(serializers.ModelSerializer):
     model = Input
     fields = ('id', 'input_item', 'task')
 
+class NestedInputSerializer(serializers.ModelSerializer):
+  input_item = NestedItemSerializer(many=False, read_only=True)
+
+  class Meta:
+    model = Input
+    fields = ('id', 'input_item', 'task')
+
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = Attribute
