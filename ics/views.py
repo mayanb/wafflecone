@@ -8,7 +8,8 @@ import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 
-class CreateTask(generics.CreateAPIView):
+class CreateTask(generics.ListCreateAPIView):
+  queryset = Task.objects.all()
   serializer_class=BasicTaskSerializer
  
 class TaskList(generics.ListCreateAPIView):

@@ -23,7 +23,7 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 class BasicTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'notes', 'created_by', 'is_open', 'created_on', 'last_edited')
+    fields = ('id', 'process_type', 'product_type', 'label', 'notes', 'created_by', 'is_open', 'created_at', 'updated_at')
 
 class NestedTaskSerializer(serializers.ModelSerializer):
   process_type = ProcessTypeSerializer(many=False, read_only=True)
