@@ -7,17 +7,18 @@ from django.shortcuts import get_object_or_404, render
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
+
+class CreateTask(generics.CreateAPIView):
+  serializer_class=BasicTaskSerializer
  
 class TaskList(generics.ListCreateAPIView):
   queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
-  filter_backends = (django_filters.rest_framework.DjangoFilterBackend,OrderingFilter,)
   filter_fields = ('label', 'is_open',)
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
-  filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
   filter_fields = ('label', 'is_open',)
 
 class ItemList(generics.ListAPIView):

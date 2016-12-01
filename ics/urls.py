@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    url(r'^tasks/create/$', views.CreateTask.as_view()),
     url(r'^tasks/$', views.TaskList.as_view()),
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view()),
 
