@@ -32,7 +32,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'notes', 'created_by', 'is_open', 'created_on', 'last_edited')
+    fields = ('id', 'process_type', 'product_type', 'label', 'notes', 'created_by', 'is_open', 'created_at', 'updated_at')
 
 
 class BasicItemSerializer(serializers.ModelSerializer):
