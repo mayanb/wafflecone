@@ -53,11 +53,35 @@ class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.all()
   serializer_class = ProductTypeSerializer
 
+
+
+
+
 class AttributeList(generics.ListCreateAPIView):
   queryset = Attribute.objects.all()
   serializer_class = AttributeSerializer
   filter_fields = ('process_type',)
 
+class AttributeDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Attribute.objects.all()
+  serializer_class = AttributeSerializer
+  filter_fields = ('process_type',)
+
+
+
+
+class TaskAttributeList(generics.ListCreateAPIView):
+  queryset = TaskAttribute.objects.all()
+  serializer_class = NestedTaskAttributeSerializer
+  filter_fields = ('task',)
+
+class TaskAttributeDetail(generics.ListCreateAPIView):
+  queryset = TaskAttribute.objects.all()
+  serializer_class = NestedTaskAttributeSerializer
+  filter_fields = ('task',)
+
+
+  
+
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
-

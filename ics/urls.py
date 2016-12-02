@@ -20,7 +20,10 @@ urlpatterns = [
     url(r'^products/$', views.ProductList.as_view()),
 
     url(r'^attributes/$', views.AttributeList.as_view()),
-    url(r'^attributes/$', views.AttributeList.as_view()),
+    url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),
+
+    url(r'^taskAttributes/$', views.TaskAttributeList.as_view()),
+    url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
