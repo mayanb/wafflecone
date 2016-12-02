@@ -47,7 +47,7 @@ class NestedItemSerializer(serializers.ModelSerializer):
     model = Item
     fields = ('id', 'item_qr', 'creating_task')
 
-class InputSerializer(serializers.ModelSerializer):
+class BasicInputSerializer(serializers.ModelSerializer):
   class Meta:
     model = Input
     fields = ('id', 'input_item', 'task')
