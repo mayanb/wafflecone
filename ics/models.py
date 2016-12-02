@@ -40,7 +40,7 @@ class Task(models.Model):
     return self.label
 
 class Item(models.Model):
-  item_qr = models.CharField(max_length=50)
+  item_qr = models.CharField(max_length=100)
   creating_task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
   def __str__(self):

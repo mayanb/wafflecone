@@ -24,11 +24,11 @@ class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
-  serializer_class = BasicItemSerializer
+  serializer_class = BasicInputSerializer
 
 class CreateItem(generics.ListCreateAPIView):
   queryset = Item.objects.all()
-  serializer_class = BasicInputSerializer
+  serializer_class = BasicItemSerializer
 
 class ItemList(generics.ListAPIView):
   queryset = Item.objects.all()
