@@ -72,16 +72,16 @@ class AttributeDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class TaskAttributeList(generics.ListCreateAPIView):
   queryset = TaskAttribute.objects.all()
-  serializer_class = NestedTaskAttributeSerializer
+  serializer_class = BasicTaskAttributeSerializer
   filter_fields = ('task',)
 
-class TaskAttributeDetail(generics.ListCreateAPIView):
+class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
   filter_fields = ('task',)
 
 
-  
+
 
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
