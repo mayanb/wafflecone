@@ -16,6 +16,8 @@ class TaskList(generics.ListCreateAPIView):
   queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
   filter_fields = ('label', 'is_open',)
+  filter_backends = (OrderingFilter,)
+  ordering_fields = ('updated_at',)
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.all()
