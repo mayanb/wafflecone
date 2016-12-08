@@ -29,7 +29,7 @@ class ProductType(models.Model):
 class Task(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
   product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
-  label = models.CharField(max_length=200)
+  label = models.CharField(max_length=20)
   notes = models.CharField(max_length=200)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE)
   is_open = models.BooleanField()
@@ -64,6 +64,10 @@ class TaskAttribute(models.Model):
   attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50)
+
+class LabelIndex(models.Model):
+  label=models.CharField(max_length=20)
+  index=models.PositiveSmallIntegerField(default=1)
 
   def __str__(self):
     return self.value
