@@ -25,9 +25,9 @@ class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = NestedTaskSerializer
   filter_fields = ('label', 'is_open',)
 
-class CreateInput(generics.ListCreateAPIView):
-  queryset = Input.objects.all()
-  serializer_class = BasicInputSerializer
+
+
+
 
 class CreateItem(generics.ListCreateAPIView):
   queryset = Item.objects.all()
@@ -43,10 +43,25 @@ class ItemDetail(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = NestedItemSerializer
   filter_fields = ('item_qr', 'creating_task')
 
+
+
+
+class CreateInput(generics.ListCreateAPIView):
+  queryset = Input.objects.all()
+  serializer_class = BasicInputSerializer
+
 class InputList(generics.ListAPIView):
   queryset = Input.objects.all()
   serializer_class = NestedInputSerializer
   filter_fields = ('task',)
+
+class InputDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Input.objects.all()
+  serializer_class = NestedInputSerializer
+  filter_fields = ('task',)
+
+
+  
 
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.all()
