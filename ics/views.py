@@ -12,13 +12,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 class CreateTask(generics.ListCreateAPIView):
   queryset = Task.objects.all()
   serializer_class=BasicTaskSerializer
+
+
+class TaskFilter(django_filters.rest_framework.FilterSet):
+    created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
+    class Meta:
+        model = Task
+        fields = ['created_at', 'label', 'is_open']
  
 class TaskList(generics.ListCreateAPIView):
   queryset = Task.objects.all()
   serializer_class = BasicTaskSerializer
-  filter_fields = ('label', 'is_open',)
   filter_backends = (OrderingFilter, DjangoFilterBackend)
-  ordering_fields = ('updated_at',)
+  ordering_fields = ('updated_at', 'created_at', 'label_index')
+  filter_class = TaskFilter
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.all()

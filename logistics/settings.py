@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'logistics.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ishita',
+        'NAME': 'ics',
         'USER': 'ishita',
         'PASSWORD': '',
         'HOST': 'localhost',
