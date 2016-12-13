@@ -29,12 +29,12 @@ class ProductType(models.Model):
 class Task(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
   product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
-  label = models.CharField(max_length=20, editable=False)  
+  label = models.CharField(max_length=20)  
   created_by = models.ForeignKey(User, on_delete=models.CASCADE)
   is_open = models.BooleanField(default=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  label_index = models.PositiveSmallIntegerField(default=0, editable=False)
+  label_index = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self):
     return self.label
