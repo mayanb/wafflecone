@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ice Cream QRs</title>
+<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+<style type="text/css"> </style>
+</head>
+
+<body>
+  <input type="text" id="numLabels"></input>
+  <input type="text" id="displayText"></input>
+  <button class="btn" id="printButton">Go</button>
+  <button class="btn" id="printButton">Reset</button>
+</body>
+
+<script src = "http://www.labelwriter.com/software/dls/sdk/js/DYMO.Label.Framework.2.0.2.js" type="text/javascript" charset="UTF-8"> </script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+
+{% load static %}
+
+<script src="{% static 'qr/qr.js' %}"></script>
+
+</html>

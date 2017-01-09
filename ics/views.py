@@ -8,6 +8,7 @@ import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
+from paginations import *
 
 class CreateTask(generics.ListCreateAPIView):
   queryset = Task.objects.all()
@@ -26,6 +27,7 @@ class TaskList(generics.ListCreateAPIView):
   filter_backends = (OrderingFilter, DjangoFilterBackend)
   ordering_fields = ('updated_at', 'created_at', 'label_index')
   filter_class = TaskFilter
+  pagination_class = SmallPagination
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.all()
