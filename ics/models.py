@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-
+from datetime import datetime  
 from django.db import models
 
 # Create your models here.
@@ -42,6 +42,7 @@ class Task(models.Model):
 class Item(models.Model):
   item_qr = models.CharField(max_length=100)
   creating_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+  created_at = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):
     return self.item_qr
@@ -56,6 +57,7 @@ class Input(models.Model):
 class Attribute(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
   name = models.CharField(max_length=20)
+  rank = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self):
     return self.name
@@ -64,3 +66,4 @@ class TaskAttribute(models.Model):
   attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50)
+  updated_at = models.DateTimeField(auto_now=True)

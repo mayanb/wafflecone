@@ -97,6 +97,14 @@ class AttributeDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 
+
+class TaskAttributeFilter(django_filters.rest_framework.FilterSet):
+    attribute = django_filters.CharFilter(name="manufacturer__name")
+
+    class Meta:
+        model = TaskAttribute
+        fields = ['task', 'attribute']
+
 class TaskAttributeList(generics.ListCreateAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = BasicTaskAttributeSerializer
@@ -105,7 +113,7 @@ class TaskAttributeList(generics.ListCreateAPIView):
 class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
-  filter_fields = ('task',)
+  filter_class = TaskAttributeFilter
 
 
 
