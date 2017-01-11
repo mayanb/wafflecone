@@ -47,6 +47,7 @@ class Task(models.Model):
       return self.custom_display
 
   def save(self, *args, **kwargs):
+    '''
     # get the # of tasks with the same name & made on the same date this year
     q = ( 
       Task.objects.filter(label=self.label)
@@ -64,7 +65,7 @@ class Task(models.Model):
       self.display = "-".join([self.label, str(self.label_index)])
     else:
       self.display = self.label
-
+      '''
     super(Task, self).save(*args, **kwargs)
 
 
