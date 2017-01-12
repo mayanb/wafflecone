@@ -18,7 +18,10 @@ urlpatterns = [
     url(r'^inputs/(?P<pk>[0-9]+)/$', views.InputDetail.as_view()),
 
     url(r'^processes/$', views.ProcessList.as_view()),
+    url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view()),
+
     url(r'^products/$', views.ProductList.as_view()),
+    url(r'^processes/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view()),
 
     url(r'^attributes/$', views.AttributeList.as_view()),
     url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),

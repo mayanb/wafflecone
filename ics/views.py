@@ -76,7 +76,18 @@ class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeSerializer
 
+class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = ProcessType.objects.all()
+  serializer_class = ProcessTypeSerializer
+
+
+
+
 class ProductList(generics.ListCreateAPIView):
+  queryset = ProductType.objects.all()
+  serializer_class = ProductTypeSerializer
+
+class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.all()
   serializer_class = ProductTypeSerializer
 

@@ -1,0 +1,132 @@
+{% extends "dashboard/index.html" %}
+
+{% block content %}
+
+<div class="mdl-grid demo-content">
+
+<div class=" demo-cards mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing processes">
+
+  <div class="mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col">
+    <ul>
+      <li class="mdl-list__item">
+        <span class="mdl-list__item-primary-content">
+          Processes
+        </span>
+        <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" >
+          <i class="material-icons">search</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" >
+          <i class="material-icons">add</i>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <div class="mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col">
+    <ul id="process-list"></ul>
+  </div>
+
+</div>
+
+<div class="demo-cards mdl-cell mdl-cell--8-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
+
+  <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--8-col test">
+
+    <div class="mdl-card__title mdl-color--deep-purple-500">
+      <h2 class="mdl-card__title-text"></h2>
+    </div>
+
+    <div class="mdl-card__supporting-text mdl-color-text--grey-600"> 
+
+      <form name="name">
+        <div class="mdl-textfield mdl-js-textfield large-textfield mdl-textfield--floating-label">
+          <input class="mdl-textfield__input large-textfield" type="text" id="name">
+          <label class="mdl-textfield__label large-textfield" for="name">Process name</label>
+        </div>
+
+        <div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner"></div>
+
+        <button class="mdl-button mdl-js-button mdl-button--icon hidden2 done" for="name">
+          <i class="material-icons">done</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon hidden2 cancel" for="name">
+          <i class="material-icons">close</i>
+        </button>
+      </form>
+
+      <div class="demo-separator mdl-cell--1-col"></div>
+
+      <form name="code">
+        <div class="mdl-textfield mdl-js-textfield large-textfield mdl-textfield--floating-label">
+          <input class="mdl-textfield__input large-textfield" type="text" id="code">
+          <label class="mdl-textfield__label large-textfield" for="code">Process Code</label>
+        </div>
+
+        <div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner"></div>
+
+        <button class="mdl-button mdl-js-button mdl-button--icon hidden2 done" for="code">
+          <i class="material-icons">done</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon hidden2 cancel" for="code">
+          <i class="material-icons">close</i>
+        </button>
+      </form>
+
+    </div>
+
+    <div class="mdl-card__actions mdl-card--border" id="attribute-section">
+
+      <ul id="attribute-list-title"><li class="mdl-list__item">
+        <span class="mdl-list__item-primary-content attribute-title">
+          Attributes
+        </span>
+        <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" >
+          <i class="material-icons">add</i>
+        </button>
+      </li></ul>
+
+      <ul class="mdl-list" id="attribute-list"></ul>
+
+    </div>
+
+    <div class="mdl-card__actions mdl-card--border">
+      <button class="mdl-button mdl-js-button mdl-button--colored" style="float:right">
+        Create
+      </button>
+      <button class="mdl-button mdl-js-button mdl-js-ripple-effect" style="float:right">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+</div>
+
+    
+  </div>
+</div>
+
+<div id="templates" class="template">
+
+  <li class="mdl-list__item process-list-item template">
+    <span class="mdl-list__item-primary-content process-title">
+    </span>
+  </li>
+
+
+  <div class="mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col process-list-item-old template">
+    <div class="mdl-card__supporting-text">
+      <span class="process-title">Label</span>
+    </div>
+  </div>
+
+  <li class="mdl-list__item attribute-list-item template">
+    <span class="mdl-list__item-primary-content attribute-title">
+      Bryan Cranston
+    </span>
+    <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored delete-attribute hidden2" >
+      <i class="material-icons">delete</i>
+    </button>
+  </li>
+</div>
+
+{% endblock %}
