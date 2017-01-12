@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'ics',
     'qr',
+    'dashboard',
 )
 
 MIDDLEWARE_CLASSES = (
