@@ -1,20 +1,37 @@
+function attributeMouseIn(e) {
+	$(this).addClass("highlighted")
+	$(this).find(".delete-attribute").removeClass("hidden2")
+} 
+
+function attributeMouseOut (e) {
+	$(this).removeClass("highlighted")
+	$(this).find(".delete-attribute").addClass("hidden2")
+}
+
 function reloadAttributesView() {
 
 	$("#attribute-list").empty()
 
 	for (var i = 0; i < attributes.length; i++) {
 		var attribute = attributes[i]
+
 		var jq = $(".attribute-list-item.template").clone(true, true).appendTo($('#attribute-list'))
-			.removeClass("template")
+			.hover(attributeMouseIn, attributeMouseOut).removeClass("template")
+			.data(attribute)
+			.attr("id", "attribute" + i)
 
-		jq.find(".attribute-title").text(attribute.name)
-		jq.find(".delete-attribute").attr("for", i)
+		jq.find(".is-upgraded").removeClass("is-upgraded").removeAttr("data-upgraded")
+
+		jq.find("form").attr("name", "attribute" + i)
+
+		jq.find(".attribute-title").val(attribute.name).attr("id", "attribute-input" + i).data({val : attribute.name, parent_id})
+		jq.find("label").attr("for", "attribute" + i)
+
+		jq.find(".delete-attribute").attr("for", "attr" + i)
+		jq.find("button").attr("for", "attribute" + i)
 	}
-}
 
-function removeAttributeView(i) {
-	var childNum = parseInt(i) + 1
-	$(".attribute-list-item:nth-child(" + childNum + ")").remove()
+	componentHandler.upgradeDom()
 }
 
 function reloadProcessView() {
@@ -22,27 +39,33 @@ function reloadProcessView() {
 		var process = processes[i]
 		var jq = $(".process-list-item.template").clone(true, true).appendTo($('#process-list'))
 			.removeClass("template")
-			.attr("id", i)
+			.attr("id", "process-list-" + process.id)
+			.data(process)
 
 		jq.find(".process-title").html(process.name).addClass("field-text").addClass("name-" + process.id)
 	}
 
 }
 
-function reloadForm() {
-	var form = $("form")
-	var json = processes[selectedProcess]
+function refreshProcess(data) {
+	var p = $("#process-list-" + data.id)
+	p.data(data)
+	p.html(data.name)
+}
 
-	$(".is-active").removeClass("is-active")
-	$("input").attr("disabled", false)
+function reloadForm(process) {
+	$(".processForm").data(process.data())
 
-	getAttributes(json.id, reloadAttributesView, function () {
-		// show error
-	})
+	updateMomos($(".processForm .momo"), process.data())
 
-	for (var prop in json) {
-		form.find("#" + prop).val(json[prop]).parent().addClass("is-dirty")
-	}
+	getAttributes(process.data().id, function (data) {
+		for (var i = 0; i < data.length; i++) {
+			var momo = makeMomo("attribute", data[i], "name", false, true)
+			momo.data()["save"] = saveAttribute
+			$("#attribute-list").append(momo)
+		}
+
+	}, function () {})
 }
 
 function updateAll(json) {
@@ -72,10 +95,9 @@ function showError(title, text) {
 function clickOnProcess(process) {
 
 		$(".process-list-item").removeClass("mdl-color--deep-purple-500").addClass("mdl-color--white")
-
 		process.addClass("mdl-color--deep-purple-500").removeClass("mdl-color--white")
 
-		reloadForm()
+		reloadForm(process)
 }
 
 function showContinueDialog(continueFunction) {
@@ -104,7 +126,7 @@ function showContinueDialog(continueFunction) {
 		})
 }
 
-function showAreYouSureDialog(title, text, continueFunction) {
+function showAreYouSureDialog(title, text, continueFunction, cancelFunction) {
 	showDialog({
     		id: 'dialog-id',
     		title: title,
@@ -117,9 +139,9 @@ function showAreYouSureDialog(title, text, continueFunction) {
     		positive: {
     			id: 'cancel-button',
         		title: 'Go back',
-        		onClick: function () {}
+        		onClick: cancelFunction
     		},
-    		cancelable: true,
+    		cancelable: false,
     		contentStyle: {'max-width': '500px'}
 		})
 }
