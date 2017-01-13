@@ -21,9 +21,10 @@ function makeMomo(prefix, data, field, large, deletable) {
 
   resetMomoIDs(momo, prefix, data, field, large, deletable)
 
-  momo.find("input").focus(inputFocused).blur(inputBlurred).val(data[field]).parent().addClass("is-dirty")
+  momo.find("input").focus(inputFocused).blur(inputBlurred).val(data[field])
   momo.find("label").text(prefix + " " + field)
-  momo.find("button").click(doneClicked)
+  momo.find(".done").click(doneClicked)
+  momo.find(".cancel").click(deleteClicked)
 
   return momo
 }
@@ -39,7 +40,7 @@ function resetMomoIDs(momo) {
   momo.attr("id", momoID)
 
   momo.find(".delegate").attr("data-for", momoID)
-  momo.find("input").attr("id", inputID)
+  refreshInput(momo.find("input").attr("id", inputID))
   momo.find("label").attr("for", inputID)
 }
 
@@ -52,7 +53,7 @@ function updateMomos(momos, data) {
     var field = momo.data().field
     momo.data().data = data
 
-    momo.find("input").val(data[field]).parent().addClass("is-dirty")
+    refreshInput(momo.find("input").val(data[field]))
   })
 }
 
@@ -64,6 +65,10 @@ function saveMomo(momo, callback, failure) {
   newData[field] = momo.find("input").val()
 
   momo.data().save(newData, callback, failure)
+}
+
+function deleteMomo(momo, callback, failure) {
+  momo.data().remove(momo.data().data, callback, failure)
 }
 
 function initMomos() {
@@ -90,15 +95,9 @@ var inputBlurred = function (e) {
 
     var momoID = input.attr("data-for")
     var momo = $("#" + momoID)
-    var field = momo.data().field
 
-    var v = momo.data().data[field]
-    input.val(v)
-
-    if (!v || v.trim() == "")
-      input.parent().removeClass("is-dirty")
-    else 
-      input.parent().addClass("is-dirty")
+    input.val(momo.data().data[momo.data().field])
+    refreshInput(input)
 
     momo.mouseleave()
     momo.find("button").addClass("hidden2")
@@ -126,10 +125,11 @@ var deleteClicked = function (e) {
   var momoID = $(this).attr("data-for")
   $("#" + momoID).find("input").attr("disabled", true)
 
-  saveMomo($("#" + momoID), function () {
+  deleteMomo($("#" + momoID), function () {
     saving = false
-    $("#" + momoID).find("input").attr("disabled", false)
+    $("#" + momoID).remove()
   }, function () {
+    saving = false
     $("#" + momoID).find("input").attr("disabled", false)
     refreshMomos( $("#" + momoID) )
   })
@@ -137,6 +137,16 @@ var deleteClicked = function (e) {
 
 function refreshMomos(momos) {
   updateMomos(momos, momos.data().data)
+}
+
+function refreshInput(input) {
+
+    var v = input.val()
+
+    if (!v || v.trim() == "")
+      input.parent().removeClass("is-dirty")
+    else 
+      input.parent().addClass("is-dirty")
 }
 
 function mouseIn(e) {

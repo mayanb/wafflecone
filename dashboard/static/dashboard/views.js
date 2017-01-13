@@ -1,37 +1,62 @@
-function attributeMouseIn(e) {
-	$(this).addClass("highlighted")
-	$(this).find(".delete-attribute").removeClass("hidden2")
-} 
+var addAttribute = function () {
+	var processID = $(".processForm").data().id
 
-function attributeMouseOut (e) {
-	$(this).removeClass("highlighted")
-	$(this).find(".delete-attribute").addClass("hidden2")
-}
+	var momo = makeMomo("attribute", {"process_type" : processID, "name" : ""}, "name", false, true)
 
-function reloadAttributesView() {
+	momo.addClass("new-momo")
 
-	$("#attribute-list").empty()
+	// custom cancel/delete button
+	momo.find("input").off("blur").blur(function (e) {
+		var input = $(this)
 
-	for (var i = 0; i < attributes.length; i++) {
-		var attribute = attributes[i]
+		  setTimeout(function () { 
 
-		var jq = $(".attribute-list-item.template").clone(true, true).appendTo($('#attribute-list'))
-			.hover(attributeMouseIn, attributeMouseOut).removeClass("template")
-			.data(attribute)
-			.attr("id", "attribute" + i)
+		    if (saving) 
+		      return
 
-		jq.find(".is-upgraded").removeClass("is-upgraded").removeAttr("data-upgraded")
+		    var momo = $(".new-momo")
+		    momo.remove()
+		  }, 200)
+	})
 
-		jq.find("form").attr("name", "attribute" + i)
+	momo.find(".cancel").off("click").click(function (e) { e.preventDefault() }).find("i").text("cancel")
 
-		jq.find(".attribute-title").val(attribute.name).attr("id", "attribute-input" + i).data({val : attribute.name, parent_id})
-		jq.find("label").attr("for", "attribute" + i)
+	momo.find(".done").off("click").click(function (e) {
+		e.preventDefault()
+		var saving = true
 
-		jq.find(".delete-attribute").attr("for", "attr" + i)
-		jq.find("button").attr("for", "attribute" + i)
-	}
+		var momoID = $(this).attr("data-for")
+		var momo = $("#" + momoID)
+		momo.find('input').attr("disabled", true)
+
+		var newData = jQuery.extend(true, {}, momo.data().data)
+		newData[momo.data().field] = momo.find('input').val()
+
+		console.log(newData)
+
+		createAttribute(newData, function (data) {
+			momo.remove()
+			var newMomo = makeMomo("attribute", data, "name", false, true)
+			$("#attribute-list").prepend(newMomo)
+			var saving = false
+		}, function () {
+			momo.find(".cancel").click()
+		})
+	})
+
+	$("#attribute-list").prepend(momo)
 
 	componentHandler.upgradeDom()
+
+	momo.find("input").focus()
+}
+
+function addProcess() {
+	var d = {id: -1}
+	$(".processForm").hide()
+	$(".new-process-form").show()
+
+	reloadForm(d, ".new-process-form")
 }
 
 function reloadProcessView() {
@@ -47,34 +72,33 @@ function reloadProcessView() {
 
 }
 
-function refreshProcess(data) {
+function refreshProcess(data, form) {
 	var p = $("#process-list-" + data.id)
 	p.data(data)
 	p.html(data.name)
 }
 
-function reloadForm(process) {
-	$(".processForm").data(process.data())
+function reloadForm(data, form) {
 
-	updateMomos($(".processForm .momo"), process.data())
+	if (!data.id || data.id < 0) {
+		$(".new-process-actions").show()
+	} else {
+		$(".new-process-actions").hide()
+	}
 
-	getAttributes(process.data().id, function (data) {
+	$(form).data(data)
+
+	updateMomos($(form + " .momo"), data)
+
+	getAttributes(data.id, function (data) {
 		for (var i = 0; i < data.length; i++) {
 			var momo = makeMomo("attribute", data[i], "name", false, true)
 			momo.data()["save"] = saveAttribute
+			momo.data()["remove"] = deleteAttribute
 			$("#attribute-list").append(momo)
 		}
 
 	}, function () {})
-}
-
-function updateAll(json) {
-	var id = json.id
-	var body = $("body")
-
-	for (var field in json) {
-		body.find(".field-text." + field + "-" + id).text(json[field])
-	}
 }
 
 function showError(title, text) {
@@ -97,7 +121,7 @@ function clickOnProcess(process) {
 		$(".process-list-item").removeClass("mdl-color--deep-purple-500").addClass("mdl-color--white")
 		process.addClass("mdl-color--deep-purple-500").removeClass("mdl-color--white")
 
-		reloadForm(process)
+		reloadForm(process.data(), ".processForm")
 }
 
 function showContinueDialog(continueFunction) {

@@ -23,6 +23,10 @@ $(document).ready(function () {
 
 	$(".processForm").append(nameMomo).append(codeMomo)
 
+	$(".processForm").clone(true, true).removeClass("processForm").addClass("new-process-form").appendTo(".appendHere").hide()
+	$(".new-process-form h2").text("New Process")
+
+
 	getProcesses(function () {
 		reloadProcessView()
 		$(".process-list-item").eq(0).click()
@@ -45,63 +49,18 @@ $(document).ready(function () {
 		})
 	})
 
-	return
+	$(".add-attribute").mousedown(function (e) {
+		e.preventDefault()
 
-	$("input").focus(function (e) {
-		$(this).attr("data-original-val", $(this).val())
-		var id = $(this).attr("id")
-		$("form[name=" + id + "]").find("button").removeClass("hidden2")
-	}).focusout(function (e) {
-		var obj = $(this)
-
-		setTimeout(function () {
-			if (saving) 
-				return
-
-			var v = obj.data().val
-			obj.val(v)
-
-			if (!v || v.trim() == "") 
-				obj.parent().removeClass("is-dirty")
-			else
-				obj.parent().addClass("is-dirty")
-
-			var id = $(obj).attr("id")
-			$("form[name=" + id + "]").find("button").addClass("hidden2")
-
-		}, 200)
+		if ($(".new-momo").length == 0) 
+			addAttribute()
 	})
 
-	$("form button.done").mousedown(function (e) {
 
-		var id = $(this).attr("for")
-
-		// disable the input
-		$("#" + id).prop("disabled", true)
-
-		// add a spinner to the form
-		$("form[name=" + id + "] .mdl-spinner").addClass("is-active")
-		
-		saveProcess(function () {
-			reloadForm()
-			updateAll(processes[selectedProcess])
-		}, function () {
-			reloadForm()
-		})
-	})
-
-	$(".delete-attribute").click(function (e) {
-		var deleteID = $(this).attr("for")
-		var toRemove = $("#" + deleteID)
-
-		// this is like the worst syntax ever
-		deleteAttribute(toRemove, function () {
-			toRemove.remove()
-		}, function () {})
-	})
 })
 
-var saveAttribute = function (data, callback, failure) {
+
+var deleteAttribute = function (data, callback, failure) {
   showAreYouSureDialog("Are you sure you want to delete this attribute?", 
   	"You'll also be deleting it for ALL the tasks!", 
   	function () {
@@ -143,6 +102,24 @@ var saveAttribute = function (data, callback, failure) {
 			saving = false
 		})
   	}, failure)
+}
+
+var createAttribute = function (data, callback, failure) {
+	saving = true
+
+	$.ajax("../ics/attributes/", {
+		method: "POST",
+		data: data
+	}).done(function (data) {
+		if (!saving) return
+		callback(data)
+	}).fail(function (data, res, error) {
+		if (!saving) return
+		failure()
+		showError("Something went wrong", "Looks like something isn't working. Try again later.")
+	}).always(function () {
+		saving = false
+	})
 }
 
 var saveProcess = function (data, callback, failure) {
@@ -196,6 +173,7 @@ function getAttributes(id, success, failure) {
 			showError("Something went wrong", "Looks like something isn't working. Try again later.")
 		})
 }
+
 
 function upgrade(jq) {
 	componentHandler.upgradeElement(jq.eq(0));
