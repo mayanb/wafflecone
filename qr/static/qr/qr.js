@@ -18,14 +18,18 @@ function init() {
     if ($.isNumeric(numLabels)) {
       numLabels = parseInt(numLabels)
     } else {
-      console.log("please enter a valid number!")
+      alert("please enter a valid number!")
       return
     }
+
+    printButton.attr("disabled", "disabled").text("Printing...")
 
     $.ajax({
       url: "codes/",
       data: {count : numLabels},
       success: success
+    }).always(function () {
+      printButton.removeAttr("disabled").text("Print!")
     })
 
   })
@@ -63,7 +67,7 @@ function success(data) {
       })
 
     } catch(e) {
-      alert(e.message || e);
+      alert("something is wrong with the dymo printer service")
     }
 
 }
@@ -118,7 +122,7 @@ function getLabelRecord(labelSetBuilder, displayText, code) {
 
     }
     catch(e) {
-        alert(e.message || e);
+        alert("something is wrong with the dymo printer");
     }
   };
   img.onerror = function() { alert('Unable to load qr-code image') }
@@ -131,7 +135,7 @@ function getPrinter() {
   // select printer to print on
   // for simplicity sake just use the first LabelWriter printer
   var printers = dymo.label.framework.getPrinters();
-  if (printers.length == 0)
+  if (!printers || printers.length == 0)
     throw "No DYMO printers are installed. Install DYMO printers.";
 
   var printerName = "";
