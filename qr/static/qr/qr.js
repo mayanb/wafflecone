@@ -5,13 +5,17 @@ $(document).ready(function () {
   init()
 })
 
+
+/* function : init
+ * ---------------
+ * This function is called after the Dymo Framework inits and sets up the webpage.
+ */
+
 function init() {
-  var printButton = $("#printButton")
+  var printButton = $("#printButton").removeAttr("disabled")
 
   printButton.click(function (e) {
     e.preventDefault()
-
-    $(".preview").remove()
 
     var numLabels = $("#numLabels").val()
 
@@ -24,29 +28,24 @@ function init() {
 
     printButton.attr("disabled", "disabled").text("Printing...")
 
+    // ajax call to generate UUIDs. function success() is called after
     $.ajax({
       url: "codes/",
       data: {count : numLabels},
-      success: success
+      success: printCodes
     }).always(function () {
       printButton.removeAttr("disabled").text("Print!")
     })
 
   })
-
-  $("#resetButton").click(function (e) {
-    e.preventDefault()
-    reset()
-  })
 }
 
-function reset() {
-  $("input").val("")
-  $(".preview").remove()
-
-}
-
-function success(data) {
+/* function : printCodes
+ * ---------------------
+ * This function takes an array of codes @data, and converts the codes into
+ * QR codes, and prints labels for them. 
+ */
+function printCodes(data) {
 
   var uuids = data.split(/\s+/)
 
@@ -72,25 +71,12 @@ function success(data) {
 
 }
 
-function preview(labelSet) {
-  var labels = labelSet.getRecords(); //get all the records we add to build the labelSet.
-
-  for (var i = 0; i< labels.length; i++) {
-    var label = dymo.label.framework.openLabelXml(getXML())
-
-    label.setObjectText("displayText1", labels[i]["displayText1"])
-    label.setObjectText("displayText2", labels[i]["displayText2"])
-    label.setObjectText("qrText", labels[i]["qrText"])
-    label.setObjectText("qrImage", labels[i]["qrImage"])
-
-    pngData = label.render();
-    var labelImage = $("body").append(
-      $("<img/>").addClass("preview")
-      .attr("src","data:image/png;base64," + pngData)
-    )
-  }
-}
-
+/* function : getLabelRecord
+ * -------------------------
+ * Gets a QR label representation of the given @code & @displayText,
+ * using @labelSetBuilder as a template.
+ * TODO: Use server-side QR code generator instead of Google Charts
+ */
 function getLabelRecord(labelSetBuilder, displayText, code) {
   var deferred = $.Deferred();
   var record = labelSetBuilder.addRecord()
@@ -131,6 +117,10 @@ function getLabelRecord(labelSetBuilder, displayText, code) {
   return deferred.promise()
 }
 
+/* function : getPrinter
+ * ---------------
+ * Gets a DYMO printer. TODO: Maybe update this to use CUPS API?
+ */
 function getPrinter() {
   // select printer to print on
   // for simplicity sake just use the first LabelWriter printer
@@ -152,6 +142,10 @@ function getPrinter() {
 
 }
 
+/* function : getXML
+ * -----------------
+ * Returns XML format of a label. TODO: Change this to AJAX get.
+ */
 function getXML() {
   var labelXml = '<?xml version="1.0" encoding="utf-8"?><DieCutLabel Version="8.0" Units="twips">  <PaperOrientation>Landscape</PaperOrientation>  <Id>Shipping</Id>  <PaperName>30323 Shipping</PaperName>  <DrawCommands>    <RoundRectangle X="0" Y="0" Width="3060" Height="5715" Rx="270" Ry="270"/>  </DrawCommands>  <ObjectInfo>    <ImageObject>      <Name>qrImage</Name>      <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>      <BackColor Alpha="0" Red="255" Green="255" Blue="255"/>      <LinkedObjectName></LinkedObjectName>      <Rotation>Rotation0</Rotation>      <IsMirrored>False</IsMirrored>      <IsVariable>False</IsVariable>      <Image></Image>      <ScaleMode>Fill</ScaleMode>      <BorderWidth>0</BorderWidth>      <BorderColor Alpha="255" Red="0" Green="0" Blue="0"/>      <HorizontalAlignment>Center</HorizontalAlignment>      <VerticalAlignment>Center</VerticalAlignment>    </ImageObject>    <Bounds X="491.4844" Y="286.4062" Width="2160" Height="2160"/>  </ObjectInfo>  <ObjectInfo>    <TextObject>      <Name>displayText1</Name>      <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>      <BackColor Alpha="0" Red="255" Green="255" Blue="255"/>      <LinkedObjectName></LinkedObjectName>      <Rotation>Rotation0</Rotation>      <IsMirrored>False</IsMirrored>      <IsVariable>False</IsVariable>      <HorizontalAlignment>Center</HorizontalAlignment>      <VerticalAlignment>Middle</VerticalAlignment>      <TextFitMode>ShrinkToFit</TextFitMode>      <UseFullFontHeight>True</UseFullFontHeight>      <Verticalized>False</Verticalized>      <StyledText>        <Element>          <String>CVB-R</String>          <Attributes>            <Font Family="OPTINational-Gothic" Size="72" Bold="False" Italic="False" Underline="False" Strikeout="False"/>            <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>          </Attributes>        </Element>      </StyledText>    </TextObject>    <Bounds X="2834.141" Y="518.2031" Width="2374.062" Height="921.25"/>  </ObjectInfo>  <ObjectInfo>    <TextObject>      <Name>displayText2</Name>      <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>      <BackColor Alpha="0" Red="255" Green="255" Blue="255"/>      <LinkedObjectName></LinkedObjectName>      <Rotation>Rotation0</Rotation>      <IsMirrored>False</IsMirrored>      <IsVariable>False</IsVariable>      <HorizontalAlignment>Center</HorizontalAlignment>      <VerticalAlignment>Middle</VerticalAlignment>      <TextFitMode>ShrinkToFit</TextFitMode>      <UseFullFontHeight>True</UseFullFontHeight>      <Verticalized>False</Verticalized>      <StyledText>        <Element>          <String>1010</String>          <Attributes>            <Font Family="OPTINational-Gothic" Size="72" Bold="False" Italic="False" Underline="False" Strikeout="False"/>            <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>          </Attributes>        </Element>      </StyledText>    </TextObject>    <Bounds X="2831.484" Y="1447.266" Width="2379.375" Height="1217.5"/>  </ObjectInfo>  <ObjectInfo>    <TextObject>      <Name>qrText</Name>      <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>      <BackColor Alpha="0" Red="255" Green="255" Blue="255"/>      <LinkedObjectName></LinkedObjectName>      <Rotation>Rotation0</Rotation>      <IsMirrored>False</IsMirrored>      <IsVariable>False</IsVariable>      <HorizontalAlignment>Center</HorizontalAlignment>      <VerticalAlignment>Middle</VerticalAlignment>      <TextFitMode>ShrinkToFit</TextFitMode>      <UseFullFontHeight>True</UseFullFontHeight>      <Verticalized>False</Verticalized>      <StyledText>        <Element>          <String>qrcode1</String>          <Attributes>            <Font Family="Source Code Pro" Size="13" Bold="False" Italic="False" Underline="False" Strikeout="False"/>            <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>          </Attributes>        </Element>      </StyledText>    </TextObject>    <Bounds X="631.0938" Y="2370.078" Width="1880.781" Height="600"/>  </ObjectInfo></DieCutLabel>'
   return labelXml;
