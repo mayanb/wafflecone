@@ -67,7 +67,7 @@ function success(data) {
       })
 
     } catch(e) {
-      alert("something is wrong with the dymo printer service")
+      alert(e.message || e);
     }
 
 }
@@ -122,7 +122,7 @@ function getLabelRecord(labelSetBuilder, displayText, code) {
 
     }
     catch(e) {
-        alert("something is wrong with the dymo printer");
+        alert(e.message || e);
     }
   };
   img.onerror = function() { alert('Unable to load qr-code image') }
@@ -135,6 +135,7 @@ function getPrinter() {
   // select printer to print on
   // for simplicity sake just use the first LabelWriter printer
   var printers = dymo.label.framework.getPrinters();
+  console.log(printers)
   if (!printers || printers.length == 0)
     throw "No DYMO printers are installed. Install DYMO printers.";
 
