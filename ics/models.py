@@ -31,8 +31,7 @@ class Task(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
   product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
   label = models.CharField(max_length=20, db_index=True)  
-  label_index = models.PositiveSmallIntegerField(default=0)
-  display = models.CharField(max_length=25, blank=True)
+  label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
   custom_display = models.CharField(max_length=25, blank=True)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE)
   is_open = models.BooleanField(default=True)
@@ -41,30 +40,30 @@ class Task(models.Model):
   updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
   def __str__(self):
-    if not self.custom_display:
-      return self.display
-    else:
+    if self.custom_display:
       return self.custom_display
+    elif self.label_index > 0:
+      return "-".join([self.label, str(self.label_index)])
+    else:
+      return self.label
 
   def save(self, *args, **kwargs):
-    
-    # get the # of tasks with the same name & made on the same date this year
-    q = ( 
-      Task.objects.filter(label=self.label)
-        .filter(created_at__startswith=str(datetime.now().year))
-        .order_by('-label_index')
-      )
+    if self.pk is None:
+      # get the num of tasks with the same name & made on the same date this year
+      q = ( 
+        Task.objects.filter(label=self.label)
+          .filter(created_at__startswith=str(datetime.now().year))
+          .order_by('-label_index')
+        )
+      numItems = len(q)
 
-    # tentatively, label_index is the # of items with same name
-    self.label_index = len(q)
-
-    # if there are other items with the same name, then actually get the highest label_index 
-    # and set our label index to that + 1
-    if self.label_index > 0:
-      self.label_index = q[0].label_index + 1
-      self.display = "-".join([self.label, str(self.label_index)])
-    else:
-      self.display = self.label
+      # if there are other items with the same name, then actually get the highest label_index 
+      # and set our label index to that + 1
+      if numItems > 0:
+        self.label_index = q[0].label_index + 1
+        self.display = "-".join([self.label, str(self.label_index)])
+      else:
+        self.display = self.label
       
     super(Task, self).save(*args, **kwargs)
 
