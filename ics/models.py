@@ -30,15 +30,15 @@ class ProductType(models.Model):
 class Task(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
   product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
-  label = models.CharField(max_length=20)  
+  label = models.CharField(max_length=20, db_index=True)  
   label_index = models.PositiveSmallIntegerField(default=0)
   display = models.CharField(max_length=25, blank=True)
   custom_display = models.CharField(max_length=25, blank=True)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE)
   is_open = models.BooleanField(default=True)
 
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
+  created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+  updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
   def __str__(self):
     if not self.custom_display:
@@ -69,10 +69,8 @@ class Task(models.Model):
     super(Task, self).save(*args, **kwargs)
 
 
-
-
 class Item(models.Model):
-  item_qr = models.CharField(max_length=100)
+  item_qr = models.CharField(max_length=100, unique=True)
   creating_task = models.ForeignKey(Task, on_delete=models.CASCADE)
   created_at = models.DateTimeField(auto_now_add=True)
 
