@@ -1,0 +1,69 @@
+body {
+  font-family: Roboto, Proxima Nova, sans-serif;
+  font-size: 0.95em;
+  background-color: #eeeeee; }
+
+.navbar, .header {
+  display: flex;
+  background-color: whitesmoke;
+  box-sizing: border-box;
+  width: 100%;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  padding: 0px 24px;
+  color: rgba(0, 0, 0, 0.87);
+  -webkit-font-smoothing: antialiased; }
+  .navbar h1, .header h1 {
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 64px; }
+
+.toolbar {
+  display: flex;
+  width: 100%;
+  vertical-align: center; }
+  .toolbar h1 {
+    padding-left: 24px;
+    font-size: 24px;
+    line-height: 64px; }
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 40px; }
+
+.card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  border-radius: 2px;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  margin-bottom: 40px;
+  background-color: white; }
+
+.card-container {
+  padding-bottom: 56px; }
+
+.card-container table {
+  border-collapse: collapse;
+  width: 100%; }
+  .card-container table td {
+    min-width: 90px;
+    line-height: 48px; }
+  .card-container table td:first-child {
+    padding-left: 24px; }
+  .card-container table thead {
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 13px;
+    font-weight: 400; }
+  .card-container table tbody tr {
+    border-top: 1px solid #eee; }
+  .card-container table tbody tr:last-child {
+    border-bottom: 1px solid #eee; }
+  .card-container table tbody td {
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 14px; }
+
+.materialSelect {
+  width: 400px; }
+
+/*# sourceMappingURL=styles.css.map */
