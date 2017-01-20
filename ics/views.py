@@ -10,29 +10,24 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
 
-class CreateTask(generics.ListCreateAPIView):
-  queryset = Task.objects.all()
-  serializer_class=BasicTaskSerializer
-
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
     created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
     class Meta:
         model = Task
         fields = ['created_at', 'label', 'is_open']
- 
+
 class TaskList(generics.ListCreateAPIView):
   queryset = Task.objects.all()
-  serializer_class = BasicTaskSerializer
+  serializer_class = NestedTaskSerializer
   filter_backends = (OrderingFilter, DjangoFilterBackend)
-  ordering_fields = ('updated_at', 'created_at', 'label_index')
   filter_class = TaskFilter
+  ordering_fields = ('updated_at', 'created_at', 'label_index')
   pagination_class = SmallPagination
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
-  filter_fields = ('label', 'is_open',)
 
 
 
@@ -124,9 +119,6 @@ class TaskAttributeList(generics.ListCreateAPIView):
 class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
-
-
-
 
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")

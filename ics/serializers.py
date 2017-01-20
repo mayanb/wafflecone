@@ -1,9 +1,6 @@
 from rest_framework import serializers
 from ics.models import *
 
-# basic or unattributed serializers do not nest. Use these for write operations #
-# nested serializers nest. Use these for read operations, when you want more than just a little data #
-
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
@@ -24,16 +21,6 @@ class BasicTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
     fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display')
-
-class NestedTaskSerializer(serializers.ModelSerializer):
-  process_type = ProcessTypeSerializer(many=False, read_only=True)
-  product_type = ProductTypeSerializer(many=False, read_only=True)
-  created_by = UserSerializer(many=False, read_only=True)
-
-  class Meta:
-    model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display')
-
 
 class BasicItemSerializer(serializers.ModelSerializer):
   class Meta:
@@ -75,3 +62,12 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = TaskAttribute
     fields = ('id', 'attribute', 'task', 'value')
+
+class NestedTaskSerializer(serializers.ModelSerializer):
+  items = BasicItemSerializer(source='getItems', read_only=True, many=True)
+  inputs = BasicInputSerializer(source='getInputs', read_only=True, many=True)
+  attributes = NestedTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
+
+  class Meta:
+    model = Task
+    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes')

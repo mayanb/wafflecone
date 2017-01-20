@@ -67,6 +67,15 @@ class Task(models.Model):
       
     super(Task, self).save(*args, **kwargs)
 
+  def getItems(self):
+    return self.item_set.all()
+
+  def getInputs(self):
+    return self.input_set.all()
+
+  def getTaskAttributes(self):
+    return self.taskattribute_set.all()
+
 
 class Item(models.Model):
   item_qr = models.CharField(max_length=100, unique=True)
