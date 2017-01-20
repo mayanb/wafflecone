@@ -1,0 +1,101 @@
+$primary: #C30017;
+$light-grey: #eee;
+$shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+$shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+$font-stack: Roboto, Proxima Nova, sans-serif;
+$unit: 10px;
+
+body {
+	font-family: $font-stack;
+	font-size: 0.95em;
+	background-color: rgba(238, 238, 238, 1)
+}
+
+.navbar, .header {
+	display: flex;
+	background-color: rgb(245,245,245);
+	box-sizing: border-box;
+	width: 100%;
+	box-shadow: $shadow-2;
+	padding: 0px 24px;
+	color: rgba(0,0,0,0.87);
+	-webkit-font-smoothing: antialiased;
+
+	h1 {
+		font-weight: normal;
+		font-size: 24px;
+		line-height: 64px;
+	}
+}
+
+.toolbar {
+	display: flex;
+	width: 100%;
+	//padding: 16px 24px;
+	vertical-align: center;
+
+	h1 {
+		padding-left:24px;
+		font-size: 24px;
+		line-height: 64px;
+	}
+
+}
+
+.container {
+	max-width: 800px;
+	margin: 0 auto;
+	padding-top: 40px;
+}
+
+.card {
+	box-shadow: $shadow-1;
+	border-radius: 2px;
+	width: 100%;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	margin-bottom: 40px;
+	background-color: white
+}
+
+.card-container {
+	padding-bottom: 56px;
+}
+
+.card-container table {
+	border-collapse:collapse;
+	width:100%;
+
+	td {
+		min-width: 90px;
+		line-height: 48px;
+	}
+
+	td:first-child {
+		padding-left: 24px;
+	}
+
+	thead {
+		color: rgba(0,0,0,0.54);
+		font-size: 13px;
+		font-weight:400;
+	}
+
+	tbody tr {
+		border-top: 1px solid #eee;
+	}
+
+	tbody tr:last-child {
+		border-bottom: 1px solid #eee;
+	}
+
+	tbody td {
+		color: rgba(0,0,0,0.87);
+		font-size:14px;
+	}
+
+}
+
+.materialSelect {
+	width: 400px;
+}
