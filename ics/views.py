@@ -17,7 +17,18 @@ class TaskFilter(django_filters.rest_framework.FilterSet):
         model = Task
         fields = ['created_at', 'label', 'is_open']
 
-class TaskList(generics.ListCreateAPIView):
+# tasks/create/
+class TaskCreate(generics.CreateAPIView):
+  queryset = Task.objects.all()
+  serializer_class = BasicTaskSerializer
+
+# tasks/edit/xxx
+class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Task.objects.all()
+  serializer_class = EditTaskSerializer
+
+# tasks/
+class TaskList(generics.ListAPIView):
   queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
   filter_backends = (OrderingFilter, DjangoFilterBackend)
@@ -25,7 +36,8 @@ class TaskList(generics.ListCreateAPIView):
   ordering_fields = ('updated_at', 'created_at', 'label_index')
   pagination_class = SmallPagination
 
-class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
+# tasks/xxx/
+class TaskDetail(generics.RetrieveAPIView):
   queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
 

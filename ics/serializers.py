@@ -17,6 +17,13 @@ class ProductTypeSerializer(serializers.ModelSerializer):
     model = ProductType
     fields = ('id', 'name', 'code')
 
+# serializes only post-editable fields of task
+class EditTaskSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Task
+    fields = ('label', 'is_open', 'label_index', 'custom_display')
+
+# serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
@@ -63,6 +70,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
     model = TaskAttribute
     fields = ('id', 'attribute', 'task', 'value')
 
+# serializes all fields of the task, with nested items, inputs, and attributes
 class NestedTaskSerializer(serializers.ModelSerializer):
   items = BasicItemSerializer(source='getItems', read_only=True, many=True)
   inputs = BasicInputSerializer(source='getInputs', read_only=True, many=True)
