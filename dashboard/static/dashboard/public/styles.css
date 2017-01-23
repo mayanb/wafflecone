@@ -1,43 +1,76 @@
+*, *:before, *:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0; }
+
 body {
-  font-family: Roboto, Proxima Nova, sans-serif;
+  font-family: Proxima Nova, sans-serif;
   font-size: 0.95em;
   background-color: #eeeeee; }
 
-.navbar, .header {
-  display: flex;
-  background-color: whitesmoke;
-  box-sizing: border-box;
-  width: 100%;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+.navbar {
+  background-color: #C30017;
   padding: 0px 24px;
-  color: rgba(0, 0, 0, 0.87);
+  color: white;
   -webkit-font-smoothing: antialiased; }
-  .navbar h1, .header h1 {
+  .navbar h1 {
     font-weight: normal;
-    font-size: 24px;
-    line-height: 64px; }
+    font-size: 20px;
+    line-height: 64px;
+    margin: 0px; }
+
+html, body, #root, .parent {
+  width: 100%;
+  height: 100%; }
+
+.parent {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  /* align items in Main Axis */
+  align-items: stretch;
+  /* align items in Cross Axis */
+  align-content: stretch;
+  /* Extra space in Cross Axis */
+  background: rgba(255, 255, 255, 0.1); }
+  .parent .content {
+    flex: 1;
+    /* same as flex: 1 1 auto; */
+    display: flex;
+    flex-direction: column; }
+    .parent .content .container {
+      width: 800px;
+      max-width: 800px;
+      margin: 0 auto; }
 
 .toolbar {
   display: flex;
   width: 100%;
   vertical-align: center; }
+  .toolbar h1, .toolbar i {
+    padding: 0px 24px;
+    line-height: 80px;
+    margin: 0; }
   .toolbar h1 {
-    padding-left: 24px;
     font-size: 24px;
-    line-height: 64px; }
+    flex: 1; }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding-top: 40px; }
+i.material-icons {
+  color: rgba(0, 0, 0, 0.5); }
+  i.material-icons:hover {
+    color: blue; }
 
 .card {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  margin: 24px;
   border-radius: 2px;
   width: 100%;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  margin-bottom: 40px;
   background-color: white; }
 
 .card-container {
@@ -49,21 +82,54 @@ body {
   .card-container table td {
     min-width: 90px;
     line-height: 48px; }
-  .card-container table td:first-child {
-    padding-left: 24px; }
+    .card-container table td:first-child {
+      padding-left: 24px; }
   .card-container table thead {
     color: rgba(0, 0, 0, 0.54);
     font-size: 13px;
     font-weight: 400; }
-  .card-container table tbody tr {
-    border-top: 1px solid #eee; }
-  .card-container table tbody tr:last-child {
-    border-bottom: 1px solid #eee; }
   .card-container table tbody td {
     color: rgba(0, 0, 0, 0.87);
     font-size: 14px; }
+  .card-container table tbody tr {
+    border-top: 1px solid #eee; }
+    .card-container table tbody tr:last-child {
+      border-bottom: 1px solid #eee; }
 
-.materialSelect {
-  width: 400px; }
+.filters {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background-color: white; }
+  .filters > div {
+    display: flex;
+    flex-direction: row;
+    max-width: 600px; }
+  .filters .multiselect {
+    flex-grow: 1;
+    padding-right: 24px; }
+    .filters .multiselect:last-child {
+      padding-right: 0px; }
+  .filters h1 {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.54); }
+
+.dates {
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 0 10px;
+  color: #aaaaaa;
+  width: 100%;
+  display: inline-flex;
+  vertical-align: middle; }
+  .dates span, .dates i {
+    display: inline-block;
+    line-height: 34px;
+    padding-right: 10px; }
+  .dates i {
+    font-size: 20px; }
+
+ul div.menuContentWrapper div.rdr-Days {
+  white-space: normal; }
 
 /*# sourceMappingURL=styles.css.map */

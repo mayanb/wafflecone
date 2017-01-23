@@ -2,8 +2,23 @@ $primary: #C30017;
 $light-grey: #eee;
 $shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 $shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-$font-stack: Roboto, Proxima Nova, sans-serif;
+$font-stack: Proxima Nova, sans-serif;
 $unit: 10px;
+
+*, *:before, *:after
+{
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+html, body {
+	width: 100%;
+    height: 100%;
+    
+    margin: 0;
+    padding: 0;
+}
 
 body {
 	font-family: $font-stack;
@@ -11,20 +26,48 @@ body {
 	background-color: rgba(238, 238, 238, 1)
 }
 
-.navbar, .header {
-	display: flex;
-	background-color: rgb(245,245,245);
-	box-sizing: border-box;
-	width: 100%;
-	box-shadow: $shadow-2;
+.navbar {
+	background-color: $primary;
 	padding: 0px 24px;
-	color: rgba(0,0,0,0.87);
+	color: white;
 	-webkit-font-smoothing: antialiased;
 
 	h1 {
 		font-weight: normal;
-		font-size: 24px;
-		line-height: 64px;
+		font-size: 20px;
+		line-height:64px;
+		margin: 0px;
+	}
+}
+
+html, body, #root, .parent {
+	width: 100%;
+    height: 100%;
+
+}
+
+.parent
+{
+    display: flex;
+    flex-direction: column;
+    
+    justify-content: flex-start; /* align items in Main Axis */
+    align-items: stretch; /* align items in Cross Axis */
+    align-content: stretch; /* Extra space in Cross Axis */
+            
+    background: rgba(255, 255, 255, .1);
+
+    .content {
+	   	flex: 1; /* same as flex: 1 1 auto; */
+	    display: flex;
+	    flex-direction: column;
+	    
+
+	    .container {
+	    	width: 800px;
+	    	max-width: 800px;
+	    	margin: 0 auto;
+	    }
 	}
 }
 
@@ -34,27 +77,33 @@ body {
 	//padding: 16px 24px;
 	vertical-align: center;
 
+	h1, i {
+		padding: 0px 24px;
+		line-height: 80px;
+		margin: 0;
+	}
+
 	h1 {
-		padding-left:24px;
 		font-size: 24px;
-		line-height: 64px;
+		flex: 1;
+	}
+}
+
+i.material-icons {
+	color: rgba(0,0,0,0.5);
+
+
+	&:hover {
+		color: blue;
 	}
 
 }
 
-.container {
-	max-width: 800px;
-	margin: 0 auto;
-	padding-top: 40px;
-}
-
 .card {
 	box-shadow: $shadow-1;
+	margin: 24px;
 	border-radius: 2px;
 	width: 100%;
-	overflow-x: hidden;
-	overflow-y: hidden;
-	margin-bottom: 40px;
 	background-color: white
 }
 
@@ -63,16 +112,17 @@ body {
 }
 
 .card-container table {
+
 	border-collapse:collapse;
 	width:100%;
 
 	td {
 		min-width: 90px;
 		line-height: 48px;
-	}
 
-	td:first-child {
-		padding-left: 24px;
+		&:first-child {
+			padding-left: 24px;
+		}
 	}
 
 	thead {
@@ -81,21 +131,71 @@ body {
 		font-weight:400;
 	}
 
-	tbody tr {
-		border-top: 1px solid #eee;
-	}
-
-	tbody tr:last-child {
-		border-bottom: 1px solid #eee;
-	}
-
 	tbody td {
 		color: rgba(0,0,0,0.87);
 		font-size:14px;
 	}
 
+	tbody tr {
+		border-top: 1px solid #eee;
+
+		&:last-child {
+			border-bottom: 1px solid #eee;
+		}
+	}
 }
 
-.materialSelect {
-	width: 400px;
+
+.filters {
+	display:flex;
+	flex-direction: column;
+	padding: 24px;
+	background-color: white;
+
+	& > div {
+		display: flex;
+		flex-direction: row;
+		max-width: 600px;
+	}
+
+	.multiselect {
+		flex-grow: 1;
+		padding-right: 24px;
+
+		&:last-child {
+			padding-right: 0px;
+		}
+
+	}
+
+	h1 {
+		font-size: 13px;
+		color: rgba(0,0,0,0.54);
+	}
+}
+
+.dates {
+	border-radius: 2px;
+	border: 1px solid rgba(0,0,0,0.2);
+	padding: 0 10px;
+	color: rgb(170,170,170);
+	width: 100%;
+
+	span, i {
+		display: inline-block;
+		line-height: 34px;
+		padding-right: 10px;
+	}
+
+	i {
+		font-size: 20px;
+	}
+
+	display:inline-flex;
+	vertical-align: middle;
+}
+
+
+ul div.menuContentWrapper div.rdr-Days {
+	white-space: normal;
 }

@@ -1,12 +1,9 @@
-import 'react-toolbox/lib/commons.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Table, TableList} from './Tables.jsx';
 import $ from 'jquery';
-import MaterialSelect from './Inputs.jsx';
-import { AppBar } from 'react-toolbox/lib/app_bar';
-import { Navigation } from 'react-toolbox/lib/navigation';
-import { Link } from 'react-toolbox/lib/link';
+import {Table, TableList} from './Tables.jsx';
+import { Filters } from './Inputs.jsx';
+import { Navbar } from './Layout.jsx'
 
 
 // <Multiselect options={this.state.products} placeholder="Filter by product..."/>
@@ -24,10 +21,13 @@ class Main extends React.Component {
 
   render() {
     return (
-      <div>
-        <MaterialBar />
-        <div className="container">
-          <TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
+      <div className="parent">
+        <Navbar />
+        <div className="content">
+          <div className="container">
+            <Filters processes={this.state.processes} products={this.state.products}/>
+            <TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
+          </div>
         </div>
       </div>
     );
@@ -47,13 +47,6 @@ class Main extends React.Component {
     $.when.apply(null, defs).done(function() {
       component.setState(newState)
     });
-
-    // once you get products & processes, then you run
-    // for every process, do an ajax call for tasks/?process_type=x
-    // on complete, setState (hopefully should only rerender the right part of it??)
-
-    // make page# part of the object. so when the page number changes for a table T,
-    // then 
   }
 
   getTasks(container) {
@@ -111,20 +104,6 @@ function splitTasksByProcess(tasks) {
   });
   return taskGroups;
 }
-
-const MaterialBar = () => (
-  <AppBar title="Scoop" flat="true">
-    <Navigation type="horizontal">
-    </Navigation>
-  </AppBar>
-);
-
-
-const Navbar = () => (
-  <div className="navbar">
-    <h1> Task Log </h1>
-  </div>
-)
 
 ReactDOM.render(
   <Main />,

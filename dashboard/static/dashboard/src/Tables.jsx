@@ -44,6 +44,7 @@ function TableHeader(props) {
   return (
     <div className="toolbar">
       <h1>{props.title}</h1>
+      <i className="material-icons">file_download</i>
     </div>
   );
 }
