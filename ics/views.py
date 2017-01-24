@@ -42,9 +42,6 @@ class TaskDetail(generics.RetrieveAPIView):
   serializer_class = NestedTaskSerializer
 
 
-
-
-
 class CreateItem(generics.ListCreateAPIView):
   queryset = Item.objects.all()
   serializer_class = BasicItemSerializer
