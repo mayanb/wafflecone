@@ -74,8 +74,9 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 class NestedTaskSerializer(serializers.ModelSerializer):
   items = BasicItemSerializer(source='getItems', read_only=True, many=True)
   inputs = BasicInputSerializer(source='getInputs', read_only=True, many=True)
-  attributes = NestedTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
+  attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
+  attribute_values = BasicTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
 
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes')
+    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes', 'attribute_values')

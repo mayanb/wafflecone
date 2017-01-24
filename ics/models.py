@@ -26,6 +26,14 @@ class ProductType(models.Model):
   def __str__(self):
     return self.name
 
+class Attribute(models.Model):
+  process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+  name = models.CharField(max_length=20)
+  rank = models.PositiveSmallIntegerField(default=0)
+
+  def __str__(self):
+    return self.name
+
 
 class Task(models.Model):
   process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
@@ -47,7 +55,15 @@ class Task(models.Model):
     else:
       return self.label
 
+
+
   def save(self, *args, **kwargs):
+    self.setLabelAndDisplay()
+    super(Task, self).save(*args, **kwargs)
+
+
+
+  def setLabelAndDisplay(self):
     if self.pk is None:
       # get the num of tasks with the same name & made on the same date this year
       q = ( 
@@ -64,8 +80,6 @@ class Task(models.Model):
         self.display = "-".join([self.label, str(self.label_index)])
       else:
         self.display = self.label
-      
-    super(Task, self).save(*args, **kwargs)
 
   def getItems(self):
     return self.item_set.all()
@@ -73,8 +87,35 @@ class Task(models.Model):
   def getInputs(self):
     return self.input_set.all()
 
+  def getAllAttributes(self):
+    return Attribute.objects.all().filter(process_type=self.process_type)
+
   def getTaskAttributes(self):
     return self.taskattribute_set.all()
+
+  # tree traversal - finds all the children of the node that this is called on
+  # returns a set([<Task object>])
+  def descendents(self):
+    found_children = set([self])
+    root_tasks = set([self])
+    self.children_helper(found_children, root_tasks, 0)
+    return found_children
+
+  def descendents_helper(self, found_children, curr_level_tasks, depth):
+    new_level_tasks = set()
+
+    # get all the items from the current level tasks task 
+    child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
+
+    # get all the tasks they were input into
+    for input in Input.objects.filter(input_item__in=child_items).select_related():
+      t = input.task
+      if t not in found_children:
+        new_level_tasks.add(input.task)
+        found_children.add(input.task)
+
+    if len(new_level_tasks) > 0:
+      self.children_helper(found_children, new_level_tasks, depth+1)
 
 
 class Item(models.Model):
@@ -92,16 +133,10 @@ class Input(models.Model):
 #  def __str__(self):
 #    return self.input_item
 
-class Attribute(models.Model):
-  process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
-  name = models.CharField(max_length=20)
-  rank = models.PositiveSmallIntegerField(default=0)
-
-  def __str__(self):
-    return self.name
-
 class TaskAttribute(models.Model):
   attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+
