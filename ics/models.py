@@ -81,9 +81,6 @@ class Task(models.Model):
       else:
         self.display = self.label
 
-
-
-
   def getItems(self):
     return self.item_set.all()
 
@@ -95,6 +92,30 @@ class Task(models.Model):
 
   def getTaskAttributes(self):
     return self.taskattribute_set.all()
+
+  # tree traversal - finds all the children of the node that this is called on
+  # returns a set([<Task object>])
+  def descendents(self):
+    found_children = set([self])
+    root_tasks = set([self])
+    self.children_helper(found_children, root_tasks, 0)
+    return found_children
+
+  def descendents_helper(self, found_children, curr_level_tasks, depth):
+    new_level_tasks = set()
+
+    # get all the items from the current level tasks task 
+    child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
+
+    # get all the tasks they were input into
+    for input in Input.objects.filter(input_item__in=child_items).select_related():
+      t = input.task
+      if t not in found_children:
+        new_level_tasks.add(input.task)
+        found_children.add(input.task)
+
+    if len(new_level_tasks) > 0:
+      self.children_helper(found_children, new_level_tasks, depth+1)
 
 
 class Item(models.Model):
@@ -117,3 +138,5 @@ class TaskAttribute(models.Model):
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+
