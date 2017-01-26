@@ -145,15 +145,11 @@ class Filters extends React.Component {
     return (
       <div className="filters">
         <div className="inputs">
-
-          <div className="input-col">
             <div>
-              <h1>By process:</h1>
               <Multiselect options={this.props.processes} placeholder="All processes" onChange={(val) => this.handleProcessChange(val)}/>
             </div>
 
             <div>
-              <h1>By origin:</h1>
               <Multiselect options={this.props.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
             </div>
 
@@ -162,12 +158,6 @@ class Filters extends React.Component {
               <Datepicker onChange={(val) => this.handleDateRangeChange(val)} />              
             </div>
 
-            <div>
-              <button onClick={() => this.props.onFilter(this.state)}>Filter</button>
-            </div>
-          </div>
-
-          <div className="input-col">
             <div>
               <h1>By parent:</h1>
               <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleParentChange(val)} />
@@ -178,14 +168,9 @@ class Filters extends React.Component {
               <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChildChange(val)} />
             </div>
 
-            <div>
-              <input type="checkbox" onChange={this.handleInventoryChange} value={this.state.inventory} />
-              <span> Show current inventory </span>
-            </div>
           </div>
 
         </div>
-      </div>
     );
   }
 }

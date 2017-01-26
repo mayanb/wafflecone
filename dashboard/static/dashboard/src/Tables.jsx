@@ -22,7 +22,7 @@ export function TableList(props) {
 
 function Table(props) {
   return (
-    <div className="card">
+    <div className="">
       <TableHeader title={props.process.name} csv={toCSV(props.process, props.tasks)}/>
 
       <div className="card-container">

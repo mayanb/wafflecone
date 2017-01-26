@@ -1,0 +1,85 @@
+.filters {
+
+	.inputs {
+		display: flex;
+		flex-direction: column;
+		
+		& > div {
+			margin-bottom: 16px;
+		}
+
+
+		h1 {
+			font-size: 13px;
+			color: rgba(0,0,0,0.4);
+			font-weight: normal;
+			margin: 4px 0px;
+		}
+
+	}
+
+	.multiselect {
+		padding-right: 24px;
+
+		&:last-child {
+			padding-right: 0px;
+		}
+
+	}
+}
+
+.Select-control {
+	border: none;
+	border-radius: 0;
+	border-bottom: 2px solid rgba(0,0,0,0.1);
+}
+
+.Select-placeholder {
+	padding: 0;
+}
+
+.dates {
+	border-radius: 2px;
+	border: 1px solid rgba(0,0,0,0.2);
+	color: rgba(0,0,0,0.87);
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	background-color: white;
+
+	span, i {
+		flex: 1;
+		display: inline-block;
+		line-height: 34px;
+		margin-left: 8px;
+		margin-right: 8px;
+	}
+
+	i {
+		flex: 0;
+		font-size: 20px;
+	}
+
+	display:inline-flex;
+	vertical-align: middle;
+}
+
+
+ul div.menuContentWrapper div.rdr-Days {
+	white-space: normal;
+}
+
+button {
+	background-color: $primary;
+	padding: 8px 16px;
+	color: white;
+	text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border: none;
+    border-radius:2px;
+    -webkit-font-smoothing: antialiased;
+}

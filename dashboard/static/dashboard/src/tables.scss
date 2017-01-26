@@ -1,0 +1,68 @@
+$table-border: 1px solid rgba(0,0,0,0.04);
+$pink: rgb(255,82,82);
+
+.card-container table {
+
+	border-collapse:collapse;
+	width:100%;
+
+	td {
+		min-width: 140px;
+		line-height: 16px;
+		padding: 16px 0px;
+
+		&:first-child {
+			min-width: 200px;
+		}
+	}
+
+	thead {
+		color: rgba(0,0,0,0.54);
+		font-size: 13px;
+		font-weight:400;
+	}
+
+	tbody td {
+		color: rgba(0,0,0,0.87);
+		font-size:14px;
+
+		&:first-child {
+			font-family: 'Overpass Mono';
+			font-weight: 700
+		}
+	}
+
+	tbody tr {
+		border-top: $table-border;
+
+		&:first-child {
+			border-color: rgba(0,0,0,0.2);
+		}
+
+		&:last-child {
+			border-bottom: 1px solid #eee;
+		}
+	}
+
+	.zero-cell {
+		color: rgba(0,0,0,0.3)
+	}
+}
+
+.toolbar {
+	display: flex;
+	width: 100%;
+	//padding: 16px 24px;
+	vertical-align: center;
+
+	h1, i {
+		//padding: 0px 24px;
+		line-height: 80px;
+		margin: 0;
+	}
+
+	h1 {
+		font-size: 20px;
+		flex: 1;
+	}
+}

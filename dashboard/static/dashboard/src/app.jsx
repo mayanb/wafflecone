@@ -5,6 +5,9 @@ import {Table, TableList} from './Tables.jsx';
 import { Filters } from './Inputs.jsx';
 import { Navbar } from './Layout.jsx'
 
+//<TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
+//<Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
+
 function SectionHeader(props) {
   return (
     <div className="section-header">
@@ -30,15 +33,19 @@ class Main extends React.Component {
   render() {
     return (
       <div className="parent">
-        <Navbar />
-        <div className="content">
-          <div className="container">
-            <SectionHeader title="Filters" icon="filter_list" />
-            <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
-            <SectionHeader title="Results" icon="grain"/>
+        <div className="content-area">
+          <Navbar title="Task Log" title2="Inventory"/>
+          <div className="content">
             <TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
           </div>
         </div>
+        <div className="sidebar">
+          <Navbar title="dsa"/>
+          <div className="content">
+            <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
+          </div>
+        </div>
+
       </div>
     );
   }
