@@ -19,6 +19,9 @@ class ProcessType(models.Model):
   def __str__(self):
     return self.name
 
+  def getAllAttributes(self):
+    return self.attribute_set.all()
+
 class ProductType(models.Model):
   name = models.CharField(max_length=20)
   code = models.CharField(max_length=20)
@@ -81,8 +84,11 @@ class Task(models.Model):
       else:
         self.display = self.label
 
-  def getItems(self):
+  def getAllItems(self):
     return self.item_set.all()
+
+  def getInventoryItems(self):
+    return self.item_set.filter(input__isnull=True)
 
   def getInputs(self):
     return self.input_set.all()
@@ -96,26 +102,48 @@ class Task(models.Model):
   # tree traversal - finds all the children of the node that this is called on
   # returns a set([<Task object>])
   def descendents(self):
-    found_children = set([self])
+    all_descendents = set([self.id])
     root_tasks = set([self])
-    self.children_helper(found_children, root_tasks, 0)
-    return found_children
+    self.descendents_helper(all_descendents, root_tasks, 0)
+    return Task.objects.filter(id__in=all_descendents)
 
-  def descendents_helper(self, found_children, curr_level_tasks, depth):
+  def descendents_helper(self, all_descendents, curr_level_tasks, depth):
     new_level_tasks = set()
 
     # get all the items from the current level tasks task 
     child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
 
     # get all the tasks they were input into
-    for input in Input.objects.filter(input_item__in=child_items).select_related():
+    child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
+
+    for input in child_task_rel:
       t = input.task
-      if t not in found_children:
+      if t.id not in all_descendents:
         new_level_tasks.add(input.task)
-        found_children.add(input.task)
+        all_descendents.add(input.task.id)
 
     if len(new_level_tasks) > 0:
-      self.children_helper(found_children, new_level_tasks, depth+1)
+      self.descendents_helper(all_descendents, new_level_tasks, depth+1)
+
+
+  def ancestors(self):
+    all_ancestors = set([self.id])
+    curr_level_tasks = set([self])
+    self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
+    return Task.objects.filter(id__in=all_ancestors)
+
+  def ancestors_helper(self, all_ancestors, curr_level_tasks, depth):
+    new_level_tasks = set()
+
+    parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
+
+    for t in parent_tasks:
+      if t.id not in all_ancestors:
+        new_level_tasks.add(t)
+        all_ancestors.add(t.id)
+
+    if len(new_level_tasks) > 0:
+      self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
 
 class Item(models.Model):

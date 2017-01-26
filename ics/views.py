@@ -9,13 +9,16 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
+import datetime
 
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
     created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
+    label = django_filters.CharFilter(name="label", lookup_expr="istartswith")
+
     class Meta:
         model = Task
-        fields = ['created_at', 'label', 'is_open']
+        fields = ['created_at', 'label', 'is_open',]
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
@@ -29,12 +32,46 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 
 # tasks/
 class TaskList(generics.ListAPIView):
-  queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
   filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_class = TaskFilter
   ordering_fields = ('updated_at', 'created_at', 'label_index')
   pagination_class = SmallPagination
+
+  def get_queryset(self):
+        queryset = Task.objects.all()
+
+        parent = self.request.query_params.get('parent', None)
+        if parent is not None:
+          queryset = Task.objects.get(pk=parent).descendents()
+
+        inventory = self.request.query_params.get('inventory', None)
+        if inventory is not None:
+          queryset = queryset.filter(item__isnull=False, item__input__isnull=True).distinct()
+
+        processes = self.request.query_params.get('processes', None)
+        if processes is not None:
+          processes = processes.strip().split(',')
+          queryset = queryset.filter(process_type__in=processes)
+
+        products = self.request.query_params.get('products', None)
+        if products is not None:
+          products = products.strip().split(',')
+          queryset = queryset.filter(product_type__in=products)
+
+        start = self.request.query_params.get('start', None)
+        end = self.request.query_params.get('end', None)
+        if start is not None and end is not None:
+          start = start.strip().split('-')
+          end = end.strip().split('-')
+          startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
+          endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
+          queryset = queryset.filter(created_at__date__range=(startDate, endDate))
+
+        return queryset
+
+  def get_serializer_context(self):
+    return {"inventory": self.request.query_params.get('inventory', None)}
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):

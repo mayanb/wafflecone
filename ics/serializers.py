@@ -1,15 +1,21 @@
 from rest_framework import serializers
 from ics.models import *
 
+class AttributeSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Attribute
+    fields = ('id', 'process_type', 'name')
+
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
     fields = ('id', 'name')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
+  attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon')
+    fields = ('id', 'name', 'code', 'icon', 'attributes')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
@@ -53,11 +59,6 @@ class NestedInputSerializer(serializers.ModelSerializer):
     model = Input
     fields = ('id', 'input_item', 'task')
 
-class AttributeSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = Attribute
-    fields = ('id', 'process_type', 'name')
-
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = TaskAttribute
@@ -72,10 +73,17 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 # serializes all fields of the task, with nested items, inputs, and attributes
 class NestedTaskSerializer(serializers.ModelSerializer):
-  items = BasicItemSerializer(source='getItems', read_only=True, many=True)
+  items = serializers.SerializerMethodField('getItems')
+  #items = BasicItemSerializer(source='getInventoryItems', read_only=True, many=True)
   inputs = BasicInputSerializer(source='getInputs', read_only=True, many=True)
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   attribute_values = BasicTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
+
+  def getItems(self, task):
+     if self.context['inventory'] is True:
+       return BasicItemSerializer(task.item_set.all().filter(input__isnull=True), many=True).data
+     else:
+      return BasicItemSerializer(task.item_set.all(), many=True).data
 
   class Meta:
     model = Task

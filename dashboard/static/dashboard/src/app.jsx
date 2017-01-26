@@ -5,16 +5,24 @@ import {Table, TableList} from './Tables.jsx';
 import { Filters } from './Inputs.jsx';
 import { Navbar } from './Layout.jsx'
 
-
-// <Multiselect options={this.state.products} placeholder="Filter by product..."/>
+function SectionHeader(props) {
+  return (
+    <div className="section-header">
+      <i className="material-icons">{props.icon}</i>
+      <h1>{props.title}</h1>
+    </div>
+  );
+}
 
 class Main extends React.Component {
   constructor() {
     super();
-
+    this.handleFilter = this.handleFilter.bind(this);
     this.state = {
       taskGroups: {},
+      processes: {},
       products: {},
+      filterDisabled: false
     };
 
   }
@@ -25,7 +33,9 @@ class Main extends React.Component {
         <Navbar />
         <div className="content">
           <div className="container">
-            <Filters processes={this.state.processes} products={this.state.products}/>
+            <SectionHeader title="Filters" icon="filter_list" />
+            <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
+            <SectionHeader title="Results" icon="grain"/>
             <TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
           </div>
         </div>
@@ -40,7 +50,7 @@ class Main extends React.Component {
 
     defs.push(this.getProcesses(newState));
     defs.push(this.getProducts(newState));
-    defs.push(this.getTasks(newState));
+    defs.push(this.getTasks(newState, ""));
 
     var component = this
 
@@ -49,10 +59,10 @@ class Main extends React.Component {
     });
   }
 
-  getTasks(container) {
+  getTasks(container, querystring) {
     var deferred = $.Deferred();
 
-    $.ajax(window.location.origin + "/ics/tasks/")
+    $.ajax(window.location.origin + "/ics/tasks/?" + querystring)
       .done(function (data) {
         container.taskGroups = splitTasksByProcess(data.results);
         deferred.resolve();
@@ -84,6 +94,51 @@ class Main extends React.Component {
 
     return deferred.promise()
   }
+
+  handleFilter(state) {
+    this.setState({filterDisabled: true})
+
+    var filters = {}
+
+    if (state.inventory)
+      filters.inventory = "True";
+
+    if (!state.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
+      filters.start = state.start
+      filters.end = state.end
+    }
+
+    if (state.processes.length > 0)
+      filters.processes = state.processes.map(function (x) {
+        return x.value
+      }).join(",")
+
+    if (state.products.length > 0)
+      filters.products = state.products.map(function (x) {
+        return x.value
+      }).join(",")
+
+    if (state.parent && state.parent != "") {
+      filters.parent = state.parent
+    }
+
+    if (state.child && state.child != "") {
+      filters.child = state.child
+    }
+
+    var thisObj = this
+
+     $.get(window.location.origin + "/ics/tasks/", filters)
+      .done(function (data) {
+        var taskGroups = splitTasksByProcess(data.results);
+        thisObj.setState({taskGroups : taskGroups})
+      }).always(function () {
+        thisObj.setState({filterDisabled: false})
+      })
+
+  }
+
+
 }
 
 function mapifyProcesses(processes) {

@@ -10,15 +10,19 @@ html, body {
   padding: 0; }
 
 body {
-  font-family: Proxima Nova, sans-serif;
+  font-family: Overpass, Proxima Nova, sans-serif;
   font-size: 0.95em;
-  background-color: #eeeeee; }
+  background-color: #F4F4F4; }
 
 .navbar {
-  background-color: #C30017;
+  background-color: transparent;
   padding: 0px 24px;
-  color: white;
-  -webkit-font-smoothing: antialiased; }
+  color: rgba(0, 0, 0, 0.87);
+  -webkit-font-smoothing: antialiased;
+  width: 100%;
+  flex: 0;
+  position: fixed;
+  top: 0; }
   .navbar h1 {
     font-weight: normal;
     font-size: 20px;
@@ -43,11 +47,31 @@ html, body, #root, .parent {
     flex: 1;
     /* same as flex: 1 1 auto; */
     display: flex;
-    flex-direction: column; }
+    flex-direction: column;
+    overflow: auto; }
     .parent .content .container {
-      width: 800px;
-      max-width: 800px;
+      width: 900px;
+      max-width: 900px;
       margin: 0 auto; }
+
+.section-header {
+  display: flex;
+  flex-direction: row;
+  margin: 16px 24px;
+  padding-top: 40px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3); }
+  .section-header i {
+    flex: 0;
+    display: inline-block;
+    line-height: 24px;
+    margin-right: 16px; }
+  .section-header h1 {
+    flex: 1;
+    font-weight: normal;
+    margin: 0;
+    line-height: 24px;
+    font-size: 24px; }
 
 .toolbar {
   display: flex;
@@ -67,22 +91,26 @@ i.material-icons {
     color: blue; }
 
 .card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
   margin: 24px;
   border-radius: 2px;
   width: 100%;
   background-color: white; }
 
 .card-container {
-  padding-bottom: 56px; }
+  padding-bottom: 56px;
+  position: relative;
+  overflow-x: auto; }
 
 .card-container table {
   border-collapse: collapse;
   width: 100%; }
   .card-container table td {
-    min-width: 90px;
-    line-height: 48px; }
+    min-width: 140px;
+    line-height: 16px;
+    padding: 16px; }
     .card-container table td:first-child {
+      min-width: 200px;
       padding-left: 24px; }
   .card-container table thead {
     color: rgba(0, 0, 0, 0.54);
@@ -91,45 +119,73 @@ i.material-icons {
   .card-container table tbody td {
     color: rgba(0, 0, 0, 0.87);
     font-size: 14px; }
+    .card-container table tbody td:first-child {
+      font-family: 'Overpass Mono';
+      font-weight: 700; }
   .card-container table tbody tr {
     border-top: 1px solid #eee; }
     .card-container table tbody tr:last-child {
       border-bottom: 1px solid #eee; }
+  .card-container table .zero-cell {
+    color: rgba(0, 0, 0, 0.3); }
 
 .filters {
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  background-color: white; }
-  .filters > div {
+  margin: 16px 24px; }
+  .filters .inputs {
     display: flex;
-    flex-direction: row;
-    max-width: 600px; }
+    flex-direction: row; }
+    .filters .inputs .input-col {
+      display: flex;
+      flex-direction: column;
+      flex: 1; }
+      .filters .inputs .input-col > div {
+        margin-bottom: 16px; }
+      .filters .inputs .input-col:last-child {
+        margin-left: 24px; }
+    .filters .inputs h1 {
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.4);
+      font-weight: normal; }
   .filters .multiselect {
-    flex-grow: 1;
     padding-right: 24px; }
     .filters .multiselect:last-child {
       padding-right: 0px; }
-  .filters h1 {
-    font-size: 13px;
-    color: rgba(0, 0, 0, 0.54); }
 
 .dates {
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.2);
-  padding: 0 10px;
-  color: #aaaaaa;
+  color: rgba(0, 0, 0, 0.87);
   width: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: white;
   display: inline-flex;
   vertical-align: middle; }
   .dates span, .dates i {
+    flex: 1;
     display: inline-block;
     line-height: 34px;
-    padding-right: 10px; }
+    margin-left: 8px;
+    margin-right: 8px; }
   .dates i {
+    flex: 0;
     font-size: 20px; }
 
 ul div.menuContentWrapper div.rdr-Days {
   white-space: normal; }
+
+button {
+  background-color: #C30017;
+  padding: 8px 16px;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border: none;
+  border-radius: 2px;
+  -webkit-font-smoothing: antialiased; }
 
 /*# sourceMappingURL=styles.css.map */
