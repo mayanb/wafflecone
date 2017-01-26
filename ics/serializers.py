@@ -27,13 +27,13 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 class EditTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
-    fields = ('label', 'is_open', 'label_index', 'custom_display')
+    fields = ('label', 'is_open', 'label_index', 'custom_display', 'is_trashed')
 
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display')
+    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
 
 class BasicItemSerializer(serializers.ModelSerializer):
   class Meta:
