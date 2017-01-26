@@ -22,12 +22,12 @@ class TaskFilter(django_filters.rest_framework.FilterSet):
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
-  queryset = Task.objects.all()
+  queryset = Task.objects.filter(is_trashed=False)
   serializer_class = BasicTaskSerializer
 
 # tasks/edit/xxx
 class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Task.objects.all()
+  queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
 # tasks/
@@ -39,7 +39,7 @@ class TaskList(generics.ListAPIView):
   pagination_class = SmallPagination
 
   def get_queryset(self):
-        queryset = Task.objects.all()
+        queryset = Task.objects.filter(is_trashed=False)
 
         parent = self.request.query_params.get('parent', None)
         if parent is not None:
@@ -75,7 +75,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.all()
+  queryset = Task.objects.filter(is_trashed=False)
   serializer_class = NestedTaskSerializer
 
 
