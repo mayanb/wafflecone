@@ -47,7 +47,6 @@ class Task(models.Model):
   created_by = models.ForeignKey(User, on_delete=models.CASCADE)
   is_open = models.BooleanField(default=True)
   is_trashed = models.BooleanField(default=False)
-
   created_at = models.DateTimeField(auto_now_add=True, db_index=True)
   updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
