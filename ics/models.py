@@ -49,7 +49,7 @@ class Task(models.Model):
   is_trashed = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True, db_index=True)
   updated_at = models.DateTimeField(auto_now=True, db_index=True)
-
+ 
   def __str__(self):
     if self.custom_display:
       return self.custom_display
@@ -152,7 +152,7 @@ class Item(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):
-    return self.item_qr
+    return str(self.creating_task) + " - " + self.item_qr[-6:]
 
 class Input(models.Model):
   input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
