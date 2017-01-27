@@ -53,6 +53,8 @@ html, body, #root, .parent {
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   background-color: white;
   z-index: 999; }
+  .parent .sidebar .content {
+    margin: 0; }
 
 i.material-icons {
   color: rgba(0, 0, 0, 0.5); }
@@ -113,8 +115,49 @@ i.material-icons {
 .filters .inputs {
   display: flex;
   flex-direction: column; }
-  .filters .inputs > div {
-    margin-bottom: 16px; }
+  .filters .inputs .section {
+    padding: 12px 24px;
+    border-top: 1px solid #eee; }
+    .filters .inputs .section .section-content > div {
+      margin-bottom: 16px; }
+    .filters .inputs .section.inactive > .section-content {
+      max-height: 0;
+      padding-top: 0px;
+      overflow: hidden; }
+    .filters .inputs .section.active > .section-content {
+      max-height: 999;
+      padding-top: 16px;
+      overflow: initial; }
+    .filters .inputs .section .header {
+      cursor: pointer; }
+    .filters .inputs .section h2 {
+      font-size: 12px;
+      font-weight: normal;
+      color: rgba(0, 0, 0, 0.87);
+      margin: 0;
+      display: inline-block;
+      vertical-align: middle; }
+    .filters .inputs .section .header i {
+      font-size: 16px;
+      line-height: 24px;
+      display: inline-block;
+      vertical-align: middle;
+      -webkit-transition-duration: 0.2s;
+      -moz-transition-duration: 0.2s;
+      -o-transition-duration: 0.2s;
+      transition-duration: 0.2s;
+      -webkit-transition-property: -webkit-transform;
+      -moz-transition-property: -moz-transform;
+      -o-transition-property: -o-transform;
+      transition-property: transform; }
+    .filters .inputs .section.active h2 {
+      color: #C30017; }
+    .filters .inputs .section.active .header i {
+      -webkit-transform: rotate(90deg);
+      -moz-transform: rotate(90deg);
+      -ms-transform: rotate(90deg);
+      -o-transform: rotate(90deg);
+      transform: rotate(90deg); }
   .filters .inputs h1 {
     font-size: 13px;
     color: rgba(0, 0, 0, 0.4);

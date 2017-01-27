@@ -74,9 +74,6 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	//<TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
-	//<Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
-
 	function SectionHeader(props) {
 	  return _react2.default.createElement(
 	    'div',
@@ -106,8 +103,7 @@
 	    _this.state = {
 	      taskGroups: {},
 	      processes: {},
-	      products: {},
-	      filterDisabled: false
+	      products: {}
 	    };
 
 	    return _this;
@@ -134,13 +130,13 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'sidebar' },
-	          _react2.default.createElement(_Layout.Navbar, { title: 'dsa' }),
+	          _react2.default.createElement(_Layout.Navbar, { title: 'none' }),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'content' },
 	            _react2.default.createElement(_Inputs.Filters, { processes: this.state.processes, products: this.state.products, onFilter: function onFilter(state) {
 	                return _this2.handleFilter(state);
-	              }, disabled: this.state.filterDisabled })
+	              } })
 	          )
 	        )
 	      );
@@ -164,10 +160,10 @@
 	    }
 	  }, {
 	    key: 'getTasks',
-	    value: function getTasks(container, querystring) {
+	    value: function getTasks(container, filters) {
 	      var deferred = _jquery2.default.Deferred();
 
-	      _jquery2.default.ajax(window.location.origin + "/ics/tasks/?" + querystring).done(function (data) {
+	      _jquery2.default.get(window.location.origin + "/ics/tasks/", filters).done(function (data) {
 	        container.taskGroups = splitTasksByProcess(data.results);
 	        deferred.resolve();
 	      });
@@ -199,9 +195,8 @@
 	      return deferred.promise();
 	    }
 	  }, {
-	    key: 'handleFilter',
-	    value: function handleFilter(state) {
-	      this.setState({ filterDisabled: true });
+	    key: 'parseFilters',
+	    value: function parseFilters(state) {
 
 	      var filters = {};
 
@@ -212,11 +207,11 @@
 	        filters.end = state.end;
 	      }
 
-	      if (state.processes.length > 0) filters.processes = state.processes.map(function (x) {
+	      if (state.processes && state.processes.length > 0) filters.processes = state.processes.map(function (x) {
 	        return x.value;
 	      }).join(",");
 
-	      if (state.products.length > 0) filters.products = state.products.map(function (x) {
+	      if (state.products && state.products.length > 0) filters.products = state.products.map(function (x) {
 	        return x.value;
 	      }).join(",");
 
@@ -228,13 +223,19 @@
 	        filters.child = state.child;
 	      }
 
+	      return filters;
+	    }
+	  }, {
+	    key: 'handleFilter',
+	    value: function handleFilter(state) {
+	      var filters = this.parseFilters(state);
 	      var thisObj = this;
+	      var newState = {};
 
-	      _jquery2.default.get(window.location.origin + "/ics/tasks/", filters).done(function (data) {
-	        var taskGroups = splitTasksByProcess(data.results);
-	        thisObj.setState({ taskGroups: taskGroups });
-	      }).always(function () {
-	        thisObj.setState({ filterDisabled: false });
+	      var defs = [this.getTasks(newState, filters)];
+
+	      _jquery2.default.when.apply(null, defs).done(function () {
+	        thisObj.setState(newState);
 	      });
 	    }
 	  }]);
@@ -47249,40 +47250,65 @@
 	      products: [],
 	      parent: "",
 	      start: "",
-	      end: ""
+	      end: "",
+	      active: 1
+
 	    };
 	    return _this3;
 	  }
 
 	  _createClass(Filters, [{
+	    key: 'handleFilter',
+	    value: function handleFilter() {
+	      var filters = {};
+
+	      if (this.state.active == 1) {
+	        filters.processes = this.state.processes;
+	        filters.products = this.state.products;
+	        filters.start = this.state.start;
+	        filters.end = this.state.end;
+	      } else if (this.state.active == 2) {
+	        filters.parent = this.state.parent;
+	      } else if (this.state.active == 3) {
+	        filters.child = this.state.child;
+	      }
+
+	      this.props.onFilter(filters);
+	    }
+	  }, {
+	    key: 'switchActive',
+	    value: function switchActive(x) {
+	      this.setState({ active: x }, this.handleFilter);
+	    }
+	  }, {
 	    key: 'handleInventoryChange',
 	    value: function handleInventoryChange() {
-	      this.setState({ inventory: !this.state.inventory });
+	      this.setState({ inventory: !this.state.inventory }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleProcessChange',
 	    value: function handleProcessChange(val) {
-	      this.setState({ processes: val });
+	      this.setState({ processes: val }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleProductChange',
 	    value: function handleProductChange(val) {
-	      this.setState({ products: val });
+	      this.setState({ products: val }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleDateRangeChange',
 	    value: function handleDateRangeChange(val) {
-	      this.setState(val);
+	      this.setState(val, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleParentChange',
 	    value: function handleParentChange(val) {
-	      this.setState({ parent: val.value });
+	      this.setState({ parent: val.value }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleChildChange',
 	    value: function handleChildChange(val) {
-	      this.setState({ child: val.value });
+	      this.setState({ child: val.value }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'render',
@@ -47297,53 +47323,110 @@
 	          { className: 'inputs' },
 	          _react2.default.createElement(
 	            'div',
-	            null,
-	            _react2.default.createElement(Multiselect, { options: this.props.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                return _this4.handleProcessChange(val);
-	              } })
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            null,
-	            _react2.default.createElement(Multiselect, { options: this.props.products, placeholder: 'All products', onChange: function onChange(val) {
-	                return _this4.handleProductChange(val);
-	              } })
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            null,
+	            { className: (this.state.active == 1 ? "active" : "inactive") + " section" },
 	            _react2.default.createElement(
-	              'h1',
-	              null,
-	              'By operation date:'
+	              'div',
+	              { className: 'header', onClick: function onClick() {
+	                  return _this4.switchActive(1);
+	                } },
+	              _react2.default.createElement(
+	                'i',
+	                { className: 'material-icons' },
+	                'chevron_right'
+	              ),
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' General '
+	              )
 	            ),
-	            _react2.default.createElement(_Datepicker2.default, { onChange: function onChange(val) {
-	                return _this4.handleDateRangeChange(val);
-	              } })
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'section-content' },
+	              _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(Multiselect, { options: this.props.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	                    return _this4.handleProcessChange(val);
+	                  } })
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(Multiselect, { options: this.props.products, placeholder: 'All products', onChange: function onChange(val) {
+	                    return _this4.handleProductChange(val);
+	                  } })
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(_Datepicker2.default, { onChange: function onChange(val) {
+	                    return _this4.handleDateRangeChange(val);
+	                  } })
+	              )
+	            )
 	          ),
 	          _react2.default.createElement(
 	            'div',
-	            null,
+	            { className: (this.state.active == 2 ? "active" : "inactive") + " section" },
 	            _react2.default.createElement(
-	              'h1',
-	              null,
-	              'By parent:'
+	              'div',
+	              { className: 'header', onClick: function onClick() {
+	                  return _this4.switchActive(2);
+	                } },
+	              _react2.default.createElement(
+	                'i',
+	                { className: 'material-icons' },
+	                'chevron_right'
+	              ),
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' By parent '
+	              )
 	            ),
-	            _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
-	                return _this4.handleParentChange(val);
-	              } })
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'section-content' },
+	              _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
+	                    return _this4.handleParentChange(val);
+	                  } })
+	              )
+	            )
 	          ),
 	          _react2.default.createElement(
 	            'div',
-	            null,
+	            { className: (this.state.active == 3 ? "active" : "inactive") + " section" },
 	            _react2.default.createElement(
-	              'h1',
-	              null,
-	              'By child:'
+	              'div',
+	              { className: 'header', onClick: function onClick() {
+	                  return _this4.switchActive(3);
+	                } },
+	              _react2.default.createElement(
+	                'i',
+	                { className: 'material-icons' },
+	                'chevron_right'
+	              ),
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' By child '
+	              )
 	            ),
-	            _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
-	                return _this4.handleChildChange(val);
-	              } })
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'section-content' },
+	              _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
+	                    return _this4.handleChildChange(val);
+	                  } })
+	              )
+	            )
 	          )
 	        )
 	      );
@@ -49731,7 +49814,7 @@
 	  }, {
 	    key: 'handleMenuOpen',
 	    value: function handleMenuOpen(e) {
-	      this.setState({ active: !this.state.active, x: e.pageX, y: e.pageY });
+	      this.setState({ active: !this.state.active, x: e.pageX - 1000, y: e.pageY });
 	    }
 	  }, {
 	    key: 'handleMenuHide',
@@ -49751,7 +49834,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var format = 'D MMMM YYYY';
+	      var format = 'MM/DD/YYYY';
 	      var predefined = this.state.predefined;
 
 

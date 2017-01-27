@@ -81,6 +81,10 @@ html, body, #root, .parent {
 		border-left: $section-border;
 		background-color: white;
 		z-index: 999;
+
+		.content {
+			margin: 0;
+		}
 	}
 
 }

@@ -113,59 +113,102 @@ class Filters extends React.Component {
       products: [],
       parent: "",
       start: "",
-      end: ""
+      end: "",
+      active: 1
+
     }
   }
 
+  handleFilter() {
+    var filters = {}
+
+    if (this.state.active == 1) {
+      filters.processes = this.state.processes
+      filters.products = this.state.products
+      filters.start = this.state.start
+      filters.end = this.state.end
+    } else if (this.state.active == 2) {
+      filters.parent = this.state.parent
+    } else if (this.state.active == 3) {
+      filters.child = this.state.child
+    }
+
+    this.props.onFilter(filters)
+
+  }
+
+  switchActive(x) {
+    this.setState({active : x}, this.handleFilter)
+  }
+
   handleInventoryChange() {
-    this.setState({inventory: !this.state.inventory })
+    this.setState({inventory: !this.state.inventory }, this.handleFilter)
   }
 
   handleProcessChange(val) {
-    this.setState({processes: val})
+    this.setState({processes: val}, this.handleFilter)
   }
 
   handleProductChange(val) {
-    this.setState({products: val})
+    this.setState({products: val}, this.handleFilter)
   }
 
   handleDateRangeChange(val) {
-    this.setState(val)
+    this.setState(val, this.handleFilter)
   }
 
   handleParentChange(val) {
-    this.setState({parent: val.value})
+    this.setState({parent: val.value}, this.handleFilter)
   }
 
   handleChildChange(val) {
-    this.setState({child: val.value})
+    this.setState({child: val.value}, this.handleFilter)
   }
 
   render () {
     return (
       <div className="filters">
         <div className="inputs">
-            <div>
-              <Multiselect options={this.props.processes} placeholder="All processes" onChange={(val) => this.handleProcessChange(val)}/>
+
+            <div className={((this.state.active == 1)?"active":"inactive") + " section"}>
+              <div className="header" onClick={() => this.switchActive(1)}>
+                <i className="material-icons">chevron_right</i><h2> General </h2>
+              </div>
+              <div className="section-content">
+                <div>
+                  <Multiselect options={this.props.processes} placeholder="All processes" onChange={(val) => this.handleProcessChange(val)}/>
+                </div>
+
+                <div>
+                  <Multiselect options={this.props.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
+                </div>
+
+                <div>
+                  <Datepicker onChange={(val) => this.handleDateRangeChange(val)} />              
+                </div>
+              </div>
             </div>
 
-            <div>
-              <Multiselect options={this.props.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
+            <div className={((this.state.active == 2)?"active":"inactive") + " section"}>
+              <div className="header" onClick={() => this.switchActive(2)}>
+                <i className="material-icons">chevron_right</i><h2> By parent </h2>
+              </div>
+              <div className="section-content">
+                <div>
+                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleParentChange(val)} />
+                </div>
+              </div>
             </div>
 
-            <div>
-              <h1>By operation date:</h1>
-              <Datepicker onChange={(val) => this.handleDateRangeChange(val)} />              
-            </div>
-
-            <div>
-              <h1>By parent:</h1>
-              <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleParentChange(val)} />
-            </div>
-
-            <div>
-              <h1>By child:</h1>
-              <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChildChange(val)} />
+            <div className={((this.state.active == 3)?"active":"inactive") + " section"}>
+              <div className="header" onClick={() => this.switchActive(3)}>
+                <i className="material-icons">chevron_right</i><h2> By child </h2>
+              </div>
+              <div className="section-content">
+                <div>
+                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChildChange(val)} />
+                </div>
+              </div>
             </div>
 
           </div>

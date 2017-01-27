@@ -31,7 +31,7 @@ export default class Datepicker extends React.Component {
   }
 
   handleMenuOpen(e) {
-     this.setState({ active: !this.state.active, x: e.pageX, y: e.pageY });
+     this.setState({ active: !this.state.active, x: e.pageX-1000, y: e.pageY });
   }
 
   handleMenuHide() {
@@ -49,7 +49,7 @@ export default class Datepicker extends React.Component {
   }
 
   render() {
-    const format = 'D MMMM YYYY';
+    const format = 'MM/DD/YYYY';
     const {  predefined } = this.state;
 
     return (

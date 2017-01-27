@@ -5,9 +5,6 @@ import {Table, TableList} from './Tables.jsx';
 import { Filters } from './Inputs.jsx';
 import { Navbar } from './Layout.jsx'
 
-//<TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
-//<Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
-
 function SectionHeader(props) {
   return (
     <div className="section-header">
@@ -25,7 +22,6 @@ class Main extends React.Component {
       taskGroups: {},
       processes: {},
       products: {},
-      filterDisabled: false
     };
 
   }
@@ -40,9 +36,9 @@ class Main extends React.Component {
           </div>
         </div>
         <div className="sidebar">
-          <Navbar title="dsa"/>
+          <Navbar title="none"/>
           <div className="content">
-            <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)} disabled={this.state.filterDisabled}/>
+            <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)}/>
           </div>
         </div>
 
@@ -66,10 +62,10 @@ class Main extends React.Component {
     });
   }
 
-  getTasks(container, querystring) {
+  getTasks(container, filters) {
     var deferred = $.Deferred();
 
-    $.ajax(window.location.origin + "/ics/tasks/?" + querystring)
+    $.get(window.location.origin + "/ics/tasks/", filters)
       .done(function (data) {
         container.taskGroups = splitTasksByProcess(data.results);
         deferred.resolve();
@@ -102,8 +98,7 @@ class Main extends React.Component {
     return deferred.promise()
   }
 
-  handleFilter(state) {
-    this.setState({filterDisabled: true})
+  parseFilters(state) {
 
     var filters = {}
 
@@ -115,12 +110,12 @@ class Main extends React.Component {
       filters.end = state.end
     }
 
-    if (state.processes.length > 0)
+    if (state.processes && state.processes.length > 0)
       filters.processes = state.processes.map(function (x) {
         return x.value
       }).join(",")
 
-    if (state.products.length > 0)
+    if (state.products && state.products.length > 0)
       filters.products = state.products.map(function (x) {
         return x.value
       }).join(",")
@@ -133,18 +128,20 @@ class Main extends React.Component {
       filters.child = state.child
     }
 
-    var thisObj = this
-
-     $.get(window.location.origin + "/ics/tasks/", filters)
-      .done(function (data) {
-        var taskGroups = splitTasksByProcess(data.results);
-        thisObj.setState({taskGroups : taskGroups})
-      }).always(function () {
-        thisObj.setState({filterDisabled: false})
-      })
-
+    return filters
   }
 
+  handleFilter(state) {
+    var filters = this.parseFilters(state)
+    var thisObj = this
+    var newState = {}
+
+    var defs = [this.getTasks(newState, filters)]
+
+    $.when.apply(null, defs).done(function() {
+      thisObj.setState(newState)
+    });
+  }
 
 }
 

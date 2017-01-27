@@ -3,10 +3,72 @@
 	.inputs {
 		display: flex;
 		flex-direction: column;
-		
-		& > div {
-			margin-bottom: 16px;
+
+		.section {
+			padding: 12px 24px;
+			border-top: 1px solid $light-grey;
+
+			.section-content {
+				& > div {
+					margin-bottom: 16px;
+				}
+			}
+
+			&.inactive > .section-content {
+				max-height: 0; 
+				padding-top: 0px;
+				overflow: hidden;
+			}
+
+			&.active > .section-content {
+				max-height: 999;
+				padding-top: 16px;
+				overflow: initial;
+			}
+
+			.header {
+				cursor: pointer;
+			}
+
+			h2 {
+				font-size: 12px;
+				font-weight: normal;
+				color: rgba(0,0,0,0.87);
+				margin: 0;
+				display: inline-block;
+				vertical-align: middle;
+			}
+
+			.header i {
+				font-size: 16px;
+				line-height: 24px;
+				display: inline-block;
+				vertical-align: middle;
+
+				-webkit-transition-duration: 0.2s;
+			    -moz-transition-duration: 0.2s;
+			    -o-transition-duration: 0.2s;
+			    transition-duration: 0.2s;
+
+				-webkit-transition-property: -webkit-transform;
+				-moz-transition-property: -moz-transform;
+				-o-transition-property: -o-transform;
+				transition-property: transform;
+			}
+
+			&.active {
+				h2 { color: $primary; }
+				.header i {
+					-webkit-transform: rotate(90deg);
+    				-moz-transform: rotate(90deg);
+    				-ms-transform: rotate(90deg);
+    				-o-transform: rotate(90deg);
+    				transform: rotate(90deg);
+				}
+
+			}
 		}
+	
 
 
 		h1 {
