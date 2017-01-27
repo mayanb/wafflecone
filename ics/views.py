@@ -45,8 +45,8 @@ class TaskList(generics.ListAPIView):
         if parent is not None:
           queryset = Task.objects.get(pk=parent).descendents()
 
-        inventory = self.request.query_params.get('inventory', None)
-        if inventory is not None:
+        inv = self.request.query_params.get('inventory', None)
+        if inv is not None:
           queryset = queryset.filter(item__isnull=False, item__input__isnull=True).distinct()
 
         processes = self.request.query_params.get('processes', None)
@@ -71,7 +71,7 @@ class TaskList(generics.ListAPIView):
         return queryset
 
   def get_serializer_context(self):
-    return {"inventory": self.request.query_params.get('inventory', None)}
+    return {"inventory": self.request.query_params.get('inventory', False)}
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):

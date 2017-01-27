@@ -80,7 +80,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
   attribute_values = BasicTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
 
   def getItems(self, task):
-     if self.context['inventory'] is True:
+     if self.context.get('inventory', False) is True:
        return BasicItemSerializer(task.item_set.all().filter(input__isnull=True), many=True).data
      else:
       return BasicItemSerializer(task.item_set.all(), many=True).data
