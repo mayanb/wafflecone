@@ -113,6 +113,8 @@ class Main extends React.Component {
     if (!processes) 
       processes = container.processes
 
+    console.log(processes)
+
     $.get(url, filters)
       .done(function (data) {
         container.count = data.results.length

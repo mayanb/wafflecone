@@ -211,6 +211,8 @@
 	      var processes = this.state.processes;
 	      if (!processes) processes = container.processes;
 
+	      console.log(processes);
+
 	      _jquery2.default.get(url, filters).done(function (data) {
 	        container.count = data.results.length;
 	        container.total = data.count;
