@@ -94,8 +94,10 @@ class Main extends React.Component {
     $.when.apply(null, defs).done(function() {
       var d2 = []
       d2.push(component.getTasks(newState, {}));
-      $.when.apply(null, defs).done(function () {
-        component.setState(newState)
+      $.when.apply(null, d2).done(function () {
+        component.setState(newState, function () {
+          console.log(component.state.processes)
+        })
       })
     })
   }
@@ -228,16 +230,12 @@ function splitTasksByProcess(tasks, processes) {
 
       // now check if the code matches anything
       Object.keys(processes).map(function (p) {
-        console.log(processes[p].code.toUpperCase())
         if (processes[p].code.toUpperCase() == label.toUpperCase())
           found = p
       })
 
       if (found == -1) {
         found = task.process_type
-        console.log("keeping " + task.custom_display + " as labeling")
-      } else {
-        console.log(task.custom_display + " is now " + processes[found].name)
       }
     }
 
