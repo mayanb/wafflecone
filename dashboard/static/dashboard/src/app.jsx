@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import $ from 'jquery';
 import {Table, TableList} from './Tables.jsx';
 import { Filters } from './Inputs.jsx';
-import { Navbar } from './Layout.jsx'
+import { Navbar, ContentDescriptor } from './Layout.jsx'
 
 function SectionHeader(props) {
   return (
@@ -22,6 +22,13 @@ class Main extends React.Component {
       taskGroups: {},
       processes: {},
       products: {},
+      count: 0,
+      total: 0,
+      active: 1,
+      previous: null,
+      next: null,
+      startIndex: 0,
+      currentPage: 1
     };
 
   }
@@ -30,20 +37,48 @@ class Main extends React.Component {
     return (
       <div className="parent">
         <div className="content-area">
-          <Navbar title="Task Log" title2="Inventory"/>
+          <Navbar options={["Activity Log", "Inventory", "Settings"]} active={this.state.active} onNav={ (x) => this.setState({active: x}) }/>
+
           <div className="content">
+            <ContentDescriptor count={this.state.count} total={this.state.total} previous={this.state.previous} next={this.state.next} startIndex={this.state.startIndex} onPage = { (x) => this.handlePage(x)}/>
             <TableList taskGroups={this.state.taskGroups} processes={this.state.processes}/>
           </div>
-        </div>
-        <div className="sidebar">
-          <Navbar title="none"/>
-          <div className="content">
-            <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)}/>
-          </div>
-        </div>
 
+          <div className="sidebar">
+              <Filters processes={this.state.processes} products={this.state.products} onFilter={(state) => this.handleFilter(state)}/>
+          </div>
+
+        </div>
       </div>
     );
+  }
+
+  handleNav(x) {
+    if (x > 1) {
+      return
+    }
+
+    this.setState({active: x})
+  }
+
+  handlePage(x) {
+    var thisObj = this
+    var newState = {}
+    var defs = [this.getTasks(newState, this.state.activeFilters, x)]
+
+    $.when.apply(null, defs).done(function() {
+      if (x < thisObj.state.currentPage) {
+        newState.startIndex = thisObj.state.startIndex - newState.count
+
+      } else {
+        newState.startIndex = thisObj.state.startIndex + thisObj.state.count
+      }
+      newState.currentPage = x
+      if (newState.currentPage == "2") {
+        newState.previous = "1"
+      }
+      thisObj.setState(newState)
+    });    
   }
 
   componentDidMount() {
@@ -53,21 +88,40 @@ class Main extends React.Component {
 
     defs.push(this.getProcesses(newState));
     defs.push(this.getProducts(newState));
-    defs.push(this.getTasks(newState, ""));
 
     var component = this
 
     $.when.apply(null, defs).done(function() {
-      component.setState(newState)
-    });
+      var d2 = []
+      d2.push(component.getTasks(newState, {}));
+      $.when.apply(null, defs).done(function () {
+        component.setState(newState)
+      })
+    })
   }
 
-  getTasks(container, filters) {
+  getTasks(container, filters, page) {
     var deferred = $.Deferred();
 
-    $.get(window.location.origin + "/ics/tasks/", filters)
+    var url = window.location.origin + "/ics/tasks/"
+
+    if (page) {
+      url += "?page=" + page
+    }
+
+    var processes = this.state.processes
+    if (!processes) 
+      processes = container.processes
+
+    $.get(url, filters)
       .done(function (data) {
-        container.taskGroups = splitTasksByProcess(data.results);
+        container.count = data.results.length
+        container.total = data.count
+        container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null
+        container.previous = data.previous && data.previous.match(/page=(\d*)/) ? data.previous.match(/page=(\d*)/)[1] : null
+        container.startIndex = 0
+        container.currentPage = 1
+        container.taskGroups = splitTasksByProcess(data.results, processes);
         deferred.resolve();
       })
 
@@ -102,8 +156,9 @@ class Main extends React.Component {
 
     var filters = {}
 
-    if (state.inventory)
-      filters.inventory = "True";
+    if (this.state.active == 1) {
+      filters.inventory = "True"
+    }
 
     if (!state.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
       filters.start = state.start
@@ -128,6 +183,7 @@ class Main extends React.Component {
       filters.child = state.child
     }
 
+    this.setState({activeFilters: filters})
     return filters
   }
 
@@ -153,14 +209,44 @@ function mapifyProcesses(processes) {
   return p
 }
 
-function splitTasksByProcess(tasks) {
+function splitTasksByProcess(tasks, processes) {
   var taskGroups = {}
-  tasks.map(function (task, i) {
-    if (!taskGroups[task.process_type])
-      taskGroups[task.process_type] = [];
 
-    taskGroups[task.process_type].push(task);
+  tasks.map(function (task, i) {
+
+    var found = -1
+
+    // if its a label
+    if (task.process_type == 1 && task.custom_display && processes) {
+
+      // get the code from here
+
+      var label = task.custom_display.split(/[\s-_]+/)
+      if (label.length > 0) {
+        label = label[0].substring(0,1)
+      }
+
+      // now check if the code matches anything
+      Object.keys(processes).map(function (p) {
+        console.log(processes[p].code.toUpperCase())
+        if (processes[p].code.toUpperCase() == label.toUpperCase())
+          found = p
+      })
+
+      if (found == -1) {
+        found = task.process_type
+        console.log("keeping " + task.custom_display + " as labeling")
+      } else {
+        console.log(task.custom_display + " is now " + processes[found].name)
+      }
+    }
+
+    if (!taskGroups[found])
+      taskGroups[found] = [];
+
+    taskGroups[found].push(task);
   });
+
   return taskGroups;
 }
 

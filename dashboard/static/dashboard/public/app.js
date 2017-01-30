@@ -103,7 +103,14 @@
 	    _this.state = {
 	      taskGroups: {},
 	      processes: {},
-	      products: {}
+	      products: {},
+	      count: 0,
+	      total: 0,
+	      active: 1,
+	      previous: null,
+	      next: null,
+	      startIndex: 0,
+	      currentPage: 1
 	    };
 
 	    return _this;
@@ -120,26 +127,55 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'content-area' },
-	          _react2.default.createElement(_Layout.Navbar, { title: 'Task Log', title2: 'Inventory' }),
+	          _react2.default.createElement(_Layout.Navbar, { options: ["Activity Log", "Inventory", "Settings"], active: this.state.active, onNav: function onNav(x) {
+	              return _this2.setState({ active: x });
+	            } }),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'content' },
+	            _react2.default.createElement(_Layout.ContentDescriptor, { count: this.state.count, total: this.state.total, previous: this.state.previous, next: this.state.next, startIndex: this.state.startIndex, onPage: function onPage(x) {
+	                return _this2.handlePage(x);
+	              } }),
 	            _react2.default.createElement(_Tables.TableList, { taskGroups: this.state.taskGroups, processes: this.state.processes })
-	          )
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'sidebar' },
-	          _react2.default.createElement(_Layout.Navbar, { title: 'none' }),
+	          ),
 	          _react2.default.createElement(
 	            'div',
-	            { className: 'content' },
+	            { className: 'sidebar' },
 	            _react2.default.createElement(_Inputs.Filters, { processes: this.state.processes, products: this.state.products, onFilter: function onFilter(state) {
 	                return _this2.handleFilter(state);
 	              } })
 	          )
 	        )
 	      );
+	    }
+	  }, {
+	    key: 'handleNav',
+	    value: function handleNav(x) {
+	      if (x > 1) {
+	        return;
+	      }
+
+	      this.setState({ active: x });
+	    }
+	  }, {
+	    key: 'handlePage',
+	    value: function handlePage(x) {
+	      var thisObj = this;
+	      var newState = {};
+	      var defs = [this.getTasks(newState, this.state.activeFilters, x)];
+
+	      _jquery2.default.when.apply(null, defs).done(function () {
+	        if (x < thisObj.state.currentPage) {
+	          newState.startIndex = thisObj.state.startIndex - newState.count;
+	        } else {
+	          newState.startIndex = thisObj.state.startIndex + thisObj.state.count;
+	        }
+	        newState.currentPage = x;
+	        if (newState.currentPage == "2") {
+	          newState.previous = "1";
+	        }
+	        thisObj.setState(newState);
+	      });
 	    }
 	  }, {
 	    key: 'componentDidMount',
@@ -150,21 +186,39 @@
 
 	      defs.push(this.getProcesses(newState));
 	      defs.push(this.getProducts(newState));
-	      defs.push(this.getTasks(newState, ""));
 
 	      var component = this;
 
 	      _jquery2.default.when.apply(null, defs).done(function () {
-	        component.setState(newState);
+	        var d2 = [];
+	        d2.push(component.getTasks(newState, {}));
+	        _jquery2.default.when.apply(null, defs).done(function () {
+	          component.setState(newState);
+	        });
 	      });
 	    }
 	  }, {
 	    key: 'getTasks',
-	    value: function getTasks(container, filters) {
+	    value: function getTasks(container, filters, page) {
 	      var deferred = _jquery2.default.Deferred();
 
-	      _jquery2.default.get(window.location.origin + "/ics/tasks/", filters).done(function (data) {
-	        container.taskGroups = splitTasksByProcess(data.results);
+	      var url = window.location.origin + "/ics/tasks/";
+
+	      if (page) {
+	        url += "?page=" + page;
+	      }
+
+	      var processes = this.state.processes;
+	      if (!processes) processes = container.processes;
+
+	      _jquery2.default.get(url, filters).done(function (data) {
+	        container.count = data.results.length;
+	        container.total = data.count;
+	        container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null;
+	        container.previous = data.previous && data.previous.match(/page=(\d*)/) ? data.previous.match(/page=(\d*)/)[1] : null;
+	        container.startIndex = 0;
+	        container.currentPage = 1;
+	        container.taskGroups = splitTasksByProcess(data.results, processes);
 	        deferred.resolve();
 	      });
 
@@ -200,7 +254,9 @@
 
 	      var filters = {};
 
-	      if (state.inventory) filters.inventory = "True";
+	      if (this.state.active == 1) {
+	        filters.inventory = "True";
+	      }
 
 	      if (!state.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
 	        filters.start = state.start;
@@ -223,6 +279,7 @@
 	        filters.child = state.child;
 	      }
 
+	      this.setState({ activeFilters: filters });
 	      return filters;
 	    }
 	  }, {
@@ -251,13 +308,42 @@
 	  return p;
 	}
 
-	function splitTasksByProcess(tasks) {
+	function splitTasksByProcess(tasks, processes) {
 	  var taskGroups = {};
-	  tasks.map(function (task, i) {
-	    if (!taskGroups[task.process_type]) taskGroups[task.process_type] = [];
 
-	    taskGroups[task.process_type].push(task);
+	  tasks.map(function (task, i) {
+
+	    var found = -1;
+
+	    // if its a label
+	    if (task.process_type == 1 && task.custom_display && processes) {
+
+	      // get the code from here
+
+	      var label = task.custom_display.split(/[\s-_]+/);
+	      if (label.length > 0) {
+	        label = label[0].substring(0, 1);
+	      }
+
+	      // now check if the code matches anything
+	      Object.keys(processes).map(function (p) {
+	        console.log(processes[p].code.toUpperCase());
+	        if (processes[p].code.toUpperCase() == label.toUpperCase()) found = p;
+	      });
+
+	      if (found == -1) {
+	        found = task.process_type;
+	        console.log("keeping " + task.custom_display + " as labeling");
+	      } else {
+	        console.log(task.custom_display + " is now " + processes[found].name);
+	      }
+	    }
+
+	    if (!taskGroups[found]) taskGroups[found] = [];
+
+	    taskGroups[found].push(task);
 	  });
+
 	  return taskGroups;
 	}
 
@@ -49834,7 +49920,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var format = 'MM/DD/YYYY';
+	      var format = 'MM/DD/YY';
 	      var predefined = this.state.predefined;
 
 
@@ -54754,9 +54840,9 @@
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-	  value: true
+		value: true
 	});
-	exports.Navbar = undefined;
+	exports.ContentDescriptor = exports.Navbar = undefined;
 
 	var _react = __webpack_require__(1);
 
@@ -54768,30 +54854,90 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var Navbar = exports.Navbar = function Navbar(props) {
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'navbar' },
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'content-area' },
-	      _react2.default.createElement(
-	        'div',
-	        { className: 'nav' },
-	        _react2.default.createElement(
-	          'h1',
-	          null,
-	          props.title
-	        ),
-	        _react2.default.createElement(
-	          'h1',
-	          null,
-	          props.title2
-	        )
-	      )
-	    )
-	  );
+	var Navbar = function Navbar(props) {
+		return _react2.default.createElement(
+			'div',
+			{ className: 'navbar' },
+			_react2.default.createElement(
+				'div',
+				{ className: 'content-area' },
+				_react2.default.createElement(
+					'div',
+					{ className: 'left' },
+					_react2.default.createElement(
+						'h1',
+						null,
+						'Scoop @ bama '
+					)
+				),
+				_react2.default.createElement(
+					'div',
+					{ className: 'nav right' },
+					_react2.default.createElement(
+						'ul',
+						null,
+						props.options.map(function (x, i) {
+							return _react2.default.createElement(
+								'li',
+								{ className: i == props.active ? "active" : "", onClick: function onClick() {
+										return props.onNav(i);
+									}, key: i },
+								x
+							);
+						})
+					)
+				)
+			)
+		);
 	};
+
+	var ContentDescriptor = function ContentDescriptor(props) {
+		return _react2.default.createElement(
+			'div',
+			{ className: 'content-descriptor' },
+			_react2.default.createElement(
+				'div',
+				{ className: 'left' },
+				_react2.default.createElement(
+					'p',
+					{ style: { display: props.count > 0 ? "" : "none" } },
+					' Showing ',
+					props.startIndex,
+					'-',
+					props.startIndex + props.count,
+					' results out of ',
+					props.total,
+					'. '
+				),
+				_react2.default.createElement(
+					'p',
+					{ style: { display: props.count > 0 ? "none" : "" } },
+					' Looks like there\'s nothing here! Try changing your filters. '
+				)
+			),
+			_react2.default.createElement(
+				'div',
+				{ className: 'right' },
+				_react2.default.createElement(
+					'button',
+					{ style: { display: props.previous ? "" : "none" }, onClick: function onClick() {
+							return props.onPage(props.previous);
+						} },
+					'Previous'
+				),
+				_react2.default.createElement(
+					'button',
+					{ style: { display: props.next ? "" : "none" }, onClick: function onClick() {
+							return props.onPage(props.next);
+						} },
+					'Next'
+				)
+			)
+		);
+	};
+
+	exports.Navbar = Navbar;
+	exports.ContentDescriptor = ContentDescriptor;
 
 /***/ }
 /******/ ]);

@@ -37,6 +37,8 @@
 				margin: 0;
 				display: inline-block;
 				vertical-align: middle;
+				text-transform: uppercase;
+				letter-spacing: 1px;
 			}
 
 			.header i {
@@ -132,16 +134,14 @@ ul div.menuContentWrapper div.rdr-Days {
 }
 
 button {
-	background-color: $primary;
 	padding: 8px 16px;
-	color: white;
+	color: $primary;
 	text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 14px;
+    font-size: 12px;
     margin: 4px 2px;
     cursor: pointer;
     border: none;
-    border-radius:2px;
-    -webkit-font-smoothing: antialiased;
+    background-color: white;
 }

@@ -49,7 +49,7 @@ export default class Datepicker extends React.Component {
   }
 
   render() {
-    const format = 'MM/DD/YYYY';
+    const format = 'MM/DD/YY';
     const {  predefined } = this.state;
 
     return (

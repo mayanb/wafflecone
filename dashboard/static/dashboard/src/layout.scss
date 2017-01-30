@@ -35,7 +35,6 @@ body {
 	background-color: white;
 	margin-right: $sidebar-width;
 	width: 100%;
-	padding: 0px 36px;
 	color: rgba(0,0,0,0.87);
 	border-bottom: $section-border;
 	-webkit-font-smoothing: antialiased;
@@ -43,13 +42,30 @@ body {
 	top: 0;
 	z-index: 998;
 
-	.nav h1 {
+	.content-area {	
+		display: flex;
+		flex-direction: row;
+	}
+
+	h1 {
 		font-weight: normal;
 		font-size: 20px;
 		line-height: $navbar-height;
 		margin: 0px;
 		margin-left: 36px;
-		float:right;
+	}
+
+	.nav ul { margin: 0 }
+
+	.nav li {
+		display: inline;
+		list-style-type: none;
+		padding-right: 24px;
+		line-height: $navbar-height;
+	}
+
+	.active {
+		color: red;
 	}
 }
 
@@ -62,31 +78,41 @@ html, body, #root, .parent {
 .parent
 {
     .content-area {
-    	padding-right: $sidebar-width;
     	height:100%;
     	width: 100%;
     }
 
     .content {
 		padding-top: $navbar-height;
-		margin: 36px;
+		padding-right: $sidebar-width;
+		margin-right: 24px;
+		margin-left: 24px;
 	}
 
 	.sidebar {
+		padding-top: $navbar-height;
 		position: fixed;
 		top: 0;
 		right: 0;
 		height: 100%;
 		width: $sidebar-width;
 		border-left: $section-border;
-		background-color: white;
-		z-index: 999;
-
-		.content {
-			margin: 0;
-		}
+		background-color: rgba(0,0,0,0.02);
 	}
 
+}
+
+.left {
+	flex: 1;
+}
+
+.right {
+	flex-grow: 0;
+}
+
+.content-descriptor {
+	display: flex;
+	flex-direction: row
 }
 
 
