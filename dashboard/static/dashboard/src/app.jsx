@@ -92,10 +92,13 @@ class Main extends React.Component {
     var component = this
 
     $.when.apply(null, defs).done(function() {
-      var d2 = []
-      d2.push(component.getTasks(newState, {}));
-      $.when.apply(null, defs).done(function () {
-        component.setState(newState)
+
+      this.setState(newState, function () {
+        var d2 = []
+        d2.push(component.getTasks(newState, {}));
+        $.when.apply(null, defs).done(function () {
+          component.setState(newState)
+        })
       })
     })
   }
