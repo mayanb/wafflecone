@@ -106,7 +106,7 @@
 	      products: {},
 	      count: 0,
 	      total: 0,
-	      active: 1,
+	      active: 0,
 	      previous: null,
 	      next: null,
 	      startIndex: 0,
@@ -192,8 +192,10 @@
 	      _jquery2.default.when.apply(null, defs).done(function () {
 	        var d2 = [];
 	        d2.push(component.getTasks(newState, {}));
-	        _jquery2.default.when.apply(null, defs).done(function () {
-	          component.setState(newState);
+	        _jquery2.default.when.apply(null, d2).done(function () {
+	          component.setState(newState, function () {
+	            console.log(component.state.processes);
+	          });
 	        });
 	      });
 	    }
@@ -327,15 +329,11 @@
 
 	      // now check if the code matches anything
 	      Object.keys(processes).map(function (p) {
-	        console.log(processes[p].code.toUpperCase());
 	        if (processes[p].code.toUpperCase() == label.toUpperCase()) found = p;
 	      });
 
 	      if (found == -1) {
 	        found = task.process_type;
-	        console.log("keeping " + task.custom_display + " as labeling");
-	      } else {
-	        console.log(task.custom_display + " is now " + processes[found].name);
 	      }
 	    }
 
