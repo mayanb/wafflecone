@@ -102,8 +102,8 @@
 	    _this.handleFilter = _this.handleFilter.bind(_this);
 	    _this.state = {
 	      taskGroups: {},
-	      processes: {},
-	      products: {},
+	      processes: null,
+	      products: null,
 	      count: 0,
 	      total: 0,
 	      active: 1,

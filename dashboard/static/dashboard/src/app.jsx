@@ -20,8 +20,8 @@ class Main extends React.Component {
     this.handleFilter = this.handleFilter.bind(this);
     this.state = {
       taskGroups: {},
-      processes: {},
-      products: {},
+      processes: null,
+      products: null,
       count: 0,
       total: 0,
       active: 1,
