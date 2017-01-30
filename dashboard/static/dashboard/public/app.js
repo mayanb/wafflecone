@@ -44,7 +44,7 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -106,7 +106,7 @@
 	      products: {},
 	      count: 0,
 	      total: 0,
-	      active: 0,
+	      active: 1,
 	      previous: null,
 	      next: null,
 	      startIndex: 0,
@@ -192,10 +192,8 @@
 	      _jquery2.default.when.apply(null, defs).done(function () {
 	        var d2 = [];
 	        d2.push(component.getTasks(newState, {}));
-	        _jquery2.default.when.apply(null, d2).done(function () {
-	          component.setState(newState, function () {
-	            console.log(component.state.processes);
-	          });
+	        _jquery2.default.when.apply(null, defs).done(function () {
+	          component.setState(newState);
 	        });
 	      });
 	    }
@@ -324,16 +322,22 @@
 
 	      var label = task.custom_display.split(/[\s-_]+/);
 	      if (label.length > 0) {
-	        label = label[0].substring(0, 1);
+	        label = label[0];
 	      }
+
+	      console.log(label);
 
 	      // now check if the code matches anything
 	      Object.keys(processes).map(function (p) {
+	        console.log(processes[p].code.toUpperCase());
 	        if (processes[p].code.toUpperCase() == label.toUpperCase()) found = p;
 	      });
 
 	      if (found == -1) {
 	        found = task.process_type;
+	        console.log("keeping " + task.custom_display + " as labeling");
+	      } else {
+	        console.log(task.custom_display + " is now " + process.p.name);
 	      }
 	    }
 
@@ -346,6 +350,7 @@
 	}
 
 	_reactDom2.default.render(_react2.default.createElement(Main, null), document.getElementById('root'));
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
 /* 1 */

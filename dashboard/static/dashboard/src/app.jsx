@@ -24,7 +24,7 @@ class Main extends React.Component {
       products: {},
       count: 0,
       total: 0,
-      active: 0,
+      active: 1,
       previous: null,
       next: null,
       startIndex: 0,
@@ -94,10 +94,8 @@ class Main extends React.Component {
     $.when.apply(null, defs).done(function() {
       var d2 = []
       d2.push(component.getTasks(newState, {}));
-      $.when.apply(null, d2).done(function () {
-        component.setState(newState, function () {
-          console.log(component.state.processes)
-        })
+      $.when.apply(null, defs).done(function () {
+        component.setState(newState)
       })
     })
   }
@@ -225,17 +223,23 @@ function splitTasksByProcess(tasks, processes) {
 
       var label = task.custom_display.split(/[\s-_]+/)
       if (label.length > 0) {
-        label = label[0].substring(0,1)
+        label = label[0]
       }
+
+      console.log(label)
 
       // now check if the code matches anything
       Object.keys(processes).map(function (p) {
+        console.log(processes[p].code.toUpperCase())
         if (processes[p].code.toUpperCase() == label.toUpperCase())
           found = p
       })
 
       if (found == -1) {
         found = task.process_type
+        console.log("keeping " + task.custom_display + " as labeling")
+      } else {
+        console.log(task.custom_display + " is now " + process.p.name)
       }
     }
 
