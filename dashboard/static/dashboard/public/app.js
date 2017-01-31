@@ -106,7 +106,7 @@
 	      products: {},
 	      count: 0,
 	      total: 0,
-	      active: 1,
+	      active: 0,
 	      previous: null,
 	      next: null,
 	      startIndex: 0,
