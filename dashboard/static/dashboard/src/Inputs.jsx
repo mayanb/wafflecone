@@ -166,6 +166,13 @@ class Filters extends React.Component {
   }
 
   render () {
+
+    var obj = false
+    if (this.props.dates) {
+      obj = <div>
+                  <Datepicker onChange={(val) => this.handleDateRangeChange(val)} />              
+                </div>
+    }
     return (
       <div className="filters">
         <div className="inputs">
@@ -183,9 +190,8 @@ class Filters extends React.Component {
                   <Multiselect options={this.props.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
                 </div>
 
-                <div>
-                  <Datepicker onChange={(val) => this.handleDateRangeChange(val)} />              
-                </div>
+
+                {obj}
               </div>
             </div>
 
