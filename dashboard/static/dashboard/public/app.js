@@ -47068,7 +47068,6 @@
 	    _this2.state = {
 	      value: []
 	    };
-
 	    return _this2;
 	  }
 
@@ -47077,6 +47076,13 @@
 	    value: function handleMultipleChange(value) {
 	      this.props.onChange(value);
 	      this.setState({ value: value });
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (nextProps.value != this.state.value) {
+	        this.setState({ value: nextProps.value });
+	      }
 	    }
 	  }, {
 	    key: 'render',
@@ -47111,26 +47117,23 @@
 	var Filters = function (_React$Component3) {
 	  _inherits(Filters, _React$Component3);
 
-	  function Filters() {
+	  function Filters(props) {
 	    _classCallCheck(this, Filters);
 
-	    var _this3 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this));
+	    var _this3 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
 
-	    _this3.handleInventoryChange = _this3.handleInventoryChange.bind(_this3);
 	    _this3.handleProcessChange = _this3.handleProcessChange.bind(_this3);
 	    _this3.handleProductChange = _this3.handleProductChange.bind(_this3);
 	    _this3.handleDateRangeChange = _this3.handleDateRangeChange.bind(_this3);
 	    _this3.handleParentChange = _this3.handleParentChange.bind(_this3);
 	    _this3.handleChildChange = _this3.handleChildChange.bind(_this3);
 	    _this3.state = {
-	      inventory: false,
 	      processes: [],
 	      products: [],
 	      parent: "",
 	      start: "",
 	      end: "",
 	      active: 1
-
 	    };
 	    return _this3;
 	  }
@@ -47154,14 +47157,23 @@
 	      this.props.onFilter(filters);
 	    }
 	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (this.props.dates != nextProps.dates) {
+	        console.log("woooot");
+	        this.setState({
+	          processes: [],
+	          products: [],
+	          parent: "",
+	          start: "",
+	          end: "",
+	          active: 1 });
+	      }
+	    }
+	  }, {
 	    key: 'switchActive',
 	    value: function switchActive(x) {
 	      this.setState({ active: x }, this.handleFilter);
-	    }
-	  }, {
-	    key: 'handleInventoryChange',
-	    value: function handleInventoryChange() {
-	      this.setState({ inventory: !this.state.inventory }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleProcessChange',
@@ -47234,14 +47246,14 @@
 	              _react2.default.createElement(
 	                'div',
 	                null,
-	                _react2.default.createElement(Multiselect, { options: this.props.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	                _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.state.processes, placeholder: 'All processes', onChange: function onChange(val) {
 	                    return _this4.handleProcessChange(val);
 	                  } })
 	              ),
 	              _react2.default.createElement(
 	                'div',
 	                null,
-	                _react2.default.createElement(Multiselect, { options: this.props.products, placeholder: 'All products', onChange: function onChange(val) {
+	                _react2.default.createElement(Multiselect, { options: this.props.products, value: this.state.products, valueArray: this.state.products, placeholder: 'All products', onChange: function onChange(val) {
 	                    return _this4.handleProductChange(val);
 	                  } })
 	              ),
@@ -54954,11 +54966,11 @@
 
 	      var filters = {};
 
-	      if (this.state.inventory) {
+	      if (this.props.inventory) {
 	        filters.inventory = true;
 	      }
 
-	      if (!this.state.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
+	      if (!this.props.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
 	        filters.start = state.start;
 	        filters.end = state.end;
 	      }

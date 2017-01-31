@@ -62,13 +62,18 @@ class Multiselect extends React.Component {
     this.state = {
       value: [],
     };
-
   }
 
   handleMultipleChange(value) {
     this.props.onChange(value)
     this.setState({value: value});
   };
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.value != this.state.value) {
+      this.setState({value: nextProps.value })
+    }
+  }
 
   render () {
     return (
@@ -99,23 +104,20 @@ class Multiselect extends React.Component {
 
 class Filters extends React.Component {
 
-  constructor() {
-    super();
-    this.handleInventoryChange = this.handleInventoryChange.bind(this);
+  constructor(props) {
+    super(props);
     this.handleProcessChange = this.handleProcessChange.bind(this);
     this.handleProductChange = this.handleProductChange.bind(this);
     this.handleDateRangeChange = this.handleDateRangeChange.bind(this);
     this.handleParentChange = this.handleParentChange.bind(this);
     this.handleChildChange = this.handleChildChange.bind(this);
     this.state = {
-      inventory: false,
       processes: [],
       products: [],
       parent: "",
       start: "",
       end: "",
       active: 1
-
     }
   }
 
@@ -137,12 +139,21 @@ class Filters extends React.Component {
 
   }
 
-  switchActive(x) {
-    this.setState({active : x}, this.handleFilter)
+  componentWillReceiveProps(nextProps) {
+    if (this.props.dates != nextProps.dates) {
+      console.log("woooot")
+      this.setState( {
+      processes: [],
+      products: [],
+      parent: "",
+      start: "",
+      end: "",
+      active: 1})
+    }
   }
 
-  handleInventoryChange() {
-    this.setState({inventory: !this.state.inventory }, this.handleFilter)
+  switchActive(x) {
+    this.setState({active : x}, this.handleFilter)
   }
 
   handleProcessChange(val) {
@@ -183,14 +194,12 @@ class Filters extends React.Component {
               </div>
               <div className="section-content">
                 <div>
-                  <Multiselect options={this.props.processes} placeholder="All processes" onChange={(val) => this.handleProcessChange(val)}/>
+                  <Multiselect options={this.props.processes} value={this.state.processes} placeholder="All processes" onChange={(val) => this.handleProcessChange(val)}/>
                 </div>
 
                 <div>
-                  <Multiselect options={this.props.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
+                  <Multiselect options={this.props.products} value={this.state.products} valueArray={this.state.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
                 </div>
-
-
                 {obj}
               </div>
             </div>
