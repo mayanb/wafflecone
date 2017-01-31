@@ -20,8 +20,8 @@ class Main extends React.Component {
     this.handleFilter = this.handleFilter.bind(this);
     this.state = {
       taskGroups: {},
-      processes: null,
-      products: null,
+      processes: {},
+      products: {},
       count: 0,
       total: 0,
       active: 1,
@@ -84,7 +84,7 @@ class Main extends React.Component {
   componentDidMount() {
     var newState = { taskGroups: [], processes: [], products: [] };
 
-    var defs = [];
+    var defs = []
 
     defs.push(this.getProcesses(newState));
     defs.push(this.getProducts(newState));
@@ -93,10 +93,10 @@ class Main extends React.Component {
 
     $.when.apply(null, defs).done(function() {
 
-      this.setState(newState, function () {
+      component.setState(newState, function () {
         var d2 = []
-        d2.push(component.getTasks(newState, {}));
-        $.when.apply(null, defs).done(function () {
+        d2.push(component.getTasks(newState, activeFilters));
+        $.when.apply(null, d2).done(function () {
           component.setState(newState)
         })
       })
@@ -116,7 +116,8 @@ class Main extends React.Component {
     if (!processes) 
       processes = container.processes
 
-    console.log(processes)
+    console.log("PROCESSES: ") 
+    console.log(this.state.processes)
 
     $.get(url, filters)
       .done(function (data) {
@@ -217,6 +218,8 @@ function mapifyProcesses(processes) {
 function splitTasksByProcess(tasks, processes) {
   var taskGroups = {}
 
+  console.log("SPLITTING TASKS")
+
   tasks.map(function (task, i) {
 
     var found = -1
@@ -231,21 +234,15 @@ function splitTasksByProcess(tasks, processes) {
         label = label[0]
       }
 
-      console.log(label)
-
       // now check if the code matches anything
       Object.keys(processes).map(function (p) {
-        console.log(processes[p].code.toUpperCase())
         if (processes[p].code.toUpperCase() == label.toUpperCase())
           found = p
       })
+    }
 
-      if (found == -1) {
-        found = task.process_type
-        console.log("keeping " + task.custom_display + " as labeling")
-      } else {
-        console.log(task.custom_display + " is now " + process.p.name)
-      }
+    if (found == -1) {
+      found = task.process_type
     }
 
     if (!taskGroups[found])
