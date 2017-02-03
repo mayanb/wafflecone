@@ -171,5 +171,13 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
 
+class RecommendedInputsList(generics.ListCreateAPIView):
+  queryset = RecommendedInputs.objects.all()
+  serializer_class = RecommendedInputsSerializer
+
+class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = RecommendedInputs.objects.all()
+  serializer_class = RecommendedInputsSerializer
+
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")

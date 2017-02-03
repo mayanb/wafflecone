@@ -15,6 +15,7 @@ class ProcessType(models.Model):
   name = models.CharField(max_length=20)
   code = models.CharField(max_length=20)
   icon = models.CharField(max_length=50)
+  unit = models.CharField(max_length=20, default="item")
   x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
   y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
@@ -168,5 +169,10 @@ class TaskAttribute(models.Model):
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+
+class RecommendedInputs(models.Model):
+  process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+  recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
 
 

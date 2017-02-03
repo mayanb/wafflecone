@@ -235,4 +235,11 @@ button {
 .processTile {
   fill: white; }
 
+svg text {
+  font-size: 0.85em;
+  line-height: 50px; }
+
+.connectionTemp {
+  fill: #90CAF9; }
+
 /*# sourceMappingURL=styles.css.map */

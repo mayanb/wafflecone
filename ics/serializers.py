@@ -15,7 +15,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'x', 'y')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -94,3 +94,9 @@ class NestedTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
     fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes', 'attribute_values')
+
+
+class RecommendedInputsSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = RecommendedInputs
+    fields = ('id', 'process_type', 'recommended_input')

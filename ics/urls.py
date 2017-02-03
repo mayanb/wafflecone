@@ -31,6 +31,9 @@ urlpatterns = [
 
     url(r'^taskAttributes/$', views.TaskAttributeList.as_view()),
     url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
+
+    url(r'^recommendedInputs/$', views.RecommendedInputsList.as_view()),
+    url(r'^recommendedInputs/(?P<pk>[0-9]+)/$', views.RecommendedInputsDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -171,8 +171,6 @@ export default class Tasks extends React.Component {
 
   parseFilters(state) {
 
-    console.log(state)
-
     var filters = {}
 
     if (this.props.inventory) {

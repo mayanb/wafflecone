@@ -17,7 +17,7 @@ class Main extends React.Component {
   constructor() {
     super();
     this.state = {
-      active: 0,
+      active: 2,
     };
 
   }
@@ -27,7 +27,7 @@ class Main extends React.Component {
     var obj = <Tasks inventory={this.state.active} />
 
     if (this.state.active == 2) {
-      obj = null //<FactoryMap />
+      obj = <FactoryMap />
     }
 
     return (
