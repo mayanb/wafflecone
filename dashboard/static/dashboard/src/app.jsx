@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Navbar} from './Layout.jsx'
 import Tasks from './Tasks.jsx'
+import FactoryMap from './FactoryMap.jsx'
 
 function SectionHeader(props) {
   return (
@@ -24,6 +25,10 @@ class Main extends React.Component {
   render() {
 
     var obj = <Tasks inventory={this.state.active} />
+
+    if (this.state.active == 2) {
+      obj = null //<FactoryMap />
+    }
 
     return (
       <div className="parent">

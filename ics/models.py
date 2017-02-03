@@ -15,6 +15,8 @@ class ProcessType(models.Model):
   name = models.CharField(max_length=20)
   code = models.CharField(max_length=20)
   icon = models.CharField(max_length=50)
+  x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+  y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
   def __str__(self):
     return self.name

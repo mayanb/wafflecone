@@ -15,7 +15,12 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'x', 'y')
+
+class ProcessTypePositionSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = ProcessType
+    fields = ('id','x','y')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
@@ -80,10 +85,11 @@ class NestedTaskSerializer(serializers.ModelSerializer):
   attribute_values = BasicTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
 
   def getItems(self, task):
-     if self.context.get('inventory', False) is True:
-       return BasicItemSerializer(task.item_set.all().filter(input__isnull=True), many=True).data
+     if self.context.get('inventory', None) is not None:
+      return BasicItemSerializer(task.item_set.all().filter(input__isnull=True), many=True).data
      else:
       return BasicItemSerializer(task.item_set.all(), many=True).data
+      
 
   class Meta:
     model = Task

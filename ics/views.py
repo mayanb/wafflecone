@@ -71,7 +71,8 @@ class TaskList(generics.ListAPIView):
         return queryset
 
   def get_serializer_context(self):
-    return {"inventory": self.request.query_params.get('inventory', False)}
+    inv = self.request.query_params.get('inventory', None )
+    return {"inventory": inv}
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):
@@ -120,6 +121,10 @@ class ProcessList(generics.ListCreateAPIView):
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeSerializer
+
+class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
+  queryset = ProcessType.objects.all()
+  serializer_class = ProcessTypePositionSerializer
 
 
 
