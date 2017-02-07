@@ -57295,6 +57295,7 @@
 	        var uuid = this.state.selectedItem.data.item_qr;
 	        (0, _qr.printQRs)([uuid]);
 	        this.setState({ disabled: false });
+	        return;
 	      }
 
 	      var thisObj = this;

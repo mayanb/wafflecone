@@ -89,6 +89,7 @@ export default class LabelPrinter extends React.Component {
       let uuid = this.state.selectedItem.data.item_qr
       printQRs([uuid])
       this.setState({disabled: false})
+      return
     }
 
     let thisObj = this
