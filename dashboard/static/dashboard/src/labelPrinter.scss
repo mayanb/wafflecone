@@ -1,0 +1,141 @@
+.trouble {
+	max-width: 500px;
+	margin: 0 auto;
+
+	h6 {
+		text-align: center;
+	}
+
+	p, li {
+		font-size: 11px;
+	}
+
+	li {
+		margin-bottom: 10px
+	}
+}
+
+div.labelPrinter {
+	padding-top: $navbar-height;
+	background-color: $light-grey;
+
+	.stuff {
+		max-width: 300px;
+		margin: 0 auto;
+		box-shadow: $shadow-1;
+		padding: 20px;
+		background-color: white;
+		max-height: 470px;
+		overflow: hidden;
+	}
+
+	input {
+		line-height: 34px;
+		font-size: 15.2px;
+		border: 0;
+		border-bottom: 2px solid rgba(0,0,0,0.1);
+
+		&:focus {
+			outline: none;
+		}
+	}
+
+	input, .multiselect, .select {
+		margin-bottom: 30px;
+	}
+
+	.inputLabel {
+		font-size: 13px;
+		color: rgba(0,0,0,0.6);
+	}
+
+	.marginer {
+		padding-top: 40px;
+
+		h2 {
+			text-align: center;
+			line-height: 48px;
+		}
+
+	}
+
+	button {
+		padding: 8px 16px;
+		color: white;
+		text-align: center;
+	    text-decoration: none;
+	    display: inline-block;
+	    font-size: 14px;
+	    margin: 4px 2px;
+	    cursor: pointer;
+	    border: none;
+	    border-radius: 2px;
+	    background-color: $primary;
+	    width: 100%
+	}
+
+	.regularprint {
+	  max-height: 1000px;
+	}
+
+	.small {
+		max-height: 0;
+		overflow: hidden;
+		z-index: 997;
+	}
+
+	.reprint {
+		margin: -20px;
+		box-shadow: $shadow-1;
+		padding: 20px;
+		background-color: white;
+		z-index: 999;
+
+		.expandReprint {
+			display: block;
+			color: $primary;
+			background-color: white;
+			font-size: 13px;
+			margin-bottom: 20px;
+			display: flex;
+			flex-direction: row;
+			padding-left: 0px;
+			padding-right: 0px;
+			text-align: left;
+
+			span {
+				flex: 1;
+			}
+
+			i  {
+				flex: 0;
+				color: $primary;
+				visibility: hidden;
+				font-size: 13px;
+				line-height: 16px;
+				vertical-align: middle;
+			}
+
+			&:focus {
+				outline: none;
+			}
+		}
+
+		&.expanded i {
+			visibility: inherit;
+		}
+	}
+}
+
+.labelSVG {
+	background-color: white;
+}
+
+div#blocker, #canvastest {
+	position: absolute;
+	height: 241px;
+	width: 431px;
+	background-color: $light-grey;
+	top: 0;
+	left: 0
+}

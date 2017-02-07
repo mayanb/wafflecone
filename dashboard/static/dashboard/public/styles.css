@@ -40,7 +40,10 @@ body {
     list-style-type: none;
     padding-right: 24px;
     line-height: 64px; }
-  .navbar .active {
+    .navbar .nav li a, .navbar .nav li a:hover, .navbar .nav li a:visited {
+      text-decoration: none;
+      color: rgba(0, 0, 0, 0.87); }
+  .navbar .active a, .navbar .active a:hover, .navbar .active a:visited {
     color: red; }
 
 html, body, #root, .parent {

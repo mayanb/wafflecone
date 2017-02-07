@@ -21652,7 +21652,7 @@
 						props.options.map(function (x, i) {
 							return _react2.default.createElement(
 								'li',
-								{ className: i == props.active ? "active" : "" /*onClick={ () => props.onNav(i) }*/, key: i },
+								{ className: i == props.active ? "active" : "", key: i },
 								_react2.default.createElement(
 									'a',
 									{ href: window.location.origin + "/dashboard/" + props.links[i] },

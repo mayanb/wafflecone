@@ -61,11 +61,18 @@ body {
 		display: inline;
 		list-style-type: none;
 		padding-right: 24px;
-		line-height: $navbar-height;
+		line-height: $navbar-height; 
+
+		a, a:hover, a:visited {
+			text-decoration: none;
+			color: rgba(0,0,0,0.87)
+		}
 	}
 
 	.active {
-		color: red;
+		a, a:hover, a:visited {
+			color: red;	
+		}
 	}
 }
 
