@@ -10,7 +10,9 @@ const Navbar = (props) => (
   		<div className="nav right">
  			<ul>
 		    { props.options.map(function (x, i) {
-		    	return <li className={i==props.active?"active":""} onClick={ () => props.onNav(i) } key={i}>{x}</li>
+		    	return <li className={i==props.active?"active":""} /*onClick={ () => props.onNav(i) }*/  key={i}> 
+		    		<a href={window.location.origin + "/dashboard/" + props.links[i]}>{x}</a> 
+		    	</li>
 		    })}
 		    </ul>
 	    </div>

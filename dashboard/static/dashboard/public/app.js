@@ -66,6 +66,10 @@
 
 	var _FactoryMap2 = _interopRequireDefault(_FactoryMap);
 
+	var _LabelPrinter = __webpack_require__(352);
+
+	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -100,21 +104,39 @@
 	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
 
 	    _this.state = {
-	      active: 0
+	      active: -1
 	    };
 
 	    return _this;
 	  }
 
 	  _createClass(Main, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var str = window.location.href;
+	      if (str.lastIndexOf("/") == str.length - 1) {
+	        str = str.substr(0, str.length - 1);
+	      }
+	      var pieces = str.split("/");
+	      var piece = pieces[pieces.length - 1];
+	      if (piece == "" || piece == "dashboard") this.setState({ active: 1 });
+	      if (piece == "inventory") this.setState({ active: 2 });
+	      if (piece == "labels") this.setState({ active: 3 });
+	      if (piece == "settings") this.setState({ active: 4 });
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      var _this2 = this;
 
-	      var obj = _react2.default.createElement(_Tasks2.default, { inventory: this.state.active });
+	      var obj = _react2.default.createElement(_Tasks2.default, { inventory: this.state.active == 2 });
 
-	      if (this.state.active == 2) {
-	        obj = null; //<FactoryMap />
+	      if (this.state.active == 3) {
+	        obj = _react2.default.createElement(_LabelPrinter2.default, null);
+	      }
+
+	      if (this.state.active == 4) {
+	        obj = false;
 	      }
 
 	      return _react2.default.createElement(
@@ -124,7 +146,8 @@
 	          'div',
 	          { className: 'content-area' },
 	          _react2.default.createElement(_Layout.Navbar, {
-	            options: ["Activity Log", "Inventory", "Settings"],
+	            options: ["Activity Log", "Inventory", "Labels", "Settings"],
+	            links: ["", "inventory", "labels", "settings"],
 	            active: this.state.active,
 	            onNav: function onNav(x) {
 	              return _this2.setState({ active: x });
@@ -21629,10 +21652,12 @@
 						props.options.map(function (x, i) {
 							return _react2.default.createElement(
 								'li',
-								{ className: i == props.active ? "active" : "", onClick: function onClick() {
-										return props.onNav(i);
-									}, key: i },
-								x
+								{ className: i == props.active ? "active" : "" /*onClick={ () => props.onNav(i) }*/, key: i },
+								_react2.default.createElement(
+									'a',
+									{ href: window.location.origin + "/dashboard/" + props.links[i] },
+									x
+								)
 							);
 						})
 					)
@@ -21905,8 +21930,6 @@
 	  }, {
 	    key: 'parseFilters',
 	    value: function parseFilters(state) {
-
-	      console.log(state);
 
 	      var filters = {};
 
@@ -47332,6 +47355,10 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function display(task) {
+		if (!task || task == undefined || task.label == undefined) {
+			return "";
+		}
+
 		if (task.custom_display && task.custom_display != "") return task.custom_display;else if (task.label_index > 0) return task.label + "-" + task.label_index;else return task.label;
 	}
 
@@ -55114,6 +55141,8 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+	var connectionBlue = "#2196F3";
+
 	var FactoryMap = function (_React$Component) {
 	  _inherits(FactoryMap, _React$Component);
 
@@ -55126,7 +55155,7 @@
 	    _this.handleConnectionEnd = _this.handleConnectionEnd.bind(_this);
 	    _this.state = {
 	      processes: [],
-	      connections: [{ id: 1, process_type: 2, reccommended_input: 14 }, { id: 2, process_type: 15, reccommended_input: 14 }, { id: 3, process_type: 12, reccommended_input: 14 }, { id: 4, process_type: 13, reccommended_input: 14 }],
+	      connections: [],
 	      selectedProcess: -1,
 	      selectedConnection: -1
 	    };
@@ -55144,7 +55173,7 @@
 
 	      return _react2.default.createElement(
 	        'svg',
-	        { style: { width: "100%", height: "100%", backgroundColor: "#1565C0" } },
+	        { className: 'factorymap', style: { width: "100%", height: "100%", backgroundColor: "#1565C0" } },
 	        _react2.default.createElement(
 	          'defs',
 	          null,
@@ -55155,38 +55184,104 @@
 	            _react2.default.createElement('feGaussianBlur', { result: 'blurOut', 'in': 'offOut', stdDeviation: '2' }),
 	            _react2.default.createElement('feBlend', { 'in': 'SourceGraphic', in2: 'blurOut', mode: 'normal' }),
 	            _react2.default.createElement('feColorMatrix', { values: '1 0 0 0 0   1 0 0 0 0   1 0 0 0 0  1 0 0 0.4 0', type: 'matrix', 'in': 'shadowBlurOuter1' })
+	          ),
+	          _react2.default.createElement(
+	            'marker',
+	            { id: 'arrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
+	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: connectionBlue, fill: 'transparent' })
 	          )
 	        ),
 	        Object.keys(this.state.connections).map(function (cid) {
+	          var _this2 = this;
+
 	          var connection = this.state.connections[cid];
-	          var p1 = this.unscale(this.state.processes[connection.process_type]);
-	          var p2 = this.unscale(this.state.processes[connection.reccommended_input]);
-	          return _react2.default.createElement('line', { x1: p1.x + 50, y1: p1.y + 50, x2: p2.x + 50, y2: p2.y + 50, key: connection.id, strokeWidth: '2', stroke: 'orange' });
+	          if (connection == undefined) return { false: false };
+	          var p1 = this.state.processes[connection.process_type];
+	          var p2 = this.state.processes[connection.recommended_input];
+	          return _react2.default.createElement(DirectedLine, _extends({
+	            p1: this.unscale(p1), p2: this.unscale(p2),
+	            p1Width: width(p1), p2Width: width(p2)
+	          }, connection, { key: cid,
+	            selected: cid == this.state.selectConnection,
+	            onClick: function onClick() {
+	              return _this2.selectConnection(cid);
+	            }
+	          }));
 	        }, this),
 	        Object.keys(this.state.processes).map(function (pid) {
+	          var _this3 = this;
+
 	          var p = thisObj.state.processes[pid];
+	          if (p == undefined) return { false: false };
 	          var coords = thisObj.unscale(p);
 	          var newp = (0, _immutabilityHelper2.default)(p, { $merge: coords });
-	          return _react2.default.createElement(ProcessTile, _extends({ width: 120, height: 100 }, newp, { key: pid, onStop: function onStop(e, ui) {
+	          return _react2.default.createElement(ProcessTile, _extends({
+	            width: width(p), height: 40
+	          }, newp, { key: pid,
+	            selected: pid == this.state.selectProcess,
+	            onStop: function onStop(e, ui) {
 	              return thisObj.handleStop(e, ui, pid);
 	            },
 	            onConnectionEnd: function onConnectionEnd(x, y) {
 	              return thisObj.handleConnectionEnd(pid, x, y);
-	            } }));
+	            },
+	            onClick: function onClick() {
+	              return _this3.selectProcess(pid);
+	            }
+	          }));
 	        })
 	      );
+	    }
+	  }, {
+	    key: 'selectProcess',
+	    value: function selectProcess(pid) {
+	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectConnection: cid, selectedProcess: -1 } });
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'selectConnection',
+	    value: function selectConnection(cid) {
+	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectConnection: -1, selectedProcess: pid } });
+	      this.setState(ns);
 	    }
 	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      var thisObj = this;
+	      var container = {};
+	      var defs = [this.getProcesses(container), this.getConnections(container)];
+
+	      _jquery2.default.when.apply(null, defs).done(function () {
+	        thisObj.setState(container);
+	      });
+	    }
+	  }, {
+	    key: 'getProcesses',
+	    value: function getProcesses(container) {
+	      var deferred = _jquery2.default.Deferred();
 	      _jquery2.default.get(window.location.origin + "/ics/processes/").done(function (data) {
 	        var processes = {};
 	        data.map(function (p, i) {
 	          processes[p.id] = p;
 	        });
-	        thisObj.setState({ processes: processes });
+	        container.processes = processes;
+	        deferred.resolve();
 	      });
+	      return deferred.promise();
+	    }
+	  }, {
+	    key: 'getConnections',
+	    value: function getConnections(container) {
+	      var deferred = _jquery2.default.Deferred();
+	      _jquery2.default.get(window.location.origin + "/ics/recommendedInputs").done(function (data) {
+	        var connections = {};
+	        data.map(function (c, i) {
+	          connections[c.id] = c;
+	        });
+	        container.connections = connections;
+	        deferred.resolve();
+	      });
+	      return deferred.promise();
 	    }
 	  }, {
 	    key: 'handleStop',
@@ -55204,20 +55299,16 @@
 	      });
 	    }
 	  }, {
-	    key: 'handleConnectionStart',
-	    value: function handleConnectionStart(e, ui) {
-	      console.log("Starting a connection!");
-	    }
-	  }, {
 	    key: 'handleConnectionEnd',
 	    value: function handleConnectionEnd(id, x, y) {
 	      var found = -1;
 	      var o = this.unscale(this.state.processes[id]);
 
 	      Object.keys(this.state.processes).map(function (pid) {
-	        var n = this.unscale(this.state.processes[pid]);
-	        if (pid == 11) console.log(Math.abs(parseFloat(x) + o.x - n.x - 50) + " " + Math.abs(parseFloat(y) + o.y - n.y - 50));
-	        if (Math.abs(parseFloat(x) + o.x - n.x - 50) < 60 && Math.abs(parseFloat(y) + o.y - n.y - 50) < 60) {
+	        var p = this.state.processes[pid];
+	        var n = this.unscale(p);
+	        var w = width(p);
+	        if (Math.abs(parseFloat(x) + o.x - (n.x + w / 2)) <= w / 2 + 10 && Math.abs(parseFloat(y) + o.y - (n.y + 10)) <= 20) {
 	          found = pid;
 	        }
 	      }, this);
@@ -55226,14 +55317,24 @@
 
 	      Object.keys(this.state.connections).map(function (cid) {
 	        var c = this.state.connections[cid];
-	        if (c.process_type == id && c.reccommended_input == found) found = -1;
+	        if (c.process_type == id && c.recommended_input == found) found = -1;
 	      }, this);
 
 	      if (found == -1) return;
 
-	      var nc = { id: this.state.connections.length + 1, process_type: id, reccommended_input: found };
-	      var ns = (0, _immutabilityHelper2.default)(this.state, { connections: { $push: [nc] } });
-	      this.setState(ns);
+	      var nc = { process_type: found, recommended_input: id };
+	      this.makeNewConnection(this, nc);
+	    }
+	  }, {
+	    key: 'makeNewConnection',
+	    value: function makeNewConnection(thisObj, data) {
+	      var url = window.location.origin + '/ics/recommendedInputs/';
+	      _jquery2.default.ajax({ url: url, data: data, method: 'POST' }).done(function (d) {
+	        var obj = {};
+	        obj[d.id] = d;
+	        var ns = (0, _immutabilityHelper2.default)(thisObj.state, { connections: { $merge: obj } });
+	        thisObj.setState(ns);
+	      });
 	    }
 	  }, {
 	    key: 'scale',
@@ -55260,6 +55361,15 @@
 	      var v = { x: x / 100 * w, y: y / 100 * h };
 	      return v;
 	    }
+	  }, {
+	    key: 'handleDelete',
+	    value: function handleDelete(cid) {
+	      var url = window.location.origin + "/ics/recommendedInputs/" + cid + "/";
+	      _jquery2.default.ajax({ url: url, method: "DELETE" }).done(function () {
+	        var ns = (0, _immutabilityHelper2.default)(this.state, { connections: { $merge: { cid: undefined } } });
+	        this.setState(ns);
+	      });
+	    }
 	  }]);
 
 	  return FactoryMap;
@@ -55272,6 +55382,67 @@
 	  return Math.floor(n * 1000) / 1000;
 	}
 
+	var DirectedLine = function (_React$Component2) {
+	  _inherits(DirectedLine, _React$Component2);
+
+	  function DirectedLine(props) {
+	    _classCallCheck(this, DirectedLine);
+
+	    return _possibleConstructorReturn(this, (DirectedLine.__proto__ || Object.getPrototypeOf(DirectedLine)).call(this, props));
+	  }
+
+	  _createClass(DirectedLine, [{
+	    key: 'getMidPoint',
+	    value: function getMidPoint() {
+	      var halfLength = this.path.getTotalLength() / 2;
+	      var p1 = this.path.getPointAtLength(halfLength - 4);
+	      var p2 = this.path.getPointAtLength(halfLength + 4);
+	      this.sample.setAttribute("x1", p1.x);
+	      this.sample.setAttribute("y1", p1.y);
+	      this.sample.setAttribute("x2", p2.x);
+	      this.sample.setAttribute("y2", p2.y);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getMidPoint();
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps() {
+	      this.getMidPoint();
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this5 = this;
+
+	      var x1 = this.props.p1.x + this.props.p1Width / 2;
+	      var y1 = this.props.p1.y + 40 / 2;
+	      var x2 = this.props.p2.x + this.props.p2Width / 2;
+	      var y2 = this.props.p2.y + 40 / 2;
+	      var path = 'M' + x1 + ' ' + y1 + ' C ' + (x1 + 10) + ' ' + (y1 - 10) + ', ' + (x2 - 10) + ' ' + (y2 - 10) + ', ' + x2 + ' ' + y2;
+	      return _react2.default.createElement(
+	        'g',
+	        null,
+	        _react2.default.createElement('path', {
+	          d: path,
+	          stroke: this.props.selected ? "red" : connectionBlue, strokeWidth: '4', fill: 'transparent',
+	          ref: function ref(path) {
+	            _this5.path = path;
+	          },
+	          onClick: this.props.onClick
+	        }),
+	        _react2.default.createElement('line', { ref: function ref(line) {
+	            _this5.sample = line;
+	          }, strokeWidth: '4', markerEnd: 'url(#arrow)' })
+	      );
+	    }
+	  }]);
+
+	  return DirectedLine;
+	}(_react2.default.Component);
+
 	function ProcessTile(props) {
 	  return _react2.default.createElement(
 	    _reactDraggable2.default,
@@ -55281,37 +55452,37 @@
 	    _react2.default.createElement(
 	      'g',
 	      null,
-	      _react2.default.createElement(DraggableLine, { x: props.width, y: props.height / 2, onStop: function onStop(x, y) {
+	      _react2.default.createElement(DraggableLine, { className: 'connectionTemp', x: props.width, y: props.height / 2, onStop: function onStop(x, y) {
 	          return props.onConnectionEnd(x, y);
 	        } }),
 	      _react2.default.createElement('rect', { className: 'processTile', width: props.width, height: props.height, rx: '4', ry: '4', filter: 'url(#f3)' }),
 	      _react2.default.createElement(
 	        'text',
-	        { textAnchor: 'middle', x: props.width / 2, y: props.height - 10 },
-	        props.name
+	        { textAnchor: 'middle', x: props.width / 2, y: props.height / 2 + 4 },
+	        props.name + " (" + props.code + ")"
 	      )
 	    )
 	  );
 	}
 
-	var DraggableLine = function (_React$Component2) {
-	  _inherits(DraggableLine, _React$Component2);
+	var DraggableLine = function (_React$Component3) {
+	  _inherits(DraggableLine, _React$Component3);
 
 	  function DraggableLine(props) {
 	    _classCallCheck(this, DraggableLine);
 
-	    var _this2 = _possibleConstructorReturn(this, (DraggableLine.__proto__ || Object.getPrototypeOf(DraggableLine)).call(this, props));
+	    var _this6 = _possibleConstructorReturn(this, (DraggableLine.__proto__ || Object.getPrototypeOf(DraggableLine)).call(this, props));
 
-	    _this2.handleDrag = _this2.handleDrag.bind(_this2);
-	    _this2.handleDragStop = _this2.handleDragStop.bind(_this2);
-	    _this2.state = { x1: props.x + 5, y1: props.y + 5, x2: props.x + 5, y2: props.y + 5 };
-	    return _this2;
+	    _this6.handleDrag = _this6.handleDrag.bind(_this6);
+	    _this6.handleDragStop = _this6.handleDragStop.bind(_this6);
+	    _this6.state = { x1: props.x + 5, y1: props.y + 5, x2: props.x + 5, y2: props.y + 5 };
+	    return _this6;
 	  }
 
 	  _createClass(DraggableLine, [{
 	    key: 'handleDrag',
 	    value: function handleDrag() {
-	      var _this3 = this;
+	      var _this7 = this;
 
 	      return function (e, _ref) {
 	        var node = _ref.node,
@@ -55320,23 +55491,23 @@
 
 	        e.stopImmediatePropagation();
 
-	        var state = (0, _immutabilityHelper2.default)(_this3.state, { $merge: { x2: _this3.state.x2 + deltaX, y2: _this3.state.y2 + deltaY } });
-	        _this3.setState(state);
+	        var state = (0, _immutabilityHelper2.default)(_this7.state, { $merge: { x2: _this7.state.x2 + deltaX, y2: _this7.state.y2 + deltaY } });
+	        _this7.setState(state);
 	      };
 	    }
 	  }, {
 	    key: 'handleDragStop',
 	    value: function handleDragStop() {
-	      var _this4 = this;
+	      var _this8 = this;
 
 	      return function (e, _ref2) {
 	        var node = _ref2.node,
 	            deltaX = _ref2.deltaX,
 	            deltaY = _ref2.deltaY;
 
-	        _this4.props.onStop(_this4.state.x2, _this4.state.y2);
-	        var state = (0, _immutabilityHelper2.default)(_this4.state, { $merge: { x2: _this4.props.x + 5, y2: _this4.props.y + 5 } });
-	        _this4.setState(state);
+	        _this8.props.onStop(_this8.state.x2, _this8.state.y2);
+	        var state = (0, _immutabilityHelper2.default)(_this8.state, { $merge: { x2: _this8.props.x + 5, y2: _this8.props.y + 5 } });
+	        _this8.setState(state);
 	      };
 	    }
 	  }, {
@@ -55353,8 +55524,8 @@
 	        _react2.default.createElement(
 	          'g',
 	          null,
-	          _react2.default.createElement('rect', { x: this.props.x - 2, y: this.props.y, height: '15', width: '15', rx: '2', ry: '2', style: { fill: "#64B5F6" } }),
-	          _react2.default.createElement('line', _extends({}, this.state, { stroke: 'black', strokeWidth: '2' }))
+	          _react2.default.createElement('line', _extends({}, this.state, { stroke: '#1976D2', strokeWidth: '4', strokeDasharray: '8, 8' })),
+	          _react2.default.createElement('rect', { x: this.props.x - 2, y: this.props.y, height: '15', width: '15', rx: '2', ry: '2', style: { fill: "#64B5F6" } })
 	        )
 	      );
 	    }
@@ -55362,6 +55533,10 @@
 
 	  return DraggableLine;
 	}(_react2.default.Component);
+
+	function width(p) {
+	  return (p.name.length + p.code.length + 5) * 7;
+	}
 
 /***/ },
 /* 351 */
@@ -56974,6 +57149,629 @@
 	});
 	;
 	//# sourceMappingURL=react-draggable.js.map
+
+/***/ },
+/* 352 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(180);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactSelect = __webpack_require__(295);
+
+	var _reactSelect2 = _interopRequireDefault(_reactSelect);
+
+	var _Task = __webpack_require__(293);
+
+	var _immutabilityHelper = __webpack_require__(328);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	var _qr = __webpack_require__(353);
+
+	var _Label = __webpack_require__(354);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var getOptions = function getOptions(input, callback) {
+	  if (input.length < 2) {
+	    callback(null, { optionss: [] });
+	  } else {
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&label=" + input).done(function (data) {
+	      var options = data.results.map(function (x) {
+	        return { value: x.id, label: (0, _Task.display)(x), data: x };
+	      });
+	      callback(null, { options: options, complete: false });
+	    });
+	  }
+	};
+
+	var TaskSelect = function (_React$Component) {
+	  _inherits(TaskSelect, _React$Component);
+
+	  function TaskSelect() {
+	    _classCallCheck(this, TaskSelect);
+
+	    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
+	  }
+
+	  _createClass(TaskSelect, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'multiselect' },
+	        _react2.default.createElement(_reactSelect2.default.Async, {
+	          name: 'form-field-name',
+	          value: this.props.value,
+	          optionRenderer: function optionRenderer(option, i) {
+	            return (0, _Task.display)(option.data);
+	          },
+	          loadOptions: getOptions,
+	          onChange: this.props.onChange,
+	          placeholder: this.props.placeholder
+	        })
+	      );
+	    }
+	  }]);
+
+	  return TaskSelect;
+	}(_react2.default.Component);
+
+	var LabelPrinter = function (_React$Component2) {
+	  _inherits(LabelPrinter, _React$Component2);
+
+	  function LabelPrinter(props) {
+	    _classCallCheck(this, LabelPrinter);
+
+	    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
+
+	    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
+	    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
+	    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
+	    _this2.handleChange = _this2.handleChange.bind(_this2);
+	    _this2.handlePrint = _this2.handlePrint.bind(_this2);
+	    _this2.state = {
+	      expanded: false,
+	      numberLabels: "",
+	      notes: "",
+	      task: "",
+	      qrValue: "",
+	      items: [],
+	      selectedItem: ""
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(LabelPrinter, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      (0, _qr.mountQR)();
+	    }
+	  }, {
+	    key: 'handlePrint',
+	    value: function handlePrint() {
+	      var numLabels = parseInt(this.state.numberLabels) || -1;
+
+	      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
+	        alert("Please enter a valid number between 0 and 100!");
+	        return;
+	      }
+
+	      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
+	        alert("Please print labels for a valid task.");
+	        return;
+	      }
+
+	      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
+	        alert("Please choose a valid specific item to reprint.");
+	        return;
+	      }
+
+	      this.setState({ disabled: true });
+
+	      if (this.state.expanded) {
+	        var uuid = this.state.selectedItem.data.item_qr;
+	        (0, _qr.printQRs)([uuid]);
+	        this.setState({ disabled: false });
+	      }
+
+	      var thisObj = this;
+	      _jquery2.default.ajax({
+	        url: "../../../qr/codes/",
+	        data: { count: numLabels }
+	      }).done(function (data) {
+	        var uuids = data.split(/\s+/);
+	        (0, _qr.printQRs)(data.split(/\s+/));
+	      }).always(function () {
+	        thisObj.setState({ disabled: false });
+	      });
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, payload) {
+	      this.setState(_defineProperty({}, which, payload));
+	    }
+	  }, {
+	    key: 'handleExpandClick',
+	    value: function handleExpandClick() {
+	      var ns = {
+	        expanded: !this.state.expanded,
+	        numberLabels: "",
+	        notes: "",
+	        task: "",
+	        qrValue: "",
+	        items: [],
+	        selectedItem: ""
+	      };
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'handleTaskChange',
+	    value: function handleTaskChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({ task: v });
+
+	      if (this.state.expanded) this.reloadItems(v.data);
+	    }
+	  }, {
+	    key: 'handleItemChange',
+	    value: function handleItemChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({ selectedItem: v });
+	    }
+	  }, {
+	    key: 'reloadItems',
+	    value: function reloadItems(task) {
+	      var options = {};
+	      if (task.items) {
+	        options = task.items.map(function (x) {
+	          return { id: x.id, label: getQR(x), data: x };
+	        });
+	      }
+	      this.setState({ items: options });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this3 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'labelPrinter' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'marginer' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'stuff' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: "regularPrint " + (this.state.expanded ? "small" : "") },
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' Print me some labels '
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Number of labels'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'eg. 20',
+	                style: { width: "100%" },
+	                value: this.state.numberLabels,
+	                onChange: function onChange(e) {
+	                  return _this3.handleChange("numberLabels", e.target.value);
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Extra notes'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'max 20 characters',
+	                style: { width: "100%" },
+	                value: this.state.notes,
+	                onChange: function onChange(e) {
+	                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                ' '
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: "reprint " + (this.state.expanded ? "expanded" : "") },
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'I need to reprint a label'
+	                ),
+	                _react2.default.createElement(
+	                  'i',
+	                  { className: 'material-icons' },
+	                  'close'
+	                )
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Item'
+	              ),
+	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
+	                name: 'item-select',
+	                placeholder: 'Choose one',
+	                options: this.state.items,
+	                valueKey: 'id',
+	                value: this.state.selectedItem,
+	                onChange: this.handleItemChange
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                '  '
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'playground', style: { position: "relative", margin: "20px" } },
+	            _react2.default.createElement(_Label.Label, { taskLabel: (0, _Task.display)(this.state.task),
+	              originLabel: getCode((0, _Task.display)(this.state.task)),
+	              notesLabel: this.state.expanded ? "" : this.state.notes
+	            }),
+	            _react2.default.createElement(
+	              'div',
+	              { id: 'canvastest' },
+	              _react2.default.createElement('canvas', { height: '241', width: '431' })
+	            ),
+	            _react2.default.createElement('div', { id: 'qrtest' }),
+	            _react2.default.createElement('div', { id: 'blocker' })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'trouble' },
+	            _react2.default.createElement('hr', null),
+	            _react2.default.createElement(
+	              'h6',
+	              null,
+	              ' Troubleshooting '
+	            ),
+	            _react2.default.createElement(
+	              'p',
+	              null,
+	              ' You need to run the Dymo toolbar app to make this work.'
+	            ),
+	            _react2.default.createElement(
+	              'ul',
+	              null,
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'Find the little ',
+	                _react2.default.createElement(
+	                  'b',
+	                  null,
+	                  'Dymo icon on the top toolbar'
+	                ),
+	                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If you can\'t find the Dymo Service icon, open ',
+	                _react2.default.createElement(
+	                  'b',
+	                  null,
+	                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
+	                ),
+	                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If that folder doesn\'t exist, make sure you have the latest version of the ',
+	                _react2.default.createElement(
+	                  'a',
+	                  { href: '' },
+	                  'dymo software installed.'
+	                ),
+	                ' Once you do, you should have that folder. '
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If you\'re still having problems, tell whoever is running the site!'
+	              ),
+	              _react2.default.createElement('hr', null),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                ' (If you are the person running the site, check the ',
+	                _react2.default.createElement(
+	                  'a',
+	                  { href: '' },
+	                  ' Dymo developers blog'
+	                ),
+	                ' because that\'s the only place they document...)'
+	              )
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+
+	  return LabelPrinter;
+	}(_react2.default.Component);
+
+	exports.default = LabelPrinter;
+
+
+	function getCode(str) {
+	  var codes = str.split('-');
+	  if (codes[1]) return codes[1];
+	  return str;
+	}
+
+	function getQR(item) {
+	  if (item && item.item_qr) {
+	    var len = item.item_qr.length;
+	    return item.item_qr.substr(len - 6, len);
+	  }
+	  return "";
+	}
+
+/***/ },
+/* 353 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	function mountQR() {
+	  if (dymo.label.framework.init) dymo.label.framework.init(init);else init();
+	}
+
+	/* function : init
+	 * ---------------
+	 * This function is called after the Dymo Framework inits and sets up the webpage.
+	 */
+
+	function init() {}
+
+	function print(numLabels, text, success, always) {
+	  $.ajax({
+	    url: "codes/",
+	    data: { count: numLabels }
+	  }).done(function (data) {
+	    success(data);
+	  }).always(function () {
+	    always();
+	  });
+	}
+
+	function printQRs(uuids) {
+	  try {
+	    var label;
+	    var labelSetBuilder;
+	    var DOMURL;
+	    var svgString;
+	    var svg;
+	    var url;
+	    var img;
+
+	    (function () {
+	      var qrcode = new QRCode(document.getElementById("qrtest"), "");
+	      label = dymo.label.framework.openLabelXml(getXML());
+	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
+	      DOMURL = self.URL || self.webkitURL || self;
+	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+	      url = DOMURL.createObjectURL(svg);
+	      img = new Image();
+
+	      img.onload = function () {
+	        var canvas = document.getElementById('canvastest').querySelector('canvas');
+	        var ctx = canvas.getContext('2d');
+
+	        uuids.map(function (uuid) {
+	          createBackingImage(ctx, img, uuid);
+	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
+	          var qrImage = getQRimage(qrcode, uuid);
+	          var record = labelSetBuilder.addRecord();
+	          record.setText('qrImage', qrImage);
+	          record.setText('backingImage', backingImage);
+	        });
+	        label.print(getPrinter(), "", labelSetBuilder);
+	      };
+	      img.src = url;
+	    })();
+	  } catch (e) {
+	    alert(e.message || e);
+	  }
+	}
+
+	function createBackingImage(ctx, svg, uuid) {
+	  // clear canvas
+	  ctx.fillStyle = '#fff';
+	  ctx.fillRect(0, 0, 431, 241);
+
+	  // add backing image + qr text
+	  ctx.fillStyle = '#000';
+	  ctx.drawImage(svg, 0, 0);
+	  ctx.font = "20px Overpass Mono";
+	  ctx.fillText(uuid.substr(uuid.length - 6), 71, 216);
+	}
+
+	function getQRimage(qrcode, uuid) {
+	  qrcode.makeCode(uuid);
+	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
+	  var pngBase64 = url.substr('data:image/png;base64,'.length);
+	  return pngBase64;
+	}
+
+	/* function : getPrinter
+	 * ---------------
+	 * Gets a DYMO printer. TODO: Maybe update this to use CUPS API?
+	 */
+	function getPrinter() {
+	  // select printer to print on
+	  // for simplicity sake just use the first LabelWriter printer
+	  var printers = dymo.label.framework.getPrinters();
+	  if (!printers || printers.length == 0) throw "No DYMO printers are installed. Install DYMO printers.";
+
+	  var printerName = "";
+	  for (var i = 0; i < printers.length; ++i) {
+	    var printer = printers[i];
+	    if (printer.printerType == "LabelWriterPrinter") {
+	      printerName = printer.name;
+	      break;
+	    }
+	  }
+
+	  return printerName;
+	}
+
+	/* function : getXML
+	 * -----------------
+	 * Returns XML format of a label. TODO: Change this to AJAX get.
+	 */
+	function getXML() {
+	  var labelXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<DieCutLabel Version=\"8.0\" Units=\"twips\">\n  <PaperOrientation>Landscape</PaperOrientation>\n  <Id>LargeShipping</Id>\n  <PaperName>30256 Shipping</PaperName>\n  <DrawCommands>\n    <RoundRectangle X=\"0\" Y=\"0\" Width=\"3331\" Height=\"5715\" Rx=\"270\" Ry=\"270\"/>\n  </DrawCommands>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>backingImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"211.2\" Y=\"57.6001\" Width=\"5337.6\" Height=\"3192\"/>\n  </ObjectInfo>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>qrImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"579.9039\" Y=\"531\" Width=\"1900\" Height=\"1900\"/>\n  </ObjectInfo>\n</DieCutLabel>\n";
+	  return labelXml;
+	}
+
+	exports.mountQR = mountQR;
+	exports.printQRs = printQRs;
+
+/***/ },
+/* 354 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.Label = undefined;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function Label(props) {
+	  console.log(props);
+	  return _react2.default.createElement(
+	    "svg",
+	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
+	    _react2.default.createElement("defs", null),
+	    _react2.default.createElement(
+	      "g",
+	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
+	      _react2.default.createElement(
+	        "g",
+	        { id: "Artboard" },
+	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "135.102905" },
+	            props.taskLabel || ""
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "91" },
+	            props.originLabel
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "179.205811" },
+	            props.notesLabel
+	          )
+	        ),
+	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
+	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "70.885882", y: "216.037" },
+	            props.qrCode
+	          )
+	        )
+	      )
+	    )
+	  );
+	}
+
+	exports.Label = Label;
 
 /***/ }
 /******/ ]);

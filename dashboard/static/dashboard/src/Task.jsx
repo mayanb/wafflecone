@@ -1,6 +1,10 @@
 import moment from 'moment';
 
 function display(task) {
+  if (!task || task == undefined || task.label == undefined) {
+  	return ""
+  }
+
   if (task.custom_display && task.custom_display != "") 
     return task.custom_display
   else if (task.label_index > 0)

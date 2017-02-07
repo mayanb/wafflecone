@@ -28,7 +28,7 @@ export default class FactoryMap extends React.Component {
     }
 
     return (
-      <svg style={{width: "100%", height: "100%", backgroundColor: "#1565C0"}}>
+      <svg className="factorymap" style={{width: "100%", height: "100%", backgroundColor: "#1565C0"}}>
 
       <defs>
         <filter id="f3" x="0" y="0" width="200%" height="200%">
@@ -64,16 +64,27 @@ export default class FactoryMap extends React.Component {
           if (p == undefined) return {false}
           let coords = thisObj.unscale(p)
           let newp = update(p, {$merge: coords})
-          return <ProcessTile width={width(p)} height={40} {...newp} key={pid} onStop={(e, ui) => thisObj.handleStop(e, ui, pid)}
-            onConnectionEnd={(x, y) => thisObj.handleConnectionEnd(pid, x, y)} />
+          return <ProcessTile 
+            width={width(p)} height={40} 
+            {...newp} key={pid}
+            selected={pid==this.state.selectProcess} 
+            onStop={(e, ui) => thisObj.handleStop(e, ui, pid)}
+            onConnectionEnd={(x, y) => thisObj.handleConnectionEnd(pid, x, y)}
+            onClick={() => this.selectProcess(pid)}
+          />
         })
       }
       </svg>
     )
   }
 
-  selectConnection(cid) {
+  selectProcess(pid) {
     let ns = update(this.state, {$merge: {selectConnection: cid, selectedProcess: -1} })
+    this.setState(ns)
+  }
+
+  selectConnection(cid) {
+    let ns = update(this.state, {$merge: {selectConnection: -1, selectedProcess: pid} })
     this.setState(ns)
   }
 

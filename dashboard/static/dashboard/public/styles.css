@@ -220,26 +220,113 @@ i.material-icons {
 ul div.menuContentWrapper div.rdr-Days {
   white-space: normal; }
 
-button {
-  padding: 8px 16px;
-  color: #C30017;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-  margin: 4px 2px;
-  cursor: pointer;
-  border: none;
-  background-color: white; }
-
 .processTile {
   fill: white; }
 
-svg text {
+.factorymap text {
   font-size: 0.85em;
   line-height: 50px; }
 
 .connectionTemp {
   fill: #90CAF9; }
+
+.trouble {
+  max-width: 500px;
+  margin: 0 auto; }
+  .trouble h6 {
+    text-align: center; }
+  .trouble p, .trouble li {
+    font-size: 11px; }
+  .trouble li {
+    margin-bottom: 10px; }
+
+div.labelPrinter {
+  padding-top: 64px;
+  background-color: #eee; }
+  div.labelPrinter .stuff {
+    max-width: 300px;
+    margin: 0 auto;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+    padding: 20px;
+    background-color: white;
+    max-height: 470px;
+    overflow: hidden; }
+  div.labelPrinter input {
+    line-height: 34px;
+    font-size: 15.2px;
+    border: 0;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1); }
+    div.labelPrinter input:focus {
+      outline: none; }
+  div.labelPrinter input, div.labelPrinter .multiselect, div.labelPrinter .select {
+    margin-bottom: 30px; }
+  div.labelPrinter .inputLabel {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.6); }
+  div.labelPrinter .marginer {
+    padding-top: 40px; }
+    div.labelPrinter .marginer h2 {
+      text-align: center;
+      line-height: 48px; }
+  div.labelPrinter button {
+    padding: 8px 16px;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border: none;
+    border-radius: 2px;
+    background-color: #C30017;
+    width: 100%; }
+  div.labelPrinter .regularprint {
+    max-height: 1000px; }
+  div.labelPrinter .small {
+    max-height: 0;
+    overflow: hidden;
+    z-index: 997; }
+  div.labelPrinter .reprint {
+    margin: -20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+    padding: 20px;
+    background-color: white;
+    z-index: 999; }
+    div.labelPrinter .reprint .expandReprint {
+      display: block;
+      color: #C30017;
+      background-color: white;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: row;
+      padding-left: 0px;
+      padding-right: 0px;
+      text-align: left; }
+      div.labelPrinter .reprint .expandReprint span {
+        flex: 1; }
+      div.labelPrinter .reprint .expandReprint i {
+        flex: 0;
+        color: #C30017;
+        visibility: hidden;
+        font-size: 13px;
+        line-height: 16px;
+        vertical-align: middle; }
+      div.labelPrinter .reprint .expandReprint:focus {
+        outline: none; }
+    div.labelPrinter .reprint.expanded i {
+      visibility: inherit; }
+
+.labelSVG {
+  background-color: white; }
+
+div#blocker, #canvastest {
+  position: absolute;
+  height: 241px;
+  width: 431px;
+  background-color: #eee;
+  top: 0;
+  left: 0; }
 
 /*# sourceMappingURL=styles.css.map */
