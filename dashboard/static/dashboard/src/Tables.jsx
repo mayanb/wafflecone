@@ -4,19 +4,34 @@ import $ from 'jquery';
 import moment from 'moment';
 import {display, toCSV} from './Task.jsx';
 
-export function TableList(props) {
-  return (
-    <div> 
-    { Object.keys(props.taskGroups).map(function(taskGroupID, i) {
-        var taskGroup = props.taskGroups[taskGroupID];
-        return <Table 
-          tasks={taskGroup} 
-          key={taskGroupID} 
-          process={props.processes[taskGroupID]} />;
-      })
-    } 
-    </div>
-  );
+export default class TableList extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { inventory: false }
+  }
+
+  componentWillReceiveProps(newprops) {
+    if (this.state.inventory != newprops.inventory) {
+      this.setState({inventory: newprops.inventory})
+    }
+  }
+
+  render() {
+    return (
+      <div> 
+      { Object.keys(this.props.taskGroups).map(function(taskGroupID, i) {
+          var taskGroup = this.props.taskGroups[taskGroupID];
+          return <Table 
+            tasks={taskGroup} 
+            key={taskGroupID} 
+            process={this.props.processes[taskGroupID]}
+            inventory={this.state.inventory} 
+          />;
+        }, this)
+      } 
+      </div>
+    );
+  }
 }
 
 
@@ -27,10 +42,10 @@ function Table(props) {
 
       <div className="card-container">
         <table>
-          <TableHead attributes={props.process.attributes}/>
+          <TableHead attributes={props.process.attributes} inventory={props.inventory}/>
           <tbody>
             { props.tasks.map(function(task, i) {
-              return <TaskRow task={task} attributes={props.process.attributes} key={task.id} />;
+              return <TaskRow task={task} attributes={props.process.attributes} key={task.id} inventory={props.inventory}/>;
             })}
           </tbody>
         </table>
@@ -49,15 +64,6 @@ function TableHeader(props) {
   );
 }
 
-// function display(task) {
-//   if (task.custom_display && task.custom_display != "") 
-//     return task.custom_display
-//   else if (task.label_index > 0)
-//     return task.label + "-" + task.label_index
-//   else
-//     return task.label
-// }
-
 function possiblyEmpty(val) {
   if ($.type(val) === "number" && val == 0)
     return "zero-cell"
@@ -74,11 +80,16 @@ function getAttributeValue(task, attributeID) {
 }
 
 function TaskRow(props) {
+
+  var inputs = <td className={possiblyEmpty(props.task.inputs.length)}>{props.task.inputs.length + " items"}</td>
+  if (props.inventory) {
+    inputs = false
+  }
   return (
     <tr className="">
      <td>{display(props.task)}</td>
      <td className={possiblyEmpty(props.task.items.length)}>{props.task.items.length + " items"}</td>
-     <td className={possiblyEmpty(props.task.inputs.length)}>{props.task.inputs.length + " items"}</td>
+     {inputs}
      { props.attributes.map(function(attribute, i) {
               return <td key={attribute.id}
                 className={possiblyEmpty(getAttributeValue(props.task, attribute.id))}>{getAttributeValue(props.task, attribute.id)}</td>
@@ -89,11 +100,15 @@ function TaskRow(props) {
 }
 
 function TableHead(props) {
+  var inputs = <td>Inputs</td>
+  if (props.inventory) {
+    inputs = false
+  }
   return (
     <thead className=""><tr>
       <td>Task</td>
       <td>Outputs</td>
-      <td>Inputs</td>
+      {inputs}
        { props.attributes.map(function(attribute, i) {
               return <td key={attribute.id}>{attribute.name}</td>
         })}

@@ -42,7 +42,7 @@ class Main extends React.Component {
 
   render() {
 
-    var obj = <Tasks inventory={this.state.active==2} />
+    var obj = <Tasks inventory={(this.state.active==2)} />
 
     if (this.state.active == 3) {
       obj = <LabelPrinter />

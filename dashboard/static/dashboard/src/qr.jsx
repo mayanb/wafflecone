@@ -30,6 +30,7 @@ function print(numLabels, text, success, always) {
 function printQRs(uuids) {
   try {
     let qrcode = new QRCode(document.getElementById("qrtest"), "");
+    qrcode.clear()
     var label = dymo.label.framework.openLabelXml(getXML())
     var labelSetBuilder = new dymo.label.framework.LabelSetBuilder()
 
@@ -71,9 +72,11 @@ function createBackingImage(ctx, svg, uuid) {
 }
 
 function getQRimage(qrcode, uuid) {
+  qrcode.clear()
   qrcode.makeCode(uuid)
   let url = document.getElementById('qrtest').querySelector('canvas').toDataURL()
   let pngBase64 = url.substr('data:image/png;base64,'.length);
+  qrcode.clear()
   return pngBase64
 }
 

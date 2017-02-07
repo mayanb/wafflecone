@@ -1,6 +1,6 @@
 import React from 'react';
 import $ from 'jquery';
-import {Table, TableList} from './Tables.jsx';
+import TableList from './Tables.jsx';
 import { Filters } from './Inputs.jsx';
 import { ContentDescriptor } from './Layout.jsx'
 import moment from 'moment';
@@ -52,6 +52,7 @@ export default class Tasks extends React.Component {
           <TableList 
             taskGroups={this.state.taskGroups} 
             processes={this.state.processes}
+            inventory={this.props.inventory}
           />
 
         </div>
@@ -199,8 +200,6 @@ export default class Tasks extends React.Component {
     if (state.child && state.child != "") {
       filters.child = state.child
     }
-
-    console.log(filters)
 
     this.setState({activeFilters: filters})
     return filters

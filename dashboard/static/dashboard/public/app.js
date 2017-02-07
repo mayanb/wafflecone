@@ -21736,6 +21736,8 @@
 
 	var _Tables = __webpack_require__(181);
 
+	var _Tables2 = _interopRequireDefault(_Tables);
+
 	var _Inputs = __webpack_require__(294);
 
 	var _Layout = __webpack_require__(178);
@@ -21807,9 +21809,10 @@
 	              return _this2.handlePage(x);
 	            }
 	          }),
-	          _react2.default.createElement(_Tables.TableList, {
+	          _react2.default.createElement(_Tables2.default, {
 	            taskGroups: this.state.taskGroups,
-	            processes: this.state.processes
+	            processes: this.state.processes,
+	            inventory: this.props.inventory
 	          })
 	        ),
 	        _react2.default.createElement(
@@ -21957,8 +21960,6 @@
 	      if (state.child && state.child != "") {
 	        filters.child = state.child;
 	      }
-
-	      console.log(filters);
 
 	      this.setState({ activeFilters: filters });
 	      return filters;
@@ -32262,7 +32263,8 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.TableList = TableList;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _react = __webpack_require__(1);
 
@@ -32284,19 +32286,55 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function TableList(props) {
-	  return _react2.default.createElement(
-	    'div',
-	    null,
-	    Object.keys(props.taskGroups).map(function (taskGroupID, i) {
-	      var taskGroup = props.taskGroups[taskGroupID];
-	      return _react2.default.createElement(Table, {
-	        tasks: taskGroup,
-	        key: taskGroupID,
-	        process: props.processes[taskGroupID] });
-	    })
-	  );
-	}
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var TableList = function (_React$Component) {
+	  _inherits(TableList, _React$Component);
+
+	  function TableList(props) {
+	    _classCallCheck(this, TableList);
+
+	    var _this = _possibleConstructorReturn(this, (TableList.__proto__ || Object.getPrototypeOf(TableList)).call(this, props));
+
+	    _this.state = { inventory: false };
+	    return _this;
+	  }
+
+	  _createClass(TableList, [{
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(newprops) {
+	      if (this.state.inventory != newprops.inventory) {
+	        this.setState({ inventory: newprops.inventory });
+	      }
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        Object.keys(this.props.taskGroups).map(function (taskGroupID, i) {
+	          var taskGroup = this.props.taskGroups[taskGroupID];
+	          return _react2.default.createElement(Table, {
+	            tasks: taskGroup,
+	            key: taskGroupID,
+	            process: this.props.processes[taskGroupID],
+	            inventory: this.state.inventory
+	          });
+	        }, this)
+	      );
+	    }
+	  }]);
+
+	  return TableList;
+	}(_react2.default.Component);
+
+	exports.default = TableList;
+
 
 	function Table(props) {
 	  return _react2.default.createElement(
@@ -32309,12 +32347,12 @@
 	      _react2.default.createElement(
 	        'table',
 	        null,
-	        _react2.default.createElement(TableHead, { attributes: props.process.attributes }),
+	        _react2.default.createElement(TableHead, { attributes: props.process.attributes, inventory: props.inventory }),
 	        _react2.default.createElement(
 	          'tbody',
 	          null,
 	          props.tasks.map(function (task, i) {
-	            return _react2.default.createElement(TaskRow, { task: task, attributes: props.process.attributes, key: task.id });
+	            return _react2.default.createElement(TaskRow, { task: task, attributes: props.process.attributes, key: task.id, inventory: props.inventory });
 	          })
 	        )
 	      )
@@ -32343,15 +32381,6 @@
 	  );
 	}
 
-	// function display(task) {
-	//   if (task.custom_display && task.custom_display != "") 
-	//     return task.custom_display
-	//   else if (task.label_index > 0)
-	//     return task.label + "-" + task.label_index
-	//   else
-	//     return task.label
-	// }
-
 	function possiblyEmpty(val) {
 	  if (_jquery2.default.type(val) === "number" && val == 0) return "zero-cell";
 	  if (_jquery2.default.type(val) === "string" && val == "n/a") return "zero-cell";
@@ -32365,6 +32394,15 @@
 	}
 
 	function TaskRow(props) {
+
+	  var inputs = _react2.default.createElement(
+	    'td',
+	    { className: possiblyEmpty(props.task.inputs.length) },
+	    props.task.inputs.length + " items"
+	  );
+	  if (props.inventory) {
+	    inputs = false;
+	  }
 	  return _react2.default.createElement(
 	    'tr',
 	    { className: '' },
@@ -32378,11 +32416,7 @@
 	      { className: possiblyEmpty(props.task.items.length) },
 	      props.task.items.length + " items"
 	    ),
-	    _react2.default.createElement(
-	      'td',
-	      { className: possiblyEmpty(props.task.inputs.length) },
-	      props.task.inputs.length + " items"
-	    ),
+	    inputs,
 	    props.attributes.map(function (attribute, i) {
 	      return _react2.default.createElement(
 	        'td',
@@ -32400,6 +32434,14 @@
 	}
 
 	function TableHead(props) {
+	  var inputs = _react2.default.createElement(
+	    'td',
+	    null,
+	    'Inputs'
+	  );
+	  if (props.inventory) {
+	    inputs = false;
+	  }
 	  return _react2.default.createElement(
 	    'thead',
 	    { className: '' },
@@ -32416,11 +32458,7 @@
 	        null,
 	        'Outputs'
 	      ),
-	      _react2.default.createElement(
-	        'td',
-	        null,
-	        'Inputs'
-	      ),
+	      inputs,
 	      props.attributes.map(function (attribute, i) {
 	        return _react2.default.createElement(
 	          'td',
@@ -57617,6 +57655,7 @@
 
 	    (function () {
 	      var qrcode = new QRCode(document.getElementById("qrtest"), "");
+	      qrcode.clear();
 	      label = dymo.label.framework.openLabelXml(getXML());
 	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
 	      DOMURL = self.URL || self.webkitURL || self;
@@ -57659,9 +57698,11 @@
 	}
 
 	function getQRimage(qrcode, uuid) {
+	  qrcode.clear();
 	  qrcode.makeCode(uuid);
 	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
 	  var pngBase64 = url.substr('data:image/png;base64,'.length);
+	  qrcode.clear();
 	  return pngBase64;
 	}
 
