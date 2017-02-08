@@ -25,7 +25,7 @@ export default class Tasks extends React.Component {
       startIndex: 0,
       currentPage: 1,
 
-      activeFilters: { start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
+      activeFilters: { inventory: props.inventory, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
     };
   }
 
@@ -33,7 +33,7 @@ export default class Tasks extends React.Component {
 	render() {
 
 		if (this.state.processes == {} || this.state.products == {}) {
-			return false;
+			return {false};
 		}
 
 		return ( 
@@ -61,7 +61,7 @@ export default class Tasks extends React.Component {
             <Filters 
               processes={this.state.processes} 
               products={this.state.products} 
-              dates={!this.props.inventory}
+              dates={this.props.inventory==false}
               onFilter={(state) => this.handleFilter(state)}
             />
         </div>
@@ -90,7 +90,7 @@ export default class Tasks extends React.Component {
   }
 
   componentDidMount() {
-    var newState = { taskGroups: [], processes: [], products: [] };
+    var newState = { taskGroups: {}, processes: {}, products: {} };
 
     var defs = []
 
@@ -100,22 +100,12 @@ export default class Tasks extends React.Component {
     var component = this
 
     $.when.apply(null, defs).done(function() {
-    	component.setState(newState)
+      component.setState(newState)
+      var d2 = [component.getTasks(newState, component.state.activeFilters)]
+      $.when.apply(null, d2).done(function() {
+        component.setState(newState)
+      });
     })
-  }
-
-  componentWillReceiveProps(nextProps) {
-
-  	if (!nextProps.inventory || this.props.inventory)
-  		return
-
-  	var newState = {}
-  	var thisObj = this
-    var defs = [this.getTasks(newState, {})]
-
-    $.when.apply(null, defs).done(function() {
-      thisObj.setState(newState)
-    });
   }
 
   getTasks(container, filters, page) {
@@ -240,7 +230,6 @@ function splitTasksByProcess(tasks, processes) {
     if (task.process_type == 1 && task.custom_display && processes) {
 
       // get the code from here
-
       var label = task.custom_display.split(/[\s-_]+/)
       if (label.length > 0) {
         label = label[0]

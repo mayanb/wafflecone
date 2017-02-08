@@ -141,7 +141,6 @@ class Filters extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.dates != nextProps.dates) {
-      console.log("woooot")
       this.setState( {
       processes: [],
       products: [],
@@ -153,22 +152,27 @@ class Filters extends React.Component {
   }
 
   switchActive(x) {
+    console.log("active")
     this.setState({active : x}, this.handleFilter)
   }
 
   handleProcessChange(val) {
+    console.log("processes")
     this.setState({processes: val}, this.handleFilter)
   }
 
   handleProductChange(val) {
+    console.log("products")
     this.setState({products: val}, this.handleFilter)
   }
 
   handleDateRangeChange(val) {
+    console.log("date")
     this.setState(val, this.handleFilter)
   }
 
   handleParentChange(val) {
+    console.log("parent")
     this.setState({parent: val.value}, this.handleFilter)
   }
 
@@ -180,9 +184,7 @@ class Filters extends React.Component {
 
     var obj = false
     if (this.props.dates) {
-      obj = <div>
-                  <Datepicker onChange={(val) => this.handleDateRangeChange(val)} />              
-                </div>
+      obj = <div><Datepicker onChange={(val) => this.handleDateRangeChange(val)} /></div>
     }
     return (
       <div className="filters">

@@ -21779,7 +21779,7 @@
 	      startIndex: 0,
 	      currentPage: 1,
 
-	      activeFilters: { start: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString(), end: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString() }
+	      activeFilters: { inventory: props.inventory, start: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString(), end: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString() }
 	    };
 	    return _this;
 	  }
@@ -21790,7 +21790,7 @@
 	      var _this2 = this;
 
 	      if (this.state.processes == {} || this.state.products == {}) {
-	        return false;
+	        return { false: false };
 	      }
 
 	      return _react2.default.createElement(
@@ -21821,7 +21821,7 @@
 	          _react2.default.createElement(_Inputs.Filters, {
 	            processes: this.state.processes,
 	            products: this.state.products,
-	            dates: !this.props.inventory,
+	            dates: this.props.inventory == false,
 	            onFilter: function onFilter(state) {
 	              return _this2.handleFilter(state);
 	            }
@@ -21852,7 +21852,7 @@
 	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
-	      var newState = { taskGroups: [], processes: [], products: [] };
+	      var newState = { taskGroups: {}, processes: {}, products: {} };
 
 	      var defs = [];
 
@@ -21863,20 +21863,10 @@
 
 	      _jquery2.default.when.apply(null, defs).done(function () {
 	        component.setState(newState);
-	      });
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(nextProps) {
-
-	      if (!nextProps.inventory || this.props.inventory) return;
-
-	      var newState = {};
-	      var thisObj = this;
-	      var defs = [this.getTasks(newState, {})];
-
-	      _jquery2.default.when.apply(null, defs).done(function () {
-	        thisObj.setState(newState);
+	        var d2 = [component.getTasks(newState, component.state.activeFilters)];
+	        _jquery2.default.when.apply(null, d2).done(function () {
+	          component.setState(newState);
+	        });
 	      });
 	    }
 	  }, {
@@ -22004,7 +21994,6 @@
 	    if (task.process_type == 1 && task.custom_display && processes) {
 
 	      // get the code from here
-
 	      var label = task.custom_display.split(/[\s-_]+/);
 	      if (label.length > 0) {
 	        label = label[0];
@@ -47654,7 +47643,6 @@
 	    key: 'componentWillReceiveProps',
 	    value: function componentWillReceiveProps(nextProps) {
 	      if (this.props.dates != nextProps.dates) {
-	        console.log("woooot");
 	        this.setState({
 	          processes: [],
 	          products: [],
@@ -47667,26 +47655,31 @@
 	  }, {
 	    key: 'switchActive',
 	    value: function switchActive(x) {
+	      console.log("active");
 	      this.setState({ active: x }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleProcessChange',
 	    value: function handleProcessChange(val) {
+	      console.log("processes");
 	      this.setState({ processes: val }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleProductChange',
 	    value: function handleProductChange(val) {
+	      console.log("products");
 	      this.setState({ products: val }, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleDateRangeChange',
 	    value: function handleDateRangeChange(val) {
+	      console.log("date");
 	      this.setState(val, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleParentChange',
 	    value: function handleParentChange(val) {
+	      console.log("parent");
 	      this.setState({ parent: val.value }, this.handleFilter);
 	    }
 	  }, {
@@ -50181,6 +50174,7 @@
 	    _this.stopPropagation = _this.stopPropagation.bind(_this);
 	    _this.isActive = _this.isActive.bind(_this);
 	    _this.handleChange = _this.handleChange.bind(_this, 'predefined');
+	    _this.handleInit = _this.handleInit.bind(_this);
 
 	    _this.state = {
 	      predefined: {},
@@ -50192,6 +50186,9 @@
 	  }
 
 	  _createClass(Datepicker, [{
+	    key: 'handleInit',
+	    value: function handleInit() {}
+	  }, {
 	    key: 'handleChange',
 	    value: function handleChange(which, payload) {
 	      this.setState(_defineProperty({}, which, payload));

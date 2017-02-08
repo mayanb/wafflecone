@@ -12,6 +12,7 @@ export default class Datepicker extends React.Component {
     this.stopPropagation = this.stopPropagation.bind(this);
     this.isActive = this.isActive.bind(this);
     this.handleChange = this.handleChange.bind(this, 'predefined')
+    this.handleInit = this.handleInit.bind(this)
 
     this.state = {
       predefined: {},
@@ -19,6 +20,10 @@ export default class Datepicker extends React.Component {
       x: 0,
       y: 0,
     }
+  }
+
+  handleInit() {
+    
   }
 
   handleChange(which, payload) {
