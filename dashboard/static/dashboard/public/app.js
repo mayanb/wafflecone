@@ -57674,6 +57674,7 @@
 	          record.setText('backingImage', backingImage);
 	        });
 	        label.print(getPrinter(), "", labelSetBuilder);
+	        qrcode.clear();
 	      };
 	      img.src = url;
 	    })();
@@ -57699,7 +57700,6 @@
 	  qrcode.makeCode(uuid);
 	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
 	  var pngBase64 = url.substr('data:image/png;base64,'.length);
-	  qrcode.clear();
 	  return pngBase64;
 	}
 

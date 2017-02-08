@@ -52,6 +52,7 @@ function printQRs(uuids) {
         record.setText('backingImage', backingImage)
       })
       label.print(getPrinter(), "", labelSetBuilder)
+      qrcode.clear()
     }
     img.src = url;
   }  catch(e) {
@@ -76,7 +77,6 @@ function getQRimage(qrcode, uuid) {
   qrcode.makeCode(uuid)
   let url = document.getElementById('qrtest').querySelector('canvas').toDataURL()
   let pngBase64 = url.substr('data:image/png;base64,'.length);
-  qrcode.clear()
   return pngBase64
 }
 
