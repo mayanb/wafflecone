@@ -64,6 +64,11 @@ export default class LabelPrinter extends React.Component {
     mountQR()
   }
 
+  componentDidMount() {
+    let q = new QRCode(document.getElementById("qrtest"), "")
+    this.setState({qrcode : q})
+  }
+
   handlePrint() {
     let numLabels = parseInt(this.state.numberLabels) || -1
 
@@ -87,7 +92,7 @@ export default class LabelPrinter extends React.Component {
 
     if (this.state.expanded) {
       let uuid = this.state.selectedItem.data.item_qr
-      printQRs([uuid])
+      printQRs([uuid], this.state.qrcode)
       this.setState({disabled: false})
       return
     }
@@ -99,7 +104,7 @@ export default class LabelPrinter extends React.Component {
     })
     .done(function (data) {
       let uuids = data.split(/\s+/)
-      printQRs(data.split(/\s+/))
+      printQRs(data.split(/\s+/), thisObj.state.qrcode)
     })
     .always(function () {
       thisObj.setState({disabled: false})

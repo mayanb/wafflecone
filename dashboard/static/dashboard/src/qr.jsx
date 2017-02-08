@@ -27,9 +27,8 @@ function print(numLabels, text, success, always) {
   })
 }
 
-function printQRs(uuids) {
+function printQRs(uuids, qrcode) {
   try {
-    let qrcode = new QRCode(document.getElementById("qrtest"), "");
     qrcode.clear()
     var label = dymo.label.framework.openLabelXml(getXML())
     var labelSetBuilder = new dymo.label.framework.LabelSetBuilder()

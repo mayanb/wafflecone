@@ -57305,6 +57305,12 @@
 	      (0, _qr.mountQR)();
 	    }
 	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var q = new QRCode(document.getElementById("qrtest"), "");
+	      this.setState({ qrcode: q });
+	    }
+	  }, {
 	    key: 'handlePrint',
 	    value: function handlePrint() {
 	      var numLabels = parseInt(this.state.numberLabels) || -1;
@@ -57328,7 +57334,7 @@
 
 	      if (this.state.expanded) {
 	        var uuid = this.state.selectedItem.data.item_qr;
-	        (0, _qr.printQRs)([uuid]);
+	        (0, _qr.printQRs)([uuid], this.state.qrcode);
 	        this.setState({ disabled: false });
 	        return;
 	      }
@@ -57339,7 +57345,7 @@
 	        data: { count: numLabels }
 	      }).done(function (data) {
 	        var uuids = data.split(/\s+/);
-	        (0, _qr.printQRs)(data.split(/\s+/));
+	        (0, _qr.printQRs)(data.split(/\s+/), thisObj.state.qrcode);
 	      }).always(function () {
 	        thisObj.setState({ disabled: false });
 	      });
@@ -57640,44 +57646,33 @@
 	  });
 	}
 
-	function printQRs(uuids) {
+	function printQRs(uuids, qrcode) {
 	  try {
-	    var label;
-	    var labelSetBuilder;
-	    var DOMURL;
-	    var svgString;
-	    var svg;
-	    var url;
-	    var img;
+	    qrcode.clear();
+	    var label = dymo.label.framework.openLabelXml(getXML());
+	    var labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
 
-	    (function () {
-	      var qrcode = new QRCode(document.getElementById("qrtest"), "");
+	    var DOMURL = self.URL || self.webkitURL || self;
+	    var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+	    var svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+	    var url = DOMURL.createObjectURL(svg);
+	    var img = new Image();
+	    img.onload = function () {
+	      var canvas = document.getElementById('canvastest').querySelector('canvas');
+	      var ctx = canvas.getContext('2d');
+
+	      uuids.map(function (uuid) {
+	        createBackingImage(ctx, img, uuid);
+	        var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
+	        var qrImage = getQRimage(qrcode, uuid);
+	        var record = labelSetBuilder.addRecord();
+	        record.setText('qrImage', qrImage);
+	        record.setText('backingImage', backingImage);
+	      });
+	      label.print(getPrinter(), "", labelSetBuilder);
 	      qrcode.clear();
-	      label = dymo.label.framework.openLabelXml(getXML());
-	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
-	      DOMURL = self.URL || self.webkitURL || self;
-	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
-	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-	      url = DOMURL.createObjectURL(svg);
-	      img = new Image();
-
-	      img.onload = function () {
-	        var canvas = document.getElementById('canvastest').querySelector('canvas');
-	        var ctx = canvas.getContext('2d');
-
-	        uuids.map(function (uuid) {
-	          createBackingImage(ctx, img, uuid);
-	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
-	          var qrImage = getQRimage(qrcode, uuid);
-	          var record = labelSetBuilder.addRecord();
-	          record.setText('qrImage', qrImage);
-	          record.setText('backingImage', backingImage);
-	        });
-	        label.print(getPrinter(), "", labelSetBuilder);
-	        qrcode.clear();
-	      };
-	      img.src = url;
-	    })();
+	    };
+	    img.src = url;
 	  } catch (e) {
 	    alert(e.message || e);
 	  }
