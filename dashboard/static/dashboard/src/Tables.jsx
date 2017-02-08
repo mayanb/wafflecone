@@ -45,7 +45,7 @@ function Table(props) {
           <TableHead attributes={props.process.attributes} inventory={props.inventory}/>
           <tbody>
             { props.tasks.map(function(task, i) {
-              return <TaskRow task={task} attributes={props.process.attributes} key={task.id} inventory={props.inventory}/>;
+              return <TaskRow task={task} attributes={props.process.attributes} key={task.id} inventory={props.inventory} unit={props.process.unit}/>;
             })}
           </tbody>
         </table>
@@ -88,7 +88,7 @@ function TaskRow(props) {
   return (
     <tr className="">
      <td>{display(props.task)}</td>
-     <td className={possiblyEmpty(props.task.items.length)}>{props.task.items.length + " items"}</td>
+     <td className={possiblyEmpty(props.task.items.length)}>{props.task.items.length + " " + getUnit(props.unit, props.task.items.length)}</td>
      {inputs}
      { props.attributes.map(function(attribute, i) {
               return <td key={attribute.id}
@@ -97,6 +97,13 @@ function TaskRow(props) {
      <td>{moment(props.task.created_at).format("MM/DD/YY").toString()}</td>
     </tr>
   );
+}
+
+function getUnit(unit, count) {
+  if(count == 0) {
+    return unit
+  }
+  return unit + "s"
 }
 
 function TableHead(props) {

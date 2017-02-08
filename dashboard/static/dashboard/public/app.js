@@ -32341,7 +32341,7 @@
 	          'tbody',
 	          null,
 	          props.tasks.map(function (task, i) {
-	            return _react2.default.createElement(TaskRow, { task: task, attributes: props.process.attributes, key: task.id, inventory: props.inventory });
+	            return _react2.default.createElement(TaskRow, { task: task, attributes: props.process.attributes, key: task.id, inventory: props.inventory, unit: props.process.unit });
 	          })
 	        )
 	      )
@@ -32403,7 +32403,7 @@
 	    _react2.default.createElement(
 	      'td',
 	      { className: possiblyEmpty(props.task.items.length) },
-	      props.task.items.length + " items"
+	      props.task.items.length + " " + getUnit(props.unit, props.task.items.length)
 	    ),
 	    inputs,
 	    props.attributes.map(function (attribute, i) {
@@ -32420,6 +32420,13 @@
 	      (0, _moment2.default)(props.task.created_at).format("MM/DD/YY").toString()
 	    )
 	  );
+	}
+
+	function getUnit(unit, count) {
+	  if (count == 0) {
+	    return unit;
+	  }
+	  return unit + "s";
 	}
 
 	function TableHead(props) {
