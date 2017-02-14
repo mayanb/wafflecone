@@ -21763,9 +21763,12 @@
 	    var _this = _possibleConstructorReturn(this, (Tasks.__proto__ || Object.getPrototypeOf(Tasks)).call(this, props));
 
 	    _this.handleFilter = _this.handleFilter.bind(_this);
+	    _this.handleTaskToggle = _this.handleTaskToggle.bind(_this);
+	    _this.handleTaskSave = _this.handleTaskSave.bind(_this);
 	    _this.state = {
 
 	      inventory: props.inventory,
+	      activeTask: null,
 
 	      taskGroups: {},
 	      processes: {},
@@ -21812,7 +21815,10 @@
 	          _react2.default.createElement(_Tables2.default, {
 	            taskGroups: this.state.taskGroups,
 	            processes: this.state.processes,
-	            inventory: this.props.inventory
+	            inventory: this.props.inventory,
+	            onTaskClick: function onTaskClick(task) {
+	              return _this2.handleTaskToggle(task);
+	            }
 	          })
 	        ),
 	        _react2.default.createElement(
@@ -21828,6 +21834,20 @@
 	          })
 	        )
 	      );
+	    }
+	  }, {
+	    key: 'handleTaskSave',
+	    value: function handleTaskSave(task) {
+	      handleTaskToggle(null);
+	    }
+	  }, {
+	    key: 'handleTaskToggle',
+	    value: function handleTaskToggle(task) {
+	      if (this.state.activeTask == null) {
+	        this.setState({ activeTask: task });
+	      } else {
+	        this.setState({ activeTask: null });
+	      }
 	    }
 	  }, {
 	    key: 'handlePage',
@@ -21875,22 +21895,23 @@
 	      var deferred = _jquery2.default.Deferred();
 
 	      var url = window.location.origin + "/ics/tasks/";
-
 	      if (page) {
 	        url += "?page=" + page;
 	      }
+
+	      filters.ordering = 'process_type__x';
 
 	      var processes = this.state.processes;
 	      if (!processes) processes = container.processes;
 
 	      _jquery2.default.get(url, filters).done(function (data) {
-	        container.count = data.results.length;
+	        container.count = data.length;
 	        container.total = data.count;
 	        container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null;
 	        container.previous = data.previous && data.previous.match(/page=(\d*)/) ? data.previous.match(/page=(\d*)/)[1] : null;
 	        container.startIndex = 0;
 	        container.currentPage = 1;
-	        container.taskGroups = splitTasksByProcess(data.results, processes);
+	        container.taskGroups = splitTasksByProcess(data, processes);
 	        deferred.resolve();
 	      });
 
@@ -21958,6 +21979,7 @@
 	    key: 'handleFilter',
 	    value: function handleFilter(state) {
 	      var filters = this.parseFilters(state);
+
 	      var thisObj = this;
 	      var newState = {};
 
@@ -32423,7 +32445,7 @@
 	}
 
 	function getUnit(unit, count) {
-	  if (count == 0) {
+	  if (count == 1) {
 	    return unit;
 	  }
 	  return unit + "s";
@@ -47494,8 +47516,8 @@
 	  if (input.length < 2) {
 	    callback(null, { optionss: [] });
 	  } else {
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&label=" + input).done(function (data) {
-	      var options = data.results.map(function (x) {
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+	      var options = data.map(function (x) {
 	        return { value: x.id, label: (0, _Task.display)(x) };
 	      });
 	      callback(null, { options: options, complete: false });
@@ -57240,8 +57262,8 @@
 	  if (input.length < 2) {
 	    callback(null, { optionss: [] });
 	  } else {
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&label=" + input).done(function (data) {
-	      var options = data.results.map(function (x) {
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+	      var options = data.map(function (x) {
 	        return { value: x.id, label: (0, _Task.display)(x), data: x };
 	      });
 	      callback(null, { options: options, complete: false });
@@ -57382,7 +57404,10 @@
 	      var v;
 	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
 
-	      this.setState({ task: v });
+	      this.setState({
+	        task: v,
+	        items: [],
+	        selectedItem: "" });
 
 	      if (this.state.expanded) this.reloadItems(v.data);
 	    }

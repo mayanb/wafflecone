@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
+from django.db.models import Q
 from ics.models import *
 from ics.serializers import *
 from rest_framework import generics
@@ -34,12 +35,16 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class TaskList(generics.ListAPIView):
   serializer_class = NestedTaskSerializer
   filter_backends = (OrderingFilter, DjangoFilterBackend)
-  filter_class = TaskFilter
-  ordering_fields = ('updated_at', 'created_at', 'label_index')
-  pagination_class = SmallPagination
+  #filter_class = TaskFilter
+  ordering_fields = ('updated_at', 'created_at', 'label_index', 'process_type__x')
+  #pagination_class = SmallPagination
 
   def get_queryset(self):
-        queryset = Task.objects.filter(is_trashed=False)
+        queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
+
+        label = self.request.query_params.get('label', None)
+        if label is not None:
+          queryset = Task.objects.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
         parent = self.request.query_params.get('parent', None)
         if parent is not None:

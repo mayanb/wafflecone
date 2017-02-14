@@ -10,8 +10,8 @@ var getOptions = function(input, callback) {
     if (input.length < 2) {
       callback(null, { optionss: [] })
     } else {
-      $.get(window.location.origin + "/ics/tasks/?limit&label=" + input).done(function (data) {
-        var options = data.results.map(function (x) {
+      $.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+        var options = data.map(function (x) {
           return { value: x.id, label: display(x)}
         })
         callback(null, {options : options, complete: false})

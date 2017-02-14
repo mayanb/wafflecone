@@ -9,9 +9,12 @@ export default class Tasks extends React.Component {
   constructor(props) {
     super(props);
     this.handleFilter = this.handleFilter.bind(this);
+    this.handleTaskToggle = this.handleTaskToggle.bind(this);
+    this.handleTaskSave = this.handleTaskSave.bind(this);
     this.state = {
 
     	inventory: props.inventory,
+      activeTask: null,
 
       taskGroups: {},
       processes: {},
@@ -49,10 +52,17 @@ export default class Tasks extends React.Component {
             onPage = { (x) => this.handlePage(x)}
           />
 
+          { /* <TaskDialog 
+            active={this.state.activeTask} 
+            onTaskClose={() => this.handleTaskToggle(null)} 
+            onTaskSave={(newTask) => this.handleTaskSave(newTask)}
+          /> */ }
+
           <TableList 
             taskGroups={this.state.taskGroups} 
             processes={this.state.processes}
             inventory={this.props.inventory}
+            onTaskClick={(task) => this.handleTaskToggle(task)}
           />
 
         </div>
@@ -67,6 +77,18 @@ export default class Tasks extends React.Component {
         </div>
 	    </div>
 	  )
+  }
+
+  handleTaskSave(task) {
+    handleTaskToggle(null)
+  }
+
+  handleTaskToggle(task) {
+    if (this.state.activeTask == null) {
+      this.setState({activeTask: task})
+    } else {
+      this.setState({activeTask: null})
+    }
   }
 
   handlePage(x) {
@@ -112,10 +134,11 @@ export default class Tasks extends React.Component {
     var deferred = $.Deferred();
 
     var url = window.location.origin + "/ics/tasks/"
-
     if (page) {
       url += "?page=" + page
     }
+
+    filters.ordering = 'process_type__x'
 
     var processes = this.state.processes
     if (!processes) 
@@ -123,13 +146,13 @@ export default class Tasks extends React.Component {
 
     $.get(url, filters)
       .done(function (data) {
-        container.count = data.results.length
+        container.count = data.length
         container.total = data.count
         container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null
         container.previous = data.previous && data.previous.match(/page=(\d*)/) ? data.previous.match(/page=(\d*)/)[1] : null
         container.startIndex = 0
         container.currentPage = 1
-        container.taskGroups = splitTasksByProcess(data.results, processes);
+        container.taskGroups = splitTasksByProcess(data, processes);
         deferred.resolve();
       })
 
@@ -197,6 +220,7 @@ export default class Tasks extends React.Component {
 
   handleFilter(state) {
     var filters = this.parseFilters(state)
+
     var thisObj = this
     var newState = {}
 
