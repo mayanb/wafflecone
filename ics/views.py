@@ -15,11 +15,9 @@ import datetime
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
     created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
-    label = django_filters.CharFilter(name="label", lookup_expr="istartswith")
-
     class Meta:
         model = Task
-        fields = ['created_at', 'label', 'is_open',]
+        fields = ['created_at', 'is_open',]
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
@@ -35,7 +33,7 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class TaskList(generics.ListAPIView):
   serializer_class = NestedTaskSerializer
   filter_backends = (OrderingFilter, DjangoFilterBackend)
-  #filter_class = TaskFilter
+  filter_class = TaskFilter
   ordering_fields = ('updated_at', 'created_at', 'label_index', 'process_type__x')
   #pagination_class = SmallPagination
 
