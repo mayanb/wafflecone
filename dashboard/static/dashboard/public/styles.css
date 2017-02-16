@@ -332,4 +332,37 @@ div#blocker, #canvastest {
   top: 0;
   left: 0; }
 
+.taskDialog .taskDialog-header h6 {
+  font-size: 24px;
+  font-weight: normal;
+  color: rgba(0, 0, 0, 0.87);
+  text-transform: uppercase;
+  margin: 0; }
+.taskDialog .taskDialog-header span {
+  font-size: 16px;
+  color: #eee;
+  text-transform: uppercase;
+  margin: 0; }
+.taskDialog h5 {
+  font-size: 12px; }
+.taskDialog .attribute span {
+  margin-right: 12px;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.87);
+  font-weight: 700;
+  text-transform: uppercase; }
+.taskDialog .attribute input {
+  border: none;
+  border-radius: 0;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1); }
+
+.dialogItem {
+  color: rgba(0, 0, 0, 0.4); }
+  .dialogItem span {
+    color: rgba(0, 0, 0, 0.87);
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 10px;
+    margin-right: 12px; }
+
 /*# sourceMappingURL=styles.css.map */

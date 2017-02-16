@@ -25,7 +25,8 @@ export default class TableList extends React.Component {
             tasks={taskGroup} 
             key={taskGroupID} 
             process={this.props.processes[taskGroupID]}
-            inventory={this.state.inventory} 
+            inventory={this.state.inventory}
+            onTaskClick={(t) => this.props.onTaskClick(t)}
           />;
         }, this)
       } 
@@ -45,7 +46,7 @@ function Table(props) {
           <TableHead attributes={props.process.attributes} inventory={props.inventory}/>
           <tbody>
             { props.tasks.map(function(task, i) {
-              return <TaskRow task={task} attributes={props.process.attributes} key={task.id} inventory={props.inventory} unit={props.process.unit}/>;
+              return <TaskRow onClick={() => props.onTaskClick(task)} task={task} attributes={props.process.attributes} key={task.id} inventory={props.inventory} unit={props.process.unit}/>;
             })}
           </tbody>
         </table>
@@ -86,7 +87,7 @@ function TaskRow(props) {
     inputs = false
   }
   return (
-    <tr className="">
+    <tr className="" onClick={() => props.onClick()}>
      <td>{display(props.task)}</td>
      <td className={possiblyEmpty(props.task.items.length)}>{props.task.items.length + " " + getUnit(props.unit, props.task.items.length)}</td>
      {inputs}

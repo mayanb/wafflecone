@@ -3,7 +3,8 @@ import $ from 'jquery';
 import TableList from './Tables.jsx';
 import { Filters } from './Inputs.jsx';
 import { ContentDescriptor } from './Layout.jsx'
-import moment from 'moment';
+import moment from 'moment'
+import TaskDialog from './TaskDialog.jsx'
 
 export default class Tasks extends React.Component {
   constructor(props) {
@@ -35,6 +36,7 @@ export default class Tasks extends React.Component {
 
 	render() {
 
+    console.log(this.state.processes)
 		if (this.state.processes == {} || this.state.products == {}) {
 			return {false};
 		}
@@ -52,11 +54,12 @@ export default class Tasks extends React.Component {
             onPage = { (x) => this.handlePage(x)}
           />
 
-          { /* <TaskDialog 
-            active={this.state.activeTask} 
-            onTaskClose={() => this.handleTaskToggle(null)} 
+          <TaskDialog 
+            active={(this.state.activeTask != null)} 
+            task={this.state.activeTask}
+            onTaskClose={(task) => this.handleTaskToggle(null)} 
             onTaskSave={(newTask) => this.handleTaskSave(newTask)}
-          /> */ }
+          />
 
           <TableList 
             taskGroups={this.state.taskGroups} 
@@ -251,7 +254,7 @@ function splitTasksByProcess(tasks, processes) {
     var found = -1
 
     // if its a label
-    if (task.process_type == 1 && task.custom_display && processes) {
+    if (task.process_type.id == 1 && task.custom_display && processes) {
 
       // get the code from here
       var label = task.custom_display.split(/[\s-_]+/)
@@ -267,7 +270,7 @@ function splitTasksByProcess(tasks, processes) {
     }
 
     if (found == -1) {
-      found = task.process_type
+      found = task.process_type.id
     }
 
     if (!taskGroups[found])
