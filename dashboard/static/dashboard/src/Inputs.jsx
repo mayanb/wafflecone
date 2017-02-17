@@ -157,7 +157,7 @@ class Filters extends React.Component {
   }
 
   handleDateRangeChange(date) {
-    this.props.onFilter({[which] : payload })
+    this.props.onFilter(date)
   }
 
   switchActive(x) {
@@ -174,10 +174,6 @@ class Filters extends React.Component {
     this.setState({products: val}, this.handleFilter)
   }
 
-  handleDateRangeChange(val) {
-    console.log("date")
-    this.setState(val, this.handleFilter)
-  }
 
   handleParentChange(val) {
     console.log("parent")

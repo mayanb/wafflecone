@@ -21922,13 +21922,11 @@
 	      var url = window.location.origin + "/ics/tasks/";
 
 	      var filters = this.parseFilters();
-	      console.log(filters);
 
 	      var processes = this.state.processes;
 	      if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) processes = container.processes;
 
 	      _jquery2.default.get(url, filters).done(function (data) {
-	        console.log(data);
 	        container.count = data.length;
 	        container.total = data.count;
 	        container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null;
@@ -22012,6 +22010,8 @@
 	      var thisObj = this;
 	      var newState = {};
 
+	      console.log(object);
+
 	      var ns = (0, _immutabilityHelper2.default)(this.state, {
 	        activeFilters: {
 	          $merge: object
@@ -22022,7 +22022,6 @@
 	        this.setState(ns);
 	      } else {
 	        this.setState(ns, function () {
-	          console.log(this.state);
 	          var defs = [this.getTasks(newState, -1, this.props.inventory)];
 	          _jquery2.default.when.apply(null, defs).done(function () {
 	            thisObj.setState(newState);
@@ -47745,7 +47744,7 @@
 	  }, {
 	    key: 'handleDateRangeChange',
 	    value: function handleDateRangeChange(date) {
-	      this.props.onFilter(_defineProperty({}, which, payload));
+	      this.props.onFilter(date);
 	    }
 	  }, {
 	    key: 'switchActive',
@@ -47763,12 +47762,6 @@
 	    value: function handleProductChange(val) {
 	      console.log("products");
 	      this.setState({ products: val }, this.handleFilter);
-	    }
-	  }, {
-	    key: 'handleDateRangeChange',
-	    value: function handleDateRangeChange(val) {
-	      console.log("date");
-	      this.setState(val, this.handleFilter);
 	    }
 	  }, {
 	    key: 'handleParentChange',

@@ -147,7 +147,6 @@ export default class Tasks extends React.Component {
     var url = window.location.origin + "/ics/tasks/"
 
     let filters = this.parseFilters()
-    console.log(filters)
 
     var processes = this.state.processes
     if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object)
@@ -155,7 +154,6 @@ export default class Tasks extends React.Component {
 
     $.get(url, filters)
       .done(function (data) {
-        console.log(data)
         container.count = data.length
         container.total = data.count
         container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null
@@ -243,6 +241,8 @@ export default class Tasks extends React.Component {
     var thisObj = this
     var newState = {}
 
+    console.log(object)
+
     var ns = update(this.state, {
       activeFilters: {
         $merge: object
@@ -253,7 +253,6 @@ export default class Tasks extends React.Component {
       this.setState(ns)
     } else {
       this.setState(ns, function () {
-        console.log(this.state)
         var defs = [this.getTasks(newState, -1, this.props.inventory)]
         $.when.apply(null, defs).done(function() {
           thisObj.setState(newState)
