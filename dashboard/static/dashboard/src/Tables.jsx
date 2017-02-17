@@ -22,7 +22,8 @@ export default class TableList extends React.Component {
       { Object.keys(this.props.taskGroups).map(function(taskGroupID, i) {
           var taskGroup = this.props.taskGroups[taskGroupID];
           return <Table 
-            tasks={taskGroup} 
+            count={taskGroup.count}
+            tasks={taskGroup.tasks} 
             key={taskGroupID} 
             process={this.props.processes[taskGroupID]}
             inventory={this.state.inventory}
@@ -39,7 +40,7 @@ export default class TableList extends React.Component {
 function Table(props) {
   return (
     <div className="">
-      <TableHeader title={props.process.name} csv={toCSV(props.process, props.tasks)}/>
+      <TableHeader title={props.process.name} icon={props.process.icon.substr(0,props.process.icon.length-4)}csv={toCSV(props.process, props.tasks)}/>
 
       <div className="card-container">
         <table>
@@ -59,7 +60,8 @@ function Table(props) {
 function TableHeader(props) {
   return (
     <div className="toolbar">
-      <h1>{props.title}</h1>
+      <img src={window.location.origin + "/static/dashboard/img/" + props.icon + "@3x.png"} style={{height:"20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
+      <h1 style={{display: "inline-block"}}>{props.title}</h1>
       <a href={'data:application/csv;charset=utf-8,' + encodeURIComponent(props.csv)} download={props.title + ".csv"}><i className="material-icons">file_download</i></a>
     </div>
   );

@@ -106,6 +106,7 @@ class Filters extends React.Component {
 
   constructor(props) {
     super(props);
+    this.handleChange = this.handleChange.bind(this);
     this.handleProcessChange = this.handleProcessChange.bind(this);
     this.handleProductChange = this.handleProductChange.bind(this);
     this.handleDateRangeChange = this.handleDateRangeChange.bind(this);
@@ -151,9 +152,16 @@ class Filters extends React.Component {
     }
   }
 
+  handleChange(which, payload) {
+    this.props.onFilter({[which] : payload })
+  }
+
+  handleDateRangeChange(date) {
+    this.props.onFilter({[which] : payload })
+  }
+
   switchActive(x) {
-    console.log("active")
-    this.setState({active : x}, this.handleFilter)
+    this.props.onFilter({active : x})
   }
 
   handleProcessChange(val) {
@@ -190,40 +198,40 @@ class Filters extends React.Component {
       <div className="filters">
         <div className="inputs">
 
-            <div className={((this.state.active == 1)?"active":"inactive") + " section"}>
+            <div className={((this.props.active == 1)?"active":"inactive") + " section"}>
               <div className="header" onClick={() => this.switchActive(1)}>
                 <i className="material-icons">chevron_right</i><h2> General </h2>
               </div>
               <div className="section-content">
                 <div>
-                  <Multiselect options={this.props.processes} value={this.state.processes} placeholder="All processes" onChange={(val) => this.handleProcessChange(val)}/>
+                  <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
                 </div>
 
                 <div>
-                  <Multiselect options={this.props.products} value={this.state.products} valueArray={this.state.products} placeholder="All products" onChange={(val) => this.handleProductChange(val)}/>
+                  <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
                 </div>
                 {obj}
               </div>
             </div>
 
-            <div className={((this.state.active == 2)?"active":"inactive") + " section"}>
+            <div className={((this.props.active == 2)?"active":"inactive") + " section"}>
               <div className="header" onClick={() => this.switchActive(2)}>
                 <i className="material-icons">chevron_right</i><h2> By parent </h2>
               </div>
               <div className="section-content">
                 <div>
-                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleParentChange(val)} />
+                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChange("parent", val)} />
                 </div>
               </div>
             </div>
 
-            <div className={((this.state.active == 3)?"active":"inactive") + " section"}>
+            <div className={((this.props.active == 3)?"active":"inactive") + " section"}>
               <div className="header" onClick={() => this.switchActive(3)}>
                 <i className="material-icons">chevron_right</i><h2> By child </h2>
               </div>
               <div className="section-content">
                 <div>
-                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChildChange(val)} />
+                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChange("child", val)} />
                 </div>
               </div>
             </div>

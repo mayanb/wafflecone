@@ -62,11 +62,11 @@
 
 	var _Tasks2 = _interopRequireDefault(_Tasks);
 
-	var _FactoryMap = __webpack_require__(350);
+	var _FactoryMap = __webpack_require__(361);
 
 	var _FactoryMap2 = _interopRequireDefault(_FactoryMap);
 
-	var _LabelPrinter = __webpack_require__(352);
+	var _LabelPrinter = __webpack_require__(363);
 
 	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
 
@@ -21746,9 +21746,13 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _TaskDialog = __webpack_require__(355);
+	var _TaskDialog = __webpack_require__(350);
 
 	var _TaskDialog2 = _interopRequireDefault(_TaskDialog);
+
+	var _immutabilityHelper = __webpack_require__(328);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -21786,7 +21790,7 @@
 	      startIndex: 0,
 	      currentPage: 1,
 
-	      activeFilters: { inventory: props.inventory, start: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString(), end: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString() }
+	      activeFilters: { active: 1, start: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString(), end: (0, _moment2.default)(new Date()).format("YYYY-MM-DD").toString() }
 	    };
 	    return _this;
 	  }
@@ -21796,58 +21800,64 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      console.log(this.state.processes);
-	      if (this.state.processes == {} || this.state.products == {}) {
-	        return { false: false };
+	      var obj = false;
+	      if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) {} else {
+	        obj = _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'content' },
+	            _react2.default.createElement(_Layout.ContentDescriptor, {
+	              count: this.state.count,
+	              total: this.state.total,
+	              previous: this.state.previous,
+	              next: this.state.next,
+	              startIndex: this.state.startIndex,
+	              onPage: function onPage(x) {
+	                return _this2.handlePage(x);
+	              }
+	            }),
+	            _react2.default.createElement(_TaskDialog2.default, {
+	              active: this.state.activeTask != null,
+	              task: this.state.activeTask,
+	              onTaskClose: function onTaskClose(task) {
+	                return _this2.handleTaskToggle(null);
+	              },
+	              onTaskSave: function onTaskSave(newTask) {
+	                return _this2.handleTaskSave(newTask);
+	              }
+	            }),
+	            _react2.default.createElement(_Tables2.default, {
+	              taskGroups: this.state.taskGroups,
+	              processes: this.state.processes,
+	              inventory: this.props.inventory,
+	              onTaskClick: function onTaskClick(task) {
+	                return _this2.handleTaskToggle(task);
+	              }
+	            })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'sidebar' },
+	            _react2.default.createElement(_Inputs.Filters, {
+	              filters: this.state.activeFilters,
+	              active: this.state.activeFilters.active,
+	              processes: this.state.processes,
+	              products: this.state.products,
+	              dates: this.props.inventory == false,
+	              onFilter: function onFilter(object) {
+	                return _this2.handleFilter(object);
+	              }
+	            })
+	          )
+	        );
 	      }
 
 	      return _react2.default.createElement(
 	        'div',
 	        null,
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'content' },
-	          _react2.default.createElement(_Layout.ContentDescriptor, {
-	            count: this.state.count,
-	            total: this.state.total,
-	            previous: this.state.previous,
-	            next: this.state.next,
-	            startIndex: this.state.startIndex,
-	            onPage: function onPage(x) {
-	              return _this2.handlePage(x);
-	            }
-	          }),
-	          _react2.default.createElement(_TaskDialog2.default, {
-	            active: this.state.activeTask != null,
-	            task: this.state.activeTask,
-	            onTaskClose: function onTaskClose(task) {
-	              return _this2.handleTaskToggle(null);
-	            },
-	            onTaskSave: function onTaskSave(newTask) {
-	              return _this2.handleTaskSave(newTask);
-	            }
-	          }),
-	          _react2.default.createElement(_Tables2.default, {
-	            taskGroups: this.state.taskGroups,
-	            processes: this.state.processes,
-	            inventory: this.props.inventory,
-	            onTaskClick: function onTaskClick(task) {
-	              return _this2.handleTaskToggle(task);
-	            }
-	          })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'sidebar' },
-	          _react2.default.createElement(_Inputs.Filters, {
-	            processes: this.state.processes,
-	            products: this.state.products,
-	            dates: this.props.inventory == false,
-	            onFilter: function onFilter(state) {
-	              return _this2.handleFilter(state);
-	            }
-	          })
-	        )
+	        obj
 	      );
 	    }
 	  }, {
@@ -21869,7 +21879,7 @@
 	    value: function handlePage(x) {
 	      var thisObj = this;
 	      var newState = {};
-	      var defs = [this.getTasks(newState, this.state.activeFilters, x)];
+	      var defs = [this.getTasks(newState, x, this.props.inventory)];
 
 	      _jquery2.default.when.apply(null, defs).done(function () {
 	        if (x < thisObj.state.currentPage) {
@@ -21897,8 +21907,8 @@
 	      var component = this;
 
 	      _jquery2.default.when.apply(null, defs).done(function () {
+	        var d2 = [component.getTasks(newState, -1, component.props.inventory)];
 	        component.setState(newState);
-	        var d2 = [component.getTasks(newState, component.state.activeFilters)];
 	        _jquery2.default.when.apply(null, d2).done(function () {
 	          component.setState(newState);
 	        });
@@ -21906,20 +21916,19 @@
 	    }
 	  }, {
 	    key: 'getTasks',
-	    value: function getTasks(container, filters, page) {
+	    value: function getTasks(container, page, inventory) {
 	      var deferred = _jquery2.default.Deferred();
 
 	      var url = window.location.origin + "/ics/tasks/";
-	      if (page) {
-	        url += "?page=" + page;
-	      }
 
-	      filters.ordering = 'process_type__x';
+	      var filters = this.parseFilters();
+	      console.log(filters);
 
 	      var processes = this.state.processes;
-	      if (!processes) processes = container.processes;
+	      if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) processes = container.processes;
 
 	      _jquery2.default.get(url, filters).done(function (data) {
+	        console.log(data);
 	        container.count = data.length;
 	        container.total = data.count;
 	        container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null;
@@ -21958,51 +21967,68 @@
 	    }
 	  }, {
 	    key: 'parseFilters',
-	    value: function parseFilters(state) {
+	    value: function parseFilters() {
 
-	      var filters = {};
+	      var state = this.state.activeFilters;
+	      var filters = { ordering: 'process_type__x' };
 
 	      if (this.props.inventory) {
 	        filters.inventory = true;
 	      }
 
-	      if (!this.props.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
-	        filters.start = state.start;
-	        filters.end = state.end;
+	      if (state.active == 1) {
+
+	        if (!this.props.inventory) {
+	          if (state.start && state.start.length > 0) {
+	            filters.start = state.start;
+	          }
+	          if (state.end && state.end.length > 0) {
+	            filters.end = state.end;
+	          }
+	        }
+
+	        if (state.processes && state.processes.length > 0) filters.processes = state.processes.map(function (x) {
+	          return x.value;
+	        }).join(",");
+
+	        if (state.products && state.products.length > 0) filters.products = state.products.map(function (x) {
+	          return x.value;
+	        }).join(",");
+	      } else if (state.active == 2) {
+	        if (state.parent && state.parent.value != "") {
+	          filters.parent = state.parent.value;
+	        }
+	      } else if (state.active == 3) {
+	        if (state.child && state.child.value != "") {
+	          filters.child = state.child.value;
+	        }
 	      }
 
-	      if (state.processes && state.processes.length > 0) filters.processes = state.processes.map(function (x) {
-	        return x.value;
-	      }).join(",");
-
-	      if (state.products && state.products.length > 0) filters.products = state.products.map(function (x) {
-	        return x.value;
-	      }).join(",");
-
-	      if (state.parent && state.parent != "") {
-	        filters.parent = state.parent;
-	      }
-
-	      if (state.child && state.child != "") {
-	        filters.child = state.child;
-	      }
-
-	      this.setState({ activeFilters: filters });
 	      return filters;
 	    }
 	  }, {
 	    key: 'handleFilter',
-	    value: function handleFilter(state) {
-	      var filters = this.parseFilters(state);
-
+	    value: function handleFilter(object) {
 	      var thisObj = this;
 	      var newState = {};
 
-	      var defs = [this.getTasks(newState, filters)];
-
-	      _jquery2.default.when.apply(null, defs).done(function () {
-	        thisObj.setState(newState);
+	      var ns = (0, _immutabilityHelper2.default)(this.state, {
+	        activeFilters: {
+	          $merge: object
+	        }
 	      });
+
+	      if (object.active) {
+	        this.setState(ns);
+	      } else {
+	        this.setState(ns, function () {
+	          console.log(this.state);
+	          var defs = [this.getTasks(newState, -1, this.props.inventory)];
+	          _jquery2.default.when.apply(null, defs).done(function () {
+	            thisObj.setState(newState);
+	          });
+	        });
+	      }
 	    }
 	  }]);
 
@@ -22046,9 +22072,10 @@
 	      found = task.process_type.id;
 	    }
 
-	    if (!taskGroups[found]) taskGroups[found] = [];
+	    if (!taskGroups[found]) taskGroups[found] = { count: 0, tasks: [] };
 
-	    taskGroups[found].push(task);
+	    taskGroups[found].tasks.push(task);
+	    taskGroups[found].count += task.items.length;
 	  });
 
 	  return taskGroups;
@@ -32348,7 +32375,8 @@
 
 	          var taskGroup = this.props.taskGroups[taskGroupID];
 	          return _react2.default.createElement(Table, {
-	            tasks: taskGroup,
+	            count: taskGroup.count,
+	            tasks: taskGroup.tasks,
 	            key: taskGroupID,
 	            process: this.props.processes[taskGroupID],
 	            inventory: this.state.inventory,
@@ -32371,7 +32399,7 @@
 	  return _react2.default.createElement(
 	    'div',
 	    { className: '' },
-	    _react2.default.createElement(TableHeader, { title: props.process.name, csv: (0, _Task.toCSV)(props.process, props.tasks) }),
+	    _react2.default.createElement(TableHeader, { title: props.process.name, icon: props.process.icon.substr(0, props.process.icon.length - 4), csv: (0, _Task.toCSV)(props.process, props.tasks) }),
 	    _react2.default.createElement(
 	      'div',
 	      { className: 'card-container' },
@@ -32397,9 +32425,10 @@
 	  return _react2.default.createElement(
 	    'div',
 	    { className: 'toolbar' },
+	    _react2.default.createElement('img', { src: window.location.origin + "/static/dashboard/img/" + props.icon + "@3x.png", style: { height: "20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } }),
 	    _react2.default.createElement(
 	      'h1',
-	      null,
+	      { style: { display: "inline-block" } },
 	      props.title
 	    ),
 	    _react2.default.createElement(
@@ -47530,6 +47559,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -47658,6 +47689,7 @@
 
 	    var _this3 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
 
+	    _this3.handleChange = _this3.handleChange.bind(_this3);
 	    _this3.handleProcessChange = _this3.handleProcessChange.bind(_this3);
 	    _this3.handleProductChange = _this3.handleProductChange.bind(_this3);
 	    _this3.handleDateRangeChange = _this3.handleDateRangeChange.bind(_this3);
@@ -47706,10 +47738,19 @@
 	      }
 	    }
 	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, payload) {
+	      this.props.onFilter(_defineProperty({}, which, payload));
+	    }
+	  }, {
+	    key: 'handleDateRangeChange',
+	    value: function handleDateRangeChange(date) {
+	      this.props.onFilter(_defineProperty({}, which, payload));
+	    }
+	  }, {
 	    key: 'switchActive',
 	    value: function switchActive(x) {
-	      console.log("active");
-	      this.setState({ active: x }, this.handleFilter);
+	      this.props.onFilter({ active: x });
 	    }
 	  }, {
 	    key: 'handleProcessChange',
@@ -47763,7 +47804,7 @@
 	          { className: 'inputs' },
 	          _react2.default.createElement(
 	            'div',
-	            { className: (this.state.active == 1 ? "active" : "inactive") + " section" },
+	            { className: (this.props.active == 1 ? "active" : "inactive") + " section" },
 	            _react2.default.createElement(
 	              'div',
 	              { className: 'header', onClick: function onClick() {
@@ -47786,15 +47827,15 @@
 	              _react2.default.createElement(
 	                'div',
 	                null,
-	                _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.state.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                    return _this4.handleProcessChange(val);
+	                _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	                    return _this4.handleChange("processes", val);
 	                  } })
 	              ),
 	              _react2.default.createElement(
 	                'div',
 	                null,
-	                _react2.default.createElement(Multiselect, { options: this.props.products, value: this.state.products, valueArray: this.state.products, placeholder: 'All products', onChange: function onChange(val) {
-	                    return _this4.handleProductChange(val);
+	                _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
+	                    return _this4.handleChange("products", val);
 	                  } })
 	              ),
 	              obj
@@ -47802,7 +47843,7 @@
 	          ),
 	          _react2.default.createElement(
 	            'div',
-	            { className: (this.state.active == 2 ? "active" : "inactive") + " section" },
+	            { className: (this.props.active == 2 ? "active" : "inactive") + " section" },
 	            _react2.default.createElement(
 	              'div',
 	              { className: 'header', onClick: function onClick() {
@@ -47826,14 +47867,14 @@
 	                'div',
 	                null,
 	                _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
-	                    return _this4.handleParentChange(val);
+	                    return _this4.handleChange("parent", val);
 	                  } })
 	              )
 	            )
 	          ),
 	          _react2.default.createElement(
 	            'div',
-	            { className: (this.state.active == 3 ? "active" : "inactive") + " section" },
+	            { className: (this.props.active == 3 ? "active" : "inactive") + " section" },
 	            _react2.default.createElement(
 	              'div',
 	              { className: 'header', onClick: function onClick() {
@@ -47857,7 +47898,7 @@
 	                'div',
 	                null,
 	                _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
-	                    return _this4.handleChildChange(val);
+	                    return _this4.handleChange("child", val);
 	                  } })
 	              )
 	            )
@@ -55195,6 +55236,918 @@
 	  value: true
 	});
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	exports.default = TaskDialog;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _moment = __webpack_require__(182);
+
+	var _moment2 = _interopRequireDefault(_moment);
+
+	var _dialog = __webpack_require__(351);
+
+	var _Task = __webpack_require__(293);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	function TaskDialog(props) {
+	  var actions = [{ label: "Cancel", onClick: props.onTaskClose }, { label: "Save", onClick: props.onTaskSave }];
+
+	  return _react2.default.createElement(
+	    _dialog.Dialog,
+	    {
+	      actions: actions,
+	      active: props.active,
+	      onEscKeyDown: props.onTaskClose,
+	      onOverlayClick: props.onTaskClose,
+	      title: ""
+	    },
+	    _react2.default.createElement(DialogContents, { task: props.task })
+	  );
+	}
+
+	function getAttributeValue(task, attributeID) {
+	  for (var i = 0; i < task.attribute_values.length; i++) {
+	    if (task.attribute_values[i].attribute == attributeID) return task.attribute_values[i].value;
+	  }
+	  return "";
+	}
+
+	var DialogContents = function (_React$Component) {
+	  _inherits(DialogContents, _React$Component);
+
+	  function DialogContents(props) {
+	    _classCallCheck(this, DialogContents);
+
+	    var _this = _possibleConstructorReturn(this, (DialogContents.__proto__ || Object.getPrototypeOf(DialogContents)).call(this, props));
+
+	    _this.onAttributeChange = _this.onAttributeChange.bind(_this);
+	    _this.state = { attributes: {} };
+	    return _this;
+	  }
+
+	  _createClass(DialogContents, [{
+	    key: 'onAttributeChange',
+	    value: function onAttributeChange(which, payload) {
+	      var ns = update(this.state, { attributes: { $set: { which: payload }
+	        }
+	      });
+
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this;
+
+	      var props = this.props;
+
+	      if (props.task == null) {
+	        return false;
+	      }
+
+	      var sentence = constructSentence(props.task);
+	      var label = props.task.label;
+	      if (props.task.label_index > 0) {
+	        label = label + "-" + props.task.label_index;
+	      }
+
+	      var obj = _react2.default.createElement(
+	        'span',
+	        null,
+	        '(' + label + ')'
+	      );
+
+	      if (!props.task.custom_display || props.task.custom_display.trim() == "") {
+	        obj = false;
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'taskDialog' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-header' },
+	          _react2.default.createElement('img', { src: img(props.task.process_type.icon), style: { display: "inline-block", height: "24px", marginRight: "8px", verticalAlign: "text-bottom" } }),
+	          _react2.default.createElement(
+	            'h6',
+	            { style: { display: "inline-block" } },
+	            (0, _Task.display)(props.task),
+	            obj
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { className: 'dialogItem' },
+	          _react2.default.createElement(
+	            'span',
+	            null,
+	            'Product Type'
+	          ),
+	          ' ' + props.task.product_type.name
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { className: 'dialogItem' },
+	          _react2.default.createElement(
+	            'span',
+	            null,
+	            'Process Type'
+	          ),
+	          ' ' + props.task.process_type.name
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { className: 'dialogItem' },
+	          _react2.default.createElement(
+	            'span',
+	            null,
+	            'Created at'
+	          ),
+	          ' ' + (0, _moment2.default)(props.task.created_at).format("dddd, MMMM Do YYYY, h:mm a").toString()
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'attribute' },
+	          _react2.default.createElement(
+	            'span',
+	            null,
+	            'Custom Display'
+	          ),
+	          _react2.default.createElement('input', { type: 'text', onChange: function onChange(val) {
+	              return _this2.onAttributeChange();
+	            }, placeholder: 'eg. R-CVB-0217' })
+	        ),
+	        _react2.default.createElement(
+	          'h5',
+	          null,
+	          'Attributes'
+	        ),
+	        props.task.attributes.map(function (attr, i) {
+	          var _this3 = this;
+
+	          return _react2.default.createElement(
+	            'div',
+	            { className: 'attribute', key: attr.id },
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              attr.name
+	            ),
+	            _react2.default.createElement('input', { type: 'text', value: this.state.attributes[attr.id], onChange: function onChange(val) {
+	                return _this3.onAttributeChange(attr.id, val);
+	              }, placeholder: 'blah blah' })
+	          );
+	        }, this)
+	      );
+	    }
+	  }]);
+
+	  return DialogContents;
+	}(_react2.default.Component);
+
+	function img(name) {
+	  var n2 = name.substr(0, name.length - 4);
+	  return window.location.origin + "/static/dashboard/img/" + n2 + "@3x.png";
+	}
+
+	function past(verb) {
+	  var last = verb.length - 1;
+	  if (verb.substr(last) == "e") {
+	    return verb.substr(0, last) + "ed";
+	  } else {
+	    return verb + "ed";
+	  }
+	}
+
+	// "2 red bins of Madagascar were winnowed on 2/2/17. 4 grey bins of winnowed product were output."
+	function constructSentence(task) {
+	  var processName = task.process_type.name.toLowerCase();
+	  var productName = task.product_type.name;
+	  var inputUnit = task.inputUnit.toLowerCase();
+	  var outputUnit = task.process_type.unit.toLowerCase();
+
+	  var numInputs = task.inputs.length;
+	  var numOutputs = task.items.length;
+
+	  var inputPl = numInputs != 1;
+	  var outputPl = numOutputs != 1;
+	  var date = (0, _moment2.default)(task.created_at).format("MM/DD/YY").toString();
+
+	  // "2 red bins of Madagascar"
+	  var firstHalf = numInputs + ' ' + inputUnit + (inputPl ? "s" : "") + ' of ' + productName + ' ' + (inputPl ? "were" : "was") + ' ' + past(processName) + ' on ' + date + '.';
+
+	  return firstHalf;
+	}
+
+/***/ },
+/* 351 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.Dialog = undefined;
+
+	var _reactCssThemr = __webpack_require__(318);
+
+	var _identifiers = __webpack_require__(323);
+
+	var _Dialog = __webpack_require__(352);
+
+	var _overlay = __webpack_require__(356);
+
+	var _overlay2 = _interopRequireDefault(_overlay);
+
+	var _button = __webpack_require__(324);
+
+	var _button2 = _interopRequireDefault(_button);
+
+	var _theme = __webpack_require__(359);
+
+	var _theme2 = _interopRequireDefault(_theme);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var Dialog = (0, _Dialog.dialogFactory)(_overlay2.default, _button2.default);
+	var ThemedDialog = (0, _reactCssThemr.themr)(_identifiers.DIALOG, _theme2.default)(Dialog);
+
+	exports.default = ThemedDialog;
+	exports.Dialog = ThemedDialog;
+
+/***/ },
+/* 352 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.dialogFactory = exports.Dialog = undefined;
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactCssThemr = __webpack_require__(318);
+
+	var _classnames3 = __webpack_require__(297);
+
+	var _classnames4 = _interopRequireDefault(_classnames3);
+
+	var _identifiers = __webpack_require__(323);
+
+	var _ActivableRenderer = __webpack_require__(353);
+
+	var _ActivableRenderer2 = _interopRequireDefault(_ActivableRenderer);
+
+	var _Button = __webpack_require__(325);
+
+	var _Button2 = _interopRequireDefault(_Button);
+
+	var _Overlay = __webpack_require__(354);
+
+	var _Overlay2 = _interopRequireDefault(_Overlay);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	var factory = function factory(Overlay, Button) {
+	  var Dialog = function Dialog(props) {
+	    var actions = props.actions.map(function (action, idx) {
+	      var className = (0, _classnames4.default)(props.theme.button, _defineProperty({}, action.className, action.className));
+	      return _react2.default.createElement(Button, _extends({ key: idx }, action, { className: className }));
+	    });
+
+	    var className = (0, _classnames4.default)([props.theme.dialog, props.theme[props.type]], _defineProperty({}, props.theme.active, props.active), props.className);
+
+	    return _react2.default.createElement(
+	      Overlay,
+	      {
+	        active: props.active,
+	        onClick: props.onOverlayClick,
+	        onEscKeyDown: props.onEscKeyDown,
+	        onMouseDown: props.onOverlayMouseDown,
+	        onMouseMove: props.onOverlayMouseMove,
+	        onMouseUp: props.onOverlayMouseUp
+	      },
+	      _react2.default.createElement(
+	        'div',
+	        { 'data-react-toolbox': 'dialog', className: className },
+	        _react2.default.createElement(
+	          'section',
+	          { role: 'body', className: props.theme.body },
+	          props.title ? _react2.default.createElement(
+	            'h6',
+	            { className: props.theme.title },
+	            props.title
+	          ) : null,
+	          props.children
+	        ),
+	        actions.length ? _react2.default.createElement(
+	          'nav',
+	          { role: 'navigation', className: props.theme.navigation },
+	          actions
+	        ) : null
+	      )
+	    );
+	  };
+
+	  Dialog.propTypes = {
+	    actions: _react.PropTypes.array,
+	    active: _react.PropTypes.bool,
+	    children: _react.PropTypes.node,
+	    className: _react.PropTypes.string,
+	    onEscKeyDown: _react.PropTypes.func,
+	    onOverlayClick: _react.PropTypes.func,
+	    onOverlayMouseDown: _react.PropTypes.func,
+	    onOverlayMouseMove: _react.PropTypes.func,
+	    onOverlayMouseUp: _react.PropTypes.func,
+	    theme: _react.PropTypes.shape({
+	      active: _react.PropTypes.string,
+	      body: _react.PropTypes.string,
+	      button: _react.PropTypes.string,
+	      dialog: _react.PropTypes.string,
+	      navigation: _react.PropTypes.string,
+	      title: _react.PropTypes.string
+	    }),
+	    title: _react.PropTypes.string,
+	    type: _react.PropTypes.string
+	  };
+
+	  Dialog.defaultProps = {
+	    actions: [],
+	    active: false,
+	    type: 'normal'
+	  };
+
+	  return (0, _ActivableRenderer2.default)()(Dialog);
+	};
+
+	var Dialog = factory(_Overlay2.default, _Button2.default);
+	exports.default = (0, _reactCssThemr.themr)(_identifiers.DIALOG)(Dialog);
+	exports.Dialog = Dialog;
+	exports.dialogFactory = factory;
+
+/***/ },
+/* 353 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var ActivableRendererFactory = function ActivableRendererFactory() {
+	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { delay: 500 };
+	  return function (ActivableComponent) {
+	    var _class, _temp2;
+
+	    return _temp2 = _class = function (_Component) {
+	      _inherits(ActivableRenderer, _Component);
+
+	      function ActivableRenderer() {
+	        var _ref;
+
+	        var _temp, _this, _ret;
+
+	        _classCallCheck(this, ActivableRenderer);
+
+	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	          args[_key] = arguments[_key];
+	        }
+
+	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = ActivableRenderer.__proto__ || Object.getPrototypeOf(ActivableRenderer)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+	          active: _this.props.active,
+	          rendered: _this.props.active
+	        }, _temp), _possibleConstructorReturn(_this, _ret);
+	      }
+
+	      _createClass(ActivableRenderer, [{
+	        key: 'componentWillReceiveProps',
+	        value: function componentWillReceiveProps(nextProps) {
+	          if (nextProps.active && !this.props.active) this.renderAndActivate();
+	          if (!nextProps.active && this.props.active) this.deactivateAndUnrender();
+	        }
+	      }, {
+	        key: 'componentWillUnmount',
+	        value: function componentWillUnmount() {
+	          clearTimeout(this.activateTimeout);
+	          clearTimeout(this.unrenderTimeout);
+	        }
+	      }, {
+	        key: 'renderAndActivate',
+	        value: function renderAndActivate() {
+	          var _this2 = this;
+
+	          if (this.unrenderTimeout) clearTimeout(this.unrenderTimeout);
+	          this.setState({ rendered: true, active: false }, function () {
+	            _this2.activateTimeout = setTimeout(function () {
+	              return _this2.setState({ active: true });
+	            }, 20);
+	          });
+	        }
+	      }, {
+	        key: 'deactivateAndUnrender',
+	        value: function deactivateAndUnrender() {
+	          var _this3 = this;
+
+	          this.setState({ rendered: true, active: false }, function () {
+	            _this3.unrenderTimeout = setTimeout(function () {
+	              _this3.setState({ rendered: false });
+	              _this3.unrenderTimeout = null;
+	            }, _this3.props.delay);
+	          });
+	        }
+	      }, {
+	        key: 'render',
+	        value: function render() {
+	          var _props = this.props,
+	              delay = _props.delay,
+	              others = _objectWithoutProperties(_props, ['delay']); // eslint-disable-line no-unused-vars
+
+
+	          var _state = this.state,
+	              active = _state.active,
+	              rendered = _state.rendered;
+
+	          return rendered ? _react2.default.createElement(ActivableComponent, _extends({}, others, { active: active })) : null;
+	        }
+	      }]);
+
+	      return ActivableRenderer;
+	    }(_react.Component), _class.propTypes = {
+	      active: _react.PropTypes.bool.isRequired,
+	      children: _react.PropTypes.any,
+	      delay: _react.PropTypes.number
+	    }, _class.defaultProps = {
+	      delay: options.delay
+	    }, _temp2;
+	  };
+	};
+
+	exports.default = ActivableRendererFactory;
+
+/***/ },
+/* 354 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.Overlay = undefined;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _classnames2 = __webpack_require__(297);
+
+	var _classnames3 = _interopRequireDefault(_classnames2);
+
+	var _reactCssThemr = __webpack_require__(318);
+
+	var _identifiers = __webpack_require__(323);
+
+	var _Portal = __webpack_require__(355);
+
+	var _Portal2 = _interopRequireDefault(_Portal);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Overlay = function (_Component) {
+	  _inherits(Overlay, _Component);
+
+	  function Overlay() {
+	    var _ref;
+
+	    var _temp, _this, _ret;
+
+	    _classCallCheck(this, Overlay);
+
+	    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	      args[_key] = arguments[_key];
+	    }
+
+	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Overlay.__proto__ || Object.getPrototypeOf(Overlay)).call.apply(_ref, [this].concat(args))), _this), _this.handleEscKey = function (e) {
+	      if (_this.props.active && _this.props.onEscKeyDown && e.which === 27) {
+	        _this.props.onEscKeyDown(e);
+	      }
+	    }, _temp), _possibleConstructorReturn(_this, _ret);
+	  }
+
+	  _createClass(Overlay, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      if (this.props.active) {
+	        document.body.addEventListener('keydown', this.handleEscKey);
+	        document.body.style.overflow = 'hidden';
+	      }
+	    }
+	  }, {
+	    key: 'componentWillUpdate',
+	    value: function componentWillUpdate(nextProps) {
+	      if (nextProps.active && !this.props.active) document.body.style.overflow = 'hidden';
+	      if (!nextProps.active && this.props.active && !document.querySelectorAll('[data-react-toolbox="overlay"]')[1]) document.body.style.overflow = '';
+	    }
+	  }, {
+	    key: 'componentDidUpdate',
+	    value: function componentDidUpdate() {
+	      if (this.props.active) {
+	        document.body.addEventListener('keydown', this.handleEscKey);
+	      }
+	    }
+	  }, {
+	    key: 'componentWillUnmount',
+	    value: function componentWillUnmount() {
+	      if (!document.querySelectorAll('[data-react-toolbox="overlay"]')[1]) document.body.style.overflow = '';
+	      document.body.removeEventListener('keydown', this.handleEscKey);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _classnames;
+
+	      var _props = this.props,
+	          active = _props.active,
+	          className = _props.className,
+	          children = _props.children,
+	          invisible = _props.invisible,
+	          onClick = _props.onClick,
+	          theme = _props.theme;
+
+	      var _className = (0, _classnames3.default)(theme.overlay, (_classnames = {}, _defineProperty(_classnames, theme.active, active), _defineProperty(_classnames, theme.invisible, invisible), _classnames), className);
+
+	      return _react2.default.createElement(
+	        _Portal2.default,
+	        null,
+	        _react2.default.createElement(
+	          'div',
+	          { className: _className, 'data-react-toolbox': 'overlay' },
+	          _react2.default.createElement('div', { className: theme.backdrop, onClick: onClick }),
+	          children
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Overlay;
+	}(_react.Component);
+
+	Overlay.propTypes = {
+	  active: _react.PropTypes.bool,
+	  children: _react.PropTypes.node,
+	  className: _react.PropTypes.string,
+	  invisible: _react.PropTypes.bool,
+	  onClick: _react.PropTypes.func,
+	  onEscKeyDown: _react.PropTypes.func,
+	  theme: _react.PropTypes.shape({
+	    active: _react.PropTypes.string,
+	    backdrop: _react.PropTypes.string,
+	    invisible: _react.PropTypes.string,
+	    overlay: _react.PropTypes.string
+	  })
+	};
+	Overlay.defaultProps = {
+	  invisible: false
+	};
+	exports.default = (0, _reactCssThemr.themr)(_identifiers.OVERLAY)(Overlay);
+	exports.Overlay = Overlay;
+
+/***/ },
+/* 355 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Portal = function (_Component) {
+	  _inherits(Portal, _Component);
+
+	  function Portal() {
+	    _classCallCheck(this, Portal);
+
+	    return _possibleConstructorReturn(this, (Portal.__proto__ || Object.getPrototypeOf(Portal)).apply(this, arguments));
+	  }
+
+	  _createClass(Portal, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this._renderOverlay();
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (this._overlayTarget && nextProps.container !== this.props.container) {
+	        this._portalContainerNode.removeChild(this._overlayTarget);
+	        this._portalContainerNode = getContainer(nextProps.container);
+	        this._portalContainerNode.appendChild(this._overlayTarget);
+	      }
+	    }
+	  }, {
+	    key: 'componentDidUpdate',
+	    value: function componentDidUpdate() {
+	      this._renderOverlay();
+	    }
+	  }, {
+	    key: 'componentWillUnmount',
+	    value: function componentWillUnmount() {
+	      this._unrenderOverlay();
+	      this._unmountOverlayTarget();
+	    }
+	  }, {
+	    key: '_mountOverlayTarget',
+	    value: function _mountOverlayTarget() {
+	      if (!this._overlayTarget) {
+	        this._overlayTarget = document.createElement('div');
+	        this._portalContainerNode = getContainer(this.props.container);
+	        this._portalContainerNode.appendChild(this._overlayTarget);
+	      }
+	    }
+	  }, {
+	    key: '_unmountOverlayTarget',
+	    value: function _unmountOverlayTarget() {
+	      if (this._overlayTarget) {
+	        this._portalContainerNode.removeChild(this._overlayTarget);
+	        this._overlayTarget = null;
+	      }
+	      this._portalContainerNode = null;
+	    }
+	  }, {
+	    key: '_renderOverlay',
+	    value: function _renderOverlay() {
+	      var overlay = !this.props.children ? null : _react2.default.Children.only(this.props.children);
+
+	      if (overlay !== null) {
+	        this._mountOverlayTarget();
+	        this._overlayInstance = _reactDom2.default.unstable_renderSubtreeIntoContainer(this, overlay, this._overlayTarget);
+	      } else {
+	        this._unrenderOverlay();
+	        this._unmountOverlayTarget();
+	      }
+	    }
+	  }, {
+	    key: '_unrenderOverlay',
+	    value: function _unrenderOverlay() {
+	      if (this._overlayTarget) {
+	        _reactDom2.default.unmountComponentAtNode(this._overlayTarget);
+	        this._overlayInstance = null;
+	      }
+	    }
+	  }, {
+	    key: 'getMountNode',
+	    value: function getMountNode() {
+	      return this._overlayTarget;
+	    }
+	  }, {
+	    key: 'getOverlayDOMNode',
+	    value: function getOverlayDOMNode() {
+	      if (!this.isMounted()) {
+	        throw new Error('getOverlayDOMNode(): A component must be mounted to have a DOM node.');
+	      }
+
+	      if (this._overlayInstance) {
+	        if (this._overlayInstance.getWrappedDOMNode) {
+	          return this._overlayInstance.getWrappedDOMNode();
+	        } else {
+	          return _reactDom2.default.findDOMNode(this._overlayInstance);
+	        }
+	      }
+
+	      return null;
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return null;
+	    }
+	  }]);
+
+	  return Portal;
+	}(_react.Component);
+
+	Portal.propTypes = {
+	  children: _react.PropTypes.any,
+	  container: _react.PropTypes.any,
+	  lockBody: _react.PropTypes.bool
+	};
+	Portal.defaultProps = {
+	  lockBody: true
+	};
+
+
+	function getContainer(container) {
+	  var _container = typeof container === 'function' ? container() : container;
+	  return _reactDom2.default.findDOMNode(_container) || document.body;
+	}
+
+	exports.default = Portal;
+
+/***/ },
+/* 356 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.Overlay = undefined;
+
+	var _reactCssThemr = __webpack_require__(318);
+
+	var _identifiers = __webpack_require__(323);
+
+	var _Overlay = __webpack_require__(354);
+
+	var _theme = __webpack_require__(357);
+
+	var _theme2 = _interopRequireDefault(_theme);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var ThemedOverlay = (0, _reactCssThemr.themr)(_identifiers.OVERLAY, _theme2.default)(_Overlay.Overlay);
+	exports.default = ThemedOverlay;
+	exports.Overlay = ThemedOverlay;
+
+/***/ },
+/* 357 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(358);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(338)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss", function() {
+				var newContent = require("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 358 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(337)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".PiEHXDwRHY8HJ07amHsgj {\n  position: fixed;\n  top: 0;\n  left: 0;\n  z-index: 300;\n  display: flex;\n  width: 100vw;\n  height: 100vh;\n  flex-direction: column;\n  align-content: center;\n  align-items: center;\n  justify-content: center;\n  pointer-events: none; }\n  .PiEHXDwRHY8HJ07amHsgj._3SslDuCRTaAZqRF0-SqqRV > *:not(.WbaQnRVOPpnF_uT9oZk0B) {\n    pointer-events: all; }\n\n.WbaQnRVOPpnF_uT9oZk0B {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  background-color: black;\n  opacity: 0;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 0.35s;\n  transition-property: opacity; }\n\n._2oZU5S3xS9ajRIMAg1Bdc2 {\n  pointer-events: all; }\n  ._2oZU5S3xS9ajRIMAg1Bdc2 > .WbaQnRVOPpnF_uT9oZk0B {\n    opacity: 0.6; }\n", ""]);
+
+	// exports
+	exports.locals = {
+		"overlay": "PiEHXDwRHY8HJ07amHsgj",
+		"invisible": "_3SslDuCRTaAZqRF0-SqqRV",
+		"backdrop": "WbaQnRVOPpnF_uT9oZk0B",
+		"active": "_2oZU5S3xS9ajRIMAg1Bdc2"
+	};
+
+/***/ },
+/* 359 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(360);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(338)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss", function() {
+				var newContent = require("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 360 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(337)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "._1f3ZgLBM9jGUXcA_FUtJBh {\n  display: flex;\n  max-width: 96vw;\n  max-height: 96vh;\n  flex-direction: column;\n  background-color: white;\n  border-radius: 0.2rem;\n  box-shadow: 0 19px 60px rgba(0, 0, 0, 0.3), 0 15px 20px rgba(0, 0, 0, 0.22);\n  opacity: 0;\n  transition-delay: 0.07s;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 0.35s;\n  transition-property: opacity, transform;\n  transform: translateY(-4rem); }\n  ._1f3ZgLBM9jGUXcA_FUtJBh._3rz6tqX9S6yEq9NyPMqVm9 {\n    opacity: 1;\n    transform: translateY(0%); }\n\n.WKoavR88nT5xnGtBvGEtt {\n  width: 30vw; }\n  @media screen and (max-width: 720px) {\n    .WKoavR88nT5xnGtBvGEtt {\n      width: 50vw; } }\n  @media screen and (max-width: 600px) {\n    .WKoavR88nT5xnGtBvGEtt {\n      width: 75vw; } }\n\n._1WehKtJMltizPisGOx2b19 {\n  width: 50vw; }\n  @media screen and (max-width: 600px) {\n    ._1WehKtJMltizPisGOx2b19 {\n      width: 96vw; } }\n\n._10bxmr5Gr3nOwk5U8oYiKq {\n  width: 96vw; }\n\n._2AkulETShrQGSzerq5ZiLS {\n  width: 96vw; }\n  @media screen and (max-width: 600px) {\n    ._2AkulETShrQGSzerq5ZiLS {\n      width: 100vw;\n      max-width: 100vw;\n      min-height: 100vh;\n      max-height: 100vh;\n      border-radius: 0; } }\n\n._sEzVM3CS9Yt9zbFPE3RB {\n  font-family: \"Roboto\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 2rem;\n  font-weight: 500;\n  line-height: 1;\n  letter-spacing: .02em;\n  flex-grow: 0;\n  margin-bottom: 1.6rem;\n  color: black; }\n\n._1_nNM3UOH0OdmUhrAZCb18 {\n  flex-grow: 2;\n  padding: 2.4rem;\n  color: #757575; }\n\n._3eiS-q9QaklQfk8Xv5pr3Y {\n  flex-grow: 0;\n  padding: 0.8rem;\n  text-align: right; }\n\n._3HGWmS4QuLj60wKPYaT104 {\n  min-width: 0;\n  padding-right: 0.8rem;\n  padding-left: 0.8rem;\n  margin-left: 0.8rem; }\n", ""]);
+
+	// exports
+	exports.locals = {
+		"dialog": "_1f3ZgLBM9jGUXcA_FUtJBh",
+		"active": "_3rz6tqX9S6yEq9NyPMqVm9",
+		"small": "WKoavR88nT5xnGtBvGEtt",
+		"normal": "_1WehKtJMltizPisGOx2b19",
+		"large": "_10bxmr5Gr3nOwk5U8oYiKq",
+		"fullscreen": "_2AkulETShrQGSzerq5ZiLS",
+		"title": "_sEzVM3CS9Yt9zbFPE3RB",
+		"body": "_1_nNM3UOH0OdmUhrAZCb18",
+		"navigation": "_3eiS-q9QaklQfk8Xv5pr3Y",
+		"button": "_3HGWmS4QuLj60wKPYaT104"
+	};
+
+/***/ },
+/* 361 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55211,7 +56164,7 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _reactDraggable = __webpack_require__(351);
+	var _reactDraggable = __webpack_require__(362);
 
 	var _reactDraggable2 = _interopRequireDefault(_reactDraggable);
 
@@ -55627,7 +56580,7 @@
 	}
 
 /***/ },
-/* 351 */
+/* 362 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function webpackUniversalModuleDefinition(root, factory) {
@@ -57239,7 +58192,7 @@
 	//# sourceMappingURL=react-draggable.js.map
 
 /***/ },
-/* 352 */
+/* 363 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57268,9 +58221,9 @@
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-	var _qr = __webpack_require__(353);
+	var _qr = __webpack_require__(364);
 
-	var _Label = __webpack_require__(354);
+	var _Label = __webpack_require__(365);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -57671,7 +58624,7 @@
 	}
 
 /***/ },
-/* 353 */
+/* 364 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -57789,7 +58742,7 @@
 	exports.printQRs = printQRs;
 
 /***/ },
-/* 354 */
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -57862,916 +58815,6 @@
 	}
 
 	exports.Label = Label;
-
-/***/ },
-/* 355 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	exports.default = TaskDialog;
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(32);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	var _moment = __webpack_require__(182);
-
-	var _moment2 = _interopRequireDefault(_moment);
-
-	var _dialog = __webpack_require__(356);
-
-	var _Task = __webpack_require__(293);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	function TaskDialog(props) {
-	  var actions = [{ label: "Cancel", onClick: props.onTaskClose }, { label: "Save", onClick: props.onTaskSave }];
-
-	  return _react2.default.createElement(
-	    _dialog.Dialog,
-	    {
-	      actions: actions,
-	      active: props.active,
-	      onEscKeyDown: props.onTaskClose,
-	      onOverlayClick: props.onTaskClsoe,
-	      title: ""
-	    },
-	    _react2.default.createElement(DialogContents, { task: props.task })
-	  );
-	}
-
-	function getAttributeValue(task, attributeID) {
-	  for (var i = 0; i < task.attribute_values.length; i++) {
-	    if (task.attribute_values[i].attribute == attributeID) return task.attribute_values[i].value;
-	  }
-	  return "";
-	}
-
-	var DialogContents = function (_React$Component) {
-	  _inherits(DialogContents, _React$Component);
-
-	  function DialogContents(props) {
-	    _classCallCheck(this, DialogContents);
-
-	    var _this = _possibleConstructorReturn(this, (DialogContents.__proto__ || Object.getPrototypeOf(DialogContents)).call(this, props));
-
-	    _this.onAttributeChange = _this.onAttributeChange.bind(_this);
-	    _this.state = { attributes: {} };
-	    return _this;
-	  }
-
-	  _createClass(DialogContents, [{
-	    key: 'onAttributeChange',
-	    value: function onAttributeChange(which, payload) {
-	      var ns = update(this.state, { attributes: { $set: { which: payload }
-	        }
-	      });
-
-	      this.setState(ns);
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this2 = this;
-
-	      var props = this.props;
-
-	      if (props.task == null) {
-	        return false;
-	      }
-
-	      var sentence = constructSentence(props.task);
-	      var label = props.task.label;
-	      if (props.task.label_index > 0) {
-	        label = label + "-" + props.task.label_index;
-	      }
-
-	      var obj = _react2.default.createElement(
-	        'span',
-	        null,
-	        '(' + label + ')'
-	      );
-
-	      if (!props.task.custom_display || props.task.custom_display.trim() == "") {
-	        obj = false;
-	      }
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'taskDialog' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'taskDialog-header' },
-	          _react2.default.createElement(
-	            'h6',
-	            null,
-	            (0, _Task.display)(props.task),
-	            obj
-	          )
-	        ),
-	        _react2.default.createElement(
-	          'p',
-	          { className: 'dialogItem' },
-	          _react2.default.createElement(
-	            'span',
-	            null,
-	            'Product Type'
-	          ),
-	          ' ' + props.task.product_type.name
-	        ),
-	        _react2.default.createElement(
-	          'p',
-	          { className: 'dialogItem' },
-	          _react2.default.createElement(
-	            'span',
-	            null,
-	            'Process Type'
-	          ),
-	          ' ' + props.task.process_type.name
-	        ),
-	        _react2.default.createElement(
-	          'p',
-	          { className: 'dialogItem' },
-	          _react2.default.createElement(
-	            'span',
-	            null,
-	            'Created at'
-	          ),
-	          ' ' + (0, _moment2.default)(props.task.created_at).format("dddd, MMMM Do YYYY, h:mm a").toString()
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'attribute' },
-	          _react2.default.createElement(
-	            'span',
-	            null,
-	            'Custom Display'
-	          ),
-	          _react2.default.createElement('input', { type: 'text', onChange: function onChange(val) {
-	              return _this2.onAttributeChange();
-	            }, placeholder: 'eg. R-CVB-0217' })
-	        ),
-	        _react2.default.createElement(
-	          'h5',
-	          null,
-	          'Attributes'
-	        ),
-	        props.task.attributes.map(function (attr, i) {
-	          var _this3 = this;
-
-	          return _react2.default.createElement(
-	            'div',
-	            { className: 'attribute', key: attr.id },
-	            _react2.default.createElement(
-	              'span',
-	              null,
-	              attr.name
-	            ),
-	            _react2.default.createElement('input', { type: 'text', value: this.state.attributes[attr.id], onChange: function onChange(val) {
-	                return _this3.onAttributeChange(attr.id, val);
-	              }, placeholder: 'blah blah' })
-	          );
-	        }, this)
-	      );
-	    }
-	  }]);
-
-	  return DialogContents;
-	}(_react2.default.Component);
-
-	function img(name) {
-	  return "path/to/img" + name;
-	}
-
-	function past(verb) {
-	  var last = verb.length - 1;
-	  if (verb.substr(last) == "e") {
-	    return verb.substr(0, last) + "ed";
-	  } else {
-	    return verb + "ed";
-	  }
-	}
-
-	// "2 red bins of Madagascar were winnowed on 2/2/17. 4 grey bins of winnowed product were output."
-	function constructSentence(task) {
-	  var processName = task.process_type.name.toLowerCase();
-	  var productName = task.product_type.name;
-	  var inputUnit = task.inputUnit.toLowerCase();
-	  var outputUnit = task.process_type.unit.toLowerCase();
-
-	  var numInputs = task.inputs.length;
-	  var numOutputs = task.items.length;
-
-	  var inputPl = numInputs != 1;
-	  var outputPl = numOutputs != 1;
-	  var date = (0, _moment2.default)(task.created_at).format("MM/DD/YY").toString();
-
-	  // "2 red bins of Madagascar"
-	  var firstHalf = numInputs + ' ' + inputUnit + (inputPl ? "s" : "") + ' of ' + productName + ' ' + (inputPl ? "were" : "was") + ' ' + past(processName) + ' on ' + date + '.';
-
-	  return firstHalf;
-	}
-
-/***/ },
-/* 356 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.Dialog = undefined;
-
-	var _reactCssThemr = __webpack_require__(318);
-
-	var _identifiers = __webpack_require__(323);
-
-	var _Dialog = __webpack_require__(357);
-
-	var _overlay = __webpack_require__(361);
-
-	var _overlay2 = _interopRequireDefault(_overlay);
-
-	var _button = __webpack_require__(324);
-
-	var _button2 = _interopRequireDefault(_button);
-
-	var _theme = __webpack_require__(364);
-
-	var _theme2 = _interopRequireDefault(_theme);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var Dialog = (0, _Dialog.dialogFactory)(_overlay2.default, _button2.default);
-	var ThemedDialog = (0, _reactCssThemr.themr)(_identifiers.DIALOG, _theme2.default)(Dialog);
-
-	exports.default = ThemedDialog;
-	exports.Dialog = ThemedDialog;
-
-/***/ },
-/* 357 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.dialogFactory = exports.Dialog = undefined;
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactCssThemr = __webpack_require__(318);
-
-	var _classnames3 = __webpack_require__(297);
-
-	var _classnames4 = _interopRequireDefault(_classnames3);
-
-	var _identifiers = __webpack_require__(323);
-
-	var _ActivableRenderer = __webpack_require__(358);
-
-	var _ActivableRenderer2 = _interopRequireDefault(_ActivableRenderer);
-
-	var _Button = __webpack_require__(325);
-
-	var _Button2 = _interopRequireDefault(_Button);
-
-	var _Overlay = __webpack_require__(359);
-
-	var _Overlay2 = _interopRequireDefault(_Overlay);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	var factory = function factory(Overlay, Button) {
-	  var Dialog = function Dialog(props) {
-	    var actions = props.actions.map(function (action, idx) {
-	      var className = (0, _classnames4.default)(props.theme.button, _defineProperty({}, action.className, action.className));
-	      return _react2.default.createElement(Button, _extends({ key: idx }, action, { className: className }));
-	    });
-
-	    var className = (0, _classnames4.default)([props.theme.dialog, props.theme[props.type]], _defineProperty({}, props.theme.active, props.active), props.className);
-
-	    return _react2.default.createElement(
-	      Overlay,
-	      {
-	        active: props.active,
-	        onClick: props.onOverlayClick,
-	        onEscKeyDown: props.onEscKeyDown,
-	        onMouseDown: props.onOverlayMouseDown,
-	        onMouseMove: props.onOverlayMouseMove,
-	        onMouseUp: props.onOverlayMouseUp
-	      },
-	      _react2.default.createElement(
-	        'div',
-	        { 'data-react-toolbox': 'dialog', className: className },
-	        _react2.default.createElement(
-	          'section',
-	          { role: 'body', className: props.theme.body },
-	          props.title ? _react2.default.createElement(
-	            'h6',
-	            { className: props.theme.title },
-	            props.title
-	          ) : null,
-	          props.children
-	        ),
-	        actions.length ? _react2.default.createElement(
-	          'nav',
-	          { role: 'navigation', className: props.theme.navigation },
-	          actions
-	        ) : null
-	      )
-	    );
-	  };
-
-	  Dialog.propTypes = {
-	    actions: _react.PropTypes.array,
-	    active: _react.PropTypes.bool,
-	    children: _react.PropTypes.node,
-	    className: _react.PropTypes.string,
-	    onEscKeyDown: _react.PropTypes.func,
-	    onOverlayClick: _react.PropTypes.func,
-	    onOverlayMouseDown: _react.PropTypes.func,
-	    onOverlayMouseMove: _react.PropTypes.func,
-	    onOverlayMouseUp: _react.PropTypes.func,
-	    theme: _react.PropTypes.shape({
-	      active: _react.PropTypes.string,
-	      body: _react.PropTypes.string,
-	      button: _react.PropTypes.string,
-	      dialog: _react.PropTypes.string,
-	      navigation: _react.PropTypes.string,
-	      title: _react.PropTypes.string
-	    }),
-	    title: _react.PropTypes.string,
-	    type: _react.PropTypes.string
-	  };
-
-	  Dialog.defaultProps = {
-	    actions: [],
-	    active: false,
-	    type: 'normal'
-	  };
-
-	  return (0, _ActivableRenderer2.default)()(Dialog);
-	};
-
-	var Dialog = factory(_Overlay2.default, _Button2.default);
-	exports.default = (0, _reactCssThemr.themr)(_identifiers.DIALOG)(Dialog);
-	exports.Dialog = Dialog;
-	exports.dialogFactory = factory;
-
-/***/ },
-/* 358 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var ActivableRendererFactory = function ActivableRendererFactory() {
-	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { delay: 500 };
-	  return function (ActivableComponent) {
-	    var _class, _temp2;
-
-	    return _temp2 = _class = function (_Component) {
-	      _inherits(ActivableRenderer, _Component);
-
-	      function ActivableRenderer() {
-	        var _ref;
-
-	        var _temp, _this, _ret;
-
-	        _classCallCheck(this, ActivableRenderer);
-
-	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	          args[_key] = arguments[_key];
-	        }
-
-	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = ActivableRenderer.__proto__ || Object.getPrototypeOf(ActivableRenderer)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
-	          active: _this.props.active,
-	          rendered: _this.props.active
-	        }, _temp), _possibleConstructorReturn(_this, _ret);
-	      }
-
-	      _createClass(ActivableRenderer, [{
-	        key: 'componentWillReceiveProps',
-	        value: function componentWillReceiveProps(nextProps) {
-	          if (nextProps.active && !this.props.active) this.renderAndActivate();
-	          if (!nextProps.active && this.props.active) this.deactivateAndUnrender();
-	        }
-	      }, {
-	        key: 'componentWillUnmount',
-	        value: function componentWillUnmount() {
-	          clearTimeout(this.activateTimeout);
-	          clearTimeout(this.unrenderTimeout);
-	        }
-	      }, {
-	        key: 'renderAndActivate',
-	        value: function renderAndActivate() {
-	          var _this2 = this;
-
-	          if (this.unrenderTimeout) clearTimeout(this.unrenderTimeout);
-	          this.setState({ rendered: true, active: false }, function () {
-	            _this2.activateTimeout = setTimeout(function () {
-	              return _this2.setState({ active: true });
-	            }, 20);
-	          });
-	        }
-	      }, {
-	        key: 'deactivateAndUnrender',
-	        value: function deactivateAndUnrender() {
-	          var _this3 = this;
-
-	          this.setState({ rendered: true, active: false }, function () {
-	            _this3.unrenderTimeout = setTimeout(function () {
-	              _this3.setState({ rendered: false });
-	              _this3.unrenderTimeout = null;
-	            }, _this3.props.delay);
-	          });
-	        }
-	      }, {
-	        key: 'render',
-	        value: function render() {
-	          var _props = this.props,
-	              delay = _props.delay,
-	              others = _objectWithoutProperties(_props, ['delay']); // eslint-disable-line no-unused-vars
-
-
-	          var _state = this.state,
-	              active = _state.active,
-	              rendered = _state.rendered;
-
-	          return rendered ? _react2.default.createElement(ActivableComponent, _extends({}, others, { active: active })) : null;
-	        }
-	      }]);
-
-	      return ActivableRenderer;
-	    }(_react.Component), _class.propTypes = {
-	      active: _react.PropTypes.bool.isRequired,
-	      children: _react.PropTypes.any,
-	      delay: _react.PropTypes.number
-	    }, _class.defaultProps = {
-	      delay: options.delay
-	    }, _temp2;
-	  };
-	};
-
-	exports.default = ActivableRendererFactory;
-
-/***/ },
-/* 359 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.Overlay = undefined;
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _classnames2 = __webpack_require__(297);
-
-	var _classnames3 = _interopRequireDefault(_classnames2);
-
-	var _reactCssThemr = __webpack_require__(318);
-
-	var _identifiers = __webpack_require__(323);
-
-	var _Portal = __webpack_require__(360);
-
-	var _Portal2 = _interopRequireDefault(_Portal);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Overlay = function (_Component) {
-	  _inherits(Overlay, _Component);
-
-	  function Overlay() {
-	    var _ref;
-
-	    var _temp, _this, _ret;
-
-	    _classCallCheck(this, Overlay);
-
-	    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	      args[_key] = arguments[_key];
-	    }
-
-	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Overlay.__proto__ || Object.getPrototypeOf(Overlay)).call.apply(_ref, [this].concat(args))), _this), _this.handleEscKey = function (e) {
-	      if (_this.props.active && _this.props.onEscKeyDown && e.which === 27) {
-	        _this.props.onEscKeyDown(e);
-	      }
-	    }, _temp), _possibleConstructorReturn(_this, _ret);
-	  }
-
-	  _createClass(Overlay, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      if (this.props.active) {
-	        document.body.addEventListener('keydown', this.handleEscKey);
-	        document.body.style.overflow = 'hidden';
-	      }
-	    }
-	  }, {
-	    key: 'componentWillUpdate',
-	    value: function componentWillUpdate(nextProps) {
-	      if (nextProps.active && !this.props.active) document.body.style.overflow = 'hidden';
-	      if (!nextProps.active && this.props.active && !document.querySelectorAll('[data-react-toolbox="overlay"]')[1]) document.body.style.overflow = '';
-	    }
-	  }, {
-	    key: 'componentDidUpdate',
-	    value: function componentDidUpdate() {
-	      if (this.props.active) {
-	        document.body.addEventListener('keydown', this.handleEscKey);
-	      }
-	    }
-	  }, {
-	    key: 'componentWillUnmount',
-	    value: function componentWillUnmount() {
-	      if (!document.querySelectorAll('[data-react-toolbox="overlay"]')[1]) document.body.style.overflow = '';
-	      document.body.removeEventListener('keydown', this.handleEscKey);
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _classnames;
-
-	      var _props = this.props,
-	          active = _props.active,
-	          className = _props.className,
-	          children = _props.children,
-	          invisible = _props.invisible,
-	          onClick = _props.onClick,
-	          theme = _props.theme;
-
-	      var _className = (0, _classnames3.default)(theme.overlay, (_classnames = {}, _defineProperty(_classnames, theme.active, active), _defineProperty(_classnames, theme.invisible, invisible), _classnames), className);
-
-	      return _react2.default.createElement(
-	        _Portal2.default,
-	        null,
-	        _react2.default.createElement(
-	          'div',
-	          { className: _className, 'data-react-toolbox': 'overlay' },
-	          _react2.default.createElement('div', { className: theme.backdrop, onClick: onClick }),
-	          children
-	        )
-	      );
-	    }
-	  }]);
-
-	  return Overlay;
-	}(_react.Component);
-
-	Overlay.propTypes = {
-	  active: _react.PropTypes.bool,
-	  children: _react.PropTypes.node,
-	  className: _react.PropTypes.string,
-	  invisible: _react.PropTypes.bool,
-	  onClick: _react.PropTypes.func,
-	  onEscKeyDown: _react.PropTypes.func,
-	  theme: _react.PropTypes.shape({
-	    active: _react.PropTypes.string,
-	    backdrop: _react.PropTypes.string,
-	    invisible: _react.PropTypes.string,
-	    overlay: _react.PropTypes.string
-	  })
-	};
-	Overlay.defaultProps = {
-	  invisible: false
-	};
-	exports.default = (0, _reactCssThemr.themr)(_identifiers.OVERLAY)(Overlay);
-	exports.Overlay = Overlay;
-
-/***/ },
-/* 360 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(32);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Portal = function (_Component) {
-	  _inherits(Portal, _Component);
-
-	  function Portal() {
-	    _classCallCheck(this, Portal);
-
-	    return _possibleConstructorReturn(this, (Portal.__proto__ || Object.getPrototypeOf(Portal)).apply(this, arguments));
-	  }
-
-	  _createClass(Portal, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this._renderOverlay();
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(nextProps) {
-	      if (this._overlayTarget && nextProps.container !== this.props.container) {
-	        this._portalContainerNode.removeChild(this._overlayTarget);
-	        this._portalContainerNode = getContainer(nextProps.container);
-	        this._portalContainerNode.appendChild(this._overlayTarget);
-	      }
-	    }
-	  }, {
-	    key: 'componentDidUpdate',
-	    value: function componentDidUpdate() {
-	      this._renderOverlay();
-	    }
-	  }, {
-	    key: 'componentWillUnmount',
-	    value: function componentWillUnmount() {
-	      this._unrenderOverlay();
-	      this._unmountOverlayTarget();
-	    }
-	  }, {
-	    key: '_mountOverlayTarget',
-	    value: function _mountOverlayTarget() {
-	      if (!this._overlayTarget) {
-	        this._overlayTarget = document.createElement('div');
-	        this._portalContainerNode = getContainer(this.props.container);
-	        this._portalContainerNode.appendChild(this._overlayTarget);
-	      }
-	    }
-	  }, {
-	    key: '_unmountOverlayTarget',
-	    value: function _unmountOverlayTarget() {
-	      if (this._overlayTarget) {
-	        this._portalContainerNode.removeChild(this._overlayTarget);
-	        this._overlayTarget = null;
-	      }
-	      this._portalContainerNode = null;
-	    }
-	  }, {
-	    key: '_renderOverlay',
-	    value: function _renderOverlay() {
-	      var overlay = !this.props.children ? null : _react2.default.Children.only(this.props.children);
-
-	      if (overlay !== null) {
-	        this._mountOverlayTarget();
-	        this._overlayInstance = _reactDom2.default.unstable_renderSubtreeIntoContainer(this, overlay, this._overlayTarget);
-	      } else {
-	        this._unrenderOverlay();
-	        this._unmountOverlayTarget();
-	      }
-	    }
-	  }, {
-	    key: '_unrenderOverlay',
-	    value: function _unrenderOverlay() {
-	      if (this._overlayTarget) {
-	        _reactDom2.default.unmountComponentAtNode(this._overlayTarget);
-	        this._overlayInstance = null;
-	      }
-	    }
-	  }, {
-	    key: 'getMountNode',
-	    value: function getMountNode() {
-	      return this._overlayTarget;
-	    }
-	  }, {
-	    key: 'getOverlayDOMNode',
-	    value: function getOverlayDOMNode() {
-	      if (!this.isMounted()) {
-	        throw new Error('getOverlayDOMNode(): A component must be mounted to have a DOM node.');
-	      }
-
-	      if (this._overlayInstance) {
-	        if (this._overlayInstance.getWrappedDOMNode) {
-	          return this._overlayInstance.getWrappedDOMNode();
-	        } else {
-	          return _reactDom2.default.findDOMNode(this._overlayInstance);
-	        }
-	      }
-
-	      return null;
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return null;
-	    }
-	  }]);
-
-	  return Portal;
-	}(_react.Component);
-
-	Portal.propTypes = {
-	  children: _react.PropTypes.any,
-	  container: _react.PropTypes.any,
-	  lockBody: _react.PropTypes.bool
-	};
-	Portal.defaultProps = {
-	  lockBody: true
-	};
-
-
-	function getContainer(container) {
-	  var _container = typeof container === 'function' ? container() : container;
-	  return _reactDom2.default.findDOMNode(_container) || document.body;
-	}
-
-	exports.default = Portal;
-
-/***/ },
-/* 361 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.Overlay = undefined;
-
-	var _reactCssThemr = __webpack_require__(318);
-
-	var _identifiers = __webpack_require__(323);
-
-	var _Overlay = __webpack_require__(359);
-
-	var _theme = __webpack_require__(362);
-
-	var _theme2 = _interopRequireDefault(_theme);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var ThemedOverlay = (0, _reactCssThemr.themr)(_identifiers.OVERLAY, _theme2.default)(_Overlay.Overlay);
-	exports.default = ThemedOverlay;
-	exports.Overlay = ThemedOverlay;
-
-/***/ },
-/* 362 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(363);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(338)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss", function() {
-				var newContent = require("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 363 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(337)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".PiEHXDwRHY8HJ07amHsgj {\n  position: fixed;\n  top: 0;\n  left: 0;\n  z-index: 300;\n  display: flex;\n  width: 100vw;\n  height: 100vh;\n  flex-direction: column;\n  align-content: center;\n  align-items: center;\n  justify-content: center;\n  pointer-events: none; }\n  .PiEHXDwRHY8HJ07amHsgj._3SslDuCRTaAZqRF0-SqqRV > *:not(.WbaQnRVOPpnF_uT9oZk0B) {\n    pointer-events: all; }\n\n.WbaQnRVOPpnF_uT9oZk0B {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  background-color: black;\n  opacity: 0;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 0.35s;\n  transition-property: opacity; }\n\n._2oZU5S3xS9ajRIMAg1Bdc2 {\n  pointer-events: all; }\n  ._2oZU5S3xS9ajRIMAg1Bdc2 > .WbaQnRVOPpnF_uT9oZk0B {\n    opacity: 0.6; }\n", ""]);
-
-	// exports
-	exports.locals = {
-		"overlay": "PiEHXDwRHY8HJ07amHsgj",
-		"invisible": "_3SslDuCRTaAZqRF0-SqqRV",
-		"backdrop": "WbaQnRVOPpnF_uT9oZk0B",
-		"active": "_2oZU5S3xS9ajRIMAg1Bdc2"
-	};
-
-/***/ },
-/* 364 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(365);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(338)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss", function() {
-				var newContent = require("!!./../../../css-loader/index.js?modules!./../../../sass-loader/index.js!./theme.scss");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 365 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(337)();
-	// imports
-
-
-	// module
-	exports.push([module.id, "._1f3ZgLBM9jGUXcA_FUtJBh {\n  display: flex;\n  max-width: 96vw;\n  max-height: 96vh;\n  flex-direction: column;\n  background-color: white;\n  border-radius: 0.2rem;\n  box-shadow: 0 19px 60px rgba(0, 0, 0, 0.3), 0 15px 20px rgba(0, 0, 0, 0.22);\n  opacity: 0;\n  transition-delay: 0.07s;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 0.35s;\n  transition-property: opacity, transform;\n  transform: translateY(-4rem); }\n  ._1f3ZgLBM9jGUXcA_FUtJBh._3rz6tqX9S6yEq9NyPMqVm9 {\n    opacity: 1;\n    transform: translateY(0%); }\n\n.WKoavR88nT5xnGtBvGEtt {\n  width: 30vw; }\n  @media screen and (max-width: 720px) {\n    .WKoavR88nT5xnGtBvGEtt {\n      width: 50vw; } }\n  @media screen and (max-width: 600px) {\n    .WKoavR88nT5xnGtBvGEtt {\n      width: 75vw; } }\n\n._1WehKtJMltizPisGOx2b19 {\n  width: 50vw; }\n  @media screen and (max-width: 600px) {\n    ._1WehKtJMltizPisGOx2b19 {\n      width: 96vw; } }\n\n._10bxmr5Gr3nOwk5U8oYiKq {\n  width: 96vw; }\n\n._2AkulETShrQGSzerq5ZiLS {\n  width: 96vw; }\n  @media screen and (max-width: 600px) {\n    ._2AkulETShrQGSzerq5ZiLS {\n      width: 100vw;\n      max-width: 100vw;\n      min-height: 100vh;\n      max-height: 100vh;\n      border-radius: 0; } }\n\n._sEzVM3CS9Yt9zbFPE3RB {\n  font-family: \"Roboto\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 2rem;\n  font-weight: 500;\n  line-height: 1;\n  letter-spacing: .02em;\n  flex-grow: 0;\n  margin-bottom: 1.6rem;\n  color: black; }\n\n._1_nNM3UOH0OdmUhrAZCb18 {\n  flex-grow: 2;\n  padding: 2.4rem;\n  color: #757575; }\n\n._3eiS-q9QaklQfk8Xv5pr3Y {\n  flex-grow: 0;\n  padding: 0.8rem;\n  text-align: right; }\n\n._3HGWmS4QuLj60wKPYaT104 {\n  min-width: 0;\n  padding-right: 0.8rem;\n  padding-left: 0.8rem;\n  margin-left: 0.8rem; }\n", ""]);
-
-	// exports
-	exports.locals = {
-		"dialog": "_1f3ZgLBM9jGUXcA_FUtJBh",
-		"active": "_3rz6tqX9S6yEq9NyPMqVm9",
-		"small": "WKoavR88nT5xnGtBvGEtt",
-		"normal": "_1WehKtJMltizPisGOx2b19",
-		"large": "_10bxmr5Gr3nOwk5U8oYiKq",
-		"fullscreen": "_2AkulETShrQGSzerq5ZiLS",
-		"title": "_sEzVM3CS9Yt9zbFPE3RB",
-		"body": "_1_nNM3UOH0OdmUhrAZCb18",
-		"navigation": "_3eiS-q9QaklQfk8Xv5pr3Y",
-		"button": "_3HGWmS4QuLj60wKPYaT104"
-	};
 
 /***/ }
 /******/ ]);

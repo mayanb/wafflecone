@@ -5,6 +5,7 @@ import { Filters } from './Inputs.jsx';
 import { ContentDescriptor } from './Layout.jsx'
 import moment from 'moment'
 import TaskDialog from './TaskDialog.jsx'
+import update from 'immutability-helper';
 
 export default class Tasks extends React.Component {
   constructor(props) {
@@ -29,21 +30,19 @@ export default class Tasks extends React.Component {
       startIndex: 0,
       currentPage: 1,
 
-      activeFilters: { inventory: props.inventory, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
+      activeFilters: { active: 1, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
     };
   }
 
 
 	render() {
 
-    console.log(this.state.processes)
-		if (this.state.processes == {} || this.state.products == {}) {
-			return {false};
-		}
-
-		return ( 
-			<div>
-				<div className="content">
+    let obj = false;
+		if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) {
+		} else {
+      obj = 
+      <div>
+        <div className="content">
 
           <ContentDescriptor 
             count={this.state.count} 
@@ -72,12 +71,21 @@ export default class Tasks extends React.Component {
 
         <div className="sidebar">
             <Filters 
+              filters = {this.state.activeFilters}
+              active = {this.state.activeFilters.active}
               processes={this.state.processes} 
               products={this.state.products} 
               dates={this.props.inventory==false}
-              onFilter={(state) => this.handleFilter(state)}
+              onFilter={(object) => this.handleFilter(object)}
             />
         </div>
+      </div>
+
+    }
+
+		return ( 
+			<div>
+				{obj}
 	    </div>
 	  )
   }
@@ -97,7 +105,7 @@ export default class Tasks extends React.Component {
   handlePage(x) {
     var thisObj = this
     var newState = {}
-    var defs = [this.getTasks(newState, this.state.activeFilters, x)]
+    var defs = [this.getTasks(newState, x, this.props.inventory)]
 
     $.when.apply(null, defs).done(function() {
       if (x < thisObj.state.currentPage) {
@@ -125,30 +133,29 @@ export default class Tasks extends React.Component {
     var component = this
 
     $.when.apply(null, defs).done(function() {
+      var d2 = [component.getTasks(newState, -1, component.props.inventory)]
       component.setState(newState)
-      var d2 = [component.getTasks(newState, component.state.activeFilters)]
       $.when.apply(null, d2).done(function() {
         component.setState(newState)
       });
     })
   }
 
-  getTasks(container, filters, page) {
+  getTasks(container, page, inventory) {
     var deferred = $.Deferred();
 
     var url = window.location.origin + "/ics/tasks/"
-    if (page) {
-      url += "?page=" + page
-    }
 
-    filters.ordering = 'process_type__x'
+    let filters = this.parseFilters()
+    console.log(filters)
 
     var processes = this.state.processes
-    if (!processes) 
+    if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object)
       processes = container.processes
 
     $.get(url, filters)
       .done(function (data) {
+        console.log(data)
         container.count = data.length
         container.total = data.count
         container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null
@@ -186,52 +193,75 @@ export default class Tasks extends React.Component {
     return deferred.promise()
   }
 
-  parseFilters(state) {
+  parseFilters() {
 
-    var filters = {}
+    let state = this.state.activeFilters
+    var filters = {ordering : 'process_type__x' }
 
     if (this.props.inventory) {
     	filters.inventory = true
     }
 
-    if (!this.props.inventory && state.start && state.start.length > 0 && state.end && state.end.length > 0) {
-      filters.start = state.start
-      filters.end = state.end
+    if (state.active == 1) {
+
+      if (!this.props.inventory) {
+        if (state.start && state.start.length > 0) {
+          filters.start = state.start
+        }
+        if (state.end && state.end.length > 0) {
+          filters.end = state.end
+        }
+      }
+
+      if (state.processes && state.processes.length > 0)
+        filters.processes = state.processes.map(function (x) {
+          return x.value
+        }).join(",")
+
+      if (state.products && state.products.length > 0)
+        filters.products = state.products.map(function (x) {
+          return x.value
+        }).join(",")
     }
 
-    if (state.processes && state.processes.length > 0)
-      filters.processes = state.processes.map(function (x) {
-        return x.value
-      }).join(",")
-
-    if (state.products && state.products.length > 0)
-      filters.products = state.products.map(function (x) {
-        return x.value
-      }).join(",")
-
-    if (state.parent && state.parent != "") {
-      filters.parent = state.parent
+    else if (state.active == 2) {
+      if (state.parent && state.parent.value != "") {
+        filters.parent = state.parent.value
+      }
     }
 
-    if (state.child && state.child != "") {
-      filters.child = state.child
+    else if (state.active == 3) {
+      if (state.child && state.child.value != "") {
+        filters.child = state.child.value
+      }
     }
 
-    this.setState({activeFilters: filters})
     return filters
   }
 
-  handleFilter(state) {
-    var filters = this.parseFilters(state)
-
+  handleFilter(object) {
     var thisObj = this
     var newState = {}
 
-    var defs = [this.getTasks(newState, filters)]
+    var ns = update(this.state, {
+      activeFilters: {
+        $merge: object
+      }
+    })
 
-    $.when.apply(null, defs).done(function() {
-      thisObj.setState(newState)
-    });
+    if (object.active) {
+      this.setState(ns)
+    } else {
+      this.setState(ns, function () {
+        console.log(this.state)
+        var defs = [this.getTasks(newState, -1, this.props.inventory)]
+        $.when.apply(null, defs).done(function() {
+          thisObj.setState(newState)
+        });
+      })
+    }
+
+
   }
 
 }
@@ -274,9 +304,10 @@ function splitTasksByProcess(tasks, processes) {
     }
 
     if (!taskGroups[found])
-      taskGroups[found] = [];
+      taskGroups[found] = {count: 0, tasks: []};
 
-    taskGroups[found].push(task);
+    taskGroups[found].tasks.push(task);
+    taskGroups[found].count += task.items.length
   });
 
   return taskGroups;
