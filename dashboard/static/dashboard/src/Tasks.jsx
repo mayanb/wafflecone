@@ -22,20 +22,18 @@ export default class Tasks extends React.Component {
       processes: {},
       products: {},
 
-      count: 0,
-      total: 0,
+      loading: false,
+      mounted: false,
 
-      previous: null,
-      next: null,
-      startIndex: 0,
-      currentPage: 1,
-
-      activeFilters: { active: 1, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
+      activeFilters: this.props.filters
     };
   }
 
 
 	render() {
+    if (!window.history.state) {
+      window.history.replaceState(this.state.activeFilters, "Scoop @ bama", window.location.href);
+    }
 
     let obj = false;
 		if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) {
@@ -44,14 +42,9 @@ export default class Tasks extends React.Component {
       <div>
         <div className="content">
 
-          <ContentDescriptor 
-            count={this.state.count} 
-            total={this.state.total} 
-            previous={this.state.previous} 
-            next={this.state.next} 
-            startIndex={this.state.startIndex} 
-            onPage = { (x) => this.handlePage(x)}
-          />
+          <div style={{display: this.state.loading?"block":""}} className="loading">
+            <div className="spinner"></div>
+          </div>
 
           <TaskDialog 
             active={(this.state.activeTask != null)} 
@@ -76,7 +69,7 @@ export default class Tasks extends React.Component {
               processes={this.state.processes} 
               products={this.state.products} 
               dates={this.props.inventory==false}
-              onFilter={(object) => this.handleFilter(object)}
+              onFilter={(object) => this.handleFilter(object, true)}
             />
         </div>
       </div>
@@ -88,6 +81,20 @@ export default class Tasks extends React.Component {
 				{obj}
 	    </div>
 	  )
+  }
+
+  componentWillReceiveProps(np) {
+    if (!this.mounted) {
+      return 
+    }
+    if (np.filters == null || (Object.keys(np.filters).length === 0 && np.filters.constructor === Object)) {
+      return
+    }
+
+    this.setState({activeFilters : np.filters}, function () {
+      this.handleFilter({}, false)
+    })
+
   }
 
   handleTaskSave(task) {
@@ -124,7 +131,6 @@ export default class Tasks extends React.Component {
 
   componentDidMount() {
     var newState = { taskGroups: {}, processes: {}, products: {} };
-
     var defs = []
 
     defs.push(this.getProcesses(newState));
@@ -136,6 +142,7 @@ export default class Tasks extends React.Component {
       var d2 = [component.getTasks(newState, -1, component.props.inventory)]
       component.setState(newState)
       $.when.apply(null, d2).done(function() {
+        newState.mounted = true
         component.setState(newState)
       });
     })
@@ -148,20 +155,22 @@ export default class Tasks extends React.Component {
 
     let filters = this.parseFilters()
 
+    console.log("getTasks")
+    console.log(page)
+
     var processes = this.state.processes
     if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object)
       processes = container.processes
 
+    this.setState({loading: true})
+    let thisObj = this
+
     $.get(url, filters)
       .done(function (data) {
-        container.count = data.length
-        container.total = data.count
-        container.next = data.next ? data.next.match(/page=(\d*)/)[1] : null
-        container.previous = data.previous && data.previous.match(/page=(\d*)/) ? data.previous.match(/page=(\d*)/)[1] : null
-        container.startIndex = 0
-        container.currentPage = 1
         container.taskGroups = splitTasksByProcess(data, processes);
-        deferred.resolve();
+      }).always(function () {
+        thisObj.setState({loading: false})
+        deferred.resolve()
       })
 
     return deferred.promise()
@@ -237,23 +246,24 @@ export default class Tasks extends React.Component {
     return filters
   }
 
-  handleFilter(object) {
-    var thisObj = this
-    var newState = {}
-
-    console.log(object)
-
-    var ns = update(this.state, {
+  handleFilter(object, push) {
+    let ns = update(this.state, {
       activeFilters: {
         $merge: object
       }
     })
 
-    if (object.active) {
+    var thisObj = this
+    var newState = {}
+
+    if (object && object.active) {
       this.setState(ns)
     } else {
       this.setState(ns, function () {
-        var defs = [this.getTasks(newState, -1, this.props.inventory)]
+        if (push) {
+          window.history.pushState(ns.activeFilters, "Scoop @ Bama", window.location.origin + window.location.pathname + "?" + $.param(ns.activeFilters));
+        }
+        var defs = [this.getTasks(newState, -2, this.props.inventory)]
         $.when.apply(null, defs).done(function() {
           thisObj.setState(newState)
         });

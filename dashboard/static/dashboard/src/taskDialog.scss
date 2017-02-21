@@ -1,0 +1,77 @@
+$medium-grey: rgba(0,0,0,0.4);
+$dark-grey: rgba(0,0,0,0.87);
+
+.taskDialog {
+
+	.taskDialog-header {
+		margin-bottom: 20px;
+
+		h6 {
+			font-size: 24px;
+			color: $dark-grey;
+			text-transform: uppercase;
+			margin: 0;
+			font-weight: 700;
+			line-height: 24px;
+		}
+
+		span {
+			font-size: 16px;
+			color: $medium-grey;
+			text-transform: uppercase;
+			margin: 0;
+			margin-left: 4px;
+			font-weight: normal;
+		}
+	}
+
+	h5 {
+		font-size: 12px;
+		
+	}
+
+	.attribute {
+
+		span {
+			margin-right: 12px;
+			font-size: 11px;
+			color: $medium-grey;
+			text-transform: uppercase;
+
+		}
+
+		input {
+			border: none;
+			border-radius: 0;
+			border-bottom: 2px solid rgba(0,0,0,0.1);
+			font-size: 15px;
+
+			&::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+			  color: $light-grey;
+			}
+			&::-moz-placeholder { /* Firefox 19+ */
+			  color: $light-grey;
+			}
+			&:-ms-input-placeholder { /* IE 10+ */
+			  color: $light-grey;
+			}
+			&:-moz-placeholder { /* Firefox 18- */
+			  color: $light-grey;
+			}
+		}
+	}
+}
+
+.dialogItem {
+	color: $dark-grey;
+	margin: 6px 0;
+	font-size: 15px;
+
+
+	span {
+		color: $medium-grey;
+		text-transform: uppercase;
+		font-size: 11px;
+		margin-right: 12px;
+	}
+}

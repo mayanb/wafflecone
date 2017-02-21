@@ -7,13 +7,12 @@ $pink: rgb(255,82,82);
 	width:100%;
 
 	td {
-		min-width: 140px;
+		min-width: 100px;
 		line-height: 16px;
 		padding: 16px 0px;
 		padding-left: 6px;
 
 		&:first-child {
-			min-width: 200px;
 			padding-left: 0px;
 		}
 	}
@@ -30,7 +29,8 @@ $pink: rgb(255,82,82);
 
 		&:first-child {
 			font-family: 'Overpass Mono';
-			font-weight: 700
+			font-weight: 700;
+			width: 50px;
 		}
 	}
 

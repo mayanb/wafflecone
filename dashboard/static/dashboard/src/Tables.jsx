@@ -44,6 +44,7 @@ function Table(props) {
 
       <div className="card-container">
         <table>
+          <colgroup width="200" />
           <TableHead attributes={props.process.attributes} inventory={props.inventory}/>
           <tbody>
             { props.tasks.map(function(task, i) {

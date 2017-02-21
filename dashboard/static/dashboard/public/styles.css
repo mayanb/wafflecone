@@ -95,16 +95,23 @@ i.material-icons {
   position: relative;
   overflow-x: auto; }
 
+.loading {
+  display: none;
+  background-color: white;
+  width: 100%;
+  height: 100%;
+  padding-right: 270px;
+  position: absolute; }
+
 .card-container table {
   border-collapse: collapse;
   width: 100%; }
   .card-container table td {
-    min-width: 140px;
+    min-width: 100px;
     line-height: 16px;
     padding: 16px 0px;
     padding-left: 6px; }
     .card-container table td:first-child {
-      min-width: 200px;
       padding-left: 0px; }
   .card-container table thead {
     color: rgba(0, 0, 0, 0.54);
@@ -115,7 +122,8 @@ i.material-icons {
     font-size: 14px; }
     .card-container table tbody td:first-child {
       font-family: 'Overpass Mono';
-      font-weight: 700; }
+      font-weight: 700;
+      width: 50px; }
   .card-container table tbody tr {
     border-top: 1px solid rgba(0, 0, 0, 0.04); }
     .card-container table tbody tr:first-child {
@@ -335,41 +343,79 @@ div#blocker, #canvastest {
   top: 0;
   left: 0; }
 
-.taskDialog .taskDialog-header h6 {
-  font-size: 24px;
-  color: rgba(0, 0, 0, 0.87);
-  text-transform: uppercase;
-  margin: 0;
-  font-weight: 700;
-  line-height: 24px; }
-.taskDialog .taskDialog-header span {
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.4);
-  text-transform: uppercase;
-  margin: 0;
-  margin-left: 4px;
-  font-weight: normal; }
+.taskDialog .taskDialog-header {
+  margin-bottom: 20px; }
+  .taskDialog .taskDialog-header h6 {
+    font-size: 24px;
+    color: rgba(0, 0, 0, 0.87);
+    text-transform: uppercase;
+    margin: 0;
+    font-weight: 700;
+    line-height: 24px; }
+  .taskDialog .taskDialog-header span {
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.4);
+    text-transform: uppercase;
+    margin: 0;
+    margin-left: 4px;
+    font-weight: normal; }
 .taskDialog h5 {
   font-size: 12px; }
 .taskDialog .attribute span {
   margin-right: 12px;
-  font-size: 10px;
-  color: rgba(0, 0, 0, 0.87);
-  font-weight: 700;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
   text-transform: uppercase; }
 .taskDialog .attribute input {
   border: none;
   border-radius: 0;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1); }
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  font-size: 15px; }
+  .taskDialog .attribute input::-webkit-input-placeholder {
+    /* Chrome/Opera/Safari */
+    color: #eee; }
+  .taskDialog .attribute input::-moz-placeholder {
+    /* Firefox 19+ */
+    color: #eee; }
+  .taskDialog .attribute input:-ms-input-placeholder {
+    /* IE 10+ */
+    color: #eee; }
+  .taskDialog .attribute input:-moz-placeholder {
+    /* Firefox 18- */
+    color: #eee; }
 
 .dialogItem {
-  color: rgba(0, 0, 0, 0.4);
-  margin: 8px 0; }
+  color: rgba(0, 0, 0, 0.87);
+  margin: 6px 0;
+  font-size: 15px; }
   .dialogItem span {
-    color: rgba(0, 0, 0, 0.87);
+    color: rgba(0, 0, 0, 0.4);
     text-transform: uppercase;
-    font-weight: 700;
-    font-size: 10px;
+    font-size: 11px;
     margin-right: 12px; }
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 100px auto;
+  background-color: #333;
+  border-radius: 100%;
+  -webkit-animation: sk-scaleout 1.0s infinite ease-in-out;
+  animation: sk-scaleout 1.0s infinite ease-in-out; }
+
+@-webkit-keyframes sk-scaleout {
+  0% {
+    -webkit-transform: scale(0); }
+  100% {
+    -webkit-transform: scale(1);
+    opacity: 0; } }
+@keyframes sk-scaleout {
+  0% {
+    -webkit-transform: scale(0);
+    transform: scale(0); }
+  100% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    opacity: 0; } }
 
 /*# sourceMappingURL=styles.css.map */
