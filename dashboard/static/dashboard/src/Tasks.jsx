@@ -42,9 +42,6 @@ export default class Tasks extends React.Component {
       <div>
         <div className="content">
 
-          <div style={{display: this.state.loading?"block":""}} className="loading">
-            <div className="spinner"></div>
-          </div>
 
           <TaskDialog 
             active={(this.state.activeTask != null)} 
@@ -59,6 +56,10 @@ export default class Tasks extends React.Component {
             inventory={this.props.inventory}
             onTaskClick={(task) => this.handleTaskToggle(task)}
           />
+
+          <div style={{display: this.state.loading?"block":""}} className="loading">
+            <div className="spinner"></div>
+          </div>
 
         </div>
 

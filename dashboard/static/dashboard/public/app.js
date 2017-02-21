@@ -21846,11 +21846,6 @@
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'content' },
-	            _react2.default.createElement(
-	              'div',
-	              { style: { display: this.state.loading ? "block" : "" }, className: 'loading' },
-	              _react2.default.createElement('div', { className: 'spinner' })
-	            ),
 	            _react2.default.createElement(_TaskDialog2.default, {
 	              active: this.state.activeTask != null,
 	              task: this.state.activeTask,
@@ -21868,7 +21863,12 @@
 	              onTaskClick: function onTaskClick(task) {
 	                return _this2.handleTaskToggle(task);
 	              }
-	            })
+	            }),
+	            _react2.default.createElement(
+	              'div',
+	              { style: { display: this.state.loading ? "block" : "" }, className: 'loading' },
+	              _react2.default.createElement('div', { className: 'spinner' })
+	            )
 	          ),
 	          _react2.default.createElement(
 	            'div',
