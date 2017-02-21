@@ -74,6 +74,10 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
+	var _jquery = __webpack_require__(181);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -123,7 +127,7 @@
 	      // inventory, dashboard, or settings??
 
 	      var csrftoken = getCookie('csrftoken');
-	      $.ajaxSetup({
+	      _jquery2.default.ajaxSetup({
 	        beforeSend: function beforeSend(xhr, settings) {
 	          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
 	            xhr.setRequestHeader("X-CSRFToken", csrftoken);
@@ -225,7 +229,7 @@
 	  if (document.cookie && document.cookie !== '') {
 	    var cookies = document.cookie.split(';');
 	    for (var i = 0; i < cookies.length; i++) {
-	      var cookie = jQuery.trim(cookies[i]);
+	      var cookie = _jquery2.default.trim(cookies[i]);
 	      // Does this cookie string begin with the name we want?
 	      if (cookie.substring(0, name.length + 1) === name + '=') {
 	        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
