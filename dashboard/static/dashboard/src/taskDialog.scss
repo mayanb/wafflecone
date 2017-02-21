@@ -35,8 +35,9 @@ $dark-grey: rgba(0,0,0,0.87);
 		span {
 			margin-right: 12px;
 			font-size: 11px;
-			color: $medium-grey;
+			color: $dark-grey;
 			text-transform: uppercase;
+			font-weight: bold;
 
 		}
 
@@ -63,15 +64,16 @@ $dark-grey: rgba(0,0,0,0.87);
 }
 
 .dialogItem {
-	color: $dark-grey;
+	color: $medium-grey;
 	margin: 6px 0;
 	font-size: 15px;
 
 
 	span {
-		color: $medium-grey;
+		color: $dark-grey;
 		text-transform: uppercase;
 		font-size: 11px;
 		margin-right: 12px;
+		font-weight: bold;
 	}
 }

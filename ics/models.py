@@ -25,6 +25,9 @@ class ProcessType(models.Model):
   def getAllAttributes(self):
     return self.attribute_set.all()
 
+  class Meta:
+    ordering = ['x',]
+
 class ProductType(models.Model):
   name = models.CharField(max_length=20)
   code = models.CharField(max_length=20)

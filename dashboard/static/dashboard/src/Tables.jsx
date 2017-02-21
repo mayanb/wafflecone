@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import $ from 'jquery';
 import moment from 'moment';
-import {display, toCSV} from './Task.jsx';
+import {display, toCSV, icon} from './Task.jsx';
 
 export default class TableList extends React.Component {
   constructor(props) {
@@ -40,7 +40,7 @@ export default class TableList extends React.Component {
 function Table(props) {
   return (
     <div className="">
-      <TableHeader title={props.process.name} icon={props.process.icon.substr(0,props.process.icon.length-4)}csv={toCSV(props.process, props.tasks)}/>
+      <TableHeader title={props.process.name} icon={props.process.icon} csv={toCSV(props.process, props.tasks)}/>
 
       <div className="card-container">
         <table>
@@ -61,7 +61,7 @@ function Table(props) {
 function TableHeader(props) {
   return (
     <div className="toolbar">
-      <img src={window.location.origin + "/static/dashboard/img/" + props.icon + "@3x.png"} style={{height:"20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
+      <img src={icon(props.icon)} style={{height:"20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
       <h1 style={{display: "inline-block"}}>{props.title}</h1>
       <a href={'data:application/csv;charset=utf-8,' + encodeURIComponent(props.csv)} download={props.title + ".csv"}><i className="material-icons">file_download</i></a>
     </div>

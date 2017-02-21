@@ -156,9 +156,6 @@ export default class Tasks extends React.Component {
 
     let filters = this.parseFilters()
 
-    console.log("getTasks")
-    console.log(page)
-
     var processes = this.state.processes
     if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object)
       processes = container.processes

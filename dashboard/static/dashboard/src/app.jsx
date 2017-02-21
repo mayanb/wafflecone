@@ -63,7 +63,7 @@ class Main extends React.Component {
     }
 
     if (this.state.active == 4) {
-      obj = false
+      obj = <FactoryMap />
     }
 
     return (

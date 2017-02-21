@@ -155,7 +155,7 @@
 	      }
 
 	      if (this.state.active == 4) {
-	        obj = false;
+	        obj = _react2.default.createElement(_FactoryMap2.default, null);
 	      }
 
 	      return _react2.default.createElement(
@@ -21970,9 +21970,6 @@
 
 	      var filters = this.parseFilters();
 
-	      console.log("getTasks");
-	      console.log(page);
-
 	      var processes = this.state.processes;
 	      if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) processes = container.processes;
 
@@ -22164,6 +22161,8 @@
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
+	var _Task = __webpack_require__(309);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -22186,11 +22185,15 @@
 
 	    _this.handleStop = _this.handleStop.bind(_this);
 	    _this.handleConnectionEnd = _this.handleConnectionEnd.bind(_this);
+	    _this.handleConnectionDelete = _this.handleConnectionDelete.bind(_this);
+	    _this.setDimensions = _this.setDimensions.bind(_this);
 	    _this.state = {
 	      processes: [],
 	      connections: [],
 	      selectedProcess: -1,
-	      selectedConnection: -1
+	      selectedConnection: -1,
+	      height: 0,
+	      width: 0
 	    };
 	    return _this;
 	  }
@@ -22201,12 +22204,12 @@
 	      var thisObj = this;
 
 	      if (this.state.processes.length == 0) {
-	        return _react2.default.createElement('svg', { style: { width: "100%", height: "100%", backgroundColor: "green" } });
+	        return _react2.default.createElement('svg', { className: 'factorymap', style: { width: this.state.width, height: this.state.height, backgroundColor: "green" } });
 	      }
 
 	      return _react2.default.createElement(
 	        'svg',
-	        { className: 'factorymap', style: { width: "100%", height: "100%", backgroundColor: "#1565C0" } },
+	        { className: 'factorymap', style: { width: this.state.width, height: this.state.height, backgroundColor: "#1565C0" } },
 	        _react2.default.createElement(
 	          'defs',
 	          null,
@@ -22220,22 +22223,32 @@
 	          ),
 	          _react2.default.createElement(
 	            'marker',
-	            { id: 'arrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
+	            { id: 'bluearrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
 	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: connectionBlue, fill: 'transparent' })
+	          ),
+	          _react2.default.createElement(
+	            'marker',
+	            { id: 'redarrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
+	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: "red", fill: 'transparent' })
 	          )
 	        ),
 	        Object.keys(this.state.connections).map(function (cid) {
 	          var _this2 = this;
 
 	          var connection = this.state.connections[cid];
-	          if (connection == undefined) return { false: false };
+	          if (connection == undefined) return;
+	          {
+	            false;
+	          }
+
 	          var p1 = this.state.processes[connection.process_type];
 	          var p2 = this.state.processes[connection.recommended_input];
+
 	          return _react2.default.createElement(DirectedLine, _extends({
 	            p1: this.unscale(p1), p2: this.unscale(p2),
 	            p1Width: width(p1), p2Width: width(p2)
 	          }, connection, { key: cid,
-	            selected: cid == this.state.selectConnection,
+	            selected: cid == this.state.selectedConnection,
 	            onClick: function onClick() {
 	              return _this2.selectConnection(cid);
 	            }
@@ -22246,36 +22259,46 @@
 
 	          var p = thisObj.state.processes[pid];
 	          if (p == undefined) return { false: false };
-	          var coords = thisObj.unscale(p);
-	          var newp = (0, _immutabilityHelper2.default)(p, { $merge: coords });
+	          var coords = this.unscale(p);
+	          //let newp = update(p, {$merge: coords})
 	          return _react2.default.createElement(ProcessTile, _extends({
 	            width: width(p), height: 40
-	          }, newp, { key: pid,
+	          }, p, { nx: coords.x, ny: coords.y, key: pid,
 	            selected: pid == this.state.selectProcess,
 	            onStop: function onStop(e, ui) {
-	              return thisObj.handleStop(e, ui, pid);
+	              return _this3.handleStop(e, ui, pid);
 	            },
 	            onConnectionEnd: function onConnectionEnd(x, y) {
-	              return thisObj.handleConnectionEnd(pid, x, y);
+	              return _this3.handleConnectionEnd(pid, x, y);
 	            },
 	            onClick: function onClick() {
 	              return _this3.selectProcess(pid);
 	            }
 	          }));
-	        })
+	        }, this)
 	      );
 	    }
 	  }, {
 	    key: 'selectProcess',
 	    value: function selectProcess(pid) {
-	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectConnection: cid, selectedProcess: -1 } });
+	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectedConnection: -1, selectedProcess: pid } });
 	      this.setState(ns);
 	    }
 	  }, {
 	    key: 'selectConnection',
 	    value: function selectConnection(cid) {
-	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectConnection: -1, selectedProcess: pid } });
+	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectedConnection: cid, selectedProcess: -1 } });
 	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.setDimensions();
+	    }
+	  }, {
+	    key: 'setDimensions',
+	    value: function setDimensions() {
+	      this.setState({ height: (0, _jquery2.default)(window).height() - 64, width: (0, _jquery2.default)(window).width() });
 	    }
 	  }, {
 	    key: 'componentDidMount',
@@ -22287,6 +22310,28 @@
 	      _jquery2.default.when.apply(null, defs).done(function () {
 	        thisObj.setState(container);
 	      });
+
+	      var url = window.location.origin + '/ics/recommendedInputs/';
+	      window.addEventListener('keyup', this.handleConnectionDelete);
+	      window.addEventListener('resize', this.setDimensions);
+	    }
+	  }, {
+	    key: 'handleConnectionDelete',
+	    value: function handleConnectionDelete(e) {
+	      var thisObj = this;
+
+	      if (e.key == "Backspace" && this.state.selectedConnection != -1) {
+
+	        var url = window.location.origin + "/ics/recommendedInputs/" + this.state.selectedConnection + "/";
+	        _jquery2.default.ajax({ method: "DELETE", url: url }).done(function (e) {
+	          var ns = (0, _immutabilityHelper2.default)(thisObj.state, {
+	            connections: {
+	              $merge: _defineProperty({}, thisObj.state.selectedConnection, undefined)
+	            }, selectedConnection: { $set: -1 }
+	          });
+	          thisObj.setState(ns);
+	        });
+	      }
 	    }
 	  }, {
 	    key: 'getProcesses',
@@ -22341,6 +22386,9 @@
 	        var p = this.state.processes[pid];
 	        var n = this.unscale(p);
 	        var w = width(p);
+
+	        if (pid == id) return;
+
 	        if (Math.abs(parseFloat(x) + o.x - (n.x + w / 2)) <= w / 2 + 10 && Math.abs(parseFloat(y) + o.y - (n.y + 10)) <= 20) {
 	          found = pid;
 	        }
@@ -22350,7 +22398,7 @@
 
 	      Object.keys(this.state.connections).map(function (cid) {
 	        var c = this.state.connections[cid];
-	        if (c.process_type == id && c.recommended_input == found) found = -1;
+	        if (c && c.process_type == id && c.recommended_input == found) found = -1;
 	      }, this);
 
 	      if (found == -1) return;
@@ -22372,8 +22420,8 @@
 	  }, {
 	    key: 'scale',
 	    value: function scale(coords) {
-	      var h = (0, _jquery2.default)('svg').height();
-	      var w = (0, _jquery2.default)('svg').width();
+	      var h = this.state.height;
+	      var w = this.state.width;
 
 	      var x = parseFloat(coords.x);
 	      var y = parseFloat(coords.y);
@@ -22385,8 +22433,8 @@
 	  }, {
 	    key: 'unscale',
 	    value: function unscale(coords) {
-	      var h = (0, _jquery2.default)('svg').height();
-	      var w = (0, _jquery2.default)('svg').width();
+	      var h = this.state.height;
+	      var w = this.state.width;
 
 	      var x = parseFloat(coords.x);
 	      var y = parseFloat(coords.y);
@@ -22454,7 +22502,7 @@
 	      var y1 = this.props.p1.y + 40 / 2;
 	      var x2 = this.props.p2.x + this.props.p2Width / 2;
 	      var y2 = this.props.p2.y + 40 / 2;
-	      var path = 'M' + x1 + ' ' + y1 + ' C ' + (x1 + 10) + ' ' + (y1 - 10) + ', ' + (x2 - 10) + ' ' + (y2 - 10) + ', ' + x2 + ' ' + y2;
+	      var path = 'M' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + y1 + ', ' + x2 + ' ' + y2 + ', ' + x2 + ' ' + y2;
 	      return _react2.default.createElement(
 	        'g',
 	        null,
@@ -22468,7 +22516,7 @@
 	        }),
 	        _react2.default.createElement('line', { ref: function ref(line) {
 	            _this5.sample = line;
-	          }, strokeWidth: '4', markerEnd: 'url(#arrow)' })
+	          }, strokeWidth: '4', markerEnd: this.props.selected ? "url(#redarrow)" : "url(#bluearrow)" })
 	      );
 	    }
 	  }]);
@@ -22481,7 +22529,7 @@
 	    _reactDraggable2.default,
 	    { onDrag: function onDrag(e, ui) {
 	        return props.onStop(e, ui);
-	      }, defaultPosition: { x: props.x, y: props.y } },
+	      }, defaultPosition: { x: props.nx, y: props.ny } },
 	    _react2.default.createElement(
 	      'g',
 	      null,
@@ -22489,9 +22537,10 @@
 	          return props.onConnectionEnd(x, y);
 	        } }),
 	      _react2.default.createElement('rect', { className: 'processTile', width: props.width, height: props.height, rx: '4', ry: '4', filter: 'url(#f3)' }),
+	      _react2.default.createElement('image', { x: 10, y: 10, height: 20, width: 20, xlinkHref: (0, _Task.icon)(props.icon) }),
 	      _react2.default.createElement(
 	        'text',
-	        { textAnchor: 'middle', x: props.width / 2, y: props.height / 2 + 4 },
+	        { textAnchor: 'middle', x: (props.width - 25) / 2 + 25, y: props.height / 2 + 4 },
 	        props.name + " (" + props.code + ")"
 	      )
 	    )
@@ -22568,7 +22617,7 @@
 	}(_react2.default.Component);
 
 	function width(p) {
-	  return (p.name.length + p.code.length + 5) * 7;
+	  return (p.name.length + p.code.length + 5) * 7 + 25;
 	}
 
 /***/ },
@@ -52306,7 +52355,7 @@
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports.toCSV = exports.getAttributesToColumnNumbers = exports.display = undefined;
+	exports.icon = exports.toCSV = exports.getAttributesToColumnNumbers = exports.display = undefined;
 
 	var _moment = __webpack_require__(182);
 
@@ -52365,9 +52414,16 @@
 		return firstRow + '\n' + csv;
 	}
 
+	function icon(k) {
+		console.log(k);
+		var i = k.substr(0, k.length - 4);
+		return window.location.origin + "/static/dashboard/img/" + i + "@3x.png";
+	}
+
 	exports.display = display;
 	exports.getAttributesToColumnNumbers = getAttributesToColumnNumbers;
 	exports.toCSV = toCSV;
+	exports.icon = icon;
 
 /***/ },
 /* 310 */
@@ -52654,7 +52710,7 @@
 	  return _react2.default.createElement(
 	    'div',
 	    { className: '' },
-	    _react2.default.createElement(TableHeader, { title: props.process.name, icon: props.process.icon.substr(0, props.process.icon.length - 4), csv: (0, _Task.toCSV)(props.process, props.tasks) }),
+	    _react2.default.createElement(TableHeader, { title: props.process.name, icon: props.process.icon, csv: (0, _Task.toCSV)(props.process, props.tasks) }),
 	    _react2.default.createElement(
 	      'div',
 	      { className: 'card-container' },
@@ -52681,7 +52737,7 @@
 	  return _react2.default.createElement(
 	    'div',
 	    { className: 'toolbar' },
-	    _react2.default.createElement('img', { src: window.location.origin + "/static/dashboard/img/" + props.icon + "@3x.png", style: { height: "20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } }),
+	    _react2.default.createElement('img', { src: (0, _Task.icon)(props.icon), style: { height: "20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } }),
 	    _react2.default.createElement(
 	      'h1',
 	      { style: { display: "inline-block" } },

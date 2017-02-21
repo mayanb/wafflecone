@@ -56,4 +56,10 @@ function toCSV(process, tasks) {
 
 }
 
-export { display, getAttributesToColumnNumbers, toCSV }
+function icon(k) {
+	console.log(k)
+	var i = k.substr(0, k.length-4)
+	return window.location.origin + "/static/dashboard/img/" + i + "@3x.png"
+}
+
+export { display, getAttributesToColumnNumbers, toCSV, icon }

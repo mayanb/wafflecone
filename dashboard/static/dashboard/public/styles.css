@@ -235,6 +235,9 @@ i.material-icons {
 ul div.menuContentWrapper div.rdr-Days {
   white-space: normal; }
 
+.factorymap {
+  margin-top: 64px; }
+
 .processTile {
   fill: white; }
 
@@ -365,8 +368,9 @@ div#blocker, #canvastest {
 .taskDialog .attribute span {
   margin-right: 12px;
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.4);
-  text-transform: uppercase; }
+  color: rgba(0, 0, 0, 0.87);
+  text-transform: uppercase;
+  font-weight: bold; }
 .taskDialog .attribute input {
   border: none;
   border-radius: 0;
@@ -386,14 +390,15 @@ div#blocker, #canvastest {
     color: #eee; }
 
 .dialogItem {
-  color: rgba(0, 0, 0, 0.87);
+  color: rgba(0, 0, 0, 0.4);
   margin: 6px 0;
   font-size: 15px; }
   .dialogItem span {
-    color: rgba(0, 0, 0, 0.4);
+    color: rgba(0, 0, 0, 0.87);
     text-transform: uppercase;
     font-size: 11px;
-    margin-right: 12px; }
+    margin-right: 12px;
+    font-weight: bold; }
 
 .spinner {
   width: 40px;
