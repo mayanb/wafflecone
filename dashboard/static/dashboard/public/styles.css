@@ -109,15 +109,19 @@ i.material-icons {
   width: 100%; }
   .card-container table td {
     min-width: 100px;
-    line-height: 16px;
-    padding: 16px 0px;
+    line-height: 14px;
+    padding: 12px 0px;
     padding-left: 6px; }
     .card-container table td:first-child {
-      padding-left: 0px; }
+      padding-left: 0px;
+      min-width: 200px;
+      width: 200px; }
   .card-container table thead {
-    color: rgba(0, 0, 0, 0.54);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400; }
+    .card-container table thead tr {
+      border-top: 1px solid rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.3); }
   .card-container table tbody td {
     color: rgba(0, 0, 0, 0.87);
     font-size: 14px; }
@@ -126,7 +130,7 @@ i.material-icons {
       font-weight: 700;
       width: 50px; }
   .card-container table tbody tr {
-    border-top: 1px solid rgba(0, 0, 0, 0.04); }
+    border-top: 1px solid rgba(0, 0, 0, 0.03); }
     .card-container table tbody tr:first-child {
       border-color: rgba(0, 0, 0, 0.2); }
     .card-container table tbody tr:last-child {
@@ -138,13 +142,22 @@ i.material-icons {
   display: flex;
   width: 100%;
   vertical-align: center;
-  padding: 30px 0; }
-  .toolbar h1, .toolbar i {
-    line-height: 20px;
-    margin: 0; }
-  .toolbar h1 {
-    font-size: 20px;
+  padding: 30px 0;
+  padding-bottom: 24px; }
+  .toolbar div.toolbarIcon {
+    flex: 0; }
+  .toolbar div.toolbarText {
     flex: 1; }
+    .toolbar div.toolbarText h1 {
+      font-size: 20px;
+      line-height: 20px;
+      margin: 0; }
+    .toolbar div.toolbarText h2 {
+      font-size: 14px;
+      line-height: 14px;
+      font-weight: normal;
+      margin: 0;
+      margin-top: 4px; }
 
 .filters .inputs {
   display: flex;

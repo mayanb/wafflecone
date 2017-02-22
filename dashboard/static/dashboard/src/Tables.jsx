@@ -40,11 +40,10 @@ export default class TableList extends React.Component {
 function Table(props) {
   return (
     <div className="">
-      <TableHeader title={props.process.name} icon={props.process.icon} csv={toCSV(props.process, props.tasks)}/>
+      <TableHeader title={props.process.name} icon={props.process.icon} csv={toCSV(props.process, props.tasks)} count={props.count} unit={props.process.unit}/>
 
       <div className="card-container">
         <table>
-          <colgroup width="200" />
           <TableHead attributes={props.process.attributes} inventory={props.inventory}/>
           <tbody>
             { props.tasks.map(function(task, i) {
@@ -58,12 +57,18 @@ function Table(props) {
   );
 }
 
+//<a href={'data:application/csv;charset=utf-8,' + encodeURIComponent(props.csv)} download={props.title + ".csv"}><i className="material-icons">file_download</i></a>
 function TableHeader(props) {
   return (
     <div className="toolbar">
-      <img src={icon(props.icon)} style={{height:"20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
-      <h1 style={{display: "inline-block"}}>{props.title}</h1>
-      <a href={'data:application/csv;charset=utf-8,' + encodeURIComponent(props.csv)} download={props.title + ".csv"}><i className="material-icons">file_download</i></a>
+      <div className="toolbarIcon">
+        <img src={icon(props.icon)} style={{height:"38px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
+      </div>
+      <div className="toolbarText">
+        <h1>{props.title}</h1>
+        <h2>{`${props.count} ${props.unit}${props.count==1?"":"s"}`}</h2>
+      </div>
+      
     </div>
   );
 }

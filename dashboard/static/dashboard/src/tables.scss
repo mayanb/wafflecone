@@ -1,4 +1,4 @@
-$table-border: 1px solid rgba(0,0,0,0.04);
+$table-border: 1px solid rgba(0,0,0,0.03);
 $pink: rgb(255,82,82);
 
 .card-container table {
@@ -8,19 +8,26 @@ $pink: rgb(255,82,82);
 
 	td {
 		min-width: 100px;
-		line-height: 16px;
-		padding: 16px 0px;
+		line-height: 14px;
+		padding: 12px 0px;
 		padding-left: 6px;
 
 		&:first-child {
 			padding-left: 0px;
+			min-width: 200px;
+			width: 200px;
 		}
 	}
 
 	thead {
-		color: rgba(0,0,0,0.54);
-		font-size: 13px;
+		//color: rgba(0,0,0,0.54);
+		font-size: 14px;
 		font-weight:400;
+
+		tr {
+			border-top: $table-border;
+			border-color: rgba(0,0,0,0.3);
+		}
 	}
 
 	tbody td {
@@ -35,8 +42,10 @@ $pink: rgb(255,82,82);
 	}
 
 	tbody tr {
+		// add a border to the the top of every row
 		border-top: $table-border;
 
+		// add a darker border to the top of the top row
 		&:first-child {
 			border-color: rgba(0,0,0,0.2);
 		}
@@ -57,16 +66,27 @@ $pink: rgb(255,82,82);
 	//padding: 16px 24px;
 	vertical-align: center;
 	padding: 30px 0;
+	padding-bottom: 24px;
 
-	h1, i {
-		//padding: 0px 24px;
-		//line-height: 80px;
-		line-height: 20px;
-		margin: 0;
+	div.toolbarIcon {
+		flex: 0
 	}
 
-	h1 {
-		font-size: 20px;
+	div.toolbarText {
+		h1 {
+			font-size: 20px;
+			line-height: 20px;
+			margin: 0
+		}
+
+		h2 {
+			font-size: 14px;
+			line-height: 14px;
+			font-weight: normal;
+			margin: 0;
+			margin-top: 4px;
+		}
+
 		flex: 1;
 	}
 }

@@ -52744,14 +52744,13 @@
 	  return _react2.default.createElement(
 	    'div',
 	    { className: '' },
-	    _react2.default.createElement(TableHeader, { title: props.process.name, icon: props.process.icon, csv: (0, _Task.toCSV)(props.process, props.tasks) }),
+	    _react2.default.createElement(TableHeader, { title: props.process.name, icon: props.process.icon, csv: (0, _Task.toCSV)(props.process, props.tasks), count: props.count, unit: props.process.unit }),
 	    _react2.default.createElement(
 	      'div',
 	      { className: 'card-container' },
 	      _react2.default.createElement(
 	        'table',
 	        null,
-	        _react2.default.createElement('colgroup', { width: '200' }),
 	        _react2.default.createElement(TableHead, { attributes: props.process.attributes, inventory: props.inventory }),
 	        _react2.default.createElement(
 	          'tbody',
@@ -52767,23 +52766,28 @@
 	  );
 	}
 
+	//<a href={'data:application/csv;charset=utf-8,' + encodeURIComponent(props.csv)} download={props.title + ".csv"}><i className="material-icons">file_download</i></a>
 	function TableHeader(props) {
 	  return _react2.default.createElement(
 	    'div',
 	    { className: 'toolbar' },
-	    _react2.default.createElement('img', { src: (0, _Task.icon)(props.icon), style: { height: "20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } }),
 	    _react2.default.createElement(
-	      'h1',
-	      { style: { display: "inline-block" } },
-	      props.title
+	      'div',
+	      { className: 'toolbarIcon' },
+	      _react2.default.createElement('img', { src: (0, _Task.icon)(props.icon), style: { height: "38px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } })
 	    ),
 	    _react2.default.createElement(
-	      'a',
-	      { href: 'data:application/csv;charset=utf-8,' + encodeURIComponent(props.csv), download: props.title + ".csv" },
+	      'div',
+	      { className: 'toolbarText' },
 	      _react2.default.createElement(
-	        'i',
-	        { className: 'material-icons' },
-	        'file_download'
+	        'h1',
+	        null,
+	        props.title
+	      ),
+	      _react2.default.createElement(
+	        'h2',
+	        null,
+	        props.count + ' ' + props.unit + (props.count == 1 ? "" : "s")
 	      )
 	    )
 	  );
