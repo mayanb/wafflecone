@@ -50,11 +50,11 @@ class Main extends React.Component {
     let piece = pieces[pieces.length - 1]
     if (piece == "" || piece == "dashboard")
       this.setState({active: 1})
-    if (piece == "inventory")
+    else if (piece == "inventory")
       this.setState({active: 2})
-    if (piece == "labels")
+    else if (piece == "labels")
       this.setState({active: 3})
-    if (piece == "settings")
+    else if (piece == "settings")
       this.setState({active: 4})
 
     // also, check if there are pre-existing filters
@@ -67,13 +67,16 @@ class Main extends React.Component {
   }
 
   render() {
-    var obj = <Tasks inventory={(this.state.active==2)} filters={this.state.filters} />
+    var obj = false
 
-    if (this.state.active == 3) {
+    if (this.state.active == 1 || this.state.active == 2)
+      obj = <Tasks inventory={(this.state.active==2)} filters={this.state.filters} />
+
+    else if (this.state.active == 3) {
       obj = <LabelPrinter />
     }
 
-    if (this.state.active == 4) {
+    else if (this.state.active == 4) {
       obj = <FactoryMap />
     }
 

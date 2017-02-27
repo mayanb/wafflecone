@@ -1,51 +1,56 @@
-$medium-grey: rgba(0,0,0,0.4);
+$medium-grey: rgb(150,163,182);
 $dark-grey: rgba(0,0,0,0.87);
+
+body {
+	-webkit-font-smoothing: antialiased;
+}
+
+div[data-react-toolbox=dialog] {
+	width: 40vw; 
+	z-index: $z-index-dialog;
+
+	section {
+		margin: 0;
+		padding: 0;
+		padding-bottom: 24px;
+	}
+
+	.taskDialog .toolbar, .taskDialog .taskDialog-body {
+		padding-left: 24px;
+		padding-right: 24px;
+	}
+
+	.taskDialog .taskDialog-body {
+		padding: 18px;
+	}
+
+	.taskDialog .toolbar {
+		border-bottom: 1px solid rgba(0,0,0,0.07);
+	}
+}
 
 .taskDialog {
 
-	.taskDialog-header {
-		margin-bottom: 20px;
-
-		h6 {
-			font-size: 24px;
-			color: $dark-grey;
-			text-transform: uppercase;
-			margin: 0;
-			font-weight: 700;
-			line-height: 24px;
-		}
-
+	.toolbar h1 {
+		color: black;
 		span {
-			font-size: 16px;
+			font-size: 14px;
 			color: $medium-grey;
-			text-transform: uppercase;
-			margin: 0;
-			margin-left: 4px;
+			-webkit-font-smoothing: antialiased;
 			font-weight: normal;
+			margin-left: 6px;
 		}
-	}
-
-	h5 {
-		font-size: 12px;
-		
 	}
 
 	.attribute {
-
-		span {
-			margin-right: 12px;
-			font-size: 11px;
-			color: $dark-grey;
-			text-transform: uppercase;
-			font-weight: bold;
-
-		}
 
 		input {
 			border: none;
 			border-radius: 0;
 			border-bottom: 2px solid rgba(0,0,0,0.1);
 			font-size: 15px;
+			color: $medium-grey;
+			-webkit-font-smoothing: antialiased;
 
 			&::-webkit-input-placeholder { /* Chrome/Opera/Safari */
 			  color: $light-grey;
@@ -63,17 +68,55 @@ $dark-grey: rgba(0,0,0,0.87);
 	}
 }
 
-.dialogItem {
+.dialogItem, .attribute {
 	color: $medium-grey;
+	-webkit-font-smoothing: antialiased;
 	margin: 6px 0;
 	font-size: 15px;
+	line-height: 24px;
+
+	i {
+		font-size: 15px;
+		line-height: 24px;
+		margin-left: 8px;
+	}
 
 
-	span {
+	span.attributeTitle {
 		color: $dark-grey;
-		text-transform: uppercase;
 		font-size: 11px;
-		margin-right: 12px;
-		font-weight: bold;
+		margin-right: 8px;
+	}
+}
+
+div[data-react-toolbox=menu] {
+	z-index: $z-index-edit-menu;
+	ul {
+		margin: 0;
+		padding: 0;
+
+		div.menuContentWrapper {
+			padding: 12px;
+		}
+	}
+
+	input {
+		line-height: 24px;
+		font-size: 15px;
+		border: 0;
+		border-bottom: 1px solid rgba(0,0,0,0.1);
+		margin-bottom: 8px;
+
+		&:focus {
+			outline: none;
+		}
+	}
+
+	button {
+		border-radius: 2px;
+		color: $medium-grey;
+		background-color: white;
+		border: 1px solid $medium-grey;
+		margin-right: 8px	
 	}
 }

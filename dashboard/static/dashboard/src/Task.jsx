@@ -1,6 +1,10 @@
 import moment from 'moment';
 
 function display(task) {
+	return words(task).toUpperCase()
+}
+
+function words(task) {
   if (!task || task == undefined || task.label == undefined) {
   	return ""
   }

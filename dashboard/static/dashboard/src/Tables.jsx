@@ -27,7 +27,7 @@ export default class TableList extends React.Component {
             key={taskGroupID} 
             process={this.props.processes[taskGroupID]}
             inventory={this.state.inventory}
-            onTaskClick={(t) => this.props.onTaskClick(t)}
+            onTaskClick={this.props.onTaskClick}
           />;
         }, this)
       } 
@@ -47,7 +47,14 @@ function Table(props) {
           <TableHead attributes={props.process.attributes} inventory={props.inventory}/>
           <tbody>
             { props.tasks.map(function(task, i) {
-              return <TaskRow onClick={() => props.onTaskClick(task)} task={task} attributes={props.process.attributes} key={task.id} inventory={props.inventory} unit={props.process.unit}/>;
+              return (<TaskRow 
+                onClick={() => props.onTaskClick(task)} 
+                task={task} 
+                attributes={props.process.attributes} 
+                key={task.id} 
+                inventory={props.inventory} 
+                unit={props.process.unit}
+              />)
             })}
           </tbody>
         </table>
@@ -82,7 +89,7 @@ function possiblyEmpty(val) {
 
 function getAttributeValue(task, attributeID) {
   for (var i = 0; i < task.attribute_values.length; i++) {
-    if (task.attribute_values[i].attribute == attributeID) 
+    if (task.attribute_values[i].attribute == attributeID && task.attribute_values[i].value) 
       return task.attribute_values[i].value
   }
   return "n/a"

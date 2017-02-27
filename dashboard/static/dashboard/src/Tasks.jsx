@@ -10,9 +10,9 @@ import update from 'immutability-helper';
 export default class Tasks extends React.Component {
   constructor(props) {
     super(props);
-    this.handleFilter = this.handleFilter.bind(this);
-    this.handleTaskToggle = this.handleTaskToggle.bind(this);
-    this.handleTaskSave = this.handleTaskSave.bind(this);
+    this.handleFilter = this.handleFilter.bind(this)
+    this.handleTaskToggle = this.handleTaskToggle.bind(this)
+    this.handleTaskChanged = this.handleTaskChanged.bind(this)
     this.state = {
 
     	inventory: props.inventory,
@@ -46,15 +46,15 @@ export default class Tasks extends React.Component {
           <TaskDialog 
             active={(this.state.activeTask != null)} 
             task={this.state.activeTask}
-            onTaskClose={(task) => this.handleTaskToggle(null)} 
-            onTaskSave={(newTask) => this.handleTaskSave(newTask)}
+            onTaskClose = {this.handleTaskToggle}
+            onTaskChanged={this.handleTaskChanged}
           />
 
           <TableList 
             taskGroups={this.state.taskGroups} 
             processes={this.state.processes}
             inventory={this.props.inventory}
-            onTaskClick={(task) => this.handleTaskToggle(task)}
+            onTaskClick={this.handleTaskToggle}
           />
 
           <div style={{display: this.state.loading?"block":""}} className="loading">
@@ -96,10 +96,6 @@ export default class Tasks extends React.Component {
       this.handleFilter({}, false)
     })
 
-  }
-
-  handleTaskSave(task) {
-    handleTaskToggle(null)
   }
 
   handleTaskToggle(task) {
@@ -147,6 +143,46 @@ export default class Tasks extends React.Component {
         component.setState(newState)
       });
     })
+  }
+
+  handleTaskChanged(task) {
+    let url = window.location.origin + "/ics/tasks/" + task.id + "/"
+    let thisObj = this
+    $.get(url)
+      .done(function (data) {
+        console.log("dataaaaa")
+        console.log(data)
+        let taskGroup = getSemanticTaskGroup(data, thisObj.state.processes)
+
+        // the jankiest loop there ever was....
+        let i = -1
+        let group = thisObj.state.taskGroups[taskGroup].tasks
+
+        for(var j = 0; j < group.length; j++) {
+          if (group[j].id == data.id) {
+            i = j
+            break
+          }
+        }
+
+        if (i == -1) return 
+
+        // now lets make a new state
+        var ns = update(thisObj.state, {
+          taskGroups: {
+            [taskGroup]: { 
+              tasks : {
+                [i] : {
+                  $set: data
+                }
+              }
+            }
+          }, activeTask : {$set: data}
+        })
+
+        thisObj.setState(ns)
+
+      })
   }
 
   getTasks(container, page, inventory) {
@@ -288,7 +324,20 @@ function splitTasksByProcess(tasks, processes) {
 
   tasks.map(function (task, i) {
 
-    var found = -1
+    let found = getSemanticTaskGroup(task, processes)
+
+    if (!taskGroups[found])
+      taskGroups[found] = {count: 0, tasks: []};
+
+    taskGroups[found].tasks.push(task);
+    taskGroups[found].count += task.items.length
+  });
+
+  return taskGroups;
+}
+
+function getSemanticTaskGroup(task, processes) {
+  var found = -1
 
     // if its a label
     if (task.process_type.id == 1 && task.custom_display && processes) {
@@ -310,13 +359,6 @@ function splitTasksByProcess(tasks, processes) {
       found = task.process_type.id
     }
 
-    if (!taskGroups[found])
-      taskGroups[found] = {count: 0, tasks: []};
-
-    taskGroups[found].tasks.push(task);
-    taskGroups[found].count += task.items.length
-  });
-
-  return taskGroups;
+    return found
 }
 

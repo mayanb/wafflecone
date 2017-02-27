@@ -10,7 +10,7 @@ html, body {
   padding: 0; }
 
 body {
-  font-family: Overpass, Proxima Nova, sans-serif;
+  font-family: Muli, Overpass, Proxima Nova, sans-serif;
   font-size: 0.95em;
   background-color: white; }
 
@@ -23,7 +23,7 @@ body {
   -webkit-font-smoothing: antialiased;
   position: fixed;
   top: 0;
-  z-index: 998; }
+  z-index: 990; }
   .navbar .content-area {
     display: flex;
     flex-direction: row; }
@@ -360,35 +360,39 @@ div#blocker, #canvastest {
   top: 0;
   left: 0; }
 
-.taskDialog .taskDialog-header {
-  margin-bottom: 20px; }
-  .taskDialog .taskDialog-header h6 {
-    font-size: 24px;
-    color: rgba(0, 0, 0, 0.87);
-    text-transform: uppercase;
+body {
+  -webkit-font-smoothing: antialiased; }
+
+div[data-react-toolbox=dialog] {
+  width: 40vw;
+  z-index: 991; }
+  div[data-react-toolbox=dialog] section {
     margin: 0;
-    font-weight: 700;
-    line-height: 24px; }
-  .taskDialog .taskDialog-header span {
-    font-size: 16px;
-    color: rgba(0, 0, 0, 0.4);
-    text-transform: uppercase;
-    margin: 0;
-    margin-left: 4px;
-    font-weight: normal; }
-.taskDialog h5 {
-  font-size: 12px; }
-.taskDialog .attribute span {
-  margin-right: 12px;
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.87);
-  text-transform: uppercase;
-  font-weight: bold; }
+    padding: 0;
+    padding-bottom: 24px; }
+  div[data-react-toolbox=dialog] .taskDialog .toolbar, div[data-react-toolbox=dialog] .taskDialog .taskDialog-body {
+    padding-left: 24px;
+    padding-right: 24px; }
+  div[data-react-toolbox=dialog] .taskDialog .taskDialog-body {
+    padding: 18px; }
+  div[data-react-toolbox=dialog] .taskDialog .toolbar {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07); }
+
+.taskDialog .toolbar h1 {
+  color: black; }
+  .taskDialog .toolbar h1 span {
+    font-size: 14px;
+    color: #96a3b6;
+    -webkit-font-smoothing: antialiased;
+    font-weight: normal;
+    margin-left: 6px; }
 .taskDialog .attribute input {
   border: none;
   border-radius: 0;
   border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-  font-size: 15px; }
+  font-size: 15px;
+  color: #96a3b6;
+  -webkit-font-smoothing: antialiased; }
   .taskDialog .attribute input::-webkit-input-placeholder {
     /* Chrome/Opera/Safari */
     color: #eee; }
@@ -402,16 +406,42 @@ div#blocker, #canvastest {
     /* Firefox 18- */
     color: #eee; }
 
-.dialogItem {
-  color: rgba(0, 0, 0, 0.4);
+.dialogItem, .attribute {
+  color: #96a3b6;
+  -webkit-font-smoothing: antialiased;
   margin: 6px 0;
-  font-size: 15px; }
-  .dialogItem span {
+  font-size: 15px;
+  line-height: 24px; }
+  .dialogItem i, .attribute i {
+    font-size: 15px;
+    line-height: 24px;
+    margin-left: 8px; }
+  .dialogItem span.attributeTitle, .attribute span.attributeTitle {
     color: rgba(0, 0, 0, 0.87);
-    text-transform: uppercase;
     font-size: 11px;
-    margin-right: 12px;
-    font-weight: bold; }
+    margin-right: 8px; }
+
+div[data-react-toolbox=menu] {
+  z-index: 992; }
+  div[data-react-toolbox=menu] ul {
+    margin: 0;
+    padding: 0; }
+    div[data-react-toolbox=menu] ul div.menuContentWrapper {
+      padding: 12px; }
+  div[data-react-toolbox=menu] input {
+    line-height: 24px;
+    font-size: 15px;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px; }
+    div[data-react-toolbox=menu] input:focus {
+      outline: none; }
+  div[data-react-toolbox=menu] button {
+    border-radius: 2px;
+    color: #96a3b6;
+    background-color: white;
+    border: 1px solid #96a3b6;
+    margin-right: 8px; }
 
 .spinner {
   width: 40px;

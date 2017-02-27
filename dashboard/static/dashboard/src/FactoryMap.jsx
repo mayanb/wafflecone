@@ -172,6 +172,7 @@ export default class FactoryMap extends React.Component {
   }
 
   handleStop(e, ui, id) {
+    this.forceUpdate()
     let url = window.location.origin + "/ics/processes/move/" + id + "/"
     let p = this.state.processes[id]
     let data = this.scale({ x: ui.x, y:  ui.y})
@@ -277,7 +278,7 @@ class DirectedLine extends React.Component {
   }
 
   getMidPoint() {
-    var halfLength = this.path.getTotalLength()/2
+    var halfLength = this.path.getTotalLength() * 2/3
     var p1 = this.path.getPointAtLength(halfLength-4)
     var p2 = this.path.getPointAtLength(halfLength+4)
     this.sample.setAttribute("x1", p1.x)
@@ -290,7 +291,7 @@ class DirectedLine extends React.Component {
     this.getMidPoint()
   }
 
-  componentWillReceiveProps() {
+  componentWillReceiveProps(np) {
     this.getMidPoint()
   }
 
