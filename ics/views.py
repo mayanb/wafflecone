@@ -48,6 +48,10 @@ class TaskList(generics.ListAPIView):
         if parent is not None:
           queryset = Task.objects.get(pk=parent).descendents()
 
+        child = self.request.query_params.get('child', None)
+        if child is not None:
+            queryset = Task.objects.get(pk=child).ancestors()
+
         inv = self.request.query_params.get('inventory', None)
         if inv is not None:
           queryset = queryset.filter(item__isnull=False, item__input__isnull=True).distinct()

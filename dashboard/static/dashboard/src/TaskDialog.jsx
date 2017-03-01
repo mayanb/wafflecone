@@ -6,25 +6,95 @@ import {Dialog} from 'react-toolbox/lib/dialog'
 import {Menu} from 'react-toolbox/lib/menu';
 import {display, toCSV, icon} from './Task.jsx';
 import update from 'immutability-helper';
+import Ancestors from './TaskDialogPages.jsx'
+import Items from './Items.jsx'
 
-export default function TaskDialog(props) {
-  let actions = []
+export default class TaskDialog extends React.Component {
 
-  return (
-    <Dialog
-      actions={actions}
-      active={props.active}
-      onEscKeyDown={props.onTaskClose}
-      onOverlayClick={props.onTaskClose}
-      title={""}
-    >
-      <DialogContents task={props.task} onTaskChanged={props.onTaskChanged}/>
-    </Dialog>
-  )
+  constructor(props) {
+    super(props)
+    this.state = {active: 1}
+  }
 
+  componentWillReceiveProps(np) {
+    this.setState({active: 0})
+  }
+
+  render() {
+    let props = this.props
+    var obj
+
+    if (props.task == null) {
+      return null
+    }
+
+    if (this.state.active == 0) {
+      obj = <Details task={props.task} onTaskChanged={props.onTaskChanged}/>
+    } else if (this.state.active == 1) {
+      obj = <Items task={props.task} />
+    } else if (this.state.active == 2) {
+      let request1 = {child: props.task.id}
+      obj = <Ancestors query={request1} />
+    } else if (this.state.active == 3) {
+      let request2 = {parent: props.task.id}
+      obj = <Ancestors query={request2} />
+    }
+
+    var label = props.task.label
+    if (props.task.label_index > 0) {
+      label = label + "-" + props.task.label_index
+    }
+
+    var obj2 = <span>{`(${label})`}</span>
+    if (!props.task.custom_display || props.task.custom_display.trim() == "") {
+      obj2 = false
+    }
+
+    return (
+      <Dialog
+        actions={[]}
+        active={props.active}
+        onEscKeyDown={props.onTaskClose}
+        onOverlayClick={props.onTaskClose}
+        title={""}
+      >
+        <div className="taskDialog">
+
+          <div className="toolbar">
+            <div className="toolbarIcon">
+              <img src={icon(props.task.process_type.icon)} style={{height:"20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
+            </div>
+            <div className="toolbarText">
+              <h1>{display(props.task)}{obj2}</h1>
+            </div>
+          </div>
+
+          <MenuBar options={["Details", "Items", "Ancestors", "Descendents"]} active={this.state.active} onClick={ (val) => this.setState({active: val}) } />
+
+          {obj}
+
+        </div>
+
+      </Dialog>
+    )
+  }
 }
 
-class DialogContents extends React.Component {
+function MenuBar(props) {
+  return (
+    <div className="menuBar">
+      <ul>
+      {
+        props.options.map(function (option, i) {
+          return (<li key={i} className={props.active==i?"activeTab":""}onClick={() => props.onClick(i)}>{option}</li>)
+        })
+      }
+      </ul>
+    </div>
+  )
+}
+
+class Details extends React.Component {
   constructor(props) {
     super(props)
     this.handleAttributeChange = this.handleAttributeChange.bind(this)
@@ -155,51 +225,38 @@ class DialogContents extends React.Component {
     }
 
     return (
-      <div className="taskDialog">
-
-        <div className="toolbar">
-          <div className="toolbarIcon">
-            <img src={icon(props.task.process_type.icon)} style={{height:"38px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
-          </div>
-          <div className="toolbarText">
-            <h1>{display(props.task)}{obj}</h1>
-            <h2>{`${props.task.items.length} ${props.task.process_type.unit}${props.task.items.length==1?"":"s"}`}</h2>
-          </div>
-        </div>
-
-        <div className="taskDialog-body">
-          <Attribute name="Product Type" value={props.task.product_type.name} editable={false} />
-          <Attribute name="Process Type" value={props.task.process_type.name} editable={false} />
-          <Attribute name="Created at" value={moment(props.task.created_at).format("dddd, MMMM Do YYYY, h:mm a").toString()} editable={false} />
-          <Attribute 
-            name="Custom Name" 
-            newValue={this.state.newCustomName} 
-            value={props.task.custom_display.trim()} 
-            editable={true} 
-            onAttributeChange={(val) => this.handleCustomNameChange(val)}
-            onSave={this.handleCustomNameSave}
-            onCancel = {this.handleCustomNameCancel}
-          />
-          {
-            props.task.attributes.map(function (attr, i) {
-              var val = this.state.attributes[attr.id]
-              return (
-                <Attribute 
-                  key={attr.id} 
-                  id={attr.id}
-                  name={attr.name} 
-                  newValue={val.newValue}
-                  value={val.value}
-                  onAttributeChange={(val) => this.handleAttributeChange(attr.id, val)}
-                  onSave={this.handleSave}
-                  onCancel={this.handleCancel} 
-                  editable={true}
-                />
-              )
-            }, this)
-          }
-        </div>
-    </div>
+      <div className="taskDialog-body" style={{overflow: "scroll"}}>
+        <Attribute name="Product Type" value={props.task.product_type.name} editable={false} />
+        <Attribute name="Process Type" value={props.task.process_type.name} editable={false} />
+        <Attribute name="Created at" value={moment(props.task.created_at).format("dddd, MMMM Do YYYY, h:mm a").toString()} editable={false} />
+        <Attribute 
+          name="Custom Name" 
+          newValue={this.state.newCustomName} 
+          value={props.task.custom_display.trim()} 
+          editable={true} 
+          onAttributeChange={(val) => this.handleCustomNameChange(val)}
+          onSave={this.handleCustomNameSave}
+          onCancel = {this.handleCustomNameCancel}
+        />
+        {
+          props.task.attributes.map(function (attr, i) {
+            var val = this.state.attributes[attr.id]
+            return (
+              <Attribute 
+                key={attr.id} 
+                id={attr.id}
+                name={attr.name} 
+                newValue={val.newValue}
+                value={val.value}
+                onAttributeChange={(val) => this.handleAttributeChange(attr.id, val)}
+                onSave={this.handleSave}
+                onCancel={this.handleCancel} 
+                editable={true}
+              />
+            )
+          }, this)
+        }
+      </div>
     )
   }
 }

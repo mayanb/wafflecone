@@ -365,6 +365,7 @@ body {
 
 div[data-react-toolbox=dialog] {
   width: 40vw;
+  max-width: 400px;
   z-index: 991; }
   div[data-react-toolbox=dialog] section {
     margin: 0;
@@ -374,9 +375,12 @@ div[data-react-toolbox=dialog] {
     padding-left: 24px;
     padding-right: 24px; }
   div[data-react-toolbox=dialog] .taskDialog .taskDialog-body {
-    padding: 18px; }
+    padding: 18px;
+    padding-top: 0px;
+    overflow-y: scroll;
+    height: 250px; }
   div[data-react-toolbox=dialog] .taskDialog .toolbar {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.07); }
+    padding-bottom: 4px; }
 
 .taskDialog .toolbar h1 {
   color: black; }
@@ -466,5 +470,44 @@ div[data-react-toolbox=menu] {
     -webkit-transform: scale(1);
     transform: scale(1);
     opacity: 0; } }
+.menuBar ul {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  padding-left: 18px;
+  margin-bottom: 0; }
+  .menuBar ul li {
+    display: inline-block;
+    list-style-type: none;
+    margin-right: 20px;
+    font-size: 12px;
+    padding-bottom: 8px; }
+    .menuBar ul li.activeTab {
+      color: blue;
+      padding-bottom: 5px;
+      border-bottom: 3px solid blue; }
+
+.tasklet {
+  margin: 10px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  margin-right: -18px; }
+  .tasklet:first-child {
+    margin-top: 20px; }
+  .tasklet img {
+    display: inline-block;
+    height: 14px;
+    margin-right: 8px;
+    vertical-align: middle; }
+  .tasklet h1 {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+    display: inline-block;
+    margin: 0; }
+  .tasklet p {
+    margin-left: 22px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    font-size: 14px; }
+  .tasklet i {
+    margin-right: 18px; }
 
 /*# sourceMappingURL=styles.css.map */

@@ -55358,8 +55358,6 @@
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	exports.default = TaskDialog;
-
 	var _react = __webpack_require__(1);
 
 	var _react2 = _interopRequireDefault(_react);
@@ -55386,6 +55384,14 @@
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
+	var _TaskDialogPages = __webpack_require__(366);
+
+	var _TaskDialogPages2 = _interopRequireDefault(_TaskDialogPages);
+
+	var _Items = __webpack_require__(367);
+
+	var _Items2 = _interopRequireDefault(_Items);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -55396,41 +55402,146 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	function TaskDialog(props) {
-	  var actions = [];
+	var TaskDialog = function (_React$Component) {
+	  _inherits(TaskDialog, _React$Component);
 
-	  return _react2.default.createElement(
-	    _dialog.Dialog,
-	    {
-	      actions: actions,
-	      active: props.active,
-	      onEscKeyDown: props.onTaskClose,
-	      onOverlayClick: props.onTaskClose,
-	      title: ""
-	    },
-	    _react2.default.createElement(DialogContents, { task: props.task, onTaskChanged: props.onTaskChanged })
-	  );
-	}
+	  function TaskDialog(props) {
+	    _classCallCheck(this, TaskDialog);
 
-	var DialogContents = function (_React$Component) {
-	  _inherits(DialogContents, _React$Component);
+	    var _this = _possibleConstructorReturn(this, (TaskDialog.__proto__ || Object.getPrototypeOf(TaskDialog)).call(this, props));
 
-	  function DialogContents(props) {
-	    _classCallCheck(this, DialogContents);
-
-	    var _this = _possibleConstructorReturn(this, (DialogContents.__proto__ || Object.getPrototypeOf(DialogContents)).call(this, props));
-
-	    _this.handleAttributeChange = _this.handleAttributeChange.bind(_this);
-	    _this.handleSave = _this.handleSave.bind(_this);
-	    _this.handleCancel = _this.handleCancel.bind(_this);
-	    _this.handleCustomNameChange = _this.handleCustomNameChange.bind(_this);
-	    _this.handleCustomNameSave = _this.handleCustomNameSave.bind(_this);
-	    _this.handleCustomNameCancel = _this.handleCustomNameCancel.bind(_this);
-	    _this.state = { attributes: {} };
+	    _this.state = { active: 1 };
 	    return _this;
 	  }
 
-	  _createClass(DialogContents, [{
+	  _createClass(TaskDialog, [{
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.setState({ active: 0 });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this;
+
+	      var props = this.props;
+	      var obj;
+
+	      if (props.task == null) {
+	        return null;
+	      }
+
+	      if (this.state.active == 0) {
+	        obj = _react2.default.createElement(Details, { task: props.task, onTaskChanged: props.onTaskChanged });
+	      } else if (this.state.active == 1) {
+	        obj = _react2.default.createElement(_Items2.default, { task: props.task });
+	      } else if (this.state.active == 2) {
+	        var request1 = { child: props.task.id };
+	        obj = _react2.default.createElement(_TaskDialogPages2.default, { query: request1 });
+	      } else if (this.state.active == 3) {
+	        var request2 = { parent: props.task.id };
+	        obj = _react2.default.createElement(_TaskDialogPages2.default, { query: request2 });
+	      }
+
+	      var label = props.task.label;
+	      if (props.task.label_index > 0) {
+	        label = label + "-" + props.task.label_index;
+	      }
+
+	      var obj2 = _react2.default.createElement(
+	        'span',
+	        null,
+	        '(' + label + ')'
+	      );
+	      if (!props.task.custom_display || props.task.custom_display.trim() == "") {
+	        obj2 = false;
+	      }
+
+	      return _react2.default.createElement(
+	        _dialog.Dialog,
+	        {
+	          actions: [],
+	          active: props.active,
+	          onEscKeyDown: props.onTaskClose,
+	          onOverlayClick: props.onTaskClose,
+	          title: ""
+	        },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'toolbar' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'toolbarIcon' },
+	              _react2.default.createElement('img', { src: (0, _Task.icon)(props.task.process_type.icon), style: { height: "20px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } })
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'toolbarText' },
+	              _react2.default.createElement(
+	                'h1',
+	                null,
+	                (0, _Task.display)(props.task),
+	                obj2
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(MenuBar, { options: ["Details", "Items", "Ancestors", "Descendents"], active: this.state.active, onClick: function onClick(val) {
+	              return _this2.setState({ active: val });
+	            } }),
+	          obj
+	        )
+	      );
+	    }
+	  }]);
+
+	  return TaskDialog;
+	}(_react2.default.Component);
+
+	exports.default = TaskDialog;
+
+
+	function MenuBar(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'menuBar' },
+	    _react2.default.createElement(
+	      'ul',
+	      null,
+	      props.options.map(function (option, i) {
+	        return _react2.default.createElement(
+	          'li',
+	          { key: i, className: props.active == i ? "activeTab" : "", onClick: function onClick() {
+	              return props.onClick(i);
+	            } },
+	          option
+	        );
+	      })
+	    )
+	  );
+	}
+
+	var Details = function (_React$Component2) {
+	  _inherits(Details, _React$Component2);
+
+	  function Details(props) {
+	    _classCallCheck(this, Details);
+
+	    var _this3 = _possibleConstructorReturn(this, (Details.__proto__ || Object.getPrototypeOf(Details)).call(this, props));
+
+	    _this3.handleAttributeChange = _this3.handleAttributeChange.bind(_this3);
+	    _this3.handleSave = _this3.handleSave.bind(_this3);
+	    _this3.handleCancel = _this3.handleCancel.bind(_this3);
+	    _this3.handleCustomNameChange = _this3.handleCustomNameChange.bind(_this3);
+	    _this3.handleCustomNameSave = _this3.handleCustomNameSave.bind(_this3);
+	    _this3.handleCustomNameCancel = _this3.handleCustomNameCancel.bind(_this3);
+	    _this3.state = { attributes: {} };
+	    return _this3;
+	  }
+
+	  _createClass(Details, [{
 	    key: 'handleCustomNameChange',
 	    value: function handleCustomNameChange(value) {
 	      this.setState({ newCustomName: value.trim() });
@@ -55536,7 +55647,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this2 = this;
+	      var _this4 = this;
 
 	      var props = this.props;
 
@@ -55562,85 +55673,57 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'taskDialog' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'toolbar' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'toolbarIcon' },
-	            _react2.default.createElement('img', { src: (0, _Task.icon)(props.task.process_type.icon), style: { height: "38px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px" } })
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'toolbarText' },
-	            _react2.default.createElement(
-	              'h1',
-	              null,
-	              (0, _Task.display)(props.task),
-	              obj
-	            ),
-	            _react2.default.createElement(
-	              'h2',
-	              null,
-	              props.task.items.length + ' ' + props.task.process_type.unit + (props.task.items.length == 1 ? "" : "s")
-	            )
-	          )
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'taskDialog-body' },
-	          _react2.default.createElement(Attribute, { name: 'Product Type', value: props.task.product_type.name, editable: false }),
-	          _react2.default.createElement(Attribute, { name: 'Process Type', value: props.task.process_type.name, editable: false }),
-	          _react2.default.createElement(Attribute, { name: 'Created at', value: (0, _moment2.default)(props.task.created_at).format("dddd, MMMM Do YYYY, h:mm a").toString(), editable: false }),
-	          _react2.default.createElement(Attribute, {
-	            name: 'Custom Name',
-	            newValue: this.state.newCustomName,
-	            value: props.task.custom_display.trim(),
-	            editable: true,
-	            onAttributeChange: function onAttributeChange(val) {
-	              return _this2.handleCustomNameChange(val);
-	            },
-	            onSave: this.handleCustomNameSave,
-	            onCancel: this.handleCustomNameCancel
-	          }),
-	          props.task.attributes.map(function (attr, i) {
-	            var _this3 = this;
+	        { className: 'taskDialog-body', style: { overflow: "scroll" } },
+	        _react2.default.createElement(Attribute, { name: 'Product Type', value: props.task.product_type.name, editable: false }),
+	        _react2.default.createElement(Attribute, { name: 'Process Type', value: props.task.process_type.name, editable: false }),
+	        _react2.default.createElement(Attribute, { name: 'Created at', value: (0, _moment2.default)(props.task.created_at).format("dddd, MMMM Do YYYY, h:mm a").toString(), editable: false }),
+	        _react2.default.createElement(Attribute, {
+	          name: 'Custom Name',
+	          newValue: this.state.newCustomName,
+	          value: props.task.custom_display.trim(),
+	          editable: true,
+	          onAttributeChange: function onAttributeChange(val) {
+	            return _this4.handleCustomNameChange(val);
+	          },
+	          onSave: this.handleCustomNameSave,
+	          onCancel: this.handleCustomNameCancel
+	        }),
+	        props.task.attributes.map(function (attr, i) {
+	          var _this5 = this;
 
-	            var val = this.state.attributes[attr.id];
-	            return _react2.default.createElement(Attribute, {
-	              key: attr.id,
-	              id: attr.id,
-	              name: attr.name,
-	              newValue: val.newValue,
-	              value: val.value,
-	              onAttributeChange: function onAttributeChange(val) {
-	                return _this3.handleAttributeChange(attr.id, val);
-	              },
-	              onSave: this.handleSave,
-	              onCancel: this.handleCancel,
-	              editable: true
-	            });
-	          }, this)
-	        )
+	          var val = this.state.attributes[attr.id];
+	          return _react2.default.createElement(Attribute, {
+	            key: attr.id,
+	            id: attr.id,
+	            name: attr.name,
+	            newValue: val.newValue,
+	            value: val.value,
+	            onAttributeChange: function onAttributeChange(val) {
+	              return _this5.handleAttributeChange(attr.id, val);
+	            },
+	            onSave: this.handleSave,
+	            onCancel: this.handleCancel,
+	            editable: true
+	          });
+	        }, this)
 	      );
 	    }
 	  }]);
 
-	  return DialogContents;
+	  return Details;
 	}(_react2.default.Component);
 
-	var Tooltip = function (_React$Component2) {
-	  _inherits(Tooltip, _React$Component2);
+	var Tooltip = function (_React$Component3) {
+	  _inherits(Tooltip, _React$Component3);
 
 	  function Tooltip(props) {
 	    _classCallCheck(this, Tooltip);
 
-	    var _this4 = _possibleConstructorReturn(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).call(this, props));
+	    var _this6 = _possibleConstructorReturn(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).call(this, props));
 
-	    _this4.handleSaveClicked = _this4.handleSaveClicked.bind(_this4);
-	    _this4.handleMenuHide = _this4.handleMenuHide.bind(_this4);
-	    return _this4;
+	    _this6.handleSaveClicked = _this6.handleSaveClicked.bind(_this6);
+	    _this6.handleMenuHide = _this6.handleMenuHide.bind(_this6);
+	    return _this6;
 	  }
 
 	  _createClass(Tooltip, [{
@@ -55660,7 +55743,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this5 = this;
+	      var _this7 = this;
 
 	      function stopPropagation(e) {
 	        e.stopPropagation();
@@ -55688,7 +55771,7 @@
 	              'div',
 	              null,
 	              _react2.default.createElement('input', { type: 'text', placeholder: 'max. 20 chars', value: this.props.value, onChange: function onChange(e) {
-	                  return _this5.props.onAttributeChange(e.target.value);
+	                  return _this7.props.onAttributeChange(e.target.value);
 	                } })
 	            ),
 	            _react2.default.createElement(
@@ -55697,7 +55780,7 @@
 	              _react2.default.createElement(
 	                'button',
 	                { onClick: function onClick() {
-	                    return _this5.handleSaveClicked();
+	                    return _this7.handleSaveClicked();
 	                  } },
 	                'Save'
 	              ),
@@ -55716,18 +55799,18 @@
 	  return Tooltip;
 	}(_react2.default.Component);
 
-	var Attribute = function (_React$Component3) {
-	  _inherits(Attribute, _React$Component3);
+	var Attribute = function (_React$Component4) {
+	  _inherits(Attribute, _React$Component4);
 
 	  function Attribute(props) {
 	    _classCallCheck(this, Attribute);
 
-	    var _this6 = _possibleConstructorReturn(this, (Attribute.__proto__ || Object.getPrototypeOf(Attribute)).call(this, props));
+	    var _this8 = _possibleConstructorReturn(this, (Attribute.__proto__ || Object.getPrototypeOf(Attribute)).call(this, props));
 
-	    _this6.handleHover = _this6.handleHover.bind(_this6);
-	    _this6.handleClick = _this6.handleClick.bind(_this6);
-	    _this6.state = { hovered: false, tooltip: false };
-	    return _this6;
+	    _this8.handleHover = _this8.handleHover.bind(_this8);
+	    _this8.handleClick = _this8.handleClick.bind(_this8);
+	    _this8.state = { hovered: false, tooltip: false };
+	    return _this8;
 	  }
 
 	  _createClass(Attribute, [{
@@ -55743,7 +55826,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this7 = this;
+	      var _this9 = this;
 
 	      var props = this.props;
 
@@ -55768,7 +55851,7 @@
 	        tooltip = _react2.default.createElement(Tooltip, {
 	          active: this.state.tooltip,
 	          onMenuHide: function onMenuHide() {
-	            return _this7.setState({ tooltip: false });
+	            return _this9.setState({ tooltip: false });
 	          },
 	          x: this.state.x,
 	          y: this.state.y,
@@ -59281,6 +59364,409 @@
 	}
 
 	exports.Label = Label;
+
+/***/ },
+/* 366 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _jquery = __webpack_require__(180);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _dialog = __webpack_require__(351);
+
+	var _menu = __webpack_require__(317);
+
+	var _Task = __webpack_require__(293);
+
+	var _immutabilityHelper = __webpack_require__(328);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Ancestors = function (_React$Component) {
+	  _inherits(Ancestors, _React$Component);
+
+	  function Ancestors(props) {
+	    _classCallCheck(this, Ancestors);
+
+	    var _this = _possibleConstructorReturn(this, (Ancestors.__proto__ || Object.getPrototypeOf(Ancestors)).call(this, props));
+
+	    _this.refreshList = _this.refreshList.bind(_this);
+	    _this.state = { ancestors: [], loading: false };
+	    return _this;
+	  }
+
+	  _createClass(Ancestors, [{
+	    key: 'render',
+	    value: function render() {
+	      if (this.state.loading) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-body' },
+	          _react2.default.createElement('div', { className: 'spinner' })
+	        );
+	      }
+
+	      if (this.state.ancestors.length == 0) {
+	        return _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(
+	            'p',
+	            null,
+	            ' The items from this task have no ancestors. '
+	          )
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'taskDialog-body' },
+	        this.state.ancestors.map(function (ancestor, i) {
+	          return _react2.default.createElement(Tasklet, _extends({ key: ancestor.id }, ancestor));
+	        })
+	      );
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.refreshList(np);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.refreshList(this.props);
+	    }
+	  }, {
+	    key: 'refreshList',
+	    value: function refreshList(props) {
+	      var url = window.location.origin + "/ics/tasks/";
+	      var thisObj = this;
+	      this.setState({ loading: true });
+
+	      console.log(props.query);
+
+	      _jquery2.default.get(url, props.query).done(function (data) {
+	        data.sort(function (a, b) {
+	          return parseFloat(a.process_type.x) - parseFloat(b.process_type.x);
+	        });
+	        thisObj.setState({ ancestors: data });
+	      }).fail(function (data) {
+	        console.log(data);
+	      }).always(function () {
+	        thisObj.setState({ loading: false });
+	      });
+	    }
+	  }]);
+
+	  return Ancestors;
+	}(_react2.default.Component);
+
+	exports.default = Ancestors;
+
+
+	function Tasklet(props) {
+
+	  var notes = getNotes(props);
+
+	  var obj = false;
+	  if (notes.trim().length > 0) {
+	    obj = _react2.default.createElement(
+	      'p',
+	      null,
+	      notes
+	    );
+	  }
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'tasklet' },
+	    _react2.default.createElement(
+	      'div',
+	      { style: { display: "flex" } },
+	      _react2.default.createElement('img', { src: (0, _Task.icon)(props.process_type.icon), style: { flex: "0" } }),
+	      _react2.default.createElement(
+	        'h1',
+	        { style: { flex: "1" } },
+	        (0, _Task.display)(props)
+	      ),
+	      _react2.default.createElement(
+	        'a',
+	        { href: window.location.origin + "/dashboard/", target: '_blank' },
+	        _react2.default.createElement(
+	          'i',
+	          { className: 'material-icons', style: { flex: "0", fontSize: "14px" } },
+	          'open_in_new'
+	        )
+	      )
+	    ),
+	    obj
+	  );
+	}
+
+	function getNotes(task) {
+	  var notesID = 0;
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+
+	  try {
+	    for (var _iterator = task.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var attribute = _step.value;
+
+	      if (attribute.name.toLowerCase().trim() === "notes") {
+	        notesID = attribute.id;
+	        break;
+	      }
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+
+	  var _iteratorNormalCompletion2 = true;
+	  var _didIteratorError2 = false;
+	  var _iteratorError2 = undefined;
+
+	  try {
+	    for (var _iterator2 = task.attribute_values[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	      var attributeVal = _step2.value;
+
+	      if (attributeVal.attribute == notesID) return attributeVal.value;
+	    }
+	  } catch (err) {
+	    _didIteratorError2 = true;
+	    _iteratorError2 = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	        _iterator2.return();
+	      }
+	    } finally {
+	      if (_didIteratorError2) {
+	        throw _iteratorError2;
+	      }
+	    }
+	  }
+
+	  return "";
+	}
+
+/***/ },
+/* 367 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _jquery = __webpack_require__(180);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _dialog = __webpack_require__(351);
+
+	var _menu = __webpack_require__(317);
+
+	var _Task = __webpack_require__(293);
+
+	var _immutabilityHelper = __webpack_require__(328);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Items = function (_React$Component) {
+	  _inherits(Items, _React$Component);
+
+	  function Items(props) {
+	    _classCallCheck(this, Items);
+
+	    var _this = _possibleConstructorReturn(this, (Items.__proto__ || Object.getPrototypeOf(Items)).call(this, props));
+
+	    _this.refreshList = _this.refreshList.bind(_this);
+	    _this.handleClick = _this.handleClick.bind(_this);
+	    _this.state = { items: [], loading: false };
+	    return _this;
+	  }
+
+	  _createClass(Items, [{
+	    key: 'render',
+	    value: function render() {
+	      if (this.state.loading) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-body' },
+	          _react2.default.createElement('div', { className: 'spinner' })
+	        );
+	      }
+
+	      if (this.state.items.length == 0) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-body' },
+	          _react2.default.createElement(
+	            'p',
+	            null,
+	            ' This task has no items.'
+	          )
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'taskDialog-body' },
+	        this.state.items.map(function (item, i) {
+	          var _this2 = this;
+
+	          return _react2.default.createElement(Itemlet, _extends({ key: item.id, onClick: function onClick() {
+	              return _this2.handleClick(item);
+	            } }, item));
+	        }, this)
+	      );
+	    }
+	  }, {
+	    key: 'handleClick',
+	    value: function handleClick(item) {
+	      var thisObj = this;
+	      var url = window.location.origin + "/ics/inputs/create/";
+
+	      // 516 is the ID of the deliver to heaven task...probably 
+	      // need to make this less janky
+	      var data = { input_item: item.id, task: "516" };
+
+	      _jquery2.default.ajax({
+	        url: url,
+	        method: "POST",
+	        data: data
+	      }).done(function (data) {
+	        var itemIndex = -1;
+	        thisObj.state.items.map(function (x, i) {
+	          if (x.id == item.id) itemIndex = i;
+	        });
+	        if (itemIndex == -1) {
+	          alert("something has gone horribly wrong");
+	        }
+
+	        var ns = (0, _immutabilityHelper2.default)(thisObj.state, { items: { $splice: [[itemIndex, 1]] } });
+	        thisObj.setState(ns);
+	      }).fail(function (err) {
+	        console.log(err);
+	      }).always(function () {});
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.refreshList(np);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.refreshList(this.props);
+	    }
+	  }, {
+	    key: 'refreshList',
+	    value: function refreshList(props) {
+	      this.setState({ items: props.task.items });
+	    }
+	  }]);
+
+	  return Items;
+	}(_react2.default.Component);
+
+	exports.default = Items;
+
+
+	function Itemlet(props) {
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'tasklet' },
+	    _react2.default.createElement(
+	      'div',
+	      { style: { display: "flex", margin: "10px" } },
+	      _react2.default.createElement(
+	        'i',
+	        { className: 'material-icons', style: { flex: "0" } },
+	        'ac_unit'
+	      ),
+	      _react2.default.createElement(
+	        'h1',
+	        { style: { flex: "1" } },
+	        qrdisplay(props)
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        { style: { flex: "0" } },
+	        _react2.default.createElement(
+	          'button',
+	          { onClick: props.onClick },
+	          'Send to heaven'
+	        )
+	      )
+	    )
+	  );
+	}
+
+	function qrdisplay(item) {
+	  return item.item_qr.substring(item.item_qr.length - 6, item.item_qr.length);
+	}
 
 /***/ }
 /******/ ]);

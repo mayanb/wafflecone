@@ -7,6 +7,7 @@ body {
 
 div[data-react-toolbox=dialog] {
 	width: 40vw; 
+	max-width: 400px;
 	z-index: $z-index-dialog;
 
 	section {
@@ -22,10 +23,13 @@ div[data-react-toolbox=dialog] {
 
 	.taskDialog .taskDialog-body {
 		padding: 18px;
+		padding-top: 0px;
+		overflow-y: scroll;
+		height: 250px;
 	}
 
 	.taskDialog .toolbar {
-		border-bottom: 1px solid rgba(0,0,0,0.07);
+		padding-bottom: 4px;
 	}
 }
 
@@ -40,6 +44,7 @@ div[data-react-toolbox=dialog] {
 			font-weight: normal;
 			margin-left: 6px;
 		}
+
 	}
 
 	.attribute {
