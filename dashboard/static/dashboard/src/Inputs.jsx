@@ -210,28 +210,6 @@ class Filters extends React.Component {
               </div>
             </div>
 
-            <div className={((this.props.active == 2)?"active":"inactive") + " section"}>
-              <div className="header" onClick={() => this.switchActive(2)}>
-                <i className="material-icons">chevron_right</i><h2> By parent </h2>
-              </div>
-              <div className="section-content">
-                <div>
-                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChange("parent", val)} />
-                </div>
-              </div>
-            </div>
-
-            <div className={((this.props.active == 3)?"active":"inactive") + " section"}>
-              <div className="header" onClick={() => this.switchActive(3)}>
-                <i className="material-icons">chevron_right</i><h2> By child </h2>
-              </div>
-              <div className="section-content">
-                <div>
-                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChange("child", val)} />
-                </div>
-              </div>
-            </div>
-
           </div>
 
         </div>

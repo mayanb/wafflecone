@@ -169,19 +169,15 @@
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'parent' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'content-area' },
-	          _react2.default.createElement(_Layout.Navbar, {
-	            options: ["Activity Log", "Inventory", "Labels", "Settings"],
-	            links: ["", "inventory", "labels", "settings"],
-	            active: this.state.active,
-	            onNav: function onNav(x) {
-	              return _this2.setState({ active: x });
-	            }
-	          }),
-	          obj
-	        )
+	        _react2.default.createElement(_Layout.Navbar, {
+	          options: ["Activity Log", "Inventory", "Labels", "Settings"],
+	          links: ["", "inventory", "labels", "settings"],
+	          active: this.state.active,
+	          onNav: function onNav(x) {
+	            return _this2.setState({ active: x });
+	          }
+	        }),
+	        obj
 	      );
 	    }
 	  }, {
@@ -21874,41 +21870,33 @@
 	      if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) {} else {
 	        obj = _react2.default.createElement(
 	          'div',
-	          null,
+	          { className: 'content' },
+	          _react2.default.createElement(_TaskDialog2.default, {
+	            active: this.state.activeTask != null,
+	            task: this.state.activeTask,
+	            onTaskClose: this.handleTaskToggle,
+	            onTaskChanged: this.handleTaskChanged
+	          }),
+	          _react2.default.createElement(_Inputs.Filters, {
+	            filters: this.state.activeFilters,
+	            active: this.state.activeFilters.active,
+	            processes: this.state.processes,
+	            products: this.state.products,
+	            dates: this.props.inventory == false,
+	            onFilter: function onFilter(object) {
+	              return _this2.handleFilter(object, true);
+	            }
+	          }),
+	          _react2.default.createElement(_Tables2.default, {
+	            taskGroups: this.state.taskGroups,
+	            processes: this.state.processes,
+	            inventory: this.props.inventory,
+	            onTaskClick: this.handleTaskToggle
+	          }),
 	          _react2.default.createElement(
 	            'div',
-	            { className: 'content' },
-	            _react2.default.createElement(_TaskDialog2.default, {
-	              active: this.state.activeTask != null,
-	              task: this.state.activeTask,
-	              onTaskClose: this.handleTaskToggle,
-	              onTaskChanged: this.handleTaskChanged
-	            }),
-	            _react2.default.createElement(_Tables2.default, {
-	              taskGroups: this.state.taskGroups,
-	              processes: this.state.processes,
-	              inventory: this.props.inventory,
-	              onTaskClick: this.handleTaskToggle
-	            }),
-	            _react2.default.createElement(
-	              'div',
-	              { style: { display: this.state.loading ? "block" : "" }, className: 'loading' },
-	              _react2.default.createElement('div', { className: 'spinner' })
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'sidebar' },
-	            _react2.default.createElement(_Inputs.Filters, {
-	              filters: this.state.activeFilters,
-	              active: this.state.activeFilters.active,
-	              processes: this.state.processes,
-	              products: this.state.products,
-	              dates: this.props.inventory == false,
-	              onFilter: function onFilter(object) {
-	                return _this2.handleFilter(object, true);
-	              }
-	            })
+	            { style: { display: this.state.loading ? "block" : "" }, className: 'loading' },
+	            _react2.default.createElement('div', { className: 'spinner' })
 	          )
 	        );
 	      }
@@ -47959,68 +47947,6 @@
 	                  } })
 	              ),
 	              obj
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: (this.props.active == 2 ? "active" : "inactive") + " section" },
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'header', onClick: function onClick() {
-	                  return _this4.switchActive(2);
-	                } },
-	              _react2.default.createElement(
-	                'i',
-	                { className: 'material-icons' },
-	                'chevron_right'
-	              ),
-	              _react2.default.createElement(
-	                'h2',
-	                null,
-	                ' By parent '
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'section-content' },
-	              _react2.default.createElement(
-	                'div',
-	                null,
-	                _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
-	                    return _this4.handleChange("parent", val);
-	                  } })
-	              )
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: (this.props.active == 3 ? "active" : "inactive") + " section" },
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'header', onClick: function onClick() {
-	                  return _this4.switchActive(3);
-	                } },
-	              _react2.default.createElement(
-	                'i',
-	                { className: 'material-icons' },
-	                'chevron_right'
-	              ),
-	              _react2.default.createElement(
-	                'h2',
-	                null,
-	                ' By child '
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'section-content' },
-	              _react2.default.createElement(
-	                'div',
-	                null,
-	                _react2.default.createElement(TaskSelect, { placeholder: 'eg. R-CVB-1012', onChange: function onChange(val) {
-	                    return _this4.handleChange("child", val);
-	                  } })
-	              )
 	            )
 	          )
 	        )

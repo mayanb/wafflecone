@@ -82,18 +82,13 @@ class Main extends React.Component {
 
     return (
       <div className="parent">
-        <div className="content-area">
-
           <Navbar 
             options={["Activity Log", "Inventory", "Labels", "Settings"]}
             links={["", "inventory", "labels", "settings"]} 
             active={this.state.active} 
             onNav={ (x) => this.setState({active: x}) }
           />
-
           {obj}
-
-        </div>
       </div>
     );
   }

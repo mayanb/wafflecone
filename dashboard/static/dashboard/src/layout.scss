@@ -1,5 +1,5 @@
 $primary: #C30017;
-$background-color: white; //#F4F4F4;
+$background-color: #F2F3F5;
 $light-grey: #eee;
 $shadow-1: 0 1px 4px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
 $shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
@@ -23,10 +23,10 @@ $z-index-edit-menu: 992;
 
 html, body {
 	width: 100%;
-    height: 100%;
-    
-    margin: 0;
-    padding: 0;
+  height: 100%;
+  
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -37,7 +37,6 @@ body {
 
 .navbar {
 	background-color: white;
-	margin-right: $sidebar-width;
 	width: 100%;
 	color: rgba(0,0,0,0.87);
 	border-bottom: $section-border;
@@ -80,35 +79,17 @@ body {
 	}
 }
 
-html, body, #root, .parent {
+html, body, #root, .parent, .content-area {
 	width: 100%;
-    height: 100%;
+  height: 100%;
 
 }
 
-.parent
-{
-    .content-area {
-    	height:100%;
-    	width: 100%;
-    }
-
-    .content {
+.parent {
+  .content {
 		padding-top: $navbar-height;
-		padding-right: $sidebar-width;
-		margin-right: 24px;
-		margin-left: 24px;
-	}
-
-	.sidebar {
-		padding-top: $navbar-height;
-		position: fixed;
-		top: 0;
-		right: 0;
-		height: 100%;
-		width: $sidebar-width;
-		border-left: $section-border;
-		background-color: rgba(0,0,0,0.02);
+		margin: 0 auto;
+		max-width:800px;
 	}
 
 }
@@ -157,10 +138,9 @@ i.material-icons {
 
 .loading {
 	display: none;
-	background-color: white;
+	background-color: $background-color;
 	width: 100%;
 	height: 100%;
-	padding-right: $sidebar-width;
 	position: absolute;
 	top: 0;
 }

@@ -12,11 +12,10 @@ html, body {
 body {
   font-family: Muli, Overpass, Proxima Nova, sans-serif;
   font-size: 0.95em;
-  background-color: white; }
+  background-color: #F2F3F5; }
 
 .navbar {
   background-color: white;
-  margin-right: 270px;
   width: 100%;
   color: rgba(0, 0, 0, 0.87);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -46,27 +45,14 @@ body {
   .navbar .active a, .navbar .active a:hover, .navbar .active a:visited {
     color: red; }
 
-html, body, #root, .parent {
+html, body, #root, .parent, .content-area {
   width: 100%;
   height: 100%; }
 
-.parent .content-area {
-  height: 100%;
-  width: 100%; }
 .parent .content {
   padding-top: 64px;
-  padding-right: 270px;
-  margin-right: 24px;
-  margin-left: 24px; }
-.parent .sidebar {
-  padding-top: 64px;
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 270px;
-  border-left: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: rgba(0, 0, 0, 0.02); }
+  margin: 0 auto;
+  max-width: 800px; }
 
 .left {
   flex: 1; }
@@ -97,10 +83,9 @@ i.material-icons {
 
 .loading {
   display: none;
-  background-color: white;
+  background-color: #F2F3F5;
   width: 100%;
   height: 100%;
-  padding-right: 270px;
   position: absolute;
   top: 0; }
 
@@ -159,63 +144,67 @@ i.material-icons {
       margin: 0;
       margin-top: 4px; }
 
-.filters .inputs {
-  display: flex;
-  flex-direction: column; }
-  .filters .inputs .section {
-    padding: 12px 24px;
-    border-top: 1px solid #eee; }
-    .filters .inputs .section .section-content > div {
-      margin-bottom: 16px; }
-    .filters .inputs .section.inactive > .section-content {
-      max-height: 0;
-      padding-top: 0px;
-      overflow: hidden; }
-    .filters .inputs .section.active > .section-content {
-      max-height: 999;
-      padding-top: 16px;
-      overflow: initial; }
-    .filters .inputs .section .header {
-      cursor: pointer; }
-    .filters .inputs .section h2 {
-      font-size: 12px;
+.filters {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: none; }
+  .filters .inputs {
+    display: flex;
+    flex-direction: column; }
+    .filters .inputs .section {
+      padding: 12px 24px;
+      border-top: 1px solid #eee; }
+      .filters .inputs .section .section-content > div {
+        margin-bottom: 16px; }
+      .filters .inputs .section.inactive > .section-content {
+        max-height: 0;
+        padding-top: 0px;
+        overflow: hidden; }
+      .filters .inputs .section.active > .section-content {
+        max-height: 999;
+        padding-top: 16px;
+        overflow: initial; }
+      .filters .inputs .section .header {
+        cursor: pointer; }
+      .filters .inputs .section h2 {
+        font-size: 12px;
+        font-weight: normal;
+        color: rgba(0, 0, 0, 0.87);
+        margin: 0;
+        display: inline-block;
+        vertical-align: middle;
+        text-transform: uppercase;
+        letter-spacing: 1px; }
+      .filters .inputs .section .header i {
+        font-size: 16px;
+        line-height: 24px;
+        display: inline-block;
+        vertical-align: middle;
+        -webkit-transition-duration: 0.2s;
+        -moz-transition-duration: 0.2s;
+        -o-transition-duration: 0.2s;
+        transition-duration: 0.2s;
+        -webkit-transition-property: -webkit-transform;
+        -moz-transition-property: -moz-transform;
+        -o-transition-property: -o-transform;
+        transition-property: transform; }
+      .filters .inputs .section.active h2 {
+        color: #C30017; }
+      .filters .inputs .section.active .header i {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg); }
+    .filters .inputs h1 {
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.4);
       font-weight: normal;
-      color: rgba(0, 0, 0, 0.87);
-      margin: 0;
-      display: inline-block;
-      vertical-align: middle;
-      text-transform: uppercase;
-      letter-spacing: 1px; }
-    .filters .inputs .section .header i {
-      font-size: 16px;
-      line-height: 24px;
-      display: inline-block;
-      vertical-align: middle;
-      -webkit-transition-duration: 0.2s;
-      -moz-transition-duration: 0.2s;
-      -o-transition-duration: 0.2s;
-      transition-duration: 0.2s;
-      -webkit-transition-property: -webkit-transform;
-      -moz-transition-property: -moz-transform;
-      -o-transition-property: -o-transform;
-      transition-property: transform; }
-    .filters .inputs .section.active h2 {
-      color: #C30017; }
-    .filters .inputs .section.active .header i {
-      -webkit-transform: rotate(90deg);
-      -moz-transform: rotate(90deg);
-      -ms-transform: rotate(90deg);
-      -o-transform: rotate(90deg);
-      transform: rotate(90deg); }
-  .filters .inputs h1 {
-    font-size: 13px;
-    color: rgba(0, 0, 0, 0.4);
-    font-weight: normal;
-    margin: 4px 0px; }
-.filters .multiselect {
-  padding-right: 24px; }
-  .filters .multiselect:last-child {
-    padding-right: 0px; }
+      margin: 4px 0px; }
+  .filters .multiselect {
+    padding-right: 24px; }
+    .filters .multiselect:last-child {
+      padding-right: 0px; }
 
 .Select-control {
   border: none;

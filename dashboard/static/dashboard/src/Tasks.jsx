@@ -23,7 +23,7 @@ export default class Tasks extends React.Component {
       products: {},
 
       loading: false,
-      mounted: false,
+      mounted: false, 
 
       activeFilters: this.props.filters
     };
@@ -39,15 +39,21 @@ export default class Tasks extends React.Component {
 		if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) {
 		} else {
       obj = 
-      <div>
         <div className="content">
-
-
           <TaskDialog 
             active={(this.state.activeTask != null)} 
             task={this.state.activeTask}
             onTaskClose = {this.handleTaskToggle}
             onTaskChanged={this.handleTaskChanged}
+          />
+
+          <Filters
+            filters = {this.state.activeFilters}
+            active = {this.state.activeFilters.active}
+            processes={this.state.processes} 
+            products={this.state.products} 
+            dates={this.props.inventory==false}
+            onFilter={(object) => this.handleFilter(object, true)}
           />
 
           <TableList 
@@ -62,18 +68,6 @@ export default class Tasks extends React.Component {
           </div>
 
         </div>
-
-        <div className="sidebar">
-            <Filters 
-              filters = {this.state.activeFilters}
-              active = {this.state.activeFilters.active}
-              processes={this.state.processes} 
-              products={this.state.products} 
-              dates={this.props.inventory==false}
-              onFilter={(object) => this.handleFilter(object, true)}
-            />
-        </div>
-      </div>
 
     }
 
