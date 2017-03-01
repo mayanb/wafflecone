@@ -191,13 +191,10 @@ class Filters extends React.Component {
       obj = <div><Datepicker onChange={(val) => this.handleDateRangeChange(val)} /></div>
     }
     return (
-      <div className="filters">
-        <div className="inputs">
+      <div className="filters inputs">
 
-            <div className={((this.props.active == 1)?"active":"inactive") + " section"}>
-              <div className="header" onClick={() => this.switchActive(1)}>
-                <i className="material-icons">chevron_right</i><h2> General </h2>
-              </div>
+            <div className="active section">
+              
               <div className="section-content">
                 <div>
                   <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
@@ -209,9 +206,6 @@ class Filters extends React.Component {
                 {obj}
               </div>
             </div>
-
-          </div>
-
         </div>
     );
   }

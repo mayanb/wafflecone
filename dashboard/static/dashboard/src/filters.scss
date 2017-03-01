@@ -1,9 +1,7 @@
-.filters {
+.filters.inputs {
 	background-color: white;
 	border: $section-border;
 	border-top: none;
-
-	.inputs {
 		display: flex;
 		flex-direction: column;
 
@@ -92,7 +90,6 @@
 			padding-right: 0px;
 		}
 
-	}
 }
 
 .Select-control {

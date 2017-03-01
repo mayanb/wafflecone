@@ -47906,48 +47906,28 @@
 	      }
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'filters' },
+	        { className: 'filters inputs' },
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'inputs' },
+	          { className: 'active section' },
 	          _react2.default.createElement(
 	            'div',
-	            { className: (this.props.active == 1 ? "active" : "inactive") + " section" },
+	            { className: 'section-content' },
 	            _react2.default.createElement(
 	              'div',
-	              { className: 'header', onClick: function onClick() {
-	                  return _this4.switchActive(1);
-	                } },
-	              _react2.default.createElement(
-	                'i',
-	                { className: 'material-icons' },
-	                'chevron_right'
-	              ),
-	              _react2.default.createElement(
-	                'h2',
-	                null,
-	                ' General '
-	              )
+	              null,
+	              _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	                  return _this4.handleChange("processes", val);
+	                } })
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { className: 'section-content' },
-	              _react2.default.createElement(
-	                'div',
-	                null,
-	                _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                    return _this4.handleChange("processes", val);
-	                  } })
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                null,
-	                _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
-	                    return _this4.handleChange("products", val);
-	                  } })
-	              ),
-	              obj
-	            )
+	              null,
+	              _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
+	                  return _this4.handleChange("products", val);
+	                } })
+	            ),
+	            obj
 	          )
 	        )
 	      );
