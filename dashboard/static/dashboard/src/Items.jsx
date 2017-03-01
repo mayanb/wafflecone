@@ -85,7 +85,6 @@ export default class Items extends React.Component {
 
   refreshList(props) {
     this.setState({items: props.task.items})
-   
   }
 
 }
@@ -96,9 +95,9 @@ function Itemlet(props) {
     <div className="tasklet">
 
       <div style={{display: "flex", margin: "10px" }}>
-        <i className="material-icons" style={{flex:"0"}}>ac_unit</i>
-        <h1 style={{flex: "1"}}>{qrdisplay(props)}</h1>
-        <div style={{flex:"0"}}>
+        <i className="material-icons" style={{flex:"0 auto", fontSize: "14px"}}>ac_unit</i>
+        <h1 style={{flex: "1 auto"}}>{qrdisplay(props)}</h1>
+        <div style={{flex:"0 auto"}}>
           <button onClick={props.onClick}>Send to heaven</button>
         </div>
       </div>

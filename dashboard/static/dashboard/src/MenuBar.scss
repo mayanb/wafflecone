@@ -29,20 +29,31 @@
 
   &:first-child {
     margin-top: 20px;
-   }
+  }
+
+  div {
+    display: flex;
+  }
 
   img {
     display: inline-block;
     height: 14px;
     margin-right: 8px;
     vertical-align: middle;
+    flex: 0 auto;
   }
 
   h1 {
     font-size: 14px;
+    line-height: 14px;
     color: rgba(0,0,0,0.87);
     display: inline-block;
-    margin: 0
+    margin: 0;
+    flex: 1 auto;
+  }
+
+  a {
+    flex: 0 auto;
   }
 
   p {
@@ -55,4 +66,6 @@
   i {
     margin-right: 18px;
   }
+
+
 }

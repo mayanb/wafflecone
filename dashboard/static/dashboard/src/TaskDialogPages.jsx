@@ -86,10 +86,10 @@ function Tasklet(props) {
   return (
     <div className="tasklet">
 
-      <div style={{display: "flex"}}>
-        <img src={icon(props.process_type.icon)} style={{flex: "0"}}/>
-        <h1 style={{flex: "1"}}>{display(props)}</h1>
-        <a href={window.location.origin + "/dashboard/"} target="_blank"><i className="material-icons" style={{flex: "0", fontSize: "14px"}}>open_in_new</i></a>
+      <div>
+        <img src={icon(props.process_type.icon)} />
+        <h1>{display(props)}</h1>
+        <a href={window.location.origin + "/dashboard/"} target="_blank"><i className="material-icons" style={{fontSize: "14px"}}>open_in_new</i></a>
       </div>
       {obj}
 

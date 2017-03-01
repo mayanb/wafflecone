@@ -59509,11 +59509,11 @@
 	    { className: 'tasklet' },
 	    _react2.default.createElement(
 	      'div',
-	      { style: { display: "flex" } },
-	      _react2.default.createElement('img', { src: (0, _Task.icon)(props.process_type.icon), style: { flex: "0" } }),
+	      null,
+	      _react2.default.createElement('img', { src: (0, _Task.icon)(props.process_type.icon) }),
 	      _react2.default.createElement(
 	        'h1',
-	        { style: { flex: "1" } },
+	        null,
 	        (0, _Task.display)(props)
 	      ),
 	      _react2.default.createElement(
@@ -59521,7 +59521,7 @@
 	        { href: window.location.origin + "/dashboard/", target: '_blank' },
 	        _react2.default.createElement(
 	          'i',
-	          { className: 'material-icons', style: { flex: "0", fontSize: "14px" } },
+	          { className: 'material-icons', style: { fontSize: "14px" } },
 	          'open_in_new'
 	        )
 	      )
@@ -59743,17 +59743,17 @@
 	      { style: { display: "flex", margin: "10px" } },
 	      _react2.default.createElement(
 	        'i',
-	        { className: 'material-icons', style: { flex: "0" } },
+	        { className: 'material-icons', style: { flex: "0 auto", fontSize: "14px" } },
 	        'ac_unit'
 	      ),
 	      _react2.default.createElement(
 	        'h1',
-	        { style: { flex: "1" } },
+	        { style: { flex: "1 auto" } },
 	        qrdisplay(props)
 	      ),
 	      _react2.default.createElement(
 	        'div',
-	        { style: { flex: "0" } },
+	        { style: { flex: "0 auto" } },
 	        _react2.default.createElement(
 	          'button',
 	          { onClick: props.onClick },
