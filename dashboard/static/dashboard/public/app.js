@@ -59689,7 +59689,7 @@
 
 	      // 516 is the ID of the deliver to heaven task...probably 
 	      // need to make this less janky
-	      var data = { input_item: item.id, task: "516" };
+	      var data = { input_item: item.id, task: "573" };
 
 	      _jquery2.default.ajax({
 	        url: url,

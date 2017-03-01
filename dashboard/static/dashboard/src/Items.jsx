@@ -49,7 +49,7 @@ export default class Items extends React.Component {
 
     // 516 is the ID of the deliver to heaven task...probably 
     // need to make this less janky
-    let data = {input_item: item.id, task: "516"}
+    let data = {input_item: item.id, task: "573"}
 
     $.ajax({
       url: url,
