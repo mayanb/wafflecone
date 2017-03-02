@@ -55,6 +55,8 @@ class Task(models.Model):
   is_trashed = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True, db_index=True)
   updated_at = models.DateTimeField(auto_now=True, db_index=True)
+  is_flagged = models.BooleanField(default=False)
+  experiment = models.CharField(max_length=25, blank=True)
  
   def __str__(self):
     if self.custom_display:
@@ -64,13 +66,11 @@ class Task(models.Model):
     else:
       return self.label
 
-
-
   def save(self, *args, **kwargs):
     self.setLabelAndDisplay()
     super(Task, self).save(*args, **kwargs)
 
-
+  def isExperimentalHelper(self):
 
   def setLabelAndDisplay(self):
     if self.pk is None:
@@ -104,6 +104,19 @@ class Task(models.Model):
 
   def getTaskAttributes(self):
     return self.taskattribute_set.all()
+
+  def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
+    new_level_tasks = set()
+
+    parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
+
+    for t in parent_tasks:
+      if t.id not in all_ancestors:
+        new_level_tasks.add(t)
+        all_ancestors.add(t.id)
+
+    if len(new_level_tasks) > 0:
+      self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
   # tree traversal - finds all the children of the node that this is called on
   # returns a set([<Task object>])
