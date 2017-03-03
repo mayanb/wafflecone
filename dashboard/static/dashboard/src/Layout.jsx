@@ -5,16 +5,19 @@ const Navbar = (props) => (
   <div className="navbar">
   	<div className="content-area">
   		<div className="left">
-	  		<h1>Scoop @ bama </h1>
+	  		<h1>Scoop</h1>
 	  	</div>
-  		<div className="nav right">
- 			<ul>
+	  	<div className="nav center">
+	  		<ul>
 		    { props.options.map(function (x, i) {
-		    	return <li className={i==props.active?"active":""} key={i}> 
+		    	return <li className={i==props.active-1?"active":""} key={i}> 
 		    		<a href={window.location.origin + "/dashboard/" + props.links[i]}>{x}</a> 
 		    	</li>
 		    })}
 		    </ul>
+	  	</div>
+  		<div className="right">
+  			<p>Production</p>
 	    </div>
 	</div>
   </div>
