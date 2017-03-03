@@ -62,11 +62,11 @@
 
 	var _Tasks2 = _interopRequireDefault(_Tasks);
 
-	var _FactoryMap = __webpack_require__(361);
+	var _FactoryMap = __webpack_require__(363);
 
 	var _FactoryMap2 = _interopRequireDefault(_FactoryMap);
 
-	var _LabelPrinter = __webpack_require__(363);
+	var _LabelPrinter = __webpack_require__(365);
 
 	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
 
@@ -55384,11 +55384,11 @@
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-	var _TaskDialogPages = __webpack_require__(366);
+	var _TaskDialogPages = __webpack_require__(361);
 
 	var _TaskDialogPages2 = _interopRequireDefault(_TaskDialogPages);
 
-	var _Items = __webpack_require__(367);
+	var _Items = __webpack_require__(362);
 
 	var _Items2 = _interopRequireDefault(_Items);
 
@@ -56652,6 +56652,409 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _jquery = __webpack_require__(180);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _dialog = __webpack_require__(351);
+
+	var _menu = __webpack_require__(317);
+
+	var _Task = __webpack_require__(293);
+
+	var _immutabilityHelper = __webpack_require__(328);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Ancestors = function (_React$Component) {
+	  _inherits(Ancestors, _React$Component);
+
+	  function Ancestors(props) {
+	    _classCallCheck(this, Ancestors);
+
+	    var _this = _possibleConstructorReturn(this, (Ancestors.__proto__ || Object.getPrototypeOf(Ancestors)).call(this, props));
+
+	    _this.refreshList = _this.refreshList.bind(_this);
+	    _this.state = { ancestors: [], loading: false };
+	    return _this;
+	  }
+
+	  _createClass(Ancestors, [{
+	    key: 'render',
+	    value: function render() {
+	      if (this.state.loading) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-body' },
+	          _react2.default.createElement('div', { className: 'spinner' })
+	        );
+	      }
+
+	      if (this.state.ancestors.length == 0) {
+	        return _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(
+	            'p',
+	            null,
+	            ' The items from this task have no ancestors. '
+	          )
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'taskDialog-body' },
+	        this.state.ancestors.map(function (ancestor, i) {
+	          return _react2.default.createElement(Tasklet, _extends({ key: ancestor.id }, ancestor));
+	        })
+	      );
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.refreshList(np);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.refreshList(this.props);
+	    }
+	  }, {
+	    key: 'refreshList',
+	    value: function refreshList(props) {
+	      var url = window.location.origin + "/ics/tasks/";
+	      var thisObj = this;
+	      this.setState({ loading: true });
+
+	      console.log(props.query);
+
+	      _jquery2.default.get(url, props.query).done(function (data) {
+	        data.sort(function (a, b) {
+	          return parseFloat(a.process_type.x) - parseFloat(b.process_type.x);
+	        });
+	        thisObj.setState({ ancestors: data });
+	      }).fail(function (data) {
+	        console.log(data);
+	      }).always(function () {
+	        thisObj.setState({ loading: false });
+	      });
+	    }
+	  }]);
+
+	  return Ancestors;
+	}(_react2.default.Component);
+
+	exports.default = Ancestors;
+
+
+	function Tasklet(props) {
+
+	  var notes = getNotes(props);
+
+	  var obj = false;
+	  if (notes.trim().length > 0) {
+	    obj = _react2.default.createElement(
+	      'p',
+	      null,
+	      notes
+	    );
+	  }
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'tasklet' },
+	    _react2.default.createElement(
+	      'div',
+	      null,
+	      _react2.default.createElement('img', { src: (0, _Task.icon)(props.process_type.icon) }),
+	      _react2.default.createElement(
+	        'h1',
+	        null,
+	        (0, _Task.display)(props)
+	      ),
+	      _react2.default.createElement(
+	        'a',
+	        { href: window.location.origin + "/dashboard/", target: '_blank' },
+	        _react2.default.createElement(
+	          'i',
+	          { className: 'material-icons', style: { fontSize: "14px" } },
+	          'open_in_new'
+	        )
+	      )
+	    ),
+	    obj
+	  );
+	}
+
+	function getNotes(task) {
+	  var notesID = 0;
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+
+	  try {
+	    for (var _iterator = task.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var attribute = _step.value;
+
+	      if (attribute.name.toLowerCase().trim() === "notes") {
+	        notesID = attribute.id;
+	        break;
+	      }
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+
+	  var _iteratorNormalCompletion2 = true;
+	  var _didIteratorError2 = false;
+	  var _iteratorError2 = undefined;
+
+	  try {
+	    for (var _iterator2 = task.attribute_values[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	      var attributeVal = _step2.value;
+
+	      if (attributeVal.attribute == notesID) return attributeVal.value;
+	    }
+	  } catch (err) {
+	    _didIteratorError2 = true;
+	    _iteratorError2 = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	        _iterator2.return();
+	      }
+	    } finally {
+	      if (_didIteratorError2) {
+	        throw _iteratorError2;
+	      }
+	    }
+	  }
+
+	  return "";
+	}
+
+/***/ },
+/* 362 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _jquery = __webpack_require__(180);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _dialog = __webpack_require__(351);
+
+	var _menu = __webpack_require__(317);
+
+	var _Task = __webpack_require__(293);
+
+	var _immutabilityHelper = __webpack_require__(328);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Items = function (_React$Component) {
+	  _inherits(Items, _React$Component);
+
+	  function Items(props) {
+	    _classCallCheck(this, Items);
+
+	    var _this = _possibleConstructorReturn(this, (Items.__proto__ || Object.getPrototypeOf(Items)).call(this, props));
+
+	    _this.refreshList = _this.refreshList.bind(_this);
+	    _this.handleClick = _this.handleClick.bind(_this);
+	    _this.state = { items: [], loading: false };
+	    return _this;
+	  }
+
+	  _createClass(Items, [{
+	    key: 'render',
+	    value: function render() {
+	      if (this.state.loading) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-body' },
+	          _react2.default.createElement('div', { className: 'spinner' })
+	        );
+	      }
+
+	      if (this.state.items.length == 0) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'taskDialog-body' },
+	          _react2.default.createElement(
+	            'p',
+	            null,
+	            ' This task has no items.'
+	          )
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'taskDialog-body' },
+	        this.state.items.map(function (item, i) {
+	          var _this2 = this;
+
+	          return _react2.default.createElement(Itemlet, _extends({ key: item.id, onClick: function onClick() {
+	              return _this2.handleClick(item);
+	            } }, item));
+	        }, this)
+	      );
+	    }
+	  }, {
+	    key: 'handleClick',
+	    value: function handleClick(item) {
+	      var thisObj = this;
+	      var url = window.location.origin + "/ics/inputs/create/";
+
+	      // 516 is the ID of the deliver to heaven task...probably 
+	      // need to make this less janky
+	      var data = { input_item: item.id, task: "573" };
+
+	      _jquery2.default.ajax({
+	        url: url,
+	        method: "POST",
+	        data: data
+	      }).done(function (data) {
+	        var itemIndex = -1;
+	        thisObj.state.items.map(function (x, i) {
+	          if (x.id == item.id) itemIndex = i;
+	        });
+	        if (itemIndex == -1) {
+	          alert("something has gone horribly wrong");
+	        }
+
+	        var ns = (0, _immutabilityHelper2.default)(thisObj.state, { items: { $splice: [[itemIndex, 1]] } });
+	        thisObj.setState(ns);
+	      }).fail(function (err) {
+	        console.log(err);
+	      }).always(function () {});
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.refreshList(np);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.refreshList(this.props);
+	    }
+	  }, {
+	    key: 'refreshList',
+	    value: function refreshList(props) {
+	      this.setState({ items: props.task.items });
+	    }
+	  }]);
+
+	  return Items;
+	}(_react2.default.Component);
+
+	exports.default = Items;
+
+
+	function Itemlet(props) {
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'tasklet' },
+	    _react2.default.createElement(
+	      'div',
+	      { style: { display: "flex", margin: "10px" } },
+	      _react2.default.createElement(
+	        'i',
+	        { className: 'material-icons', style: { flex: "0 auto", fontSize: "14px" } },
+	        'ac_unit'
+	      ),
+	      _react2.default.createElement(
+	        'h1',
+	        { style: { flex: "1 auto" } },
+	        qrdisplay(props)
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        { style: { flex: "0 auto" } },
+	        _react2.default.createElement(
+	          'button',
+	          { onClick: props.onClick },
+	          'Send to heaven'
+	        )
+	      )
+	    )
+	  );
+	}
+
+	function qrdisplay(item) {
+	  return item.item_qr.substring(item.item_qr.length - 6, item.item_qr.length);
+	}
+
+/***/ },
+/* 363 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
 	var _jquery = __webpack_require__(180);
 
 	var _jquery2 = _interopRequireDefault(_jquery);
@@ -56660,7 +57063,7 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _reactDraggable = __webpack_require__(362);
+	var _reactDraggable = __webpack_require__(364);
 
 	var _reactDraggable2 = _interopRequireDefault(_reactDraggable);
 
@@ -57129,7 +57532,7 @@
 	}
 
 /***/ },
-/* 362 */
+/* 364 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function webpackUniversalModuleDefinition(root, factory) {
@@ -58741,7 +59144,7 @@
 	//# sourceMappingURL=react-draggable.js.map
 
 /***/ },
-/* 363 */
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -58770,9 +59173,9 @@
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-	var _qr = __webpack_require__(364);
+	var _qr = __webpack_require__(366);
 
-	var _Label = __webpack_require__(365);
+	var _Label = __webpack_require__(367);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -59173,7 +59576,7 @@
 	}
 
 /***/ },
-/* 364 */
+/* 366 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -59291,7 +59694,7 @@
 	exports.printQRs = printQRs;
 
 /***/ },
-/* 365 */
+/* 367 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59364,409 +59767,6 @@
 	}
 
 	exports.Label = Label;
-
-/***/ },
-/* 366 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(32);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	var _jquery = __webpack_require__(180);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _dialog = __webpack_require__(351);
-
-	var _menu = __webpack_require__(317);
-
-	var _Task = __webpack_require__(293);
-
-	var _immutabilityHelper = __webpack_require__(328);
-
-	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Ancestors = function (_React$Component) {
-	  _inherits(Ancestors, _React$Component);
-
-	  function Ancestors(props) {
-	    _classCallCheck(this, Ancestors);
-
-	    var _this = _possibleConstructorReturn(this, (Ancestors.__proto__ || Object.getPrototypeOf(Ancestors)).call(this, props));
-
-	    _this.refreshList = _this.refreshList.bind(_this);
-	    _this.state = { ancestors: [], loading: false };
-	    return _this;
-	  }
-
-	  _createClass(Ancestors, [{
-	    key: 'render',
-	    value: function render() {
-	      if (this.state.loading) {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'taskDialog-body' },
-	          _react2.default.createElement('div', { className: 'spinner' })
-	        );
-	      }
-
-	      if (this.state.ancestors.length == 0) {
-	        return _react2.default.createElement(
-	          'div',
-	          null,
-	          _react2.default.createElement(
-	            'p',
-	            null,
-	            ' The items from this task have no ancestors. '
-	          )
-	        );
-	      }
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'taskDialog-body' },
-	        this.state.ancestors.map(function (ancestor, i) {
-	          return _react2.default.createElement(Tasklet, _extends({ key: ancestor.id }, ancestor));
-	        })
-	      );
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(np) {
-	      this.refreshList(np);
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.refreshList(this.props);
-	    }
-	  }, {
-	    key: 'refreshList',
-	    value: function refreshList(props) {
-	      var url = window.location.origin + "/ics/tasks/";
-	      var thisObj = this;
-	      this.setState({ loading: true });
-
-	      console.log(props.query);
-
-	      _jquery2.default.get(url, props.query).done(function (data) {
-	        data.sort(function (a, b) {
-	          return parseFloat(a.process_type.x) - parseFloat(b.process_type.x);
-	        });
-	        thisObj.setState({ ancestors: data });
-	      }).fail(function (data) {
-	        console.log(data);
-	      }).always(function () {
-	        thisObj.setState({ loading: false });
-	      });
-	    }
-	  }]);
-
-	  return Ancestors;
-	}(_react2.default.Component);
-
-	exports.default = Ancestors;
-
-
-	function Tasklet(props) {
-
-	  var notes = getNotes(props);
-
-	  var obj = false;
-	  if (notes.trim().length > 0) {
-	    obj = _react2.default.createElement(
-	      'p',
-	      null,
-	      notes
-	    );
-	  }
-
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'tasklet' },
-	    _react2.default.createElement(
-	      'div',
-	      null,
-	      _react2.default.createElement('img', { src: (0, _Task.icon)(props.process_type.icon) }),
-	      _react2.default.createElement(
-	        'h1',
-	        null,
-	        (0, _Task.display)(props)
-	      ),
-	      _react2.default.createElement(
-	        'a',
-	        { href: window.location.origin + "/dashboard/", target: '_blank' },
-	        _react2.default.createElement(
-	          'i',
-	          { className: 'material-icons', style: { fontSize: "14px" } },
-	          'open_in_new'
-	        )
-	      )
-	    ),
-	    obj
-	  );
-	}
-
-	function getNotes(task) {
-	  var notesID = 0;
-	  var _iteratorNormalCompletion = true;
-	  var _didIteratorError = false;
-	  var _iteratorError = undefined;
-
-	  try {
-	    for (var _iterator = task.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	      var attribute = _step.value;
-
-	      if (attribute.name.toLowerCase().trim() === "notes") {
-	        notesID = attribute.id;
-	        break;
-	      }
-	    }
-	  } catch (err) {
-	    _didIteratorError = true;
-	    _iteratorError = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion && _iterator.return) {
-	        _iterator.return();
-	      }
-	    } finally {
-	      if (_didIteratorError) {
-	        throw _iteratorError;
-	      }
-	    }
-	  }
-
-	  var _iteratorNormalCompletion2 = true;
-	  var _didIteratorError2 = false;
-	  var _iteratorError2 = undefined;
-
-	  try {
-	    for (var _iterator2 = task.attribute_values[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	      var attributeVal = _step2.value;
-
-	      if (attributeVal.attribute == notesID) return attributeVal.value;
-	    }
-	  } catch (err) {
-	    _didIteratorError2 = true;
-	    _iteratorError2 = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion2 && _iterator2.return) {
-	        _iterator2.return();
-	      }
-	    } finally {
-	      if (_didIteratorError2) {
-	        throw _iteratorError2;
-	      }
-	    }
-	  }
-
-	  return "";
-	}
-
-/***/ },
-/* 367 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(32);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	var _jquery = __webpack_require__(180);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _dialog = __webpack_require__(351);
-
-	var _menu = __webpack_require__(317);
-
-	var _Task = __webpack_require__(293);
-
-	var _immutabilityHelper = __webpack_require__(328);
-
-	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Items = function (_React$Component) {
-	  _inherits(Items, _React$Component);
-
-	  function Items(props) {
-	    _classCallCheck(this, Items);
-
-	    var _this = _possibleConstructorReturn(this, (Items.__proto__ || Object.getPrototypeOf(Items)).call(this, props));
-
-	    _this.refreshList = _this.refreshList.bind(_this);
-	    _this.handleClick = _this.handleClick.bind(_this);
-	    _this.state = { items: [], loading: false };
-	    return _this;
-	  }
-
-	  _createClass(Items, [{
-	    key: 'render',
-	    value: function render() {
-	      if (this.state.loading) {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'taskDialog-body' },
-	          _react2.default.createElement('div', { className: 'spinner' })
-	        );
-	      }
-
-	      if (this.state.items.length == 0) {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'taskDialog-body' },
-	          _react2.default.createElement(
-	            'p',
-	            null,
-	            ' This task has no items.'
-	          )
-	        );
-	      }
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'taskDialog-body' },
-	        this.state.items.map(function (item, i) {
-	          var _this2 = this;
-
-	          return _react2.default.createElement(Itemlet, _extends({ key: item.id, onClick: function onClick() {
-	              return _this2.handleClick(item);
-	            } }, item));
-	        }, this)
-	      );
-	    }
-	  }, {
-	    key: 'handleClick',
-	    value: function handleClick(item) {
-	      var thisObj = this;
-	      var url = window.location.origin + "/ics/inputs/create/";
-
-	      // 516 is the ID of the deliver to heaven task...probably 
-	      // need to make this less janky
-	      var data = { input_item: item.id, task: "573" };
-
-	      _jquery2.default.ajax({
-	        url: url,
-	        method: "POST",
-	        data: data
-	      }).done(function (data) {
-	        var itemIndex = -1;
-	        thisObj.state.items.map(function (x, i) {
-	          if (x.id == item.id) itemIndex = i;
-	        });
-	        if (itemIndex == -1) {
-	          alert("something has gone horribly wrong");
-	        }
-
-	        var ns = (0, _immutabilityHelper2.default)(thisObj.state, { items: { $splice: [[itemIndex, 1]] } });
-	        thisObj.setState(ns);
-	      }).fail(function (err) {
-	        console.log(err);
-	      }).always(function () {});
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(np) {
-	      this.refreshList(np);
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.refreshList(this.props);
-	    }
-	  }, {
-	    key: 'refreshList',
-	    value: function refreshList(props) {
-	      this.setState({ items: props.task.items });
-	    }
-	  }]);
-
-	  return Items;
-	}(_react2.default.Component);
-
-	exports.default = Items;
-
-
-	function Itemlet(props) {
-
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'tasklet' },
-	    _react2.default.createElement(
-	      'div',
-	      { style: { display: "flex", margin: "10px" } },
-	      _react2.default.createElement(
-	        'i',
-	        { className: 'material-icons', style: { flex: "0 auto", fontSize: "14px" } },
-	        'ac_unit'
-	      ),
-	      _react2.default.createElement(
-	        'h1',
-	        { style: { flex: "1 auto" } },
-	        qrdisplay(props)
-	      ),
-	      _react2.default.createElement(
-	        'div',
-	        { style: { flex: "0 auto" } },
-	        _react2.default.createElement(
-	          'button',
-	          { onClick: props.onClick },
-	          'Send to heaven'
-	        )
-	      )
-	    )
-	  );
-	}
-
-	function qrdisplay(item) {
-	  return item.item_qr.substring(item.item_qr.length - 6, item.item_qr.length);
-	}
 
 /***/ }
 /******/ ]);

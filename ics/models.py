@@ -70,8 +70,6 @@ class Task(models.Model):
     self.setLabelAndDisplay()
     super(Task, self).save(*args, **kwargs)
 
-  def isExperimentalHelper(self):
-
   def setLabelAndDisplay(self):
     if self.pk is None:
       # get the num of tasks with the same name & made on the same date this year
