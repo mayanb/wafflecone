@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import $ from 'jquery';
 import moment from 'moment';
-import {display, toCSV, icon} from './Task.jsx';
+import {display, getNotes, getOperator, toCSV, icon} from './Task.jsx';
 
 export default class TableList extends React.Component {
   constructor(props) {
@@ -69,11 +69,11 @@ function TableHeader(props) {
   return (
     <div className="toolbar">
       <div className="toolbarIcon">
-        <img src={icon(props.icon)} style={{height:"38px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
+        <img src={icon(props.icon)} style={{height:"16px", verticalAlign: "text-bottom", display: "inline-block", marginRight: "8px"}}/>
       </div>
       <div className="toolbarText">
-        <h1>{props.title}</h1>
-        <h2>{`${props.count} ${props.unit}${props.count==1?"":"s"}`}</h2>
+        <span className="title">{props.title}</span>
+        <span className="detail">{`${props.count} ${props.unit}${props.count==1?"":"s"}`}</span>
       </div>
       
     </div>
@@ -83,7 +83,7 @@ function TableHeader(props) {
 function possiblyEmpty(val) {
   if ($.type(val) === "number" && val == 0)
     return "zero-cell"
-  if ($.type(val) === "string" && val == "n/a")
+  if ($.type(val) === "string" && val == "")
   return "zero-cell"
 }
 
@@ -101,16 +101,17 @@ function TaskRow(props) {
   if (props.inventory) {
     inputs = false
   }
+
+  let notes = getNotes(props.task)
+  let operator = getOperator(props.task)
+
   return (
     <tr className="" onClick={() => props.onClick()}>
-     <td>{display(props.task)}</td>
-     <td className={possiblyEmpty(props.task.items.length)}>{props.task.items.length + " " + getUnit(props.unit, props.task.items.length)}</td>
-     {inputs}
-     { props.attributes.map(function(attribute, i) {
-              return <td key={attribute.id}
-                className={possiblyEmpty(getAttributeValue(props.task, attribute.id))}>{getAttributeValue(props.task, attribute.id)}</td>
-      })}
-     <td>{moment(props.task.created_at).format("MM/DD/YY").toString()}</td>
+      <td><span>{display(props.task)}</span></td>
+      <td className={"outputs " + possiblyEmpty(props.task.items.length)}><span>{props.task.items.length + " " + getUnit(props.unit, props.task.items.length)}</span></td>
+      <td className={"notes " + possiblyEmpty(notes)}><span>{notes || "n/a"}</span></td>
+      <td className={"operator" + possiblyEmpty(operator)}><span>{operator || "n/a"}</span></td>
+      <td><span>{moment(props.task.created_at).format("MM/DD/YY").toString()}</span></td>
     </tr>
   );
 }
@@ -129,13 +130,11 @@ function TableHead(props) {
   }
   return (
     <thead className=""><tr>
-      <td>Task</td>
-      <td>Outputs</td>
-      {inputs}
-       { props.attributes.map(function(attribute, i) {
-              return <td key={attribute.id}>{attribute.name}</td>
-        })}
-       <td>Created on</td>
+      <td><span>Task</span></td>
+      <td className="outputs"><span>Outputs</span></td>
+      <td className="notes"><span>Notes</span></td>
+      <td className="operator"><span>Operator</span></td>
+      <td><span>Created on</span></td>
     </tr></thead>
   );
 }

@@ -187,53 +187,38 @@ class Filters extends React.Component {
   render () {
 
     var obj = false
+
     if (this.props.dates) {
-      obj = <div><Datepicker onChange={(val) => this.handleDateRangeChange(val)} /></div>
+      obj = <div style={{marginLeft: "8px", flex: "1 auto"}}><Datepicker onChange={(val) => this.handleDateRangeChange(val)} /></div>
     }
+
     return (
-      <div className="filters">
-        <div className="inputs">
+      <div className="filters inputs">
 
-            <div className={((this.props.active == 1)?"active":"inactive") + " section"}>
-              <div className="header" onClick={() => this.switchActive(1)}>
-                <i className="material-icons">chevron_right</i><h2> General </h2>
-              </div>
+            <div className="active section">
+              
               <div className="section-content">
-                <div>
-                  <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
-                </div>
 
                 <div>
-                  <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
+                  <TaskSelect placeholder="All tasks" onChange={(val) => this.handleChange("parent", val)} />
                 </div>
-                {obj}
+
+                <div style={{display: "flex", flexdirection: "row"}}>
+                  <div style={{marginRight: "8px", flex: "1 auto"}}>
+                    <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
+                  </div>
+
+                  <div style={{flex: "1 auto"}}>
+                    <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
+                  </div>
+
+                  {obj}
+
+                </div>
+
+
               </div>
             </div>
-
-            <div className={((this.props.active == 2)?"active":"inactive") + " section"}>
-              <div className="header" onClick={() => this.switchActive(2)}>
-                <i className="material-icons">chevron_right</i><h2> By parent </h2>
-              </div>
-              <div className="section-content">
-                <div>
-                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChange("parent", val)} />
-                </div>
-              </div>
-            </div>
-
-            <div className={((this.props.active == 3)?"active":"inactive") + " section"}>
-              <div className="header" onClick={() => this.switchActive(3)}>
-                <i className="material-icons">chevron_right</i><h2> By child </h2>
-              </div>
-              <div className="section-content">
-                <div>
-                  <TaskSelect placeholder="eg. R-CVB-1012" onChange={(val) => this.handleChange("child", val)} />
-                </div>
-              </div>
-            </div>
-
-          </div>
-
         </div>
     );
   }

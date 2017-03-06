@@ -82,18 +82,13 @@ class Main extends React.Component {
 
     return (
       <div className="parent">
-        <div className="content-area">
-
           <Navbar 
             options={["Activity Log", "Inventory", "Labels", "Settings"]}
             links={["", "inventory", "labels", "settings"]} 
             active={this.state.active} 
             onNav={ (x) => this.setState({active: x}) }
           />
-
           {obj}
-
-        </div>
       </div>
     );
   }
@@ -129,7 +124,7 @@ function getFilters() {
   let filters = QueryStringToJSON()
   if (!filters || (Object.keys(filters).length === 0 && filters.constructor === Object)) {
     return { active: 1, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
-  } 
+  }
   return filters
 }
 

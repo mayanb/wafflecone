@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import $ from 'jquery';
 import {Dialog} from 'react-toolbox/lib/dialog'
 import {Menu} from 'react-toolbox/lib/menu';
-import {display, toCSV, icon} from './Task.jsx';
+import {display, getNotes, toCSV, icon} from './Task.jsx';
 import update from 'immutability-helper';
 
 export default class Ancestors extends React.Component {
@@ -95,21 +95,4 @@ function Tasklet(props) {
 
     </div>
   )
-}
-
-function getNotes(task) {
-  var notesID = 0
-  for (var attribute of task.attributes) {
-    if(attribute.name.toLowerCase().trim() === "notes") {
-      notesID = attribute.id
-      break;
-    }
-  }
-
-  for (var attributeVal of task.attribute_values) {
-    if(attributeVal.attribute == notesID)
-      return attributeVal.value
-  }
-
-  return ""
 }
