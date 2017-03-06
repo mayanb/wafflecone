@@ -124,7 +124,7 @@ function getFilters() {
   let filters = QueryStringToJSON()
   if (!filters || (Object.keys(filters).length === 0 && filters.constructor === Object)) {
     return { active: 1, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
-  } 
+  }
   return filters
 }
 

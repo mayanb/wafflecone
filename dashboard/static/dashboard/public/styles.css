@@ -16,7 +16,7 @@ body {
 
 .navbar {
   background-color: white;
-  padding-top: 10px;
+  padding-top: 14px;
   width: 100%;
   color: rgba(0, 0, 0, 0.87);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -94,42 +94,67 @@ i.material-icons {
   overflow-x: auto; }
 
 .loading {
-  display: none;
-  background-color: #F2F3F5;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0; }
+  display: none; }
+
+.noresults {
+  margin-top: 32px;
+  text-align: center; }
+  .noresults span {
+    font-size: 18px;
+    color: rgba(0, 0, 0, 0.3);
+    text-align: middle; }
 
 .card-container table {
   border-collapse: collapse;
-  width: 100%; }
+  width: calc(100% - 64px);
+  box-sizing: border-box; }
   .card-container table td {
     min-width: 100px;
     line-height: 14px;
+    width: 84px;
     padding: 12px 0px;
-    padding-left: 6px; }
+    box-sizing: border-box;
+    cursor: pointer; }
+    .card-container table td span {
+      display: block;
+      margin: 0px 16px;
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; }
     .card-container table td:first-child {
       padding-left: 0px;
-      min-width: 200px;
+      min-width: 192px;
       width: 200px; }
+    .card-container table td:last-child {
+      padding-right: 0px;
+      width: 92px; }
+    .card-container table td.notes span {
+      width: 240px;
+      min-width: 240px; }
+    .card-container table td.operator span {
+      min-width: 80px;
+      width: 80px; }
+    .card-container table td.outputs span {
+      min-width: 100px;
+      width: 100px; }
   .card-container table thead {
     font-size: 14px;
+    color: rgba(0, 0, 0, 0.4);
     font-weight: 400; }
     .card-container table thead tr {
-      border-top: 1px solid rgba(0, 0, 0, 0.03);
       border-color: rgba(0, 0, 0, 0.3); }
   .card-container table tbody td {
     color: rgba(0, 0, 0, 0.87);
     font-size: 14px; }
     .card-container table tbody td:first-child {
-      font-family: 'Overpass Mono';
+      letter-spacing: 1px;
       font-weight: 700;
       width: 50px; }
   .card-container table tbody tr {
     border-top: 1px solid rgba(0, 0, 0, 0.03); }
     .card-container table tbody tr:first-child {
-      border-color: rgba(0, 0, 0, 0.2); }
+      border-color: rgba(0, 0, 0, 0.1); }
     .card-container table tbody tr:last-child {
       border-bottom: 1px solid #eee; }
   .card-container table .zero-cell {
@@ -145,23 +170,26 @@ i.material-icons {
     flex: 0 auto; }
   .toolbar div.toolbarText {
     flex: 1 auto; }
-    .toolbar div.toolbarText h1 {
+    .toolbar div.toolbarText span.title {
       font-size: 20px;
       line-height: 20px;
       margin: 0; }
-    .toolbar div.toolbarText h2 {
+    .toolbar div.toolbarText span.detail {
       font-size: 14px;
       line-height: 14px;
       font-weight: normal;
       margin: 0;
-      margin-top: 4px; }
+      margin-left: 8px;
+      margin-top: 4px;
+      color: rgba(0, 0, 0, 0.3); }
 
 .filters.inputs {
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-top: none;
   display: flex;
-  flex-direction: column; }
+  flex-direction: column;
+  margin-top: 40px; }
   .filters.inputs .section {
     padding: 12px 24px;
     border-top: 1px solid #eee; }
@@ -221,7 +249,7 @@ i.material-icons {
 .Select-control {
   border: none;
   border-radius: 0;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1); }
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
 
 .Select-placeholder {
   padding: 0; }
@@ -517,5 +545,101 @@ div[data-react-toolbox=menu] {
     font-size: 14px; }
   .tasklet i {
     margin-right: 18px; }
+
+.log-header {
+  color: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  padding: 8px 0px;
+  margin-top: 32px; }
+
+.logrow {
+  display: flex;
+  flex-direction: row;
+  padding: 12px 0px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer; }
+  .logrow span {
+    line-height: 16px; }
+  .logrow .first {
+    flex: 0 auto;
+    margin-right: 8px; }
+  .logrow .second {
+    flex: 1 auto;
+    margin-right: 8px; }
+  .logrow .third {
+    flex: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end; }
+  .logrow .icon-img {
+    width: 16px; }
+  .logrow .title {
+    margin-right: 8px; }
+  .logrow .header {
+    margin-bottom: 8px; }
+  .logrow .detail {
+    font-size: 13px;
+    color: #2F2F2F; }
+  .logrow .count {
+    color: rgba(0, 0, 0, 0.3); }
+  .logrow .circle {
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    margin: 3px;
+    background-color: green;
+    margin-right: 4px;
+    /* width and height can be anything, as long as they're equal */ }
+  .logrow .open {
+    color: rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+    font-size: 10px;
+    letter-spacing: 0.1; }
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline; }
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block; }
+
+body {
+  line-height: 1; }
+
+ol, ul {
+  list-style: none; }
+
+blockquote, q {
+  quotes: none; }
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
 
 /*# sourceMappingURL=styles.css.map */

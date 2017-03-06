@@ -1,11 +1,20 @@
 import React from 'react';
 import $ from 'jquery';
 import TableList from './Tables.jsx';
+import ActivityLog from './ActivityLog.jsx';
 import { Filters } from './Inputs.jsx';
 import { ContentDescriptor } from './Layout.jsx'
 import moment from 'moment'
 import TaskDialog from './TaskDialog.jsx'
 import update from 'immutability-helper';
+
+function NoResults(props) {
+  return (
+    <div className="noresults">
+      <span>Oops! We didn't find anything. Try expanding your search.</span>
+    </div>
+  )
+}
 
 export default class Tasks extends React.Component {
   constructor(props) {
@@ -18,6 +27,7 @@ export default class Tasks extends React.Component {
     	inventory: props.inventory,
       activeTask: null,
 
+      tasks: [],
       taskGroups: {},
       processes: {},
       products: {},
@@ -35,8 +45,43 @@ export default class Tasks extends React.Component {
       window.history.replaceState(this.state.activeFilters, "Scoop @ bama", window.location.href);
     }
 
+    var panel = (
+      <div style={{display: this.state.loading?"block":""}} className="loading">
+            <div className="spinner"></div>
+          </div>
+    )
+
+    if (!this.state.loading && this.state.inventory && this.state.tasks.length > 0) {
+      panel = (
+        <TableList 
+            //tasks={this.state.tasks}
+            taskGroups={this.state.taskGroups} 
+            processes={this.state.processes}
+            inventory={this.props.inventory}
+            onTaskClick={this.handleTaskToggle}
+          />
+      )
+    }
+
+    else if (!this.state.loading && this.state.tasks.length > 0) {
+      panel = (
+        <ActivityLog
+          tasks={this.state.tasks}
+          //taskGroups={this.state.taskGroups} 
+          processes={this.state.processes}
+          inventory={this.props.inventory}
+          onTaskClick={this.handleTaskToggle}
+        />
+      )
+    }
+
+    else if (!this.state.loading) {
+      panel = <NoResults />
+    }
+
     let obj = false;
 		if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object) {
+
 		} else {
       obj = 
         <div className="content">
@@ -56,16 +101,8 @@ export default class Tasks extends React.Component {
             onFilter={(object) => this.handleFilter(object, true)}
           />
 
-          <TableList 
-            taskGroups={this.state.taskGroups} 
-            processes={this.state.processes}
-            inventory={this.props.inventory}
-            onTaskClick={this.handleTaskToggle}
-          />
+          {panel}
 
-          <div style={{display: this.state.loading?"block":""}} className="loading">
-            <div className="spinner"></div>
-          </div>
 
         </div>
 
@@ -121,7 +158,7 @@ export default class Tasks extends React.Component {
   }
 
   componentDidMount() {
-    var newState = { taskGroups: {}, processes: {}, products: {} };
+    var newState = { tasks: [], taskGroups: {}, processes: {}, products: {} };
     var defs = []
 
     defs.push(this.getProcesses(newState));
@@ -134,7 +171,9 @@ export default class Tasks extends React.Component {
       component.setState(newState)
       $.when.apply(null, d2).done(function() {
         newState.mounted = true
-        component.setState(newState)
+        component.setState(newState, function () {
+          console.log(component.state)
+        })
       });
     })
   }
@@ -144,7 +183,6 @@ export default class Tasks extends React.Component {
     let thisObj = this
     $.get(url)
       .done(function (data) {
-        console.log("dataaaaa")
         console.log(data)
         let taskGroup = getSemanticTaskGroup(data, thisObj.state.processes)
 
@@ -195,6 +233,7 @@ export default class Tasks extends React.Component {
 
     $.get(url, filters)
       .done(function (data) {
+        container.tasks = data
         container.taskGroups = splitTasksByProcess(data, processes);
       }).always(function () {
         thisObj.setState({loading: false})
@@ -235,6 +274,8 @@ export default class Tasks extends React.Component {
 
     if (this.props.inventory) {
     	filters.inventory = true
+    } else {
+      filters.ordering = "-created_at"
     }
 
     if (state.active == 1) {
@@ -257,11 +298,9 @@ export default class Tasks extends React.Component {
         filters.products = state.products.map(function (x) {
           return x.value
         }).join(",")
-    }
 
-    else if (state.active == 2) {
-      if (state.parent && state.parent.value != "") {
-        filters.parent = state.parent.value
+      if (state.parent && state.parent.label != "") {
+        filters.label = state.parent.label
       }
     }
 

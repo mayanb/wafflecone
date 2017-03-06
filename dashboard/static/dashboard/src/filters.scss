@@ -4,6 +4,7 @@
 	border-top: none;
 		display: flex;
 		flex-direction: column;
+		margin-top: 40px;
 
 		.section {
 			padding: 12px 24px;
@@ -95,7 +96,7 @@
 .Select-control {
 	border: none;
 	border-radius: 0;
-	border-bottom: 2px solid rgba(0,0,0,0.1);
+	border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
 .Select-placeholder {

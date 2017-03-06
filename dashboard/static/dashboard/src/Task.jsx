@@ -4,6 +4,41 @@ function display(task) {
 	return words(task).toUpperCase()
 }
 
+function getNotes(task) {
+  var notesID = 0
+  for (var attribute of task.attributes) {
+    if(attribute.name.toLowerCase().trim() === "notes") {
+      notesID = attribute.id
+      break;
+    }
+  }
+
+  for (var attributeVal of task.attribute_values) {
+    if(attributeVal.attribute == notesID)
+      return attributeVal.value
+  }
+
+  return ""
+}
+
+function getOperator(task) {
+  var notesID = 0
+  for (var attribute of task.attributes) {
+    if(attribute.name.toLowerCase().trim() === "operator") {
+      notesID = attribute.id
+      break;
+    }
+  }
+
+  for (var attributeVal of task.attribute_values) {
+    if(attributeVal.attribute == notesID)
+      return attributeVal.value
+  }
+
+  return ""
+}
+
+
 function words(task) {
   if (!task || task == undefined || task.label == undefined) {
   	return ""
@@ -65,4 +100,4 @@ function icon(k) {
 	return window.location.origin + "/static/dashboard/img/" + i + "@3x.png"
 }
 
-export { display, getAttributesToColumnNumbers, toCSV, icon }
+export { display, getNotes, getOperator, getAttributesToColumnNumbers, toCSV, icon }

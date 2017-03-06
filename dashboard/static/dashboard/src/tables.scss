@@ -4,28 +4,59 @@ $pink: rgb(255,82,82);
 .card-container table {
 
 	border-collapse:collapse;
-	width:100%;
+	width: calc(100% - 64px);
+	box-sizing: border-box;
 
 	td {
 		min-width: 100px;
 		line-height: 14px;
+		width: 84px;
 		padding: 12px 0px;
-		padding-left: 6px;
+		box-sizing: border-box;
+		cursor: pointer;
+
+		span {
+			display: block;
+			margin: 0px 16px;
+			box-sizing: border-box;
+			white-space: nowrap;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		}
 
 		&:first-child {
 			padding-left: 0px;
-			min-width: 200px;
+			min-width: 192px;
 			width: 200px;
+		}
+
+		&:last-child {
+			padding-right: 0px;
+			width: 92px;
+		}
+
+		&.notes span {
+			width: 240px;
+			min-width: 240px;
+		}
+
+		&.operator span {
+			min-width: 80px;
+			width: 80px;
+		}
+
+		&.outputs span {
+			min-width: 100px;
+			width: 100px;
 		}
 	}
 
 	thead {
-		//color: rgba(0,0,0,0.54);
 		font-size: 14px;
+		color: rgba(0,0,0,0.4);
 		font-weight:400;
 
 		tr {
-			border-top: $table-border;
 			border-color: rgba(0,0,0,0.3);
 		}
 	}
@@ -34,8 +65,10 @@ $pink: rgb(255,82,82);
 		color: rgba(0,0,0,0.87);
 		font-size:14px;
 
+
 		&:first-child {
-			font-family: 'Overpass Mono';
+			//font-family: 'Overpass Mono';
+			letter-spacing: 1px;
 			font-weight: 700;
 			width: 50px;
 		}
@@ -47,7 +80,7 @@ $pink: rgb(255,82,82);
 
 		// add a darker border to the top of the top row
 		&:first-child {
-			border-color: rgba(0,0,0,0.2);
+			border-color: rgba(0,0,0,0.1);
 		}
 
 		&:last-child {
@@ -56,7 +89,7 @@ $pink: rgb(255,82,82);
 	}
 
 	.zero-cell {
-		color: rgba(0,0,0,0.3)
+		color: rgba(0,0,0,0.3);
 	}
 }
 
@@ -73,18 +106,20 @@ $pink: rgb(255,82,82);
 	}
 
 	div.toolbarText {
-		h1 {
+		span.title {
 			font-size: 20px;
 			line-height: 20px;
 			margin: 0
 		}
 
-		h2 {
+		span.detail {
 			font-size: 14px;
 			line-height: 14px;
 			font-weight: normal;
 			margin: 0;
+			margin-left: 8px;
 			margin-top: 4px;
+			color: rgba(0,0,0,0.3);
 		}
 
 		flex: 1 auto;

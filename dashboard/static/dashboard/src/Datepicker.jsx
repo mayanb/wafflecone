@@ -36,7 +36,7 @@ export default class Datepicker extends React.Component {
   }
 
   handleMenuOpen(e) {
-     this.setState({ active: !this.state.active, x: e.pageX-1000, y: e.pageY });
+     this.setState({ active: !this.state.active, x: e.pageX, y: e.pageY });
   }
 
   handleMenuHide() {
@@ -61,7 +61,7 @@ export default class Datepicker extends React.Component {
 
       <div onClick={this.handleMenuOpen} >
 
-        <div className="dates" style={{ borderColor: this.state.active?"red":"" }}>
+        <div className="dates" style={{ borderColor: this.state.active?"$primary":"" }}>
           <span>
           { 
             (predefined['startDate'] && predefined['startDate'].format(format).toString()) + " - " + 
