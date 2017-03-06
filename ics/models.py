@@ -11,11 +11,16 @@ class User(models.Model):
     return self.name
 
 
+class Team(models.Model):
+  name = models.CharField(max_length=20)
+
 class ProcessType(models.Model):
+  #team = models.ForeignKey(Team, on_delete=models.CASCADE)
   name = models.CharField(max_length=20)
   code = models.CharField(max_length=20)
   icon = models.CharField(max_length=50)
-  unit = models.CharField(max_length=20, default="item")
+  unit = models.CharField(max_length=20, default="container")
+  #output_desc = models.CharField(max_length=20, default="product")
   x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
   y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
