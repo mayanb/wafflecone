@@ -74,7 +74,7 @@ class Task(models.Model):
 
   def save(self, *args, **kwargs):
     self.setLabelAndDisplay()
-    self.refreshKeywords()
+    self.refreshKeywords("")
     super(Task, self).save(*args, **kwargs)
 
   def setLabelAndDisplay(self):
@@ -110,8 +110,8 @@ class Task(models.Model):
   def getTaskAttributes(self):
     return self.taskattribute_set.all()
 
-  def refreshKeywords(self):
-    p1 = "".join([
+  def refreshKeywords(self, extra):
+    p1 = " ".join([
       self.process_type.code, self.process_type.name, self.product_type.code, self.product_type.name,
       self.custom_display, self.label, "-".join([self.label,str(self.label_index)])
     ])
@@ -119,7 +119,13 @@ class Task(models.Model):
     p2 = " ".join(self.custom_display.split("-"))
     p3 = " ".join(self.label.split("-"))
 
-    self.keywords = " ".join([p1, p2, p3])
+    p4 = ""
+
+    if self.pk is not None: 
+      p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
+
+    self.keywords = " ".join([p1, p2, p3, p4])[:200]
+
 
   def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
     new_level_tasks = set()
@@ -199,6 +205,10 @@ class TaskAttribute(models.Model):
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+  def save(self, *args, **kwargs):
+    
+    super(TaskAttribute, self).save(*args, **kwargs)
 
 
 class RecommendedInputs(models.Model):
