@@ -59587,7 +59587,7 @@
 	            { className: 'stuff' },
 	            _react2.default.createElement(
 	              'div',
-	              { className: "regularPrint " + (this.state.expanded ? "small" : "") },
+	              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
 	              _react2.default.createElement(
 	                'h2',
 	                null,
@@ -59631,11 +59631,7 @@
 	                ' ',
 	                this.state.disabled ? "Printing..." : "Print!",
 	                ' '
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: "reprint " + (this.state.expanded ? "expanded" : "") },
+	              ),
 	              _react2.default.createElement(
 	                'button',
 	                { className: 'expandReprint', onClick: this.handleExpandClick },
@@ -59643,11 +59639,24 @@
 	                  'span',
 	                  null,
 	                  'I need to reprint a label'
-	                ),
+	                )
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
 	                _react2.default.createElement(
 	                  'i',
 	                  { className: 'material-icons' },
-	                  'close'
+	                  'arrow_back'
+	                ),
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'Back to regular printing'
 	                )
 	              ),
 	              _react2.default.createElement(

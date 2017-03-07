@@ -25,7 +25,7 @@ div.labelPrinter {
 		box-shadow: $shadow-1;
 		padding: 20px;
 		background-color: white;
-		max-height: 470px;
+		//max-height: 400px;
 		overflow: hidden;
 	}
 
@@ -56,23 +56,22 @@ div.labelPrinter {
 			text-align: center;
 			line-height: 48px;
 		}
-
 	}
 
 	button {
 		padding: 8px 16px;
 		color: white;
 		text-align: center;
-	    text-decoration: none;
-	    display: inline-block;
-	    font-size: 14px;
-	    margin: 4px 2px;
-	    cursor: pointer;
-	    border: none;
-	    border-radius: 2px;
-	    background-color: $primary;
-	    width: 100%
-	}
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border: none;
+    border-radius: 2px;
+    background-color: $primary;
+    width: 100%
+}
 
 	.regularprint {
 	  max-height: 1000px;
@@ -86,39 +85,39 @@ div.labelPrinter {
 
 	.reprint {
 		margin: -20px;
-		box-shadow: $shadow-1;
+		//box-shadow: $shadow-1;
 		padding: 20px;
 		background-color: white;
 		z-index: 999;
 
-		.expandReprint {
-			display: block;
+		&:focus {
+			outline: none;
+		}
+	}
+
+	button.expandReprint {
+		display: block;
+		color: $primary;
+		background-color: white;
+		font-size: 13px;
+		margin-bottom: 20px;
+		display: flex;
+		flex-direction: row;
+		padding-left: 0px;
+		padding-right: 0px;
+		text-align: left;
+
+		span {
+			flex: 1;
+		}
+
+		i  {
+			text-align: right;
+			flex: 0;
 			color: $primary;
-			background-color: white;
 			font-size: 13px;
-			margin-bottom: 20px;
-			display: flex;
-			flex-direction: row;
-			padding-left: 0px;
-			padding-right: 0px;
-			text-align: left;
-
-			span {
-				flex: 1;
-			}
-
-			i  {
-				flex: 0;
-				color: $primary;
-				visibility: hidden;
-				font-size: 13px;
-				line-height: 16px;
-				vertical-align: middle;
-			}
-
-			&:focus {
-				outline: none;
-			}
+			line-height: 16px;
+			vertical-align: middle;
 		}
 
 		&.expanded i {

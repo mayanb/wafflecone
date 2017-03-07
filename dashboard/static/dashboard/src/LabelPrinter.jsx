@@ -173,7 +173,7 @@ export default class LabelPrinter extends React.Component {
         <div className="marginer">
           <div className="stuff">          
 
-            <div className={"regularPrint " + (this.state.expanded?"small":"")}>
+            <div className={"regularPrint"} style={{display: (this.state.expanded?"none":"initial")}}>
               <h2> Print me some labels </h2>
               <span className="inputLabel">Number of labels</span>
               <input type="text" 
@@ -192,12 +192,16 @@ export default class LabelPrinter extends React.Component {
                 onChange={(e) => this.handleChange("notes", e.target.value.substr(0,20))}
               />
               <button type="submit" id="printButton" onClick={this.handlePrint}> {this.state.disabled?"Printing...":"Print!"} </button>
-            </div>
 
-            <div className={"reprint " + (this.state.expanded?"expanded":"")}>
               <button className="expandReprint" onClick={this.handleExpandClick}>
                 <span>I need to reprint a label</span>
-                <i className="material-icons">close</i>
+              </button>
+            </div>
+
+            <div className={"reprint " + (this.state.expanded?"expanded":"")} style={{display: (!this.state.expanded?"none":"initial")}}>
+              
+              <button className="expandReprint" onClick={this.handleExpandClick}>
+                <i className="material-icons">arrow_back</i><span>Back to regular printing</span>
               </button>
               <span className="inputLabel">Task</span>
               <TaskSelect placeholder="Task (eg. R-CVB-1010)" onChange={this.handleTaskChange} value={this.state.task}/>

@@ -309,7 +309,6 @@ div.labelPrinter {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
     padding: 20px;
     background-color: white;
-    max-height: 470px;
     overflow: hidden; }
   div.labelPrinter input {
     line-height: 34px;
@@ -349,33 +348,32 @@ div.labelPrinter {
     z-index: 997; }
   div.labelPrinter .reprint {
     margin: -20px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
     padding: 20px;
     background-color: white;
     z-index: 999; }
-    div.labelPrinter .reprint .expandReprint {
-      display: block;
+    div.labelPrinter .reprint:focus {
+      outline: none; }
+  div.labelPrinter button.expandReprint {
+    display: block;
+    color: #49A8F3;
+    background-color: white;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    padding-left: 0px;
+    padding-right: 0px;
+    text-align: left; }
+    div.labelPrinter button.expandReprint span {
+      flex: 1; }
+    div.labelPrinter button.expandReprint i {
+      text-align: right;
+      flex: 0;
       color: #49A8F3;
-      background-color: white;
       font-size: 13px;
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction: row;
-      padding-left: 0px;
-      padding-right: 0px;
-      text-align: left; }
-      div.labelPrinter .reprint .expandReprint span {
-        flex: 1; }
-      div.labelPrinter .reprint .expandReprint i {
-        flex: 0;
-        color: #49A8F3;
-        visibility: hidden;
-        font-size: 13px;
-        line-height: 16px;
-        vertical-align: middle; }
-      div.labelPrinter .reprint .expandReprint:focus {
-        outline: none; }
-    div.labelPrinter .reprint.expanded i {
+      line-height: 16px;
+      vertical-align: middle; }
+    div.labelPrinter button.expandReprint.expanded i {
       visibility: inherit; }
 
 .labelSVG {
