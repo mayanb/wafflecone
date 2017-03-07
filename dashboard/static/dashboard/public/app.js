@@ -47912,7 +47912,7 @@
 	            'div',
 	            null,
 	            this.props.tasks.map(function (task, i) {
-	              return _react2.default.createElement(LogRow, _extends({ key: task.id }, task));
+	              return _react2.default.createElement(LogRow, _extends({ key: task.id }, task, { onClick: this.props.onTaskClick }));
 	            }, this)
 	          )
 	        );
@@ -47932,7 +47932,9 @@
 	  console.log(props);
 	  return _react2.default.createElement(
 	    'div',
-	    { className: 'logrow' },
+	    { className: 'logrow', onClick: function onClick() {
+	        return props.onClick(props);
+	      } },
 	    _react2.default.createElement(
 	      'div',
 	      { className: 'first' },

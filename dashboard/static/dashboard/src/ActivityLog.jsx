@@ -21,7 +21,7 @@ export default class ActivityLog extends React.Component {
 
           <div> 
             { this.props.tasks.map(function(task, i) {
-                return <LogRow key={task.id} {...task} />
+                return <LogRow key={task.id} {...task} onClick={this.props.onTaskClick}/>
               }, this)
             } 
           </div>
@@ -37,7 +37,7 @@ export default class ActivityLog extends React.Component {
 function LogRow(props) {
   console.log(props)
   return (
-    <div className="logrow">
+    <div className="logrow" onClick={() => props.onClick(props)}>
       <div className="first">
         <img className="icon-img" src={icon(props.process_type.icon)} />
       </div>
