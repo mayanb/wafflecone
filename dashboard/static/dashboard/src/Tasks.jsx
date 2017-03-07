@@ -174,6 +174,7 @@ export default class Tasks extends React.Component {
 
       // update the processes and product filters
       let af = component.state.activeFilters
+      console.log(af)
 
       let ns = update(af, {
         $merge: {

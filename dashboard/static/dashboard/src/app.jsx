@@ -112,7 +112,7 @@ function QueryStringToJSON() {
         let key = pair[0]
         if (key && key != "") {
           result[key] = decodeURIComponent(pair[1] || '');
-          if (result[key].indexOf(',') > -1) {
+          if (key.toLowerCase() == "processes" || key.toLowerCase() == "products") {
             result[key] = result[key].split(',')
           }
         }
