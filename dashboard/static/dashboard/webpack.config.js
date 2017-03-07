@@ -14,7 +14,11 @@ module.exports = {
             {
                 test: /(\.scss|\.css)$/,
                 loaders: ["style", "css?modules", "sass"]
-            }
+            },
+{
+    test: /\.json$/,
+    loader: "json-loader"
+}
         ],
     },
     entry: './src/app.jsx',

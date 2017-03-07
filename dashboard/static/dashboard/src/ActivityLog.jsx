@@ -35,7 +35,6 @@ export default class ActivityLog extends React.Component {
 }
 
 function LogRow(props) {
-  console.log(props)
   return (
     <div className="logrow" onClick={() => props.onClick(props)}>
       <div className="first">

@@ -7,50 +7,61 @@ import $ from 'jquery';
 import {display} from './Task.jsx'
 
 var getOptions = function(input, callback) {
-    if (input.length < 2) {
-      callback(null, { optionss: [] })
-    } else {
-      $.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
-        var options = data.map(function (x) {
-          return { value: x.id, label: display(x)}
-        })
-        callback(null, {options : options, complete: false})
+  if (input.length < 2) {
+    callback(null, { optionss: [] })
+  } else {
+    $.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+      var options = data.map(function (x) {
+        return { value: x.id, label: display(x)}
       })
+      callback(null, {options : options, complete: false})
+    })
+  }
+}
+
+class TaskSelect extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleEnter = this.handleEnter.bind(this);
+    this.state = {value: props.label || ""}
+  }
+
+  handleChange(event) {
+    this.setState({value: event.target.value})
+  }
+
+  handleEnter(event) {
+    if(event.keyCode == 13) {
+      this.props.onChange(this.state.value)
     }
   }
 
-class TaskSelect extends React.Component {
-  constructor() {
-    super();
-    this.handleChange = this.handleChange.bind(this);
-    this.state = {}
-
+  componentWillReceiveProps(np) {
+    console.log(np)
+    if (np.value != this.state.value) {
+      this.setState({value: np.value || "" })
+    }
   }
-
-  handleChange(value) {
-    var v;
-    if (value != undefined && value != null && value.length != 0)
-      v = value
-    else v = {value: ""}
-
-    this.setState(v)
-    this.props.onChange(v)
-  };
 
   render () {
     return (
-      <div className="multiselect">
-        <Select.Async
+      <div className="task-select">
+        <i className="material-icons">search</i>
+        <input
+          type="text"
           name="form-field-name"
           value={this.state.value}
-          loadOptions={getOptions}
           onChange={this.handleChange}
+          onKeyDown={this.handleEnter}
           placeholder={this.props.placeholder}
         />
       </div>
     );
   }
 
+  componentDidMount() {
+  }
 
 }
 
@@ -107,37 +118,12 @@ class Filters extends React.Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
-    this.handleProcessChange = this.handleProcessChange.bind(this);
-    this.handleProductChange = this.handleProductChange.bind(this);
     this.handleDateRangeChange = this.handleDateRangeChange.bind(this);
-    this.handleParentChange = this.handleParentChange.bind(this);
-    this.handleChildChange = this.handleChildChange.bind(this);
     this.state = {
-      processes: [],
-      products: [],
-      parent: "",
       start: "",
       end: "",
       active: 1
     }
-  }
-
-  handleFilter() {
-    var filters = {}
-
-    if (this.state.active == 1) {
-      filters.processes = this.state.processes
-      filters.products = this.state.products
-      filters.start = this.state.start
-      filters.end = this.state.end
-    } else if (this.state.active == 2) {
-      filters.parent = this.state.parent
-    } else if (this.state.active == 3) {
-      filters.child = this.state.child
-    }
-
-    this.props.onFilter(filters)
-
   }
 
   componentWillReceiveProps(nextProps) {
@@ -160,36 +146,12 @@ class Filters extends React.Component {
     this.props.onFilter(date)
   }
 
-  switchActive(x) {
-    this.props.onFilter({active : x})
-  }
-
-  handleProcessChange(val) {
-    console.log("processes")
-    this.setState({processes: val}, this.handleFilter)
-  }
-
-  handleProductChange(val) {
-    console.log("products")
-    this.setState({products: val}, this.handleFilter)
-  }
-
-
-  handleParentChange(val) {
-    console.log("parent")
-    this.setState({parent: val.value}, this.handleFilter)
-  }
-
-  handleChildChange(val) {
-    this.setState({child: val.value}, this.handleFilter)
-  }
-
   render () {
 
     var obj = false
 
     if (this.props.dates) {
-      obj = <div style={{marginLeft: "8px", flex: "1 auto"}}><Datepicker onChange={(val) => this.handleDateRangeChange(val)} /></div>
+      obj = <div style={{marginLeft: "8px", flex: "1 auto"}}><Datepicker initialDates={this.props.initialDates} onChange={this.handleDateRangeChange} /></div>
     }
 
     return (
@@ -200,7 +162,7 @@ class Filters extends React.Component {
               <div className="section-content">
 
                 <div>
-                  <TaskSelect placeholder="All tasks" onChange={(val) => this.handleChange("parent", val)} />
+                  <TaskSelect placeholder="All tasks" value={this.props.label} onChange={(val) => this.handleChange("label", val)} />
                 </div>
 
                 <div style={{display: "flex", flexdirection: "row"}}>

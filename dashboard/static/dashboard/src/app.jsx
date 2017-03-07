@@ -28,9 +28,6 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-
-    // inventory, dashboard, or settings??
-
     let csrftoken = getCookie('csrftoken');
     $.ajaxSetup({
       beforeSend: function(xhr, settings) {
@@ -62,7 +59,6 @@ class Main extends React.Component {
   }
 
   refresh(e) {
-    console.log("filters being set")
     this.setState({filters: e.state})
   }
 
@@ -113,8 +109,13 @@ function QueryStringToJSON() {
     var result = {};
     pairs.forEach(function(pair) {
         pair = pair.split('=');
-        if (pair[0] && pair[0] != "")
-          result[pair[0]] = decodeURIComponent(pair[1] || '');
+        let key = pair[0]
+        if (key && key != "") {
+          result[key] = decodeURIComponent(pair[1] || '');
+          if (result[key].indexOf(',') > -1) {
+            result[key] = result[key].split(',')
+          }
+        }
     });
 
     return JSON.parse(JSON.stringify(result));
@@ -122,6 +123,7 @@ function QueryStringToJSON() {
 
 function getFilters() {
   let filters = QueryStringToJSON()
+  //filters.label = {value: filters.label}
   if (!filters || (Object.keys(filters).length === 0 && filters.constructor === Object)) {
     return { active: 1, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
   }

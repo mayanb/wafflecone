@@ -20,7 +20,7 @@ class ProcessType(models.Model):
   code = models.CharField(max_length=20)
   icon = models.CharField(max_length=50)
   unit = models.CharField(max_length=20, default="container")
-  #output_desc = models.CharField(max_length=20, default="product")
+  output_desc = models.CharField(max_length=20, default="product")
   x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
   y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
@@ -62,6 +62,7 @@ class Task(models.Model):
   updated_at = models.DateTimeField(auto_now=True, db_index=True)
   is_flagged = models.BooleanField(default=False)
   experiment = models.CharField(max_length=25, blank=True)
+  keywords = models.CharField(max_length=200, blank=True)
  
   def __str__(self):
     if self.custom_display:
@@ -73,6 +74,7 @@ class Task(models.Model):
 
   def save(self, *args, **kwargs):
     self.setLabelAndDisplay()
+    self.refreshKeywords()
     super(Task, self).save(*args, **kwargs)
 
   def setLabelAndDisplay(self):
@@ -107,6 +109,17 @@ class Task(models.Model):
 
   def getTaskAttributes(self):
     return self.taskattribute_set.all()
+
+  def refreshKeywords(self):
+    p1 = "".join([
+      self.process_type.code, self.process_type.name, self.product_type.code, self.product_type.name,
+      self.custom_display, self.label, "-".join([self.label,str(self.label_index)])
+    ])
+
+    p2 = " ".join(self.custom_display.split("-"))
+    p3 = " ".join(self.label.split("-"))
+
+    self.keywords = " ".join([p1, p2, p3])
 
   def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
     new_level_tasks = set()

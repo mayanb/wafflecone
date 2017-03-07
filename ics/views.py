@@ -41,7 +41,10 @@ class TaskList(generics.ListAPIView):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
 
         label = self.request.query_params.get('label', None)
-        if label is not None:
+        dashboard = self.request.query_params.get('dashboard', None)
+        if label is not None and dashboard is not None:
+          queryset = Task.objects.filter(Q(keywords__icontains=label))
+        elif label is not None:
           queryset = Task.objects.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
         parent = self.request.query_params.get('parent', None)

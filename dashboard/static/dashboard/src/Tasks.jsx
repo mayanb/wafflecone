@@ -41,6 +41,7 @@ export default class Tasks extends React.Component {
 
 
 	render() {
+    console.log(this.state.activeFilters)
     if (!window.history.state) {
       window.history.replaceState(this.state.activeFilters, "Scoop @ bama", window.location.href);
     }
@@ -54,7 +55,6 @@ export default class Tasks extends React.Component {
     if (!this.state.loading && this.state.inventory && this.state.tasks.length > 0) {
       panel = (
         <TableList 
-            //tasks={this.state.tasks}
             taskGroups={this.state.taskGroups} 
             processes={this.state.processes}
             inventory={this.props.inventory}
@@ -67,7 +67,6 @@ export default class Tasks extends React.Component {
       panel = (
         <ActivityLog
           tasks={this.state.tasks}
-          //taskGroups={this.state.taskGroups} 
           processes={this.state.processes}
           inventory={this.props.inventory}
           onTaskClick={this.handleTaskToggle}
@@ -93,12 +92,14 @@ export default class Tasks extends React.Component {
           />
 
           <Filters
+            label = {this.state.activeFilters.label}
             filters = {this.state.activeFilters}
             active = {this.state.activeFilters.active}
             processes={this.state.processes} 
             products={this.state.products} 
             dates={this.props.inventory==false}
             onFilter={(object) => this.handleFilter(object, true)}
+            initialDates={{start: this.state.activeFilters.start, end: this.state.activeFilters.end}}
           />
 
           {panel}
@@ -167,15 +168,38 @@ export default class Tasks extends React.Component {
     var component = this
 
     $.when.apply(null, defs).done(function() {
-      var d2 = [component.getTasks(newState, -1, component.props.inventory)]
+      
+      // apply the processes/products state
       component.setState(newState)
+
+      // update the processes and product filters
+      let af = component.state.activeFilters
+
+      let ns = update(af, {
+        $merge: {
+          processes: component.matchByID(af.processes || [], newState.processes),
+          products: component.matchByID(af.products || [], newState.products)
+        }
+      })
+
+      component.setState({activeFilters: ns})
+
+
+      // get the tasks
+      var d2 = [component.getTasks(newState, -1, component.props.inventory)]
       $.when.apply(null, d2).done(function() {
         newState.mounted = true
-        component.setState(newState, function () {
-          console.log(component.state)
-        })
+        component.setState(newState)
       });
     })
+  }
+
+  matchByID(select, data) {
+    let ns = select.map(function (id) {
+      return { value: id, label: data[id].name }
+    })
+
+    return ns
   }
 
   handleTaskChanged(task) {
@@ -183,7 +207,6 @@ export default class Tasks extends React.Component {
     let thisObj = this
     $.get(url)
       .done(function (data) {
-        console.log(data)
         let taskGroup = getSemanticTaskGroup(data, thisObj.state.processes)
 
         // the jankiest loop there ever was....
@@ -223,6 +246,7 @@ export default class Tasks extends React.Component {
     var url = window.location.origin + "/ics/tasks/"
 
     let filters = this.parseFilters()
+    filters.dashboard = "True"
 
     var processes = this.state.processes
     if (Object.keys(this.state.processes).length === 0 && this.state.processes.constructor === Object)
@@ -248,7 +272,7 @@ export default class Tasks extends React.Component {
 
     $.ajax(window.location.origin + "/ics/products/")
       .done(function (data) {
-        container.products = data
+        container.products = mapifyProcesses(data)
         deferred.resolve();
       })
 
@@ -278,36 +302,28 @@ export default class Tasks extends React.Component {
       filters.ordering = "-created_at"
     }
 
-    if (state.active == 1) {
-
-      if (!this.props.inventory) {
-        if (state.start && state.start.length > 0) {
-          filters.start = state.start
-        }
-        if (state.end && state.end.length > 0) {
-          filters.end = state.end
-        }
+    if (!this.props.inventory) {
+      if (state.start && state.start.length > 0) {
+        filters.start = state.start
       }
-
-      if (state.processes && state.processes.length > 0)
-        filters.processes = state.processes.map(function (x) {
-          return x.value
-        }).join(",")
-
-      if (state.products && state.products.length > 0)
-        filters.products = state.products.map(function (x) {
-          return x.value
-        }).join(",")
-
-      if (state.parent && state.parent.label != "") {
-        filters.label = state.parent.label
+      if (state.end && state.end.length > 0) {
+        filters.end = state.end
       }
     }
 
-    else if (state.active == 3) {
-      if (state.child && state.child.value != "") {
-        filters.child = state.child.value
-      }
+    if (state.processes && state.processes.length > 0) {
+      filters.processes = state.processes.map(function (x) {
+        return x.value
+      }).join(",")
+    }
+
+    if (state.products && state.products.length > 0)
+      filters.products = state.products.map(function (x) {
+         return x.value
+      }).join(",")
+
+    if (state.label && state.label != "") {
+      filters.label = state.label
     }
 
     return filters
@@ -328,7 +344,8 @@ export default class Tasks extends React.Component {
     } else {
       this.setState(ns, function () {
         if (push) {
-          window.history.pushState(ns.activeFilters, "Scoop @ Bama", window.location.origin + window.location.pathname + "?" + $.param(ns.activeFilters));
+          window.history.pushState(ns.activeFilters, "Scoop @ Bama", 
+              window.location.origin + window.location.pathname + "?" + $.param(thisObj.parseFilters(ns.activeFilters)));
         }
         var defs = [this.getTasks(newState, -2, this.props.inventory)]
         $.when.apply(null, defs).done(function() {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { defaultRanges, Calendar, DateRange } from 'react-date-range';
 import {Menu} from 'react-toolbox/lib/menu';
-import moment from 'moment';
+import moment from 'moment-timezone';
 
 export default class Datepicker extends React.Component {
 
@@ -22,14 +22,22 @@ export default class Datepicker extends React.Component {
     }
   }
 
-  handleInit() {
-    
+  handleInit(which, payload) {
+    console.log(payload)
+    let newPL = { startDate: moment.tz(new Date(this.props.initialDates.start), 'UTC'), 
+                  endDate : moment.tz(new Date(this.props.initialDates.end), 'UTC')}
+
+    this.setState({predefined: newPL})
+
+    this.props.onChange(this.props.initialDates)
   }
 
   handleChange(which, payload) {
     this.setState({
       [which] : payload
     });
+
+    console.log(payload)
 
     this.props.onChange({start: payload["startDate"].format("YYYY-MM-DD").toString(),
                           end: payload["endDate"].format("YYYY-MM-DD").toString()})
@@ -77,7 +85,7 @@ export default class Datepicker extends React.Component {
               <DateRange
                 linkedCalendars={ true }
                 ranges={ defaultRanges }
-                onInit={ this.handleChange}
+                onInit={ this.handleInit}
                 onChange={ this.handleChange }
                 theme={{
                   Calendar : { width: 200 },
