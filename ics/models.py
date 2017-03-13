@@ -74,10 +74,17 @@ class Task(models.Model):
 
   def save(self, *args, **kwargs):
     self.setLabelAndDisplay()
-    self.refreshKeywords("")
+    self.refreshKeywords()
     super(Task, self).save(*args, **kwargs)
 
   def setLabelAndDisplay(self):
+    """
+    Calculates the display text based on whether there are any other
+    tasks with the same label and updates it accordingly
+    ----
+    task.setLabelAndDisplay()
+    task.save()
+    """
     if self.pk is None:
       # get the num of tasks with the same name & made on the same date this year
       q = ( 
@@ -110,21 +117,31 @@ class Task(models.Model):
   def getTaskAttributes(self):
     return self.taskattribute_set.all()
 
-  def refreshKeywords(self, extra):
+  def refreshKeywords(self):
+    """
+    Calculates a list of keywords from the task's fields and the task's
+    attributes and updates the task.
+    ----
+    task.refreshKeywords()
+    task.save()
+    """
     p1 = " ".join([
-      self.process_type.code, self.process_type.name, self.product_type.code, self.product_type.name,
-      self.custom_display, self.label, "-".join([self.label,str(self.label_index)])
+      self.process_type.code, 
+      self.process_type.name, 
+      self.product_type.code, 
+      self.product_type.name,
+      self.custom_display, 
+      self.label, 
+      "-".join([self.label,str(self.label_index)]),
+      self.custom_display.split("-"),
+      self.label.split("-")
     ])
 
-    p2 = " ".join(self.custom_display.split("-"))
-    p3 = " ".join(self.label.split("-"))
-
     p4 = ""
-
     if self.pk is not None: 
       p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
 
-    self.keywords = " ".join([p1, p2, p3, p4])[:200]
+    self.keywords = " ".join([p1, p4])[:200]
 
 
   def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
@@ -140,21 +157,38 @@ class Task(models.Model):
     if len(new_level_tasks) > 0:
       self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
-  # tree traversal - finds all the children of the node that this is called on
-  # returns a set([<Task object>])
+
+
+  
   def descendents(self):
+    """
+    Finds all the descendent tasks of this task and returns them as a Queryset
+    ----
+    descendents = task.descendents()
+    """
     all_descendents = set([self.id])
     root_tasks = set([self])
     self.descendents_helper(all_descendents, root_tasks, 0)
+
+    # convert set of IDs to Queryset & return
     return Task.objects.filter(id__in=all_descendents)
 
   def descendents_helper(self, all_descendents, curr_level_tasks, depth):
+    """
+    Recursive helper function for descendents(). Recursively travels through the
+    graph of trees to update all_descendents to contain the IDs of descendent tasks.
+    @ all_descendents: set of already found descendent IDs
+    @ curr_level_tasks: set of descendent IDs at the current depth of traversal
+    @ depth: integer depth of traversal
+    ----
+    (see descendents() for usage)
+    """
     new_level_tasks = set()
 
-    # get all the items from the current level tasks task 
+    # get all the items that were created by a task in curr_level_tasks
     child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
 
-    # get all the tasks they were input into
+    # get all the tasks these items were input into
     child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
 
     for input in child_task_rel:
@@ -168,14 +202,32 @@ class Task(models.Model):
 
 
   def ancestors(self):
+    """
+    Finds all the ancestor tasks of this task and returns them as a Queryset
+    ----
+    ancestors = task.ancestors()
+    """
     all_ancestors = set([self.id])
     curr_level_tasks = set([self])
     self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
+
+    # convert set of IDs to Queryset & return
     return Task.objects.filter(id__in=all_ancestors)
 
   def ancestors_helper(self, all_ancestors, curr_level_tasks, depth):
+    """
+    Recursive helper function for ancestors(). Recursively travels through the
+    graph of trees to update all_ancestors to contain the IDs of ancestor tasks.
+    @ all_ancestors: set of already found ancestor IDs
+    @ curr_level_tasks: set of ancestor IDs at the current depth of traversal
+    @ depth: integer depth of traversal
+    ----
+    (see ancestors() for usage)
+    """
     new_level_tasks = set()
 
+    # get all tasks where any of its items were used as inputs into a task 
+    # that is in curr_level_tasks
     parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
 
     for t in parent_tasks:
@@ -205,10 +257,6 @@ class TaskAttribute(models.Model):
   task = models.ForeignKey(Task, on_delete=models.CASCADE)
   value = models.CharField(max_length=50, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
-
-  def save(self, *args, **kwargs):
-    
-    super(TaskAttribute, self).save(*args, **kwargs)
 
 
 class RecommendedInputs(models.Model):
