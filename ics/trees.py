@@ -17,3 +17,14 @@ def children(found_children, curr_level_tasks):
 	children(found_children, new_level_tasks)
 
 
+
+def deleteDups():
+	tasks = Task.objects.all()
+	attributes = Attributes.objects.all()
+	for t in tasks:
+		for a in attributes:
+			taskAttrs = TaskAttributes.filter(task=t, attribute=a)
+			let num = len(taskAttrs)
+			if num > 1:
+				for i in range(1, num):
+					taskAttrs[i].delete()

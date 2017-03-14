@@ -5,262 +5,266 @@ from django.db import models
 # Create your models here.
 
 class User(models.Model):
-  name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20)
 
-  def __str__(self):
-    return self.name
+    def __str__(self):
+        return self.name
 
 
 class Team(models.Model):
-  name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20)
 
 class ProcessType(models.Model):
-  #team = models.ForeignKey(Team, on_delete=models.CASCADE)
-  name = models.CharField(max_length=20)
-  code = models.CharField(max_length=20)
-  icon = models.CharField(max_length=50)
-  unit = models.CharField(max_length=20, default="container")
-  output_desc = models.CharField(max_length=20, default="product")
-  x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-  y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    #team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    name = models.CharField(max_length=20)
+    code = models.CharField(max_length=20)
+    icon = models.CharField(max_length=50)
+    unit = models.CharField(max_length=20, default="container")
+    output_desc = models.CharField(max_length=20, default="product")
+    x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
-  def __str__(self):
-    return self.name
+    def __str__(self):
+        return self.name
 
-  def getAllAttributes(self):
-    return self.attribute_set.all()
+    def getAllAttributes(self):
+        return self.attribute_set.all()
 
-  class Meta:
-    ordering = ['x',]
+    class Meta:
+        ordering = ['x',]
 
 class ProductType(models.Model):
-  name = models.CharField(max_length=20)
-  code = models.CharField(max_length=20)
+    name = models.CharField(max_length=20)
+    code = models.CharField(max_length=20)
 
-  def __str__(self):
-    return self.name
+    def __str__(self):
+        return self.name
 
 class Attribute(models.Model):
-  process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
-  name = models.CharField(max_length=20)
-  rank = models.PositiveSmallIntegerField(default=0)
+    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+    name = models.CharField(max_length=20)
+    rank = models.PositiveSmallIntegerField(default=0)
 
-  def __str__(self):
-    return self.name
+    def __str__(self):
+        return self.name
 
 
 class Task(models.Model):
-  process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
-  product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
-  label = models.CharField(max_length=20, db_index=True)  
-  label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
-  custom_display = models.CharField(max_length=25, blank=True)
-  created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-  is_open = models.BooleanField(default=True)
-  is_trashed = models.BooleanField(default=False)
-  created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-  updated_at = models.DateTimeField(auto_now=True, db_index=True)
-  is_flagged = models.BooleanField(default=False)
-  experiment = models.CharField(max_length=25, blank=True)
-  keywords = models.CharField(max_length=200, blank=True)
+    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+    product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+    label = models.CharField(max_length=20, db_index=True)  
+    label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
+    custom_display = models.CharField(max_length=25, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_open = models.BooleanField(default=True)
+    is_trashed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+    is_flagged = models.BooleanField(default=False)
+    experiment = models.CharField(max_length=25, blank=True)
+    keywords = models.CharField(max_length=200, blank=True)
  
-  def __str__(self):
-    if self.custom_display:
-      return self.custom_display
-    elif self.label_index > 0:
-      return "-".join([self.label, str(self.label_index)])
-    else:
-      return self.label
+    def __str__(self):
+        if self.custom_display:
+            return self.custom_display
+        elif self.label_index > 0:
+            return "-".join([self.label, str(self.label_index)])
+        else:
+            return self.label
 
-  def save(self, *args, **kwargs):
-    self.setLabelAndDisplay()
-    self.refreshKeywords()
-    super(Task, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.setLabelAndDisplay()
+        self.refreshKeywords()
+        super(Task, self).save(*args, **kwargs)
 
-  def setLabelAndDisplay(self):
-    """
-    Calculates the display text based on whether there are any other
-    tasks with the same label and updates it accordingly
-    ----
-    task.setLabelAndDisplay()
-    task.save()
-    """
-    if self.pk is None:
-      # get the num of tasks with the same name & made on the same date this year
-      q = ( 
-        Task.objects.filter(label=self.label)
-          .filter(created_at__startswith=str(datetime.now().year))
-          .order_by('-label_index')
-        )
-      numItems = len(q)
+    def setLabelAndDisplay(self):
+        """
+        Calculates the display text based on whether there are any other
+        tasks with the same label and updates it accordingly
+        ----
+        task.setLabelAndDisplay()
+        task.save()
+        """
+        if self.pk is None:
+            # get the number of tasks with the same label from this year
+            q = ( 
+                Task.objects.filter(label=self.label)
+                    .filter(created_at__startswith=str(datetime.now().year))
+                    .order_by('-label_index')
+                )
+            numItems = len(q)
 
-      # if there are other items with the same name, then actually get the highest label_index 
-      # and set our label index to that + 1
-      if numItems > 0:
-        self.label_index = q[0].label_index + 1
-        self.display = "-".join([self.label, str(self.label_index)])
-      else:
-        self.display = self.label
+            # if there are other items with the same name, then get the
+            # highest label_index and set our label_index to that + 1
+            if numItems > 0:
+                self.label_index = q[0].label_index + 1
+                self.display = "-".join([self.label, str(self.label_index)])
+            else:
+                self.display = self.label
 
-  def getAllItems(self):
-    return self.item_set.all()
+    def getAllItems(self):
+        return self.item_set.all()
 
-  def getInventoryItems(self):
-    return self.item_set.filter(input__isnull=True)
+    def getInventoryItems(self):
+        return self.item_set.filter(input__isnull=True)
 
-  def getInputs(self):
-    return self.input_set.all()
+    def getInputs(self):
+        return self.input_set.all()
 
-  def getAllAttributes(self):
-    return Attribute.objects.all().filter(process_type=self.process_type)
+    def getAllAttributes(self):
+        return Attribute.objects.all().filter(process_type=self.process_type)
 
-  def getTaskAttributes(self):
-    return self.taskattribute_set.all()
+    def getTaskAttributes(self):
+        return self.taskattribute_set.all()
 
-  def refreshKeywords(self):
-    """
-    Calculates a list of keywords from the task's fields and the task's
-    attributes and updates the task.
-    ----
-    task.refreshKeywords()
-    task.save()
-    """
-    p1 = " ".join([
-      self.process_type.code, 
-      self.process_type.name, 
-      self.product_type.code, 
-      self.product_type.name,
-      self.custom_display, 
-      self.label, 
-      "-".join([self.label,str(self.label_index)]),
-      self.custom_display.split("-"),
-      self.label.split("-")
-    ])
+    def refreshKeywords(self):
+        """
+        Calculates a list of keywords from the task's fields and the task's
+        attributes and updates the task.
+        ----
+        task.refreshKeywords()
+        task.save()
+        """
+        p1 = " ".join([
+            self.process_type.code, 
+            self.process_type.name, 
+            self.product_type.code, 
+            self.product_type.name,
+            self.custom_display, 
+            self.label, 
+            "-".join([self.label,str(self.label_index)]),
+            self.custom_display.split("-"),
+            self.label.split("-")
+        ])
 
-    p4 = ""
-    if self.pk is not None: 
-      p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
+        p4 = ""
+        if self.pk is not None: 
+            p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
 
-    self.keywords = " ".join([p1, p4])[:200]
-
-
-  def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
-    new_level_tasks = set()
-
-    parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
-
-    for t in parent_tasks:
-      if t.id not in all_ancestors:
-        new_level_tasks.add(t)
-        all_ancestors.add(t.id)
-
-    if len(new_level_tasks) > 0:
-      self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
+        self.keywords = " ".join([p1, p4])[:200]
 
 
+    def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
+        new_level_tasks = set()
 
-  
-  def descendents(self):
-    """
-    Finds all the descendent tasks of this task and returns them as a Queryset
-    ----
-    descendents = task.descendents()
-    """
-    all_descendents = set([self.id])
-    root_tasks = set([self])
-    self.descendents_helper(all_descendents, root_tasks, 0)
+        parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
 
-    # convert set of IDs to Queryset & return
-    return Task.objects.filter(id__in=all_descendents)
+        for t in parent_tasks:
+            if t.id not in all_ancestors:
+                new_level_tasks.add(t)
+                all_ancestors.add(t.id)
 
-  def descendents_helper(self, all_descendents, curr_level_tasks, depth):
-    """
-    Recursive helper function for descendents(). Recursively travels through the
-    graph of trees to update all_descendents to contain the IDs of descendent tasks.
-    @ all_descendents: set of already found descendent IDs
-    @ curr_level_tasks: set of descendent IDs at the current depth of traversal
-    @ depth: integer depth of traversal
-    ----
-    (see descendents() for usage)
-    """
-    new_level_tasks = set()
-
-    # get all the items that were created by a task in curr_level_tasks
-    child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
-
-    # get all the tasks these items were input into
-    child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
-
-    for input in child_task_rel:
-      t = input.task
-      if t.id not in all_descendents:
-        new_level_tasks.add(input.task)
-        all_descendents.add(input.task.id)
-
-    if len(new_level_tasks) > 0:
-      self.descendents_helper(all_descendents, new_level_tasks, depth+1)
+        if len(new_level_tasks) > 0:
+            self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
 
-  def ancestors(self):
-    """
-    Finds all the ancestor tasks of this task and returns them as a Queryset
-    ----
-    ancestors = task.ancestors()
-    """
-    all_ancestors = set([self.id])
-    curr_level_tasks = set([self])
-    self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
 
-    # convert set of IDs to Queryset & return
-    return Task.objects.filter(id__in=all_ancestors)
+    
+    def descendents(self):
+        """
+        Finds all the descendent tasks of this task and returns them as a Queryset
+        ----
+        descendents = task.descendents()
+        """
+        all_descendents = set([self.id])
+        root_tasks = set([self])
+        self.descendents_helper(all_descendents, root_tasks, 0)
 
-  def ancestors_helper(self, all_ancestors, curr_level_tasks, depth):
-    """
-    Recursive helper function for ancestors(). Recursively travels through the
-    graph of trees to update all_ancestors to contain the IDs of ancestor tasks.
-    @ all_ancestors: set of already found ancestor IDs
-    @ curr_level_tasks: set of ancestor IDs at the current depth of traversal
-    @ depth: integer depth of traversal
-    ----
-    (see ancestors() for usage)
-    """
-    new_level_tasks = set()
+        # convert set of IDs to Queryset & return
+        return Task.objects.filter(id__in=all_descendents)
 
-    # get all tasks where any of its items were used as inputs into a task 
-    # that is in curr_level_tasks
-    parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
+    def descendents_helper(self, all_descendents, curr_level_tasks, depth):
+        """
+        Recursive helper function for descendents(). Recursively travels through the
+        graph of trees to update all_descendents to contain the IDs of descendent tasks.
+        
+        Keyword arguments:
+        all_descendents  -- set of already found descendent IDs
+        curr_level_tasks -- set of descendent IDs at the current depth of traversal
+        depth            -- integer depth of traversal
+        ----
+        (see descendents() for usage)
+        """
+        new_level_tasks = set()
 
-    for t in parent_tasks:
-      if t.id not in all_ancestors:
-        new_level_tasks.add(t)
-        all_ancestors.add(t.id)
+        # get all the items that were created by a task in curr_level_tasks
+        child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
 
-    if len(new_level_tasks) > 0:
-      self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
+        # get all the tasks these items were input into
+        child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
+
+        for input in child_task_rel:
+            t = input.task
+            if t.id not in all_descendents:
+                new_level_tasks.add(input.task)
+                all_descendents.add(input.task.id)
+
+        if len(new_level_tasks) > 0:
+            self.descendents_helper(all_descendents, new_level_tasks, depth+1)
+
+
+    def ancestors(self):
+        """
+        Finds all the ancestor tasks of this task and returns them as a Queryset
+        ----
+        ancestors = task.ancestors()
+        """
+        all_ancestors = set([self.id])
+        curr_level_tasks = set([self])
+        self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
+
+        # convert set of IDs to Queryset & return
+        return Task.objects.filter(id__in=all_ancestors)
+
+    def ancestors_helper(self, all_ancestors, curr_level_tasks, depth):
+        """
+        Recursive helper function for ancestors(). Recursively travels through the
+        graph of trees to update all_ancestors to contain the IDs of ancestor tasks.
+
+        Keyword arguments: 
+        all_ancestors    -- set of already found ancestor IDs
+        curr_level_tasks -- set of ancestor IDs at the current depth of traversal
+        depth            -- integer depth of traversal
+        ----
+        (see ancestors() for usage)
+        """
+        new_level_tasks = set()
+
+        # get all tasks where any of its items were used as inputs into a task 
+        # that is in curr_level_tasks
+        parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
+
+        for t in parent_tasks:
+            if t.id not in all_ancestors:
+                new_level_tasks.add(t)
+                all_ancestors.add(t.id)
+
+        if len(new_level_tasks) > 0:
+            self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
 
 class Item(models.Model):
-  item_qr = models.CharField(max_length=100, unique=True)
-  creating_task = models.ForeignKey(Task, on_delete=models.CASCADE)
-  created_at = models.DateTimeField(auto_now_add=True)
+    item_qr = models.CharField(max_length=100, unique=True)
+    creating_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-  def __str__(self):
-    return str(self.creating_task) + " - " + self.item_qr[-6:]
+    def __str__(self):
+        return str(self.creating_task) + " - " + self.item_qr[-6:]
 
 class Input(models.Model):
-  input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
-  task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
 
 class TaskAttribute(models.Model):
-  attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
-  task = models.ForeignKey(Task, on_delete=models.CASCADE)
-  value = models.CharField(max_length=50, blank=True)
-  updated_at = models.DateTimeField(auto_now=True)
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    value = models.CharField(max_length=50, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class RecommendedInputs(models.Model):
-  process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
-  recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
+    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+    recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
 
 

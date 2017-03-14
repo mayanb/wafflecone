@@ -121,15 +121,15 @@
 	        null,
 	        _react2.default.createElement(
 	          'div',
-	          null,
+	          { className: 'parent' },
 	          _react2.default.createElement(_Layout.Navbar, {
 	            options: ["Activity Log", "Inventory", "Labels", "Settings"],
 	            links: ["", "inventory", "labels", "settings"]
 	          }),
-	          _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: '/dashboard/a', component: ActivityLog }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/inventory', component: Inventory }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/labels', component: _LabelPrinter2.default }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/settings', component: _FactoryMap2.default })
+	          _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
+	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/", component: Inventory }),
+	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
+	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
 	        )
 	      );
 	    }
@@ -21791,7 +21791,7 @@
 	    _react2.default.createElement(
 	      'span',
 	      null,
-	      'Oops! We didn\'t find anything. Try expanding your search.'
+	      'Looks like there\'s nothing here. Try expanding your search.'
 	    )
 	  );
 	}

@@ -33,16 +33,16 @@ class Main extends React.Component {
     return (
 
       <Router>
-        <div>
+        <div className="parent">
         <Navbar 
           options={["Activity Log", "Inventory", "Labels", "Settings"]}
           links={["", "inventory", "labels", "settings"]} 
         />
 
-          <Route exact path="/dashboard/a" component={ActivityLog} />
-          <Route path="/dashboard/inventory" component={Inventory} />
-          <Route path="/dashboard/labels" component={LabelPrinter} />
-          <Route path="/dashboard/settings" component={FactoryMap} />
+          <Route exact path={"/dashboard/"}component={ActivityLog} />
+          <Route path={"/dashboard/inventory/"} component={Inventory} />
+          <Route path={"/dashboard/labels/"} component={LabelPrinter} />
+          <Route path={"/dashboard/settings/"} component={FactoryMap} />
 
         </div>
       </Router>

@@ -11,7 +11,7 @@ import update from 'immutability-helper';
 function NoResults(props) {
   return (
     <div className="noresults">
-      <span>Oops! We didn't find anything. Try expanding your search.</span>
+      <span>Looks like there's nothing here. Try expanding your search.</span>
     </div>
   )
 }
