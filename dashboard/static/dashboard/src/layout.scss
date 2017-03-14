@@ -62,23 +62,24 @@ body {
 	.nav li {
 		display: inline-block;
 		list-style-type: none;
-		padding: 0px 16px;
-		margin-right: 24px;
-		line-height: $navbar-height; 
+		margin-right: 24px; 
 
 		a, a:hover, a:visited {
+			display: block;
+			line-height: $navbar-height;
+			padding: 0px 16px;
 			text-decoration: none;
 			color: rgba(0,0,0,0.87);
-		}
 
-		&.active {
+			&.active {
+				color: $primary;
+				border-bottom: 4px solid $primary;
 
-			color: $primary;
-			border-bottom: 4px solid $primary;
-
-			a, a:hover, a:visited {
-				color: $primary;	
+				&, &:hover, &:visited {
+					color: $primary;	
+				}
 			}
+
 		}
 
 

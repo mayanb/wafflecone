@@ -38,17 +38,18 @@ body {
   .navbar .nav li {
     display: inline-block;
     list-style-type: none;
-    padding: 0px 16px;
-    margin-right: 24px;
-    line-height: 50px; }
+    margin-right: 24px; }
     .navbar .nav li a, .navbar .nav li a:hover, .navbar .nav li a:visited {
+      display: block;
+      line-height: 50px;
+      padding: 0px 16px;
       text-decoration: none;
       color: rgba(0, 0, 0, 0.87); }
-    .navbar .nav li.active {
-      color: #49A8F3;
-      border-bottom: 4px solid #49A8F3; }
-      .navbar .nav li.active a, .navbar .nav li.active a:hover, .navbar .nav li.active a:visited {
-        color: #49A8F3; }
+      .navbar .nav li a.active, .navbar .nav li a:hover.active, .navbar .nav li a:visited.active {
+        color: #49A8F3;
+        border-bottom: 4px solid #49A8F3; }
+        .navbar .nav li a.active, .navbar .nav li a.active:hover, .navbar .nav li a.active:visited, .navbar .nav li a:hover.active, .navbar .nav li a:hover.active:hover, .navbar .nav li a:hover.active:visited, .navbar .nav li a:visited.active, .navbar .nav li a:visited.active:hover, .navbar .nav li a:visited.active:visited {
+          color: #49A8F3; }
 
 html, body, #root, .parent, .content-area {
   width: 100%;

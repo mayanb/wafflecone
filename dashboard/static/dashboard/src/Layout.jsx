@@ -1,5 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import {NavLink} from 'react-router-dom'
 
 const Navbar = (props) => (
   <div className="navbar">
@@ -10,9 +11,11 @@ const Navbar = (props) => (
 	  	<div className="nav center">
 	  		<ul>
 		    { props.options.map(function (x, i) {
-		    	return <li className={i==props.active-1?"active":""} key={i}> 
-		    		<a href={window.location.origin + "/dashboard/" + props.links[i]}>{x}</a> 
-		    	</li>
+		    	return (
+            <li key={i}> 
+              <NavLink exact to={ "/dashboard/" + props.links[i]} activeClassName="active">{x}</NavLink>
+            </li>
+          )
 		    })}
 		    </ul>
 	  	</div>

@@ -1,33 +1,23 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Navbar} from './Layout.jsx'
+import React from 'react'
+import ReactDOM from 'react-dom'
+import {getCookie, csrfSafeMethod} from './csrf.jsx'
+import {BrowserRouter as Router, Route} from 'react-router-dom'
+import $ from 'jquery'
+import moment from 'moment'
+
+import {Navbar} from './Layout.jsx'
 import Tasks from './Tasks.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
-import moment from 'moment'
-import $ from 'jquery'
-
-function SectionHeader(props) {
-  return (
-    <div className="section-header">
-      <i className="material-icons">{props.icon}</i>
-      <h1>{props.title}</h1>
-    </div>
-  );
-}
 
 class Main extends React.Component {
   constructor() {
     super();
-    this.refresh = this.refresh.bind(this)
-    this.state = {
-      active: -1,
-      filters: getFilters()
-    };
-
   }
 
   componentDidMount() {
+
+    // handle cross-site forgery request stuff
     let csrftoken = getCookie('csrftoken');
     $.ajaxSetup({
       beforeSend: function(xhr, settings) {
@@ -37,71 +27,50 @@ class Main extends React.Component {
       }
     })
 
-
-    var str = window.location.pathname
-    if (str.lastIndexOf("/") == str.length - 1) {
-      str = str.substr(0, str.length-1)
-    }
-
-    var pieces = str.split("/")
-    let piece = pieces[pieces.length - 1]
-    if (piece == "" || piece == "dashboard")
-      this.setState({active: 1})
-    else if (piece == "inventory")
-      this.setState({active: 2})
-    else if (piece == "labels")
-      this.setState({active: 3})
-    else if (piece == "settings")
-      this.setState({active: 4})
-
-    // also, check if there are pre-existing filters
-    window.addEventListener("popstate", this.refresh)
   }
 
-  refresh(e) {
-    this.setState({filters: e.state})
-  }
-
-  render() {
-    var obj = false
-
-    if (this.state.active == 1 || this.state.active == 2)
-      obj = <Tasks inventory={(this.state.active==2)} filters={this.state.filters} />
-
-    else if (this.state.active == 3) {
-      obj = <LabelPrinter />
-    }
-
-    else if (this.state.active == 4) {
-      obj = <FactoryMap />
-    }
-
+  render () {
     return (
-      <div className="parent">
-          <Navbar 
-            options={["Activity Log", "Inventory", "Labels", "Settings"]}
-            links={["", "inventory", "labels", "settings"]} 
-            active={this.state.active} 
-            onNav={ (x) => this.setState({active: x}) }
-          />
-          {obj}
-      </div>
-    );
-  }
 
-  handleNav(x) {
-    if (x > 1) {
-      return
-    }
-    this.setState({active: x})
-  }
+      <Router>
+        <div>
+        <Navbar 
+          options={["Activity Log", "Inventory", "Labels", "Settings"]}
+          links={["", "inventory", "labels", "settings"]} 
+        />
 
+          <Route exact path="/dashboard/a" component={ActivityLog} />
+          <Route path="/dashboard/inventory" component={Inventory} />
+          <Route path="/dashboard/labels" component={LabelPrinter} />
+          <Route path="/dashboard/settings" component={FactoryMap} />
+
+        </div>
+      </Router>
+    )
+  }
+}
+
+function ActivityLog(props) {
+  return (
+    <Tasks inventory={false} filters={getFilters()} />
+  )
+}
+
+function Inventory(props) {
+  return (
+    <Tasks inventory={true} filters={getFilters()} />
+  )
 }
 
 ReactDOM.render(
   <Main />,
   document.getElementById('root')
 );
+
+
+
+
+// QUERY STRING STUFF
 
 function QueryStringToJSON() {            
     var pairs = location.search.slice(1).split('&');
@@ -128,25 +97,4 @@ function getFilters() {
     return { active: 1, start: moment(new Date()).format("YYYY-MM-DD").toString(), end: moment(new Date()).format("YYYY-MM-DD").toString() }
   }
   return filters
-}
-
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = $.trim(cookies[i]);
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-function csrfSafeMethod(method) {
-    // these HTTP methods do not require CSRF protection
-    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
