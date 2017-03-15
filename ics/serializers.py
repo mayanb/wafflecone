@@ -38,7 +38,7 @@ class EditTaskSerializer(serializers.ModelSerializer):
 class BasicTaskSerializer(serializers.ModelSerializer):
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'created_by', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
+    fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
 
 class BasicItemSerializer(serializers.ModelSerializer):
   class Meta:
@@ -102,7 +102,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'created_by', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes', 'attribute_values')
+    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes', 'attribute_values')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):

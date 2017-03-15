@@ -10,12 +10,8 @@ class User(models.Model):
     def __str__(self):
         return self.name
 
-
-class Team(models.Model):
-    name = models.CharField(max_length=20)
-
 class ProcessType(models.Model):
-    #team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    #created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
@@ -55,7 +51,7 @@ class Task(models.Model):
     label = models.CharField(max_length=20, db_index=True)  
     label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
     custom_display = models.CharField(max_length=25, blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    #created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     is_open = models.BooleanField(default=True)
     is_trashed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
