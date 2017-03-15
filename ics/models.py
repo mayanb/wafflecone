@@ -11,7 +11,7 @@ class User(models.Model):
         return self.name
 
 class ProcessType(models.Model):
-    #created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
@@ -147,15 +147,17 @@ class Task(models.Model):
             self.custom_display, 
             self.label, 
             "-".join([self.label,str(self.label_index)]),
-            self.custom_display.split("-"),
-            self.label.split("-")
         ])
+
+        p2 = self.custom_display.split("-")
+
+        p3 = self.label.split("-")
 
         p4 = ""
         if self.pk is not None: 
             p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
 
-        self.keywords = " ".join([p1, p4])[:200]
+        self.keywords = " ".join([p1, p2, p3, p4])[:200]
 
 
     
