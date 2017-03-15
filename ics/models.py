@@ -72,7 +72,7 @@ class Task(models.Model):
         self.setLabelAndDisplay()
         self.refreshKeywords()
         super(Task, self).save(*args, **kwargs)
-        self.setExperimentalValues()
+        
 
     # def setExperimentalValues(self):
     #     """
