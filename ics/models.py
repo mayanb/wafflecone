@@ -149,9 +149,9 @@ class Task(models.Model):
             "-".join([self.label,str(self.label_index)]),
         ])
 
-        p2 = self.custom_display.split("-")
+        p2 = " ".join(self.custom_display.split("-"))
 
-        p3 = self.label.split("-")
+        p3 = " ".join(self.label.split("-"))
 
         p4 = ""
         if self.pk is not None: 
