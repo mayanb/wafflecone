@@ -264,3 +264,7 @@ class RecommendedInputs(models.Model):
     recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
 
 
+class Experiment(models.Model):
+    name = models.CharField(max_length=100, blank=True)
+    root_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    child_task = models.ForeignKey(Task, on_delete=models.CASCADE)
