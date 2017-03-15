@@ -72,6 +72,24 @@ class Task(models.Model):
         self.setLabelAndDisplay()
         self.refreshKeywords()
         super(Task, self).save(*args, **kwargs)
+        self.setExperimentalValues()
+
+    # def setExperimentalValues(self):
+    #     """
+    #     Calculates whether any child task's experimental values need to be updated
+    #     ----
+    #     task.setLabelAndDisplay()
+    #     task.save()
+    #     """
+    #     if self.pk is None:
+    #         return
+    #     if self.experiment is None:
+    #         return
+
+    #     descendents = 
+
+
+
 
     def setLabelAndDisplay(self):
         """
@@ -138,21 +156,6 @@ class Task(models.Model):
             p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
 
         self.keywords = " ".join([p1, p4])[:200]
-
-
-    def isExperimental_helper(self, all_ancestors, curr_level_tasks, depth):
-        new_level_tasks = set()
-
-        parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
-
-        for t in parent_tasks:
-            if t.id not in all_ancestors:
-                new_level_tasks.add(t)
-                all_ancestors.add(t.id)
-
-        if len(new_level_tasks) > 0:
-            self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
-
 
 
     
@@ -264,7 +267,7 @@ class RecommendedInputs(models.Model):
     recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
 
 
-class Experiment(models.Model):
-    name = models.CharField(max_length=100, blank=True)
-    root_task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    child_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+# class Experiment(models.Model):
+#     name = models.CharField(max_length=100, blank=True)
+#     root_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+#     child_task = models.ForeignKey(Task, on_delete=models.CASCADE)
