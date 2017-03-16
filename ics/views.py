@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.db.models import Q
 from ics.models import *
+from django.contrib.auth.models import User
 from ics.serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
@@ -11,6 +12,10 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
 import datetime
+
+class UserList(generics.ListAPIView):
+  queryset = User.objects.all()
+  serializer_class = UserSerializer
 
 
 class TaskFilter(django_filters.rest_framework.FilterSet):

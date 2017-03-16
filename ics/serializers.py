@@ -1,15 +1,11 @@
 from rest_framework import serializers
 from ics.models import *
+from django.contrib.auth.models import User
 
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = Attribute
     fields = ('id', 'process_type', 'name')
-
-class UserSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = User
-    fields = ('id', 'name')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
@@ -21,6 +17,13 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
     model = ProcessType
     fields = ('id','x','y')
+
+class UserSerializer(serializers.ModelSerializer):
+  processes = ProcessTypeSerializer(many=True, read_only=True)
+  #products = serializers.PrimaryKeyRelatedField(many=True, queryset=ProductType.objects.all())
+  class Meta:
+    model = User
+    fields = ('id', 'username', 'processes')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):

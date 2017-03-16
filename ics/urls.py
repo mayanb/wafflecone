@@ -3,6 +3,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 
 urlpatterns = [
+    url(r'^users/$', views.UserList.as_view()),
+
     url(r'^$', views.index, name='index'),
     # url(r'^tasks/create/$', views.CreateTask.as_view()),
     url(r'^inputs/create/$', views.CreateInput.as_view()),
