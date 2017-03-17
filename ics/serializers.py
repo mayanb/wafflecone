@@ -18,18 +18,18 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
     model = ProcessType
     fields = ('id','x','y')
 
-class UserSerializer(serializers.ModelSerializer):
-  processes = ProcessTypeSerializer(many=True, read_only=True)
-  #products = serializers.PrimaryKeyRelatedField(many=True, queryset=ProductType.objects.all())
-  class Meta:
-    model = User
-    fields = ('id', 'username', 'processes')
-
 
 class ProductTypeSerializer(serializers.ModelSerializer):
   class Meta:
     model = ProductType
     fields = ('id', 'name', 'code')
+
+class UserSerializer(serializers.ModelSerializer):
+  processes = ProcessTypeSerializer(many=True, read_only=True)
+  products = ProductTypeSerializer(many=True, read_only=True)
+  class Meta:
+    model = User
+    fields = ('id', 'username', 'processes', 'products')
 
 # serializes only post-editable fields of task
 class EditTaskSerializer(serializers.ModelSerializer):

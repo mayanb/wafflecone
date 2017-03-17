@@ -22,7 +22,7 @@ class TaskFilter(django_filters.rest_framework.FilterSet):
     created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
     class Meta:
         model = Task
-        fields = ['created_at', 'is_open',]
+        fields = ['created_at', 'is_open']
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
@@ -44,6 +44,10 @@ class TaskList(generics.ListAPIView):
 
   def get_queryset(self):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
+
+        team = self.request.query_params.get('team', None)
+        if team is not None:
+          queryset = Task.objects.filter(process_type__created_by=team)
 
         label = self.request.query_params.get('label', None)
         dashboard = self.request.query_params.get('dashboard', None)
