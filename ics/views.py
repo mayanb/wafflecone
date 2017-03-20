@@ -19,10 +19,10 @@ class UserList(generics.ListAPIView):
 
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
-    created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
-    class Meta:
-        model = Task
-        fields = ['created_at', 'is_open']
+  created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
+  class Meta:
+      model = Task
+      fields = ['created_at', 'is_open']
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
@@ -95,7 +95,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.filter(is_trashed=False)
+  queryset = Task.objects.all()
   serializer_class = NestedTaskSerializer
 
 
