@@ -47,14 +47,14 @@ class TaskList(generics.ListAPIView):
 
         team = self.request.query_params.get('team', None)
         if team is not None:
-          queryset = Task.objects.filter(process_type__created_by=team)
+          queryset = queryset.filter(process_type__created_by=team)
 
         label = self.request.query_params.get('label', None)
         dashboard = self.request.query_params.get('dashboard', None)
         if label is not None and dashboard is not None:
-          queryset = Task.objects.filter(Q(keywords__icontains=label))
+          queryset = queryset.filter(Q(keywords__icontains=label))
         elif label is not None:
-          queryset = Task.objects.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+          queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
         parent = self.request.query_params.get('parent', None)
         if parent is not None:
@@ -95,7 +95,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.all()
+  queryset = Task.objects.filter(is_trashed=True)
   serializer_class = NestedTaskSerializer
 
 
