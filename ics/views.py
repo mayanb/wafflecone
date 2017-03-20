@@ -14,7 +14,7 @@ from paginations import *
 import datetime
 
 class UserList(generics.ListAPIView):
-  queryset = User.objects.filter(is_staff=False)
+  queryset = User.objects.all()
   serializer_class = UserSerializer
 
 
