@@ -29,14 +29,26 @@ function print(numLabels, text, success, always) {
 
 function printQRs(uuids, qrcode) {
   try {
+
+    // get a printer 
+    let printer = getPrinter()
+
+    // clear the current qr code
     qrcode.clear()
+
+    // get the label printing xml
     var label = dymo.label.framework.openLabelXml(getXML())
     var labelSetBuilder = new dymo.label.framework.LabelSetBuilder()
 
+    // convert the svg to an image url
     var DOMURL = self.URL || self.webkitURL || self;
     var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
     var svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
     var url = DOMURL.createObjectURL(svg);
+
+    // create an image and set the URL to the svg image. Then when it's loaded,
+    // convert the svg to canvas, and then attach it to the label record
+    // And then attach the qr code.
     var img = new Image();
     img.onload = function() {
       var canvas = document.getElementById('canvastest').querySelector('canvas')
@@ -50,15 +62,19 @@ function printQRs(uuids, qrcode) {
         record.setText('qrImage', qrImage)
         record.setText('backingImage', backingImage)
       })
-      label.print(getPrinter(), "", labelSetBuilder)
+
+      // print the qr code
+      label.print(printer, "", labelSetBuilder)
       qrcode.clear()
     }
+
     img.src = url;
   }  catch(e) {
     alert(e.message || e)
   }
 }
 
+// the backing image is all the text
 function createBackingImage(ctx, svg, uuid) {
   // clear canvas
   ctx.fillStyle = '#fff';
@@ -87,19 +103,23 @@ function getPrinter() {
   // select printer to print on
   // for simplicity sake just use the first LabelWriter printer
   var printers = dymo.label.framework.getPrinters();
+  console.log(printers)
   if (!printers || printers.length == 0)
-    throw "No DYMO printers are installed. Install DYMO printers.";
+    throw "No DYMO printers are installed. Install DYMO printers."
 
-  var printerName = "";
-  for (var i = 0; i < printers.length; ++i) {
-    var printer = printers[i];
-    if (printer.printerType == "LabelWriterPrinter") {
-      printerName = printer.name;
+  var i = -1;
+  for (var j = 0; j < printers.length; ++j) {
+    var printer = printers[j];
+    if (printer.printerType == "LabelWriterPrinter" && printer.isConnected) {
+      i = j
       break;
     }
   }
 
-  return printerName
+  if (i == -1) 
+    throw "No DYMO printers are connected."
+
+  return printers[i].name
 
 }
 

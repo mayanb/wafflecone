@@ -64235,36 +64235,65 @@
 
 	function printQRs(uuids, qrcode) {
 	  try {
-	    qrcode.clear();
-	    var label = dymo.label.framework.openLabelXml(getXML());
-	    var labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
+	    var label;
+	    var labelSetBuilder;
+	    var DOMURL;
+	    var svgString;
+	    var svg;
+	    var url;
+	    var img;
 
-	    var DOMURL = self.URL || self.webkitURL || self;
-	    var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
-	    var svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-	    var url = DOMURL.createObjectURL(svg);
-	    var img = new Image();
-	    img.onload = function () {
-	      var canvas = document.getElementById('canvastest').querySelector('canvas');
-	      var ctx = canvas.getContext('2d');
+	    (function () {
 
-	      uuids.map(function (uuid) {
-	        createBackingImage(ctx, img, uuid);
-	        var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
-	        var qrImage = getQRimage(qrcode, uuid);
-	        var record = labelSetBuilder.addRecord();
-	        record.setText('qrImage', qrImage);
-	        record.setText('backingImage', backingImage);
-	      });
-	      label.print(getPrinter(), "", labelSetBuilder);
+	      // get a printer 
+	      var printer = getPrinter();
+
+	      // clear the current qr code
 	      qrcode.clear();
-	    };
-	    img.src = url;
+
+	      // get the label printing xml
+	      label = dymo.label.framework.openLabelXml(getXML());
+	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
+
+	      // convert the svg to an image url
+
+	      DOMURL = self.URL || self.webkitURL || self;
+	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+	      url = DOMURL.createObjectURL(svg);
+
+	      // create an image and set the URL to the svg image. Then when it's loaded,
+	      // convert the svg to canvas, and then attach it to the label record
+	      // And then attach the qr code.
+
+	      img = new Image();
+
+	      img.onload = function () {
+	        var canvas = document.getElementById('canvastest').querySelector('canvas');
+	        var ctx = canvas.getContext('2d');
+
+	        uuids.map(function (uuid) {
+	          createBackingImage(ctx, img, uuid);
+	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
+	          var qrImage = getQRimage(qrcode, uuid);
+	          var record = labelSetBuilder.addRecord();
+	          record.setText('qrImage', qrImage);
+	          record.setText('backingImage', backingImage);
+	        });
+
+	        // print the qr code
+	        label.print(printer, "", labelSetBuilder);
+	        qrcode.clear();
+	      };
+
+	      img.src = url;
+	    })();
 	  } catch (e) {
 	    alert(e.message || e);
 	  }
 	}
 
+	// the backing image is all the text
 	function createBackingImage(ctx, svg, uuid) {
 	  // clear canvas
 	  ctx.fillStyle = '#fff';
@@ -64293,18 +64322,21 @@
 	  // select printer to print on
 	  // for simplicity sake just use the first LabelWriter printer
 	  var printers = dymo.label.framework.getPrinters();
+	  console.log(printers);
 	  if (!printers || printers.length == 0) throw "No DYMO printers are installed. Install DYMO printers.";
 
-	  var printerName = "";
-	  for (var i = 0; i < printers.length; ++i) {
-	    var printer = printers[i];
-	    if (printer.printerType == "LabelWriterPrinter") {
-	      printerName = printer.name;
+	  var i = -1;
+	  for (var j = 0; j < printers.length; ++j) {
+	    var printer = printers[j];
+	    if (printer.printerType == "LabelWriterPrinter" && printer.isConnected) {
+	      i = j;
 	      break;
 	    }
 	  }
 
-	  return printerName;
+	  if (i == -1) throw "No DYMO printers are connected.";
+
+	  return printers[i].name;
 	}
 
 	/* function : getXML
