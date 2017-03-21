@@ -65,7 +65,14 @@ export default class LabelPrinter extends React.Component {
   }
 
   componentDidMount() {
-    let q = new QRCode(document.getElementById("qrtest"), "")
+    let q = new QRCode(document.getElementById("qrtest"), {
+      text: "",
+      width: 128,
+      height: 128,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.Q
+    })
     this.setState({qrcode : q})
   }
 

@@ -63875,7 +63875,14 @@
 	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
-	      var q = new QRCode(document.getElementById("qrtest"), "");
+	      var q = new QRCode(document.getElementById("qrtest"), {
+	        text: "",
+	        width: 128,
+	        height: 128,
+	        colorDark: "#000000",
+	        colorLight: "#ffffff",
+	        correctLevel: QRCode.CorrectLevel.Q
+	      });
 	      this.setState({ qrcode: q });
 	    }
 	  }, {
