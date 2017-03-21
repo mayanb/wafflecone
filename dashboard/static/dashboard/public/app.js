@@ -60306,7 +60306,7 @@
 	      var stateAttributes = {};
 	      console.log(task);
 	      if (task) {
-	        task.attributes.map(function (attr, i) {
+	        task.process_type.attributes.map(function (attr, i) {
 	          stateAttributes[attr.id] = getAttribute(task, attr.id);
 	        });
 	      }
