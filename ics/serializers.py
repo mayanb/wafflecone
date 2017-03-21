@@ -81,31 +81,23 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 # serializes all fields of the task, with nested items, inputs, and attributes
 class NestedTaskSerializer(serializers.ModelSerializer):
-  items = serializers.SerializerMethodField('getItems')
-  inputs = BasicInputSerializer(source='getInputs', read_only=True, many=True)
+  items = BasicItemSerializer(many=True, read_only=True)
+  inputs = BasicInputSerializer(many=True, read_only=True)
   inputUnit = serializers.SerializerMethodField('getInputUnit')
-  attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
-  attribute_values = BasicTaskAttributeSerializer(source='getTaskAttributes', read_only=True, many=True)
+  attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
   product_type = ProductTypeSerializer(many=False, read_only=True)
   process_type = ProcessTypeSerializer(many=False, read_only=True)
 
   def getInputUnit(self, task):
-    input = task.input_set.first()
+    input = task.inputs.first()
     if input is not None:
       return input.task.process_type.unit
     else: 
       return ''
 
-  def getItems(self, task):
-     if self.context.get('inventory', None) is not None:
-      return BasicItemSerializer(task.item_set.all().filter(input__isnull=True), many=True).data
-     else:
-      return BasicItemSerializer(task.item_set.all(), many=True).data
-      
-
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attributes', 'attribute_values')
+    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attribute_values')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):

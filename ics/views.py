@@ -66,7 +66,7 @@ class TaskList(generics.ListAPIView):
 
         inv = self.request.query_params.get('inventory', None)
         if inv is not None:
-          queryset = queryset.filter(item__isnull=False, item__input__isnull=True).distinct()
+          queryset = queryset.filter(items__isnull=False, items__input__isnull=True).distinct()
 
         processes = self.request.query_params.get('processes', None)
         if processes is not None:

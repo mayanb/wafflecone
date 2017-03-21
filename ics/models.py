@@ -68,24 +68,6 @@ class Task(models.Model):
         self.setLabelAndDisplay()
         self.refreshKeywords()
         super(Task, self).save(*args, **kwargs)
-        
-
-    # def setExperimentalValues(self):
-    #     """
-    #     Calculates whether any child task's experimental values need to be updated
-    #     ----
-    #     task.setLabelAndDisplay()
-    #     task.save()
-    #     """
-    #     if self.pk is None:
-    #         return
-    #     if self.experiment is None:
-    #         return
-
-    #     descendents = 
-
-
-
 
     def setLabelAndDisplay(self):
         """
@@ -120,9 +102,6 @@ class Task(models.Model):
 
     def getInputs(self):
         return self.input_set.all()
-
-    def getAllAttributes(self):
-        return Attribute.objects.all().filter(process_type=self.process_type)
 
     def getTaskAttributes(self):
         return self.taskattribute_set.all()
@@ -242,7 +221,7 @@ class Task(models.Model):
 
 class Item(models.Model):
     item_qr = models.CharField(max_length=100, unique=True)
-    creating_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -250,12 +229,12 @@ class Item(models.Model):
 
 class Input(models.Model):
     input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 
 
 class TaskAttribute(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attribute_values")
     value = models.CharField(max_length=50, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -49,7 +49,7 @@ function Table(props) {
             { props.tasks.map(function(task, i) {
               return (<TaskRow 
                 onClick={() => props.onTaskClick(task)} 
-                task={task} 
+                task={task}
                 attributes={props.process.attributes} 
                 key={task.id} 
                 inventory={props.inventory} 

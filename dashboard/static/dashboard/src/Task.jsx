@@ -6,7 +6,7 @@ function display(task) {
 
 function getNotes(task) {
   var notesID = 0
-  for (var attribute of task.attributes) {
+  for (var attribute of task.process_type.attributes) {
     if(attribute.name.toLowerCase().trim() === "notes") {
       notesID = attribute.id
       break;
@@ -23,7 +23,7 @@ function getNotes(task) {
 
 function getOperator(task) {
   var notesID = 0
-  for (var attribute of task.attributes) {
+  for (var attribute of task.process_type.attributes) {
     if(attribute.name.toLowerCase().trim() === "operator") {
       notesID = attribute.id
       break;
