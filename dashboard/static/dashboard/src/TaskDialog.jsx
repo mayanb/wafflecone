@@ -239,7 +239,7 @@ class Details extends React.Component {
           onCancel = {this.handleCustomNameCancel}
         />
         {
-          props.task.attributes.map(function (attr, i) {
+          props.task.process_type.attributes.map(function (attr, i) {
             var val = this.state.attributes[attr.id]
             return (
               <Attribute 
