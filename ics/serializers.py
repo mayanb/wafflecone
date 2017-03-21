@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = Attribute
-    fields = ('id', 'process_type', 'name')
+    fields = ('id', 'process_type', 'name', 'rank')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
