@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'ics',
     'qr',
     'dashboard',
+    'hello',
 )
 
 MIDDLEWARE_CLASSES = (
