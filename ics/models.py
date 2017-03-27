@@ -208,7 +208,7 @@ class Task(models.Model):
 
         # get all tasks where any of its items were used as inputs into a task 
         # that is in curr_level_tasks
-        parent_tasks = Task.objects.filter(item__input__task__in=curr_level_tasks)
+        parent_tasks = Task.objects.filter(items__input__task__in=curr_level_tasks)
 
         for t in parent_tasks:
             if t.id not in all_ancestors:
@@ -242,6 +242,13 @@ class TaskAttribute(models.Model):
 class RecommendedInputs(models.Model):
     process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
     recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
+
+
+# class LocationHistory(models.Model):
+#     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="location_history")
+#     in_transit = models.BooleanField(default=False)
+#     team = models.ForeignKey(User, on_delete=models.CASCADE)
+#     timestamp = models.DateTimeField(auto_now_add=True)
 
 
 # class Experiment(models.Model):
