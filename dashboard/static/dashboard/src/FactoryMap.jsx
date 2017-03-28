@@ -145,7 +145,7 @@ export default class FactoryMap extends React.Component {
 
   getProcesses(container) {
     var deferred = $.Deferred();
-    var req = {created_by: window.localStorage.getItem("team")}
+    var req = {created_by: (window.localStorage.getItem("team") || "1"}
     if (!req.created_by) {
       alert("No teams loaded:(((")
     }
@@ -164,7 +164,7 @@ export default class FactoryMap extends React.Component {
 
   getConnections(container) {
     var deferred = $.Deferred();
-    var req = {created_by: window.localStorage.getItem("team")}
+    var req = {created_by: window.localStorage.getItem("team") || "1"}
     if (!req.created_by) {
       alert("No teams loaded:(((")
     }
