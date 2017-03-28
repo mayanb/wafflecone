@@ -39,7 +39,7 @@ class Main extends React.Component {
           links={["", "inventory", "labels", "settings"]} 
         />
 
-          <Route exact path={"/dashboard/"}component={ActivityLog} />
+          <Route exact path={"/dashboard/"} component={ActivityLog} />
           <Route path={"/dashboard/inventory/"} component={Inventory} />
           <Route path={"/dashboard/labels/"} component={LabelPrinter} />
           <Route path={"/dashboard/settings/"} component={FactoryMap} />

@@ -11,7 +11,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:

@@ -1,30 +1,61 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import {NavLink} from 'react-router-dom'
+import {Dropdown} from 'react-toolbox/lib/dropdown'
 
-const Navbar = (props) => (
-  <div className="navbar">
-  	<div className="content-area">
-  		<div className="left">
+var teams = [
+    { value: '1', label: 'Production'},
+    { value: '5', label: 'Valencia' },
+];
+
+class Navbar extends React.Component {
+
+  constructor(props) {
+    super(props)
+    this.state = { team: this.getTeam() }
+  }
+
+  getTeam() {
+    return window.localStorage.getItem("team") || "1"
+  }
+
+  handleTeamChange(nt) {
+    this.setState({team : nt})
+    window.localStorage.setItem("team", nt)
+    window.location.reload()
+  }
+
+  render() {
+    return (
+    <div className="navbar">
+    	<div className="content-area">
+  	 	 <div className="left">
 	  		<h1>Scoop</h1>
-	  	</div>
-	  	<div className="nav center">
+	  	  </div>
+	  	  <div className="nav center">
 	  		<ul>
-		    { props.options.map(function (x, i) {
-		    	return (
-            <li key={i}> 
-              <NavLink exact to={ "/dashboard/" + props.links[i]} activeClassName="active">{x}</NavLink>
-            </li>
-          )
-		    })}
+		      { 
+            this.props.options.map(function (x, i) {
+		    	    return (
+                <li key={i}> 
+                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName="active">{x}</NavLink>
+              </li>
+            )
+		      }, this )}
 		    </ul>
 	  	</div>
   		<div className="right">
-  			<p>Production</p>
+  			<Dropdown
+          source={teams}
+          onChange={(val) => this.handleTeamChange(val)}
+          value={this.state.team}
+        />
 	    </div>
 	</div>
   </div>
-)
+  )
+}
+}
 
 const ContentDescriptor = (props) => (
 	<div className="content-descriptor">

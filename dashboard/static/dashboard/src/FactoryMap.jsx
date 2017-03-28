@@ -145,7 +145,12 @@ export default class FactoryMap extends React.Component {
 
   getProcesses(container) {
     var deferred = $.Deferred();
-    $.get(window.location.origin + "/ics/processes/")
+    var req = {created_by: window.localStorage.getItem("team")}
+    if (!req.created_by) {
+      alert("No teams loaded:(((")
+    }
+
+    $.get(window.location.origin + "/ics/processes/", req)
       .done(function (data) {
         var processes = {}
         data.map(function (p, i) {
@@ -159,8 +164,14 @@ export default class FactoryMap extends React.Component {
 
   getConnections(container) {
     var deferred = $.Deferred();
-    $.get(window.location.origin + "/ics/recommendedInputs")
+    var req = {created_by: window.localStorage.getItem("team")}
+    if (!req.created_by) {
+      alert("No teams loaded:(((")
+    }
+
+    $.get(window.location.origin + "/ics/recommendedInputs/", req)
       .done(function (data) {
+        console.log(data)
         var connections = {}
         data.map(function (c, i) {
           connections[c.id] = c 

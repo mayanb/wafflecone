@@ -129,13 +129,12 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Input.objects.all()
   serializer_class = NestedInputSerializer
   filter_fields = ('task',)
-
-
   
 
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeSerializer
+  filter_fields = ('created_by',)
 
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
@@ -191,8 +190,14 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = NestedTaskAttributeSerializer
 
 class RecommendedInputsList(generics.ListCreateAPIView):
-  queryset = RecommendedInputs.objects.all()
+  #queryset = RecommendedInputs.objects.all()
   serializer_class = RecommendedInputsSerializer
+
+  def get_queryset(self):
+    team = self.request.query_params.get('created_by', None)
+    if team is not None:
+      return RecommendedInputs.objects.filter(process_type__created_by=team).filter(recommended_input__created_by=team)
+    return RecommendedInputs.objects.all()
 
 class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = RecommendedInputs.objects.all()
