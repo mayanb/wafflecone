@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from datetime import datetime  
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your models here.
 
@@ -226,6 +227,33 @@ class Item(models.Model):
 
     def __str__(self):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
+    
+
+    def getInventory(self):
+        """
+        Returns the inventory this item is currently in; if this item no longer exists
+        in real life OR the item has been delivered but not received into any inventory,
+        the function returns None.
+        ----
+        containing_inventory = item.getInventory()
+        """
+        # if it's been used, it definitely is in no inventory
+        if self.input_set.all().exists():
+            return None
+
+        # see if it's been moved to a different inventory
+        try:
+            last_movementItem = self.movementitem_set.latest('movement__timestamp').select_related()
+            last_movement = last_movementItem.movement
+            if last_movement.status == Movement.RECEIVED:
+                return last_movement.team
+            return None
+
+        # no, then return the creating inventory
+        except ObjectDoesNotExist:
+            print("no movement")
+            return self.creating_task.process_type.created_by
+
 
 class Input(models.Model):
     input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
@@ -243,15 +271,18 @@ class RecommendedInputs(models.Model):
     process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
     recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
 
+class Movement(models.Model):
+    IN_TRANSIT = "IT"
+    RECEIVED = "RC"
+    STATUS_CHOICES = ((IN_TRANSIT, "in_transit"), (RECEIVED, "received"))
 
-# class LocationHistory(models.Model):
-#     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="location_history")
-#     in_transit = models.BooleanField(default=False)
-#     team = models.ForeignKey(User, on_delete=models.CASCADE)
-#     timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=IN_TRANSIT)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    intended_destination = models.CharField(max_length=50, blank=True)
+    deliverable = models.BooleanField(default=False)
+    group_qr = models.CharField(max_length=50, blank=True)
+    team = models.ForeignKey(User, related_name="movements", on_delete=models.CASCADE)
 
-
-# class Experiment(models.Model):
-#     name = models.CharField(max_length=100, blank=True)
-#     root_task = models.ForeignKey(Task, on_delete=models.CASCADE)
-#     child_task = models.ForeignKey(Task, on_delete=models.CASCADE)
+class MovementItem(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    movement = models.ForeignKey(Movement, on_delete=models.CASCADE, related_name="items")

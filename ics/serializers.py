@@ -50,10 +50,11 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
 class NestedItemSerializer(serializers.ModelSerializer):
   creating_task = BasicTaskSerializer(many=False, read_only=True)
+  inventory = serializers.CharField(source='getInventory')
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory')
 
 class BasicInputSerializer(serializers.ModelSerializer):
   class Meta:
@@ -104,3 +105,34 @@ class RecommendedInputsSerializer(serializers.ModelSerializer):
   class Meta:
     model = RecommendedInputs
     fields = ('id', 'process_type', 'recommended_input')
+
+class MovementItemSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = MovementItem
+    fields = ('id', 'item')
+
+class NestedMovementItemSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = MovementItem
+    fields = ('id', 'item')
+    depth = 1
+
+class MovementListSerializer(serializers.ModelSerializer):
+  items = NestedMovementItemSerializer(many=True, read_only=True)
+  class Meta:
+    model = Movement
+    fields = ('id', 'items', 'team', 'status')
+
+class MovementCreateSerializer(serializers.ModelSerializer):
+  items = MovementItemSerializer(many=True, read_only=False)
+
+  class Meta:
+    model = Movement
+    fields = ('id', 'status', 'intended_destination', 'deliverable', 'group_qr', 'team', 'items')
+
+  def create(self, validated_data):
+    items_data = validated_data.pop('items')
+    movement = Movement.objects.create(**validated_data)
+    for item in items_data:
+      MovementItem.objects.create(movement=movement, **item)
+    return movement

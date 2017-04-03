@@ -169,10 +169,6 @@ class AttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = AttributeSerializer
   filter_fields = ('process_type',)
 
-
-
-
-
 class TaskAttributeFilter(django_filters.rest_framework.FilterSet):
     attribute = django_filters.CharFilter(name="attribute__name")
 
@@ -205,3 +201,11 @@ class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
 
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
+
+class MovementCreate(generics.CreateAPIView):
+  queryset = Movement.objects.all()
+  serializer_class=MovementCreateSerializer
+
+class MovementList(generics.ListAPIView):
+  queryset = Movement.objects.all()
+  serializer_class=MovementListSerializer
