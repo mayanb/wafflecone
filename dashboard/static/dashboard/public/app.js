@@ -78,9 +78,13 @@
 
 	var _FactoryMap2 = _interopRequireDefault(_FactoryMap);
 
-	var _LabelPrinter = __webpack_require__(413);
+	var _LabelPrinter = __webpack_require__(414);
 
 	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
+
+	var _Inventory = __webpack_require__(417);
+
+	var _Inventory2 = _interopRequireDefault(_Inventory);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -96,7 +100,10 @@
 	  function Main() {
 	    _classCallCheck(this, Main);
 
-	    return _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
+	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
+
+	    _this.state = { selectedInventory: 2 };
+	    return _this;
 	  }
 
 	  _createClass(Main, [{
@@ -121,15 +128,26 @@
 	        null,
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'parent' },
-	          _react2.default.createElement(_Layout.Navbar, {
-	            options: ["Activity Log", "Inventory", "Labels", "Settings"],
-	            links: ["", "inventory", "labels", "settings"]
-	          }),
-	          _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/", component: Inventory }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
+	          null,
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'parent' },
+	            _react2.default.createElement(
+	              'main',
+	              { className: 'd-content' },
+	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/", component: Invent }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
+	            ),
+	            _react2.default.createElement(_Layout.Navbar, {
+	              className: 'd-nav',
+	              options: ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"],
+	              links: ["dsda", "", "inventory", "labels", "settings"],
+	              shrink: this.state.selectedInventory
+	            }),
+	            _react2.default.createElement('aside', { className: 'd-ads' })
+	          )
 	        )
 	      );
 	    }
@@ -142,11 +160,9 @@
 	  return _react2.default.createElement(_Tasks2.default, { inventory: false, filters: getFilters() });
 	}
 
-	function Inventory(props) {
-	  return _react2.default.createElement(_Tasks2.default, { inventory: true, filters: getFilters() });
+	function Invent(props) {
+	  return _react2.default.createElement(_Inventory2.default, { inventory: true, filters: getFilters() });
 	}
-
-	_reactDom2.default.render(_react2.default.createElement(Main, null), document.getElementById('root'));
 
 	// QUERY STRING STUFF
 
@@ -176,6 +192,8 @@
 	  }
 	  return filters;
 	}
+
+	_reactDom2.default.render(_react2.default.createElement(Main, null), document.getElementById('root'));
 
 /***/ },
 /* 1 */
@@ -50100,50 +50118,43 @@
 	    value: function render() {
 	      var _this2 = this;
 
+	      var selectedInventory = this.props.selectedInventory;
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'navbar' },
+	        { className: "d-nav " + (selectedInventory != -1 ? "shrink" : "") },
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'content-area' },
+	          { className: 'nav-brand' },
+	          'SCOOP'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'nav-team' },
+	          _react2.default.createElement(_dropdown.Dropdown, {
+	            source: teams,
+	            onChange: function onChange(val) {
+	              return _this2.handleTeamChange(val);
+	            },
+	            value: this.state.team
+	          })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          null,
 	          _react2.default.createElement(
-	            'div',
-	            { className: 'left' },
-	            _react2.default.createElement(
-	              'h1',
-	              null,
-	              'Scoop'
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'nav center' },
-	            _react2.default.createElement(
-	              'ul',
-	              null,
-	              this.props.options.map(function (x, i) {
-	                return _react2.default.createElement(
-	                  'li',
-	                  { key: i },
-	                  _react2.default.createElement(
-	                    _reactRouterDom.NavLink,
-	                    { exact: true, to: "/dashboard/" + this.props.links[i], activeClassName: 'active' },
-	                    x
-	                  )
-	                );
-	              }, this)
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'right' },
-	            _react2.default.createElement(_dropdown.Dropdown, {
-	              source: teams,
-	              onChange: function onChange(val) {
-	                return _this2.handleTeamChange(val);
-	              },
-	              value: this.state.team
-	            })
+	            'ul',
+	            null,
+	            this.props.options.map(function (x, i) {
+	              return _react2.default.createElement(
+	                'li',
+	                { key: i },
+	                _react2.default.createElement(
+	                  _reactRouterDom.NavLink,
+	                  { exact: true, to: "/dashboard/" + this.props.links[i], activeClassName: selectedInventory != -1 ? "" : "active" },
+	                  x
+	                )
+	              );
+	            }, this)
 	          )
 	        )
 	      );
@@ -53206,7 +53217,7 @@
 	      if (this.props.dates) {
 	        obj = _react2.default.createElement(
 	          'div',
-	          { style: { marginLeft: "8px", flex: "1 auto" } },
+	          null,
 	          _react2.default.createElement(_Datepicker2.default, { initialDates: this.props.initialDates, onChange: this.handleDateRangeChange })
 	        );
 	      }
@@ -53229,23 +53240,19 @@
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: "flex", flexdirection: "row" } },
-	              _react2.default.createElement(
-	                'div',
-	                { style: { marginRight: "8px", flex: "1 auto" } },
-	                _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                    return _this4.handleChange("processes", val);
-	                  } })
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { style: { flex: "1 auto" } },
-	                _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
-	                    return _this4.handleChange("products", val);
-	                  } })
-	              ),
-	              obj
-	            )
+	              null,
+	              _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	                  return _this4.handleChange("processes", val);
+	                } })
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              null,
+	              _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
+	                  return _this4.handleChange("products", val);
+	                } })
+	            ),
+	            obj
 	          )
 	        )
 	      );
@@ -62507,7 +62514,7 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _reactDraggable = __webpack_require__(416);
+	var _reactDraggable = __webpack_require__(413);
 
 	var _reactDraggable2 = _interopRequireDefault(_reactDraggable);
 
@@ -62988,679 +62995,6 @@
 
 /***/ },
 /* 413 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _reactSelect = __webpack_require__(352);
-
-	var _reactSelect2 = _interopRequireDefault(_reactSelect);
-
-	var _Task = __webpack_require__(349);
-
-	var _immutabilityHelper = __webpack_require__(377);
-
-	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-	var _qr = __webpack_require__(414);
-
-	var _Label = __webpack_require__(415);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var getOptions = function getOptions(input, callback) {
-	  if (input.length < 2) {
-	    callback(null, { optionss: [] });
-	  } else {
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
-	      var options = data.map(function (x) {
-	        return { value: x.id, label: (0, _Task.display)(x), data: x };
-	      });
-	      callback(null, { options: options, complete: false });
-	    });
-	  }
-	};
-
-	var TaskSelect = function (_React$Component) {
-	  _inherits(TaskSelect, _React$Component);
-
-	  function TaskSelect() {
-	    _classCallCheck(this, TaskSelect);
-
-	    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
-	  }
-
-	  _createClass(TaskSelect, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'multiselect' },
-	        _react2.default.createElement(_reactSelect2.default.Async, {
-	          name: 'form-field-name',
-	          value: this.props.value,
-	          optionRenderer: function optionRenderer(option, i) {
-	            return (0, _Task.display)(option.data);
-	          },
-	          loadOptions: getOptions,
-	          onChange: this.props.onChange,
-	          placeholder: this.props.placeholder
-	        })
-	      );
-	    }
-	  }]);
-
-	  return TaskSelect;
-	}(_react2.default.Component);
-
-	var LabelPrinter = function (_React$Component2) {
-	  _inherits(LabelPrinter, _React$Component2);
-
-	  function LabelPrinter(props) {
-	    _classCallCheck(this, LabelPrinter);
-
-	    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
-
-	    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
-	    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
-	    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
-	    _this2.handleChange = _this2.handleChange.bind(_this2);
-	    _this2.handlePrint = _this2.handlePrint.bind(_this2);
-	    _this2.state = {
-	      expanded: false,
-	      numberLabels: "",
-	      notes: "",
-	      task: "",
-	      qrValue: "",
-	      items: [],
-	      selectedItem: ""
-	    };
-	    return _this2;
-	  }
-
-	  _createClass(LabelPrinter, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      (0, _qr.mountQR)();
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      var q = new QRCode(document.getElementById("qrtest"), {
-	        text: "",
-	        width: 128,
-	        height: 128,
-	        colorDark: "#000000",
-	        colorLight: "#ffffff",
-	        correctLevel: QRCode.CorrectLevel.Q
-	      });
-	      this.setState({ qrcode: q });
-	    }
-	  }, {
-	    key: 'handlePrint',
-	    value: function handlePrint() {
-	      var numLabels = parseInt(this.state.numberLabels) || -1;
-
-	      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
-	        alert("Please enter a valid number between 0 and 100!");
-	        return;
-	      }
-
-	      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
-	        alert("Please print labels for a valid task.");
-	        return;
-	      }
-
-	      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
-	        alert("Please choose a valid specific item to reprint.");
-	        return;
-	      }
-
-	      this.setState({ disabled: true });
-
-	      if (this.state.expanded) {
-	        var uuid = this.state.selectedItem.data.item_qr;
-	        (0, _qr.printQRs)([uuid], this.state.qrcode);
-	        this.setState({ disabled: false });
-	        return;
-	      }
-
-	      var thisObj = this;
-	      _jquery2.default.ajax({
-	        url: "../../../qr/codes/",
-	        data: { count: numLabels }
-	      }).done(function (data) {
-	        var uuids = data.split(/\s+/);
-	        (0, _qr.printQRs)(data.split(/\s+/), thisObj.state.qrcode);
-	      }).always(function () {
-	        thisObj.setState({ disabled: false });
-	      });
-	    }
-	  }, {
-	    key: 'handleChange',
-	    value: function handleChange(which, payload) {
-	      this.setState(_defineProperty({}, which, payload));
-	    }
-	  }, {
-	    key: 'handleExpandClick',
-	    value: function handleExpandClick() {
-	      var ns = {
-	        expanded: !this.state.expanded,
-	        numberLabels: "",
-	        notes: "",
-	        task: "",
-	        qrValue: "",
-	        items: [],
-	        selectedItem: ""
-	      };
-	      this.setState(ns);
-	    }
-	  }, {
-	    key: 'handleTaskChange',
-	    value: function handleTaskChange(value) {
-	      var v;
-	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
-
-	      this.setState({
-	        task: v,
-	        items: [],
-	        selectedItem: "" });
-
-	      if (this.state.expanded) this.reloadItems(v.data);
-	    }
-	  }, {
-	    key: 'handleItemChange',
-	    value: function handleItemChange(value) {
-	      var v;
-	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
-
-	      this.setState({ selectedItem: v });
-	    }
-	  }, {
-	    key: 'reloadItems',
-	    value: function reloadItems(task) {
-	      var options = {};
-	      if (task.items) {
-	        options = task.items.map(function (x) {
-	          return { id: x.id, label: getQR(x), data: x };
-	        });
-	      }
-	      this.setState({ items: options });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this3 = this;
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'labelPrinter' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'marginer' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'stuff' },
-	            _react2.default.createElement(
-	              'div',
-	              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
-	              _react2.default.createElement(
-	                'h2',
-	                null,
-	                ' Print me some labels '
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Number of labels'
-	              ),
-	              _react2.default.createElement('input', { type: 'text',
-	                placeholder: 'eg. 20',
-	                style: { width: "100%" },
-	                value: this.state.numberLabels,
-	                onChange: function onChange(e) {
-	                  return _this3.handleChange("numberLabels", e.target.value);
-	                }
-	              }),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Task'
-	              ),
-	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Extra notes'
-	              ),
-	              _react2.default.createElement('input', { type: 'text',
-	                placeholder: 'max 20 characters',
-	                style: { width: "100%" },
-	                value: this.state.notes,
-	                onChange: function onChange(e) {
-	                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
-	                }
-	              }),
-	              _react2.default.createElement(
-	                'button',
-	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
-	                ' ',
-	                this.state.disabled ? "Printing..." : "Print!",
-	                ' '
-	              ),
-	              _react2.default.createElement(
-	                'button',
-	                { className: 'expandReprint', onClick: this.handleExpandClick },
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  'I need to reprint a label'
-	                )
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
-	              _react2.default.createElement(
-	                'button',
-	                { className: 'expandReprint', onClick: this.handleExpandClick },
-	                _react2.default.createElement(
-	                  'i',
-	                  { className: 'material-icons' },
-	                  'arrow_back'
-	                ),
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  'Back to regular printing'
-	                )
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Task'
-	              ),
-	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Item'
-	              ),
-	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
-	                name: 'item-select',
-	                placeholder: 'Choose one',
-	                options: this.state.items,
-	                valueKey: 'id',
-	                value: this.state.selectedItem,
-	                onChange: this.handleItemChange
-	              }),
-	              _react2.default.createElement(
-	                'button',
-	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
-	                ' ',
-	                this.state.disabled ? "Printing..." : "Print!",
-	                '  '
-	              )
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'playground', style: { position: "relative", margin: "20px" } },
-	            _react2.default.createElement(_Label.Label, { taskLabel: (0, _Task.display)(this.state.task),
-	              originLabel: getCode((0, _Task.display)(this.state.task)),
-	              notesLabel: this.state.expanded ? "" : this.state.notes
-	            }),
-	            _react2.default.createElement(
-	              'div',
-	              { id: 'canvastest' },
-	              _react2.default.createElement('canvas', { height: '241', width: '431' })
-	            ),
-	            _react2.default.createElement('div', { id: 'qrtest' }),
-	            _react2.default.createElement('div', { id: 'blocker' })
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'trouble' },
-	            _react2.default.createElement('hr', null),
-	            _react2.default.createElement(
-	              'h6',
-	              null,
-	              ' Troubleshooting '
-	            ),
-	            _react2.default.createElement(
-	              'p',
-	              null,
-	              ' You need to run the Dymo toolbar app to make this work.'
-	            ),
-	            _react2.default.createElement(
-	              'ul',
-	              null,
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'Find the little ',
-	                _react2.default.createElement(
-	                  'b',
-	                  null,
-	                  'Dymo icon on the top toolbar'
-	                ),
-	                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
-	              ),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'If you can\'t find the Dymo Service icon, open ',
-	                _react2.default.createElement(
-	                  'b',
-	                  null,
-	                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
-	                ),
-	                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
-	              ),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'If that folder doesn\'t exist, make sure you have the latest version of the ',
-	                _react2.default.createElement(
-	                  'a',
-	                  { href: '' },
-	                  'dymo software installed.'
-	                ),
-	                ' Once you do, you should have that folder. '
-	              ),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'If you\'re still having problems, tell whoever is running the site!'
-	              ),
-	              _react2.default.createElement('hr', null),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                ' (If you are the person running the site, check the ',
-	                _react2.default.createElement(
-	                  'a',
-	                  { href: '' },
-	                  ' Dymo developers blog'
-	                ),
-	                ' because that\'s the only place they document...)'
-	              )
-	            )
-	          )
-	        )
-	      );
-	    }
-	  }]);
-
-	  return LabelPrinter;
-	}(_react2.default.Component);
-
-	exports.default = LabelPrinter;
-
-
-	function getCode(str) {
-	  var codes = str.split('-');
-	  if (codes[1]) return codes[1];
-	  return str;
-	}
-
-	function getQR(item) {
-	  if (item && item.item_qr) {
-	    var len = item.item_qr.length;
-	    return item.item_qr.substr(len - 6, len);
-	  }
-	  return "";
-	}
-
-/***/ },
-/* 414 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	function mountQR() {
-	  if (dymo.label.framework.init) dymo.label.framework.init(init);else init();
-	}
-
-	/* function : init
-	 * ---------------
-	 * This function is called after the Dymo Framework inits and sets up the webpage.
-	 */
-
-	function init() {}
-
-	function print(numLabels, text, success, always) {
-	  $.ajax({
-	    url: "codes/",
-	    data: { count: numLabels }
-	  }).done(function (data) {
-	    success(data);
-	  }).always(function () {
-	    always();
-	  });
-	}
-
-	function printQRs(uuids, qrcode) {
-	  try {
-	    var label;
-	    var labelSetBuilder;
-	    var DOMURL;
-	    var svgString;
-	    var svg;
-	    var url;
-	    var img;
-
-	    (function () {
-
-	      // get a printer 
-	      var printer = getPrinter();
-
-	      // clear the current qr code
-	      qrcode.clear();
-
-	      // get the label printing xml
-	      label = dymo.label.framework.openLabelXml(getXML());
-	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
-
-	      // convert the svg to an image url
-
-	      DOMURL = self.URL || self.webkitURL || self;
-	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
-	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-	      url = DOMURL.createObjectURL(svg);
-
-	      // create an image and set the URL to the svg image. Then when it's loaded,
-	      // convert the svg to canvas, and then attach it to the label record
-	      // And then attach the qr code.
-
-	      img = new Image();
-
-	      img.onload = function () {
-	        var canvas = document.getElementById('canvastest').querySelector('canvas');
-	        var ctx = canvas.getContext('2d');
-
-	        uuids.map(function (uuid) {
-	          createBackingImage(ctx, img, uuid);
-	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
-	          var qrImage = getQRimage(qrcode, uuid);
-	          var record = labelSetBuilder.addRecord();
-	          record.setText('qrImage', qrImage);
-	          record.setText('backingImage', backingImage);
-	        });
-
-	        // print the qr code
-	        label.print(printer, "", labelSetBuilder);
-	        qrcode.clear();
-	      };
-
-	      img.src = url;
-	    })();
-	  } catch (e) {
-	    alert(e.message || e);
-	  }
-	}
-
-	// the backing image is all the text
-	function createBackingImage(ctx, svg, uuid) {
-	  // clear canvas
-	  ctx.fillStyle = '#fff';
-	  ctx.fillRect(0, 0, 431, 241);
-
-	  // add backing image + qr text
-	  ctx.fillStyle = '#000';
-	  ctx.drawImage(svg, 0, 0);
-	  ctx.font = "20px Overpass Mono";
-	  ctx.fillText(uuid.substr(uuid.length - 6), 71, 216);
-	}
-
-	function getQRimage(qrcode, uuid) {
-	  qrcode.clear();
-	  qrcode.makeCode(uuid);
-	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
-	  var pngBase64 = url.substr('data:image/png;base64,'.length);
-	  return pngBase64;
-	}
-
-	/* function : getPrinter
-	 * ---------------
-	 * Gets a DYMO printer. TODO: Maybe update this to use CUPS API?
-	 */
-	function getPrinter() {
-	  // select printer to print on
-	  // for simplicity sake just use the first LabelWriter printer
-	  var printers = dymo.label.framework.getPrinters();
-	  console.log(printers);
-	  if (!printers || printers.length == 0) throw "No DYMO printers are installed. Install DYMO printers.";
-
-	  var i = -1;
-	  for (var j = 0; j < printers.length; ++j) {
-	    var printer = printers[j];
-	    if (printer.printerType == "LabelWriterPrinter" && printer.isConnected) {
-	      i = j;
-	      break;
-	    }
-	  }
-
-	  if (i == -1) throw "No DYMO printers are connected.";
-
-	  return printers[i].name;
-	}
-
-	/* function : getXML
-	 * -----------------
-	 * Returns XML format of a label. TODO: Change this to AJAX get.
-	 */
-	function getXML() {
-	  var labelXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<DieCutLabel Version=\"8.0\" Units=\"twips\">\n  <PaperOrientation>Landscape</PaperOrientation>\n  <Id>LargeShipping</Id>\n  <PaperName>30256 Shipping</PaperName>\n  <DrawCommands>\n    <RoundRectangle X=\"0\" Y=\"0\" Width=\"3331\" Height=\"5715\" Rx=\"270\" Ry=\"270\"/>\n  </DrawCommands>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>backingImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"211.2\" Y=\"57.6001\" Width=\"5337.6\" Height=\"3192\"/>\n  </ObjectInfo>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>qrImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"579.9039\" Y=\"531\" Width=\"1900\" Height=\"1900\"/>\n  </ObjectInfo>\n</DieCutLabel>\n";
-	  return labelXml;
-	}
-
-	exports.mountQR = mountQR;
-	exports.printQRs = printQRs;
-
-/***/ },
-/* 415 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.Label = undefined;
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function Label(props) {
-	  console.log(props);
-	  return _react2.default.createElement(
-	    "svg",
-	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
-	    _react2.default.createElement("defs", null),
-	    _react2.default.createElement(
-	      "g",
-	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
-	      _react2.default.createElement(
-	        "g",
-	        { id: "Artboard" },
-	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "135.102905" },
-	            props.taskLabel || ""
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "91" },
-	            props.originLabel
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "179.205811" },
-	            props.notesLabel
-	          )
-	        ),
-	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
-	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "70.885882", y: "216.037" },
-	            props.qrCode
-	          )
-	        )
-	      )
-	    )
-	  );
-	}
-
-	exports.Label = Label;
-
-/***/ },
-/* 416 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function webpackUniversalModuleDefinition(root, factory) {
@@ -65270,6 +64604,885 @@
 	});
 	;
 	//# sourceMappingURL=react-draggable.js.map
+
+/***/ },
+/* 414 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactSelect = __webpack_require__(352);
+
+	var _reactSelect2 = _interopRequireDefault(_reactSelect);
+
+	var _Task = __webpack_require__(349);
+
+	var _immutabilityHelper = __webpack_require__(377);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	var _qr = __webpack_require__(415);
+
+	var _Label = __webpack_require__(416);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var getOptions = function getOptions(input, callback) {
+	  if (input.length < 2) {
+	    callback(null, { optionss: [] });
+	  } else {
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+	      var options = data.map(function (x) {
+	        return { value: x.id, label: (0, _Task.display)(x), data: x };
+	      });
+	      callback(null, { options: options, complete: false });
+	    });
+	  }
+	};
+
+	var TaskSelect = function (_React$Component) {
+	  _inherits(TaskSelect, _React$Component);
+
+	  function TaskSelect() {
+	    _classCallCheck(this, TaskSelect);
+
+	    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
+	  }
+
+	  _createClass(TaskSelect, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'multiselect' },
+	        _react2.default.createElement(_reactSelect2.default.Async, {
+	          name: 'form-field-name',
+	          value: this.props.value,
+	          optionRenderer: function optionRenderer(option, i) {
+	            return (0, _Task.display)(option.data);
+	          },
+	          loadOptions: getOptions,
+	          onChange: this.props.onChange,
+	          placeholder: this.props.placeholder
+	        })
+	      );
+	    }
+	  }]);
+
+	  return TaskSelect;
+	}(_react2.default.Component);
+
+	var LabelPrinter = function (_React$Component2) {
+	  _inherits(LabelPrinter, _React$Component2);
+
+	  function LabelPrinter(props) {
+	    _classCallCheck(this, LabelPrinter);
+
+	    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
+
+	    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
+	    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
+	    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
+	    _this2.handleChange = _this2.handleChange.bind(_this2);
+	    _this2.handlePrint = _this2.handlePrint.bind(_this2);
+	    _this2.state = {
+	      expanded: false,
+	      numberLabels: "",
+	      notes: "",
+	      task: "",
+	      qrValue: "",
+	      items: [],
+	      selectedItem: ""
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(LabelPrinter, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      (0, _qr.mountQR)();
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var q = new QRCode(document.getElementById("qrtest"), {
+	        text: "",
+	        width: 128,
+	        height: 128,
+	        colorDark: "#000000",
+	        colorLight: "#ffffff",
+	        correctLevel: QRCode.CorrectLevel.Q
+	      });
+	      this.setState({ qrcode: q });
+	    }
+	  }, {
+	    key: 'handlePrint',
+	    value: function handlePrint() {
+	      var numLabels = parseInt(this.state.numberLabels) || -1;
+
+	      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
+	        alert("Please enter a valid number between 0 and 100!");
+	        return;
+	      }
+
+	      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
+	        alert("Please print labels for a valid task.");
+	        return;
+	      }
+
+	      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
+	        alert("Please choose a valid specific item to reprint.");
+	        return;
+	      }
+
+	      this.setState({ disabled: true });
+
+	      if (this.state.expanded) {
+	        var uuid = this.state.selectedItem.data.item_qr;
+	        (0, _qr.printQRs)([uuid], this.state.qrcode);
+	        this.setState({ disabled: false });
+	        return;
+	      }
+
+	      var thisObj = this;
+	      _jquery2.default.ajax({
+	        url: "../../../qr/codes/",
+	        data: { count: numLabels }
+	      }).done(function (data) {
+	        var uuids = data.split(/\s+/);
+	        (0, _qr.printQRs)(data.split(/\s+/), thisObj.state.qrcode);
+	      }).always(function () {
+	        thisObj.setState({ disabled: false });
+	      });
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, payload) {
+	      this.setState(_defineProperty({}, which, payload));
+	    }
+	  }, {
+	    key: 'handleExpandClick',
+	    value: function handleExpandClick() {
+	      var ns = {
+	        expanded: !this.state.expanded,
+	        numberLabels: "",
+	        notes: "",
+	        task: "",
+	        qrValue: "",
+	        items: [],
+	        selectedItem: ""
+	      };
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'handleTaskChange',
+	    value: function handleTaskChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({
+	        task: v,
+	        items: [],
+	        selectedItem: "" });
+
+	      if (this.state.expanded) this.reloadItems(v.data);
+	    }
+	  }, {
+	    key: 'handleItemChange',
+	    value: function handleItemChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({ selectedItem: v });
+	    }
+	  }, {
+	    key: 'reloadItems',
+	    value: function reloadItems(task) {
+	      var options = {};
+	      if (task.items) {
+	        options = task.items.map(function (x) {
+	          return { id: x.id, label: getQR(x), data: x };
+	        });
+	      }
+	      this.setState({ items: options });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this3 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'labelPrinter' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'marginer' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'stuff' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' Print me some labels '
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Number of labels'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'eg. 20',
+	                style: { width: "100%" },
+	                value: this.state.numberLabels,
+	                onChange: function onChange(e) {
+	                  return _this3.handleChange("numberLabels", e.target.value);
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Extra notes'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'max 20 characters',
+	                style: { width: "100%" },
+	                value: this.state.notes,
+	                onChange: function onChange(e) {
+	                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                ' '
+	              ),
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'I need to reprint a label'
+	                )
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'i',
+	                  { className: 'material-icons' },
+	                  'arrow_back'
+	                ),
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'Back to regular printing'
+	                )
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Item'
+	              ),
+	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
+	                name: 'item-select',
+	                placeholder: 'Choose one',
+	                options: this.state.items,
+	                valueKey: 'id',
+	                value: this.state.selectedItem,
+	                onChange: this.handleItemChange
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                '  '
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'playground', style: { position: "relative", margin: "20px" } },
+	            _react2.default.createElement(_Label.Label, { taskLabel: (0, _Task.display)(this.state.task),
+	              originLabel: getCode((0, _Task.display)(this.state.task)),
+	              notesLabel: this.state.expanded ? "" : this.state.notes
+	            }),
+	            _react2.default.createElement(
+	              'div',
+	              { id: 'canvastest' },
+	              _react2.default.createElement('canvas', { height: '241', width: '431' })
+	            ),
+	            _react2.default.createElement('div', { id: 'qrtest' }),
+	            _react2.default.createElement('div', { id: 'blocker' })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'trouble' },
+	            _react2.default.createElement('hr', null),
+	            _react2.default.createElement(
+	              'h6',
+	              null,
+	              ' Troubleshooting '
+	            ),
+	            _react2.default.createElement(
+	              'p',
+	              null,
+	              ' You need to run the Dymo toolbar app to make this work.'
+	            ),
+	            _react2.default.createElement(
+	              'ul',
+	              null,
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'Find the little ',
+	                _react2.default.createElement(
+	                  'b',
+	                  null,
+	                  'Dymo icon on the top toolbar'
+	                ),
+	                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If you can\'t find the Dymo Service icon, open ',
+	                _react2.default.createElement(
+	                  'b',
+	                  null,
+	                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
+	                ),
+	                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If that folder doesn\'t exist, make sure you have the latest version of the ',
+	                _react2.default.createElement(
+	                  'a',
+	                  { href: '' },
+	                  'dymo software installed.'
+	                ),
+	                ' Once you do, you should have that folder. '
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If you\'re still having problems, tell whoever is running the site!'
+	              ),
+	              _react2.default.createElement('hr', null),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                ' (If you are the person running the site, check the ',
+	                _react2.default.createElement(
+	                  'a',
+	                  { href: '' },
+	                  ' Dymo developers blog'
+	                ),
+	                ' because that\'s the only place they document...)'
+	              )
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+
+	  return LabelPrinter;
+	}(_react2.default.Component);
+
+	exports.default = LabelPrinter;
+
+
+	function getCode(str) {
+	  var codes = str.split('-');
+	  if (codes[1]) return codes[1];
+	  return str;
+	}
+
+	function getQR(item) {
+	  if (item && item.item_qr) {
+	    var len = item.item_qr.length;
+	    return item.item_qr.substr(len - 6, len);
+	  }
+	  return "";
+	}
+
+/***/ },
+/* 415 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	function mountQR() {
+	  if (dymo.label.framework.init) dymo.label.framework.init(init);else init();
+	}
+
+	/* function : init
+	 * ---------------
+	 * This function is called after the Dymo Framework inits and sets up the webpage.
+	 */
+
+	function init() {}
+
+	function print(numLabels, text, success, always) {
+	  $.ajax({
+	    url: "codes/",
+	    data: { count: numLabels }
+	  }).done(function (data) {
+	    success(data);
+	  }).always(function () {
+	    always();
+	  });
+	}
+
+	function printQRs(uuids, qrcode) {
+	  try {
+	    var label;
+	    var labelSetBuilder;
+	    var DOMURL;
+	    var svgString;
+	    var svg;
+	    var url;
+	    var img;
+
+	    (function () {
+
+	      // get a printer 
+	      var printer = getPrinter();
+
+	      // clear the current qr code
+	      qrcode.clear();
+
+	      // get the label printing xml
+	      label = dymo.label.framework.openLabelXml(getXML());
+	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
+
+	      // convert the svg to an image url
+
+	      DOMURL = self.URL || self.webkitURL || self;
+	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+	      url = DOMURL.createObjectURL(svg);
+
+	      // create an image and set the URL to the svg image. Then when it's loaded,
+	      // convert the svg to canvas, and then attach it to the label record
+	      // And then attach the qr code.
+
+	      img = new Image();
+
+	      img.onload = function () {
+	        var canvas = document.getElementById('canvastest').querySelector('canvas');
+	        var ctx = canvas.getContext('2d');
+
+	        uuids.map(function (uuid) {
+	          createBackingImage(ctx, img, uuid);
+	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
+	          var qrImage = getQRimage(qrcode, uuid);
+	          var record = labelSetBuilder.addRecord();
+	          record.setText('qrImage', qrImage);
+	          record.setText('backingImage', backingImage);
+	        });
+
+	        // print the qr code
+	        label.print(printer, "", labelSetBuilder);
+	        qrcode.clear();
+	      };
+
+	      img.src = url;
+	    })();
+	  } catch (e) {
+	    alert(e.message || e);
+	  }
+	}
+
+	// the backing image is all the text
+	function createBackingImage(ctx, svg, uuid) {
+	  // clear canvas
+	  ctx.fillStyle = '#fff';
+	  ctx.fillRect(0, 0, 431, 241);
+
+	  // add backing image + qr text
+	  ctx.fillStyle = '#000';
+	  ctx.drawImage(svg, 0, 0);
+	  ctx.font = "20px Overpass Mono";
+	  ctx.fillText(uuid.substr(uuid.length - 6), 71, 216);
+	}
+
+	function getQRimage(qrcode, uuid) {
+	  qrcode.clear();
+	  qrcode.makeCode(uuid);
+	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
+	  var pngBase64 = url.substr('data:image/png;base64,'.length);
+	  return pngBase64;
+	}
+
+	/* function : getPrinter
+	 * ---------------
+	 * Gets a DYMO printer. TODO: Maybe update this to use CUPS API?
+	 */
+	function getPrinter() {
+	  // select printer to print on
+	  // for simplicity sake just use the first LabelWriter printer
+	  var printers = dymo.label.framework.getPrinters();
+	  console.log(printers);
+	  if (!printers || printers.length == 0) throw "No DYMO printers are installed. Install DYMO printers.";
+
+	  var i = -1;
+	  for (var j = 0; j < printers.length; ++j) {
+	    var printer = printers[j];
+	    if (printer.printerType == "LabelWriterPrinter" && printer.isConnected) {
+	      i = j;
+	      break;
+	    }
+	  }
+
+	  if (i == -1) throw "No DYMO printers are connected.";
+
+	  return printers[i].name;
+	}
+
+	/* function : getXML
+	 * -----------------
+	 * Returns XML format of a label. TODO: Change this to AJAX get.
+	 */
+	function getXML() {
+	  var labelXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<DieCutLabel Version=\"8.0\" Units=\"twips\">\n  <PaperOrientation>Landscape</PaperOrientation>\n  <Id>LargeShipping</Id>\n  <PaperName>30256 Shipping</PaperName>\n  <DrawCommands>\n    <RoundRectangle X=\"0\" Y=\"0\" Width=\"3331\" Height=\"5715\" Rx=\"270\" Ry=\"270\"/>\n  </DrawCommands>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>backingImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"211.2\" Y=\"57.6001\" Width=\"5337.6\" Height=\"3192\"/>\n  </ObjectInfo>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>qrImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"579.9039\" Y=\"531\" Width=\"1900\" Height=\"1900\"/>\n  </ObjectInfo>\n</DieCutLabel>\n";
+	  return labelXml;
+	}
+
+	exports.mountQR = mountQR;
+	exports.printQRs = printQRs;
+
+/***/ },
+/* 416 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.Label = undefined;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function Label(props) {
+	  console.log(props);
+	  return _react2.default.createElement(
+	    "svg",
+	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
+	    _react2.default.createElement("defs", null),
+	    _react2.default.createElement(
+	      "g",
+	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
+	      _react2.default.createElement(
+	        "g",
+	        { id: "Artboard" },
+	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "135.102905" },
+	            props.taskLabel || ""
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "91" },
+	            props.originLabel
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "179.205811" },
+	            props.notesLabel
+	          )
+	        ),
+	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
+	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "70.885882", y: "216.037" },
+	            props.qrCode
+	          )
+	        )
+	      )
+	    )
+	  );
+	}
+
+	exports.Label = Label;
+
+/***/ },
+/* 417 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Inventory = function (_React$Component) {
+	  _inherits(Inventory, _React$Component);
+
+	  function Inventory(props) {
+	    _classCallCheck(this, Inventory);
+
+	    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
+
+	    var process1 = { output_desc: "Raw beans", count: "4", unit: "bag", date: "2/12/17" };
+	    var process2 = { output_desc: "Prepped beans", count: "11", unit: "gray brute container", date: "1/18/17" };
+	    var process3 = { output_desc: "Roasted beans", count: "6", unit: "red brute container", date: "12/29/16" };
+	    _this.state = {
+	      processes: [process1, process2, process3],
+	      selected: -1
+	    };
+	    return _this;
+	  }
+
+	  _createClass(Inventory, [{
+	    key: "render",
+	    value: function render() {
+	      return _react2.default.createElement(
+	        "div",
+	        { className: "inventory" },
+	        _react2.default.createElement(
+	          "div",
+	          { className: "inventory-list" },
+	          this.state.processes.map(function (process, i) {
+	            var _this2 = this;
+
+	            return _react2.default.createElement(InventoryItem, _extends({ key: i, i: i, selected: this.state.selected }, process, { onClick: function onClick() {
+	                return _this2.handleClick(i);
+	              } }));
+	          }, this)
+	        ),
+	        _react2.default.createElement(InventoryDetail, this.state.processes[this.selected])
+	      );
+	    }
+	  }, {
+	    key: "handleClick",
+	    value: function handleClick(i) {
+	      console.log(i);
+	      this.setState({ selected: i });
+	    }
+	  }]);
+
+	  return Inventory;
+	}(_react2.default.Component);
+
+	exports.default = Inventory;
+
+
+	function InventoryDetail(props) {
+	  return _react2.default.createElement(
+	    "div",
+	    { className: "inventory-detail" },
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-detail-header" },
+	      _react2.default.createElement(
+	        "div",
+	        { className: "i-detail-outputdesc" },
+	        _react2.default.createElement(
+	          "span",
+	          null,
+	          props.output_desc
+	        )
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { className: "i-detail-count" },
+	        _react2.default.createElement(
+	          "span",
+	          null,
+	          props.count + " " + props.unit + "s"
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-detail-content" },
+	      _react2.default.createElement(Item, null),
+	      _react2.default.createElement(Item, null),
+	      _react2.default.createElement(Item, null),
+	      _react2.default.createElement(Item, null)
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-detail-footer" },
+	      _react2.default.createElement(
+	        "button",
+	        null,
+	        "Deliver these items"
+	      )
+	    )
+	  );
+	}
+
+	function Item(props) {
+	  return _react2.default.createElement(
+	    "div",
+	    { className: "item", onClick: props.onClick },
+	    _react2.default.createElement(
+	      "div",
+	      { className: "flex" },
+	      _react2.default.createElement("div", { className: "item-img" }),
+	      _react2.default.createElement(
+	        "div",
+	        null,
+	        _react2.default.createElement(
+	          "span",
+	          { className: "item-qr" },
+	          "s8jf9w"
+	        ),
+	        _react2.default.createElement(
+	          "span",
+	          { className: "item-task" },
+	          "R-MD-1209-1"
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "unflex" },
+	      _react2.default.createElement("input", { type: "checkbox", onChange: null })
+	    )
+	  );
+	}
+
+	function InventoryItem(props) {
+	  return _react2.default.createElement(
+	    "div",
+	    { className: "inventoryClass " + isSelected(props) },
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-outputdesc" },
+	      _react2.default.createElement(
+	        "span",
+	        null,
+	        props.output_desc.sentenceCase()
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-count" },
+	      _react2.default.createElement(
+	        "span",
+	        null,
+	        props.count
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-unit" },
+	      _react2.default.createElement(
+	        "span",
+	        null,
+	        props.unit.sentenceCase() + "s"
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "i-date" },
+	      _react2.default.createElement(
+	        "span",
+	        null,
+	        props.date
+	      )
+	    )
+	  );
+	}
+
+	function isSelected(props) {
+	  return props.i == props.selected ? "selected" : "";
+	}
+
+	String.prototype.sentenceCase = function () {
+	  return this.charAt(0).toUpperCase() + this.slice(1);
+	};
 
 /***/ }
 /******/ ]);

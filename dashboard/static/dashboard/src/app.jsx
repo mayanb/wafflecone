@@ -9,10 +9,13 @@ import {Navbar} from './Layout.jsx'
 import Tasks from './Tasks.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
+import Inventory from './Inventory2.jsx'
 
 class Main extends React.Component {
   constructor() {
     super();
+
+    this.state = { selectedInventory: 2 }
   }
 
   componentDidMount() {
@@ -26,29 +29,33 @@ class Main extends React.Component {
         }
       }
     })
-
   }
 
   render () {
     return (
-
       <Router>
-        <div className="parent">
-        <Navbar 
-          options={["Activity Log", "Inventory", "Labels", "Settings"]}
-          links={["", "inventory", "labels", "settings"]} 
-        />
-
-          <Route exact path={"/dashboard/"} component={ActivityLog} />
-          <Route path={"/dashboard/inventory/"} component={Inventory} />
-          <Route path={"/dashboard/labels/"} component={LabelPrinter} />
-          <Route path={"/dashboard/settings/"} component={FactoryMap} />
-
-        </div>
+          <div>
+          <div className="parent">
+            <main className="d-content">
+              <Route exact path={"/dashboard/"} component={ActivityLog} />
+              <Route path={"/dashboard/inventory/"} component={Invent} />
+              <Route path={"/dashboard/labels/"} component={LabelPrinter} />
+              <Route path={"/dashboard/settings/"} component={FactoryMap} />
+            </main>
+            <Navbar 
+              className="d-nav" 
+              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
+              links={["dsda", "", "inventory", "labels", "settings"]}
+              shrink={this.state.selectedInventory}
+            ></Navbar>
+            <aside className="d-ads"></aside>
+          </div>
+          </div>
       </Router>
     )
   }
 }
+
 
 function ActivityLog(props) {
   return (
@@ -56,16 +63,11 @@ function ActivityLog(props) {
   )
 }
 
-function Inventory(props) {
+function Invent(props) {
   return (
-    <Tasks inventory={true} filters={getFilters()} />
+    <Inventory inventory={true} filters={getFilters()} />
   )
 }
-
-ReactDOM.render(
-  <Main />,
-  document.getElementById('root')
-);
 
 
 
@@ -98,3 +100,8 @@ function getFilters() {
   }
   return filters
 }
+
+ReactDOM.render(
+  <Main />,
+  document.getElementById('root')
+);

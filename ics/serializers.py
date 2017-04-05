@@ -11,7 +11,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -95,6 +95,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
       return input.task.process_type.unit
     else: 
       return ''
+
 
   class Meta:
     model = Task

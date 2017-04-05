@@ -25,36 +25,33 @@ class Navbar extends React.Component {
     window.location.reload()
   }
 
-  render() {
+  render () {
+    let selectedInventory = this.props.selectedInventory
     return (
-    <div className="navbar">
-    	<div className="content-area">
-  	 	 <div className="left">
-	  		<h1>Scoop</h1>
-	  	  </div>
-	  	  <div className="nav center">
-	  		<ul>
-		      { 
-            this.props.options.map(function (x, i) {
-		    	    return (
-                <li key={i}> 
-                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName="active">{x}</NavLink>
-              </li>
-            )
-		      }, this )}
-		    </ul>
-	  	</div>
-  		<div className="right">
-  			<Dropdown
+      <div className={"d-nav " + ((selectedInventory!=-1)?"shrink":"")}>
+        <div className="nav-brand">SCOOP</div>
+        <div className="nav-team">
+        <Dropdown
           source={teams}
           onChange={(val) => this.handleTeamChange(val)}
           value={this.state.team}
         />
-	    </div>
-	</div>
-  </div>
-  )
-}
+        </div>
+        <div>
+        <ul>
+          { 
+            this.props.options.map(function (x, i) {
+              return (
+              <li key={i}> 
+                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName={(selectedInventory!=-1)?"":"active"}>{x}</NavLink>
+              </li>
+              )
+          }, this )}
+        </ul>
+        </div>
+      </div>
+    )
+  }
 }
 
 const ContentDescriptor = (props) => (

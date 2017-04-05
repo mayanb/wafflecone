@@ -1,5 +1,5 @@
 $primary: #49A8F3;
-$background-color: #F2F3F5;
+$background-color: #ffffff;
 $light-grey: #eee;
 $shadow-1: 0 1px 4px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
 $shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
@@ -27,63 +27,10 @@ html, body {
   padding: 0;
 }
 
-body {
+body div#root {
 	font-family: $font-stack;
-	font-size: 0.95em;
+	font-size: 14px;
 	background-color: $background-color;
-}
-
-.navbar {
-	background-color: white;
-	padding-top: 14px;
-	width: 100%;
-	color: rgba(0,0,0,0.87);
-	border-bottom: $section-border;
-	-webkit-font-smoothing: antialiased;
-	position: fixed;
-	top: 0;
-	z-index: $z-index-navbar;
-
-	.content-area {	
-		display: flex;
-		flex-direction: row;
-	}
-
-	h1 {
-		font-weight: normal;
-		font-size: 20px;
-		line-height: $navbar-height;
-		margin: 0px;
-		margin-left: 36px;
-	}
-
-	.nav ul { margin: 0 auto; }
-
-	.nav li {
-		display: inline-block;
-		list-style-type: none;
-		margin-right: 24px; 
-
-		a, a:hover, a:visited {
-			display: block;
-			line-height: $navbar-height;
-			padding: 0px 16px;
-			text-decoration: none;
-			color: rgba(0,0,0,0.87);
-
-			&.active {
-				color: $primary;
-				border-bottom: 4px solid $primary;
-
-				&, &:hover, &:visited {
-					color: $primary;	
-				}
-			}
-
-		}
-
-
-	}
 }
 
 html, body, #root, .parent, .content-area {
@@ -94,31 +41,92 @@ html, body, #root, .parent, .content-area {
 
 .parent {
   .content {
-		padding-top: $navbar-height;
 		margin: 0 auto;
-		max-width:800px;
+		max-width:900px;
 	}
 
+  display: flex;
+  flex: 1;
+
 }
 
-.left {
-	width: 20vw;
-	flex: 0 auto;
+.d-content {
+  flex: 1;
 }
 
-.center {
-	flex: 1 auto;
-	text-align: center;
+.d-nav{
+  flex: 0 0 13em;
+  box-shadow: $shadow-1;
+
+  &.shrink {
+  	flex: 0 0 16px;
+
+  	div, ul {
+  		display: none
+  	}
+  }
 }
 
-.right {
-	width: 20vw;
-	text-align: right;
-	display: flex;
-	align-items: flex-end;
-	justify-content: flex-end;
-	align-content: flex-end;
-	flex: 0 auto;
+.d-ads {
+	display: none;
+}
+
+.d-nav {
+  /* put the nav on the left */
+  order: -1;
+  background-color: #505256;
+  height: 100vh;
+ 	display: flex;
+ 	flex-direction: column;
+ 	color: rgba(255,255,255,0.56);
+
+ 	.nav-team {
+ 		border-bottom: 1px solid rgba(255,255,255,0.1);
+ 		padding-top: 16px;
+ 		padding-bottom: 16px;
+ 	  vertical-align: middle;
+ 	  padding-left: 16px;
+
+ 		i {
+ 			line-height: 24px;
+ 			vertical-align: middle;
+ 			color: rgba(255,255,255,0.56)
+ 		}
+ 	}
+
+ 	.nav-brand {
+ 		padding-top: 16px;
+ 		color: rgba(255,255,255,1);
+ 		font-size: 1.5em;
+ 		padding-left: 16px;
+ 	}
+
+	ul { margin: 0 auto; }
+
+	li {
+		list-style-type: none;
+
+		a, a:hover, a:visited {
+			display: block;
+			line-height: $navbar-height;
+			text-decoration: none;
+			color: rgba(255,255,255,0.56);
+			margin-left: 16px;
+
+			&.active {
+				background-color: $primary;
+				color: white;
+				width: 100%;
+				padding-left: 16px;
+				margin-left: 0px;
+
+				&, &:hover, &:visited {
+					color: white;	
+				}
+			}
+		}
+	}
+
 }
 
 .content-descriptor {
@@ -172,25 +180,22 @@ i.material-icons {
 }
 
 div[data-react-toolbox="dropdown"] {
-	max-width: 10vw;
-	margin-right: 10px;
-	font-size: 1rem !important;
-
-
 	&>div {
-		margin-bottom: -12px;
-		margin-top: -32px;
-		//padding-top: 0px;
-		//padding-bottom:16px;
+		padding: 0px;
+		margin: 0px;
+	}
+
+	ul {
+		color: rgba(0,0,0,0.6)
 	}
 
 	input {
-		padding: 8px 0px 0px 0px;
-		font-size: 12px;
-		line-height: 1rem;
+		margin: 0px;
+		padding: 0px;
+		padding-top: 4px;
+		color: rgba(255,255,255, 0.56);
+		font-size: 14px;
 		outline: none;
-		text-align:right;
-		padding-right: 42px;
 		border: none;
 	}
 
