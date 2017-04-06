@@ -229,30 +229,30 @@ class Item(models.Model):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
     
 
-    def getInventory(self):
-        """
-        Returns the inventory this item is currently in; if this item no longer exists
-        in real life OR the item has been delivered but not received into any inventory,
-        the function returns None.
-        ----
-        containing_inventory = item.getInventory()
-        """
-        # if it's been used, it definitely is in no inventory
-        if self.input_set.all().exists():
-            return None
+    # def getInventory(self):
+    #     """
+    #     Returns the inventory this item is currently in; if this item no longer exists
+    #     in real life OR the item has been delivered but not received into any inventory,
+    #     the function returns None.
+    #     ----
+    #     containing_inventory = item.getInventory()
+    #     """
+    #     # if it's been used, it definitely is in no inventory
+    #     if self.input_set.all().exists():
+    #         return None
 
-        # see if it's been moved to a different inventory
-        try:
-            last_movementItem = self.movementitem_set.latest('movement__timestamp').select_related()
-            last_movement = last_movementItem.movement
-            if last_movement.status == Movement.RECEIVED:
-                return last_movement.team
-            return None
+    #     # see if it's been moved to a different inventory
+    #     try:
+    #         last_movementItem = self.movementitem_set.latest('movement__timestamp').select_related()
+    #         last_movement = last_movementItem.movement
+    #         if last_movement.status == Movement.RECEIVED:
+    #             return last_movement.team
+    #         return None
 
-        # no, then return the creating inventory
-        except ObjectDoesNotExist:
-            print("no movement")
-            return self.creating_task.process_type.created_by
+    #     # no, then return the creating inventory
+    #     except ObjectDoesNotExist:
+    #         print("no movement")
+    #         return self.creating_task.process_type.created_by
 
 
 class Input(models.Model):

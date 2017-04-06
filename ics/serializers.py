@@ -50,7 +50,7 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
 class NestedItemSerializer(serializers.ModelSerializer):
   creating_task = BasicTaskSerializer(many=False, read_only=True)
-  inventory = serializers.CharField(source='getInventory')
+  #inventory = serializers.CharField(source='getInventory')
 
   class Meta:
     model = Item
