@@ -46,16 +46,12 @@ class Main extends React.Component {
           <div className="parent">
             <main className="d-content">
               <Route exact path={"/dashboard/"} component={ActivityLog} />
-              <Route path={"/dashboard/inventory/:id"} component={Invent} />
+              <Route path={"/dashboard/inventory/:id?"} component={Invent} />
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
             </main>
-            <Navbar 
-              className="d-nav" 
-              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
-              links={["dsda", "", "inventory", "labels", "settings"]}
-              shouldShrink={this.state.shrink}
-            ></Navbar>
+
+            <Route path="/dashboard/:section?/:id?" component={Navbar} />
             <aside className="d-ads"></aside>
           </div>
           </div>
@@ -63,6 +59,15 @@ class Main extends React.Component {
     )
   }
 }
+
+/*
+            <Navbar 
+              className="d-nav" 
+              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
+              links={["dsda", "", "inventory", "labels", "settings"]}
+              shouldShrink={this.state.shrink}
+            ></Navbar>
+*/
 
 
 function ActivityLog(props) {
@@ -73,7 +78,7 @@ function ActivityLog(props) {
 
 function Invent(props) {
   return (
-    <Inventory inventory={true} filters={getFilters()} selected={props.match.params.id}/>
+    <Inventory inventory={true} filters={getFilters()} match={props.match}/>
   )
 }
 

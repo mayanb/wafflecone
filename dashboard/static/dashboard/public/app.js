@@ -147,16 +147,11 @@
 	              'main',
 	              { className: 'd-content' },
 	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id", component: Invent }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: Invent }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
 	            ),
-	            _react2.default.createElement(_Layout.Navbar, {
-	              className: 'd-nav',
-	              options: ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"],
-	              links: ["dsda", "", "inventory", "labels", "settings"],
-	              shouldShrink: this.state.shrink
-	            }),
+	            _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
 	            _react2.default.createElement('aside', { className: 'd-ads' })
 	          )
 	        )
@@ -167,12 +162,21 @@
 	  return Main;
 	}(_react2.default.Component);
 
+	/*
+	            <Navbar 
+	              className="d-nav" 
+	              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
+	              links={["dsda", "", "inventory", "labels", "settings"]}
+	              shouldShrink={this.state.shrink}
+	            ></Navbar>
+	*/
+
 	function ActivityLog(props) {
 	  return _react2.default.createElement(_Tasks2.default, { inventory: false, filters: getFilters() });
 	}
 
 	function Invent(props) {
-	  return _react2.default.createElement(_Inventory2.default, { inventory: true, filters: getFilters(), selected: props.match.params.id });
+	  return _react2.default.createElement(_Inventory2.default, { inventory: true, filters: getFilters(), match: props.match });
 	}
 
 	// QUERY STRING STUFF
@@ -50129,10 +50133,17 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      console.log(this.props);
+	      var options = ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"];
+	      var links = ["dsda", "", "inventory", "labels", "settings"];
+
+	      var navbarSizeClass = "bigNav";
+	      if (this.props.match.params.id) {
+	        navbarSizeClass = "littleNav";
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
-	        { className: "d-nav " + (this.props.shrink ? "shrink" : "") },
+	        { className: "d-nav " + navbarSizeClass },
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'nav-brand' },
@@ -50155,13 +50166,13 @@
 	          _react2.default.createElement(
 	            'ul',
 	            null,
-	            this.props.options.map(function (x, i) {
+	            options.map(function (x, i) {
 	              return _react2.default.createElement(
 	                'li',
 	                { key: i },
 	                _react2.default.createElement(
 	                  _reactRouterDom.NavLink,
-	                  { exact: true, to: "/dashboard/" + this.props.links[i], activeClassName: "active" },
+	                  { exact: true, to: "/dashboard/" + links[i], activeClassName: "active" },
 	                  x
 	                )
 	              );
@@ -65358,6 +65369,12 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var props = this.props;
+	      var detail = false;
+	      if (props.match.params.id) {
+	        detail = _react2.default.createElement(_InventoryDetail2.default, this.state.processes[this.state.selected]);
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'inventory' },
@@ -65377,7 +65394,7 @@
 	            );
 	          }, this)
 	        ),
-	        _react2.default.createElement(_InventoryDetail2.default, this.state.processes[this.state.selected])
+	        detail
 	      );
 	    }
 	  }, {

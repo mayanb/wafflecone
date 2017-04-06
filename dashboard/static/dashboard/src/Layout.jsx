@@ -26,9 +26,16 @@ class Navbar extends React.Component {
   }
 
   render () {
-    console.log(this.props)
+    let options = ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]
+    let links = ["dsda", "", "inventory", "labels", "settings"]
+
+    var navbarSizeClass = "bigNav"
+    if (this.props.match.params.id) {
+      navbarSizeClass = "littleNav"
+    }
+
     return (
-      <div className={"d-nav " + ((this.props.shrink)?"shrink":"")}>
+      <div className={"d-nav " + navbarSizeClass}>
         <div className="nav-brand">SCOOP</div>
         <div className="nav-team">
         <Dropdown
@@ -40,10 +47,10 @@ class Navbar extends React.Component {
         <div>
         <ul>
           { 
-            this.props.options.map(function (x, i) {
+            options.map(function (x, i) {
               return (
               <li key={i}> 
-                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName={"active"}>{x}</NavLink>
+                <NavLink exact to={ "/dashboard/" + links[i]} activeClassName={"active"}>{x}</NavLink>
               </li>
               )
           }, this )}

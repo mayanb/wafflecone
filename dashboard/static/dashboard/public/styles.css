@@ -36,6 +36,11 @@ html, body, #root, .parent, .content-area {
     .d-nav.shrink div, .d-nav.shrink ul {
       display: none; }
 
+.d-nav.littleNav {
+  flex: 0 0 16px; }
+  .d-nav.littleNav > div, .d-nav.littleNav > ul {
+    display: none; }
+
 .d-ads {
   display: none; }
 
