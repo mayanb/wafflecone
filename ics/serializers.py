@@ -121,14 +121,14 @@ class MovementListSerializer(serializers.ModelSerializer):
   items = NestedMovementItemSerializer(many=True, read_only=True)
   class Meta:
     model = Movement
-    fields = ('id', 'items', 'team', 'status')
+    fields = ('id', 'items', 'origin', 'status')
 
 class MovementCreateSerializer(serializers.ModelSerializer):
   items = MovementItemSerializer(many=True, read_only=False)
 
   class Meta:
     model = Movement
-    fields = ('id', 'status', 'intended_destination', 'deliverable', 'group_qr', 'team', 'items')
+    fields = ('id', 'status', 'intended_destination', 'deliverable', 'group_qr', 'origin', 'items')
 
   def create(self, validated_data):
     items_data = validated_data.pop('items')
@@ -136,3 +136,8 @@ class MovementCreateSerializer(serializers.ModelSerializer):
     for item in items_data:
       MovementItem.objects.create(movement=movement, **item)
     return movement
+
+class MovementReceiveSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Movement
+    fields = ('id', 'status', 'destination')

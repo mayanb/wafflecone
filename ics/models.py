@@ -281,7 +281,8 @@ class Movement(models.Model):
     intended_destination = models.CharField(max_length=50, blank=True)
     deliverable = models.BooleanField(default=False)
     group_qr = models.CharField(max_length=50, blank=True)
-    team = models.ForeignKey(User, related_name="movements", on_delete=models.CASCADE)
+    origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
+    destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
 
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)

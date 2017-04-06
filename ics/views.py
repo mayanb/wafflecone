@@ -209,3 +209,8 @@ class MovementCreate(generics.CreateAPIView):
 class MovementList(generics.ListAPIView):
   queryset = Movement.objects.all()
   serializer_class=MovementListSerializer
+  filter_fields=('group_qr',)
+
+class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Movement.objects.all()
+  serializer_class = MovementReceiveSerializer

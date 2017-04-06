@@ -38,7 +38,8 @@ urlpatterns = [
     url(r'^recommendedInputs/(?P<pk>[0-9]+)/$', views.RecommendedInputsDetail.as_view()),
 
     url(r'^movements/create/$', views.MovementCreate.as_view()),
-    url(r'^movements/$', views.MovementList.as_view())
+    url(r'^movements/$', views.MovementList.as_view()),
+    url(r'^movements/(?P<pk>[0-9]+)/$', views.MovementReceive.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
