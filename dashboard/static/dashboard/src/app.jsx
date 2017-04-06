@@ -14,12 +14,12 @@ import Inventory from './Inventory2.jsx'
 class Main extends React.Component {
   constructor() {
     super();
-
-    this.state = { selectedInventory: 2 }
+    this.handleExpandRequest = this.handleExpandRequest.bind(this)
+    this.handleShrinkRequest = this.handleShrinkRequest.bind(this)
+    this.state = { shrink: false }
   }
 
   componentDidMount() {
-
     // handle cross-site forgery request stuff
     let csrftoken = getCookie('csrftoken');
     $.ajaxSetup({
@@ -31,6 +31,14 @@ class Main extends React.Component {
     })
   }
 
+  handleExpandRequest() {
+    this.setState({ shrink: true})
+  }
+
+  handleShrinkRequest() {
+    this.setState({ shrink: false})
+  }
+
   render () {
     return (
       <Router>
@@ -38,7 +46,7 @@ class Main extends React.Component {
           <div className="parent">
             <main className="d-content">
               <Route exact path={"/dashboard/"} component={ActivityLog} />
-              <Route path={"/dashboard/inventory/"} component={Invent} />
+              <Route path={"/dashboard/inventory/:id"} component={Invent} />
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
             </main>
@@ -46,7 +54,7 @@ class Main extends React.Component {
               className="d-nav" 
               options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
               links={["dsda", "", "inventory", "labels", "settings"]}
-              shrink={this.state.selectedInventory}
+              shouldShrink={this.state.shrink}
             ></Navbar>
             <aside className="d-ads"></aside>
           </div>
@@ -65,7 +73,7 @@ function ActivityLog(props) {
 
 function Invent(props) {
   return (
-    <Inventory inventory={true} filters={getFilters()} />
+    <Inventory inventory={true} filters={getFilters()} selected={props.match.params.id}/>
   )
 }
 

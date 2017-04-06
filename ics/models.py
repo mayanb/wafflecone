@@ -22,6 +22,12 @@ class ProcessType(models.Model):
     def getAllAttributes(self):
         return self.attribute_set.all()
 
+    def getInventoryCount(self):
+        return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self).count()
+
+    def getInventoryItems(self):
+        return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self)
+
     class Meta:
         ordering = ['x',]
 

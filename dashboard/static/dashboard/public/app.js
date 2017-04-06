@@ -102,14 +102,15 @@
 
 	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
 
-	    _this.state = { selectedInventory: 2 };
+	    _this.handleExpandRequest = _this.handleExpandRequest.bind(_this);
+	    _this.handleShrinkRequest = _this.handleShrinkRequest.bind(_this);
+	    _this.state = { shrink: false };
 	    return _this;
 	  }
 
 	  _createClass(Main, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
-
 	      // handle cross-site forgery request stuff
 	      var csrftoken = (0, _csrf.getCookie)('csrftoken');
 	      _jquery2.default.ajaxSetup({
@@ -119,6 +120,16 @@
 	          }
 	        }
 	      });
+	    }
+	  }, {
+	    key: 'handleExpandRequest',
+	    value: function handleExpandRequest() {
+	      this.setState({ shrink: true });
+	    }
+	  }, {
+	    key: 'handleShrinkRequest',
+	    value: function handleShrinkRequest() {
+	      this.setState({ shrink: false });
 	    }
 	  }, {
 	    key: 'render',
@@ -136,7 +147,7 @@
 	              'main',
 	              { className: 'd-content' },
 	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/", component: Invent }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id", component: Invent }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
 	            ),
@@ -144,7 +155,7 @@
 	              className: 'd-nav',
 	              options: ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"],
 	              links: ["dsda", "", "inventory", "labels", "settings"],
-	              shrink: this.state.selectedInventory
+	              shouldShrink: this.state.shrink
 	            }),
 	            _react2.default.createElement('aside', { className: 'd-ads' })
 	          )
@@ -161,7 +172,7 @@
 	}
 
 	function Invent(props) {
-	  return _react2.default.createElement(_Inventory2.default, { inventory: true, filters: getFilters() });
+	  return _react2.default.createElement(_Inventory2.default, { inventory: true, filters: getFilters(), selected: props.match.params.id });
 	}
 
 	// QUERY STRING STUFF
@@ -50118,10 +50129,10 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var selectedInventory = this.props.selectedInventory;
+	      console.log(this.props);
 	      return _react2.default.createElement(
 	        'div',
-	        { className: "d-nav " + (selectedInventory != -1 ? "shrink" : "") },
+	        { className: "d-nav " + (this.props.shrink ? "shrink" : "") },
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'nav-brand' },
@@ -50150,7 +50161,7 @@
 	                { key: i },
 	                _react2.default.createElement(
 	                  _reactRouterDom.NavLink,
-	                  { exact: true, to: "/dashboard/" + this.props.links[i], activeClassName: selectedInventory != -1 ? "" : "active" },
+	                  { exact: true, to: "/dashboard/" + this.props.links[i], activeClassName: "active" },
 	                  x
 	                )
 	              );
@@ -65282,7 +65293,7 @@
 /* 417 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -65295,6 +65306,16 @@
 	var _react = __webpack_require__(1);
 
 	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _InventoryDetail = __webpack_require__(418);
+
+	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -65312,41 +65333,58 @@
 
 	    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
 
-	    var process1 = { output_desc: "Raw beans", count: "4", unit: "bag", date: "2/12/17" };
-	    var process2 = { output_desc: "Prepped beans", count: "11", unit: "gray brute container", date: "1/18/17" };
-	    var process3 = { output_desc: "Roasted beans", count: "6", unit: "red brute container", date: "12/29/16" };
 	    _this.state = {
-	      processes: [process1, process2, process3],
+	      processes: [],
+	      loading: false,
 	      selected: -1
 	    };
 	    return _this;
 	  }
 
 	  _createClass(Inventory, [{
-	    key: "render",
+	    key: 'getProcessesForInventory',
+	    value: function getProcessesForInventory() {
+	      var url = window.location.origin + "/ics/processes/inventory/";
+	      var component = this;
+	      _jquery2.default.get(url).done(function (data) {
+	        component.setState({ processes: data });
+	      });
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getProcessesForInventory();
+	    }
+	  }, {
+	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
-	        "div",
-	        { className: "inventory" },
+	        'div',
+	        { className: 'inventory' },
 	        _react2.default.createElement(
-	          "div",
-	          { className: "inventory-list" },
+	          'div',
+	          { className: 'inventory-list' },
+	          _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
 	          this.state.processes.map(function (process, i) {
 	            var _this2 = this;
 
-	            return _react2.default.createElement(InventoryItem, _extends({ key: i, i: i, selected: this.state.selected }, process, { onClick: function onClick() {
-	                return _this2.handleClick(i);
-	              } }));
+	            return _react2.default.createElement(
+	              _reactRouterDom.Link,
+	              { key: i, to: "/dashboard/inventory/" + process.id },
+	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: this.state.selected }, process, { onClick: function onClick() {
+	                  return _this2.handleClick(i);
+	                } }))
+	            );
 	          }, this)
 	        ),
-	        _react2.default.createElement(InventoryDetail, this.state.processes[this.selected])
+	        _react2.default.createElement(_InventoryDetail2.default, this.state.processes[this.state.selected])
 	      );
 	    }
 	  }, {
-	    key: "handleClick",
+	    key: 'handleClick',
 	    value: function handleClick(i) {
-	      console.log(i);
 	      this.setState({ selected: i });
+	      this.props.onExpandRequest();
 	    }
 	  }]);
 
@@ -65356,124 +65394,51 @@
 	exports.default = Inventory;
 
 
-	function InventoryDetail(props) {
-	  return _react2.default.createElement(
-	    "div",
-	    { className: "inventory-detail" },
-	    _react2.default.createElement(
-	      "div",
-	      { className: "i-detail-header" },
-	      _react2.default.createElement(
-	        "div",
-	        { className: "i-detail-outputdesc" },
-	        _react2.default.createElement(
-	          "span",
-	          null,
-	          props.output_desc
-	        )
-	      ),
-	      _react2.default.createElement(
-	        "div",
-	        { className: "i-detail-count" },
-	        _react2.default.createElement(
-	          "span",
-	          null,
-	          props.count + " " + props.unit + "s"
-	        )
-	      )
-	    ),
-	    _react2.default.createElement(
-	      "div",
-	      { className: "i-detail-content" },
-	      _react2.default.createElement(Item, null),
-	      _react2.default.createElement(Item, null),
-	      _react2.default.createElement(Item, null),
-	      _react2.default.createElement(Item, null)
-	    ),
-	    _react2.default.createElement(
-	      "div",
-	      { className: "i-detail-footer" },
-	      _react2.default.createElement(
-	        "button",
-	        null,
-	        "Deliver these items"
-	      )
-	    )
-	  );
-	}
-
-	function Item(props) {
-	  return _react2.default.createElement(
-	    "div",
-	    { className: "item", onClick: props.onClick },
-	    _react2.default.createElement(
-	      "div",
-	      { className: "flex" },
-	      _react2.default.createElement("div", { className: "item-img" }),
-	      _react2.default.createElement(
-	        "div",
-	        null,
-	        _react2.default.createElement(
-	          "span",
-	          { className: "item-qr" },
-	          "s8jf9w"
-	        ),
-	        _react2.default.createElement(
-	          "span",
-	          { className: "item-task" },
-	          "R-MD-1209-1"
-	        )
-	      )
-	    ),
-	    _react2.default.createElement(
-	      "div",
-	      { className: "unflex" },
-	      _react2.default.createElement("input", { type: "checkbox", onChange: null })
-	    )
-	  );
-	}
-
 	function InventoryItem(props) {
 	  return _react2.default.createElement(
-	    "div",
-	    { className: "inventoryClass " + isSelected(props) },
+	    'div',
+	    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
 	    _react2.default.createElement(
-	      "div",
-	      { className: "i-outputdesc" },
+	      'div',
+	      { className: 'i-outputdesc' },
 	      _react2.default.createElement(
-	        "span",
+	        'span',
 	        null,
 	        props.output_desc.sentenceCase()
 	      )
 	    ),
 	    _react2.default.createElement(
-	      "div",
-	      { className: "i-count" },
+	      'div',
+	      { className: 'i-count' },
 	      _react2.default.createElement(
-	        "span",
+	        'span',
 	        null,
 	        props.count
 	      )
 	    ),
 	    _react2.default.createElement(
-	      "div",
-	      { className: "i-unit" },
+	      'div',
+	      { className: 'i-unit' },
 	      _react2.default.createElement(
-	        "span",
+	        'span',
 	        null,
 	        props.unit.sentenceCase() + "s"
 	      )
 	    ),
 	    _react2.default.createElement(
-	      "div",
-	      { className: "i-date" },
+	      'div',
+	      { className: 'i-date' },
 	      _react2.default.createElement(
-	        "span",
+	        'span',
 	        null,
 	        props.date
 	      )
 	    )
 	  );
+	}
+
+	function isHeader(props) {
+	  return props.header == true ? "inventoryClass-header" : "";
 	}
 
 	function isSelected(props) {
@@ -65483,6 +65448,159 @@
 	String.prototype.sentenceCase = function () {
 	  return this.charAt(0).toUpperCase() + this.slice(1);
 	};
+
+/***/ },
+/* 418 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _Task = __webpack_require__(349);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var InventoryDetail = function (_React$Component) {
+	  _inherits(InventoryDetail, _React$Component);
+
+	  function InventoryDetail(props) {
+	    _classCallCheck(this, InventoryDetail);
+
+	    var _this = _possibleConstructorReturn(this, (InventoryDetail.__proto__ || Object.getPrototypeOf(InventoryDetail)).call(this, props));
+
+	    _this.state = {
+	      items: []
+	    };
+	    return _this;
+	  }
+
+	  _createClass(InventoryDetail, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getInventoryItems(this.props);
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.getInventoryItems(np);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var props = this.props;
+	      console.log(props);
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'inventory-detail' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-header' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'i-detail-outputdesc' },
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              props.output_desc
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'i-detail-count' },
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              props.count + " " + props.unit + "s"
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-content' },
+	          this.state.items.map(function (item, i) {
+	            return _react2.default.createElement(Item, _extends({ key: i }, item));
+	          }, this)
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-footer' },
+	          _react2.default.createElement(
+	            'button',
+	            null,
+	            'Deliver these items'
+	          )
+	        )
+	      );
+	    }
+	  }, {
+	    key: 'getInventoryItems',
+	    value: function getInventoryItems(props) {
+	      var url = window.location.origin + "/ics/processes/inventory/" + props.id;
+	      console.log(url);
+	      var component = this;
+	      _jquery2.default.get(url).done(function (data) {
+	        component.setState({ items: data.items });
+	      });
+	    }
+	  }]);
+
+	  return InventoryDetail;
+	}(_react2.default.Component);
+
+	exports.default = InventoryDetail;
+
+
+	function Item(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'item', onClick: props.onClick },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'flex' },
+	      _react2.default.createElement('div', { className: 'item-img' }),
+	      _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'item-qr' },
+	          props.item_qr.substring(42)
+	        ),
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'item-task' },
+	          (0, _Task.display)(props.creating_task)
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'unflex' },
+	      _react2.default.createElement('input', { type: 'checkbox', onChange: null })
+	    )
+	  );
+	}
 
 /***/ }
 /******/ ]);

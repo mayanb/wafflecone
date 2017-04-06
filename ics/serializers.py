@@ -13,6 +13,12 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
     model = ProcessType
     fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc')
 
+class ProcessInventoryListSerializer(serializers.ModelSerializer):
+  count = serializers.IntegerField(source='getInventoryCount')
+  class Meta:
+    model = ProcessType
+    fields = ('id', 'output_desc', 'count', 'unit')
+
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
     model = ProcessType
@@ -106,6 +112,12 @@ class RecommendedInputsSerializer(serializers.ModelSerializer):
   class Meta:
     model = RecommendedInputs
     fields = ('id', 'process_type', 'recommended_input')
+
+class ProcessInventoryDetailSerializer(serializers.ModelSerializer):
+  items = NestedItemSerializer(source='getInventoryItems', many=True, read_only=True)
+  class Meta:
+    model = ProcessType
+    fields = ('items',)
 
 class MovementItemSerializer(serializers.ModelSerializer):
   class Meta:

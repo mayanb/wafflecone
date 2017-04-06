@@ -144,6 +144,14 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
 
+class ProcessInventoryList(generics.ListAPIView):
+  queryset = ProcessType.objects.all()
+  serializer_class = ProcessInventoryListSerializer
+
+class ProcessInventoryDetail(generics.RetrieveAPIView):
+  queryset = ProcessType.objects.all()
+  serializer_class = ProcessInventoryDetailSerializer
+
 
 
 

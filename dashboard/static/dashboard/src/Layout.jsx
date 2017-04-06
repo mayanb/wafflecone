@@ -26,9 +26,9 @@ class Navbar extends React.Component {
   }
 
   render () {
-    let selectedInventory = this.props.selectedInventory
+    console.log(this.props)
     return (
-      <div className={"d-nav " + ((selectedInventory!=-1)?"shrink":"")}>
+      <div className={"d-nav " + ((this.props.shrink)?"shrink":"")}>
         <div className="nav-brand">SCOOP</div>
         <div className="nav-team">
         <Dropdown
@@ -43,7 +43,7 @@ class Navbar extends React.Component {
             this.props.options.map(function (x, i) {
               return (
               <li key={i}> 
-                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName={(selectedInventory!=-1)?"":"active"}>{x}</NavLink>
+                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName={"active"}>{x}</NavLink>
               </li>
               )
           }, this )}

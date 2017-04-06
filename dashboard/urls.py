@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^[a-z]+/$', views.index, name='index'),
+    url(r'^[a-z]+/[0-9]+/$', views.index, name='index'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
