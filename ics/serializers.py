@@ -82,7 +82,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 # serializes all fields of the task, with nested items, inputs, and attributes
 class NestedTaskSerializer(serializers.ModelSerializer):
-  items = BasicItemSerializer(many=True, read_only=True)
+  items = serializers.SerializerMethodField('getItems')
   inputs = BasicInputSerializer(many=True, read_only=True)
   inputUnit = serializers.SerializerMethodField('getInputUnit')
   attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
@@ -95,6 +95,14 @@ class NestedTaskSerializer(serializers.ModelSerializer):
       return input.task.process_type.unit
     else: 
       return ''
+
+  def getItems(self, task):
+    if self.context.get('inventory', None) is not None:
+      print("inventory")
+      return BasicItemSerializer(task.items.all().filter(input__isnull=True), many=True).data
+    else:
+      print("not inventory")
+      return BasicItemSerializer(task.items.all(), many=True).data
 
   class Meta:
     model = Task
