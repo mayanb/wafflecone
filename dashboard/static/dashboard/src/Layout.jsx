@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import {NavLink} from 'react-router-dom'
+import {Link, NavLink} from 'react-router-dom'
 import {Dropdown} from 'react-toolbox/lib/dropdown'
 
 var teams = [
@@ -36,25 +36,31 @@ class Navbar extends React.Component {
 
     return (
       <div className={"d-nav " + navbarSizeClass}>
-        <div className="nav-brand">SCOOP</div>
-        <div className="nav-team">
-        <Dropdown
-          source={teams}
-          onChange={(val) => this.handleTeamChange(val)}
-          value={this.state.team}
-        />
-        </div>
-        <div>
-        <ul>
-          { 
-            options.map(function (x, i) {
-              return (
-              <li key={i}> 
-                <NavLink exact to={ "/dashboard/" + links[i]} activeClassName={"active"}>{x}</NavLink>
-              </li>
-              )
-          }, this )}
-        </ul>
+        <Link to={"/dashboard/" + (this.props.match.params.section||"") + "/"} style={{"display": this.props.match.params.id?"":"none"}}>
+          <div className="pushout">
+          </div>
+        </Link>
+        <div className="bar">
+          <div className="nav-brand">SCOOP</div>
+          <div className="nav-team">
+          <Dropdown
+            source={teams}
+            onChange={(val) => this.handleTeamChange(val)}
+            value={this.state.team}
+          />
+          </div>
+          <div>
+          <ul>
+            { 
+              options.map(function (x, i) {
+                return (
+                <li key={i}> 
+                  <NavLink exact to={ "/dashboard/" + links[i]} activeClassName={"active"}>{x}</NavLink>
+                </li>
+                )
+            }, this )}
+          </ul>
+          </div>
         </div>
       </div>
     )

@@ -26,19 +26,28 @@ html, body, #root, .parent, .content-area {
     max-width: 900px; }
 
 .d-content {
-  flex: 1; }
+  flex: 1;
+  max-height: 100vh;
+  overflow: scroll; }
 
 .d-nav {
   flex: 0 0 13em;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12); }
-  .d-nav.shrink {
-    flex: 0 0 16px; }
-    .d-nav.shrink div, .d-nav.shrink ul {
-      display: none; }
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: flex 0.3s; }
+
+.pushout {
+  width: 32px;
+  height: 32px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+  border-radius: 100%;
+  position: fixed;
+  background-color: white;
+  top: 5px;
+  left: 8px; }
 
 .d-nav.littleNav {
   flex: 0 0 16px; }
-  .d-nav.littleNav > div, .d-nav.littleNav > ul {
+  .d-nav.littleNav > div.bar {
     display: none; }
 
 .d-ads {
@@ -696,10 +705,10 @@ table {
     flex: 1;
     max-width: 900px;
     margin: 0 auto;
-    padding-top: 100px;
-    height: 100vh;
-    max-height: 100vh;
-    overflow: scroll; }
+    padding-top: 100px; }
+    .inventory .inventory-list.smallDetail {
+      max-height: 100vh;
+      overflow: scroll; }
   .inventory .inventory-detail {
     flex: 0 0 20em;
     display: flex;
@@ -707,7 +716,12 @@ table {
     background-color: #fafafa;
     min-height: 100vh;
     max-height: 100vh;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12); }
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: flex 0.3s; }
+    .inventory .inventory-detail.smallDetail {
+      flex: 0 0 0.001px; }
+      .inventory .inventory-detail.smallDetail div {
+        display: none; }
     .inventory .inventory-detail .i-detail-header {
       background-color: white;
       border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -755,9 +769,11 @@ table {
         background-color: #43A6F6;
         color: white;
         border: none; }
+  .inventory a, .inventory a:hover, .inventory a:visited, .inventory a:-webkit-any-link {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 0.64); }
   .inventory .inventoryClass {
     display: flex;
-    color: rgba(0, 0, 0, 0.64);
     line-height: 20px;
     padding: 8px 0px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);

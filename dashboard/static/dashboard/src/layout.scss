@@ -52,24 +52,30 @@ html, body, #root, .parent, .content-area {
 
 .d-content {
   flex: 1;
+  max-height: 100vh;
+  overflow: scroll;
 }
 
 .d-nav{
   flex: 0 0 13em;
   box-shadow: $shadow-1;
+  transition: flex 0.3s
+}
 
-  &.shrink {
-  	flex: 0 0 16px;
-
-  	div, ul {
-  		display: none
-  	}
-  }
+.pushout {
+  width: 32px;
+  height: 32px;
+  box-shadow: $shadow-1;
+  border-radius: 100%;
+  position: fixed;
+  background-color: white;
+  top: 5px;
+  left: 8px;
 }
 
 .d-nav.littleNav {
   flex: 0 0 16px;
-  &>div, &>ul {
+  &>div.bar {
     display: none;
   }
 }

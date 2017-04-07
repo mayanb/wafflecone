@@ -50145,38 +50145,47 @@
 	        'div',
 	        { className: "d-nav " + navbarSizeClass },
 	        _react2.default.createElement(
-	          'div',
-	          { className: 'nav-brand' },
-	          'SCOOP'
+	          _reactRouterDom.Link,
+	          { to: "/dashboard/" + (this.props.match.params.section || "") + "/", style: { "display": this.props.match.params.id ? "" : "none" } },
+	          _react2.default.createElement('div', { className: 'pushout' })
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'nav-team' },
-	          _react2.default.createElement(_dropdown.Dropdown, {
-	            source: teams,
-	            onChange: function onChange(val) {
-	              return _this2.handleTeamChange(val);
-	            },
-	            value: this.state.team
-	          })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          null,
+	          { className: 'bar' },
 	          _react2.default.createElement(
-	            'ul',
+	            'div',
+	            { className: 'nav-brand' },
+	            'SCOOP'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'nav-team' },
+	            _react2.default.createElement(_dropdown.Dropdown, {
+	              source: teams,
+	              onChange: function onChange(val) {
+	                return _this2.handleTeamChange(val);
+	              },
+	              value: this.state.team
+	            })
+	          ),
+	          _react2.default.createElement(
+	            'div',
 	            null,
-	            options.map(function (x, i) {
-	              return _react2.default.createElement(
-	                'li',
-	                { key: i },
-	                _react2.default.createElement(
-	                  _reactRouterDom.NavLink,
-	                  { exact: true, to: "/dashboard/" + links[i], activeClassName: "active" },
-	                  x
-	                )
-	              );
-	            }, this)
+	            _react2.default.createElement(
+	              'ul',
+	              null,
+	              options.map(function (x, i) {
+	                return _react2.default.createElement(
+	                  'li',
+	                  { key: i },
+	                  _react2.default.createElement(
+	                    _reactRouterDom.NavLink,
+	                    { exact: true, to: "/dashboard/" + links[i], activeClassName: "active" },
+	                    x
+	                  )
+	                );
+	              }, this)
+	            )
 	          )
 	        )
 	      );
@@ -65328,6 +65337,8 @@
 
 	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
 
+	var _Inputs = __webpack_require__(351);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -65370,17 +65381,22 @@
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
-	      var detail = false;
-	      if (props.match.params.id) {
-	        detail = _react2.default.createElement(_InventoryDetail2.default, this.state.processes[this.state.selected]);
-	      }
-
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'inventory' },
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'inventory-list' },
+	          { className: "inventory-list " + (props.match.params.id ? "smallDetail" : "") },
+	          _react2.default.createElement(_Inputs.Filters, {
+	            label: "",
+	            filters: {},
+	            active: 1,
+	            processes: 0,
+	            products: 0,
+	            dates: false,
+	            onFilter: function onFilter(object) {},
+	            initialDates: { start: null, end: null }
+	          }),
 	          _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
 	          this.state.processes.map(function (process, i) {
 	            var _this2 = this;
@@ -65388,21 +65404,20 @@
 	            return _react2.default.createElement(
 	              _reactRouterDom.Link,
 	              { key: i, to: "/dashboard/inventory/" + process.id },
-	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: this.state.selected }, process, { onClick: function onClick() {
+	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.match.params.id }, process, { onClick: function onClick() {
 	                  return _this2.handleClick(i);
 	                } }))
 	            );
 	          }, this)
 	        ),
-	        detail
+	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.state.processes[this.state.selected], { match: props.match, showDetail: props.match.params.id }))
 	      );
 	    }
-	  }, {
-	    key: 'handleClick',
-	    value: function handleClick(i) {
-	      this.setState({ selected: i });
-	      this.props.onExpandRequest();
-	    }
+
+	    // handleClick(i) {
+	    //   this.setState({selected: i})
+	    // }
+
 	  }]);
 
 	  return Inventory;
@@ -65459,7 +65474,8 @@
 	}
 
 	function isSelected(props) {
-	  return props.i == props.selected ? "selected" : "";
+	  if (isHeader(props)) return false;
+	  return props.id == props.selected ? "selected" : "";
 	}
 
 	String.prototype.sentenceCase = function () {
@@ -65506,8 +65522,9 @@
 
 	    var _this = _possibleConstructorReturn(this, (InventoryDetail.__proto__ || Object.getPrototypeOf(InventoryDetail)).call(this, props));
 
+	    _this.latestRequestID = -1;
 	    _this.state = {
-	      items: []
+	      process: {}
 	    };
 	    return _this;
 	  }
@@ -65526,10 +65543,9 @@
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
-	      console.log(props);
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'inventory-detail' },
+	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'i-detail-header' },
@@ -65539,7 +65555,7 @@
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              props.output_desc
+	              this.state.process.output_desc
 	            )
 	          ),
 	          _react2.default.createElement(
@@ -65548,14 +65564,14 @@
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              props.count + " " + props.unit + "s"
+	              (this.state.process.items || []).length + " " + this.state.process.unit + "s"
 	            )
 	          )
 	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'i-detail-content' },
-	          this.state.items.map(function (item, i) {
+	          (this.state.process.items || []).map(function (item, i) {
 	            return _react2.default.createElement(Item, _extends({ key: i }, item));
 	          }, this)
 	        ),
@@ -65573,11 +65589,17 @@
 	  }, {
 	    key: 'getInventoryItems',
 	    value: function getInventoryItems(props) {
-	      var url = window.location.origin + "/ics/processes/inventory/" + props.id;
-	      console.log(url);
+	      if (!props.match.params.id) {
+	        return;
+	      }
+
+	      var url = window.location.origin + "/ics/processes/inventory/" + props.match.params.id;
+	      var random = Math.floor(Math.random() * 1000);
+	      this.latestRequestID = random;
+
 	      var component = this;
-	      _jquery2.default.get(url).done(function (data) {
-	        component.setState({ items: data.items });
+	      _jquery2.default.get(url).done(function (data, d, jqxhr) {
+	        if (component.latestRequestID == random) component.setState({ process: data });
 	      });
 	    }
 	  }]);

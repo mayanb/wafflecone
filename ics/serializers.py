@@ -117,7 +117,7 @@ class ProcessInventoryDetailSerializer(serializers.ModelSerializer):
   items = NestedItemSerializer(source='getInventoryItems', many=True, read_only=True)
   class Meta:
     model = ProcessType
-    fields = ('items',)
+    fields = ('id', 'items',  'output_desc', 'unit')
 
 class MovementItemSerializer(serializers.ModelSerializer):
   class Meta:
@@ -127,7 +127,7 @@ class MovementItemSerializer(serializers.ModelSerializer):
 class NestedMovementItemSerializer(serializers.ModelSerializer):
   class Meta:
     model = MovementItem
-    fields = ('id', 'item')
+    fields = ('id', 'item',)
     depth = 1
 
 class MovementListSerializer(serializers.ModelSerializer):
