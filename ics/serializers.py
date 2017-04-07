@@ -129,7 +129,7 @@ class MovementListSerializer(serializers.ModelSerializer):
   items = NestedMovementItemSerializer(many=True, read_only=True)
   class Meta:
     model = Movement
-    fields = ('id', 'items', 'origin', 'status')
+    fields = ('id', 'items', 'origin', 'status', 'destination')
 
 class MovementCreateSerializer(serializers.ModelSerializer):
   items = MovementItemSerializer(many=True, read_only=False)
