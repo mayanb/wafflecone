@@ -53023,7 +53023,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.Filters = undefined;
+	exports.InventoryFilter = exports.Filters = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -53197,22 +53197,56 @@
 	  return Multiselect;
 	}(_react2.default.Component);
 
-	var Filters = function (_React$Component3) {
-	  _inherits(Filters, _React$Component3);
+	var InventoryFilter = function (_React$Component3) {
+	  _inherits(InventoryFilter, _React$Component3);
+
+	  function InventoryFilter() {
+	    _classCallCheck(this, InventoryFilter);
+
+	    return _possibleConstructorReturn(this, (InventoryFilter.__proto__ || Object.getPrototypeOf(InventoryFilter)).apply(this, arguments));
+	  }
+
+	  _createClass(InventoryFilter, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this4 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(_reactSelect2.default, { multi: true,
+	          options: this.props.options,
+	          value: this.props.selected,
+	          placeholder: 'All products',
+	          labelKey: 'name',
+	          valueKey: 'id',
+	          onChange: function onChange(val) {
+	            return _this4.props.onFilter("productFilter", val);
+	          }
+	        })
+	      );
+	    }
+	  }]);
+
+	  return InventoryFilter;
+	}(_react2.default.Component);
+
+	var Filters = function (_React$Component4) {
+	  _inherits(Filters, _React$Component4);
 
 	  function Filters(props) {
 	    _classCallCheck(this, Filters);
 
-	    var _this3 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
+	    var _this5 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
 
-	    _this3.handleChange = _this3.handleChange.bind(_this3);
-	    _this3.handleDateRangeChange = _this3.handleDateRangeChange.bind(_this3);
-	    _this3.state = {
+	    _this5.handleChange = _this5.handleChange.bind(_this5);
+	    _this5.handleDateRangeChange = _this5.handleDateRangeChange.bind(_this5);
+	    _this5.state = {
 	      start: "",
 	      end: "",
 	      active: 1
 	    };
-	    return _this3;
+	    return _this5;
 	  }
 
 	  _createClass(Filters, [{
@@ -53241,7 +53275,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this4 = this;
+	      var _this6 = this;
 
 	      var obj = false;
 
@@ -53266,21 +53300,21 @@
 	              'div',
 	              null,
 	              _react2.default.createElement(TaskSelect, { placeholder: 'All tasks', value: this.props.label, onChange: function onChange(val) {
-	                  return _this4.handleChange("label", val);
+	                  return _this6.handleChange("label", val);
 	                } })
 	            ),
 	            _react2.default.createElement(
 	              'div',
 	              null,
 	              _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                  return _this4.handleChange("processes", val);
+	                  return _this6.handleChange("processes", val);
 	                } })
 	            ),
 	            _react2.default.createElement(
 	              'div',
 	              null,
 	              _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
-	                  return _this4.handleChange("products", val);
+	                  return _this6.handleChange("products", val);
 	                } })
 	            ),
 	            obj
@@ -53294,6 +53328,7 @@
 	}(_react2.default.Component);
 
 	exports.Filters = Filters;
+	exports.InventoryFilter = InventoryFilter;
 
 /***/ },
 /* 352 */
@@ -65341,6 +65376,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -65355,10 +65392,14 @@
 
 	    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
 
+	    _this.handleProductFilter = _this.handleProductFilter.bind(_this);
+	    _this.latestRequestID = -1;
 	    _this.state = {
 	      processes: [],
+	      products: [],
 	      loading: false,
-	      selected: -1
+	      selected: -1,
+	      productFilter: []
 	    };
 	    return _this;
 	  }
@@ -65366,16 +65407,45 @@
 	  _createClass(Inventory, [{
 	    key: 'getProcessesForInventory',
 	    value: function getProcessesForInventory() {
+	      this.setState({ loading: true });
+
 	      var url = window.location.origin + "/ics/processes/inventory/";
+	      var params = { products: this.state.productFilter };
 	      var component = this;
+	      var requestID = Math.floor(Math.random() * 1000);
+	      this.latestRequestID = requestID;
+
+	      _jquery2.default.get(url, params).done(function (data) {
+	        if (component.latestRequestID == requestID) component.setState({ processes: data });
+	      }).always(function () {
+	        if (component.latestRequestID == requestID) component.setState({ loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'getProductsForInventory',
+	    value: function getProductsForInventory() {
+	      var component = this;
+	      var url = window.location.origin + "/ics/products/";
 	      _jquery2.default.get(url).done(function (data) {
-	        component.setState({ processes: data });
+	        var mappedProducts = data.map(function (product, i) {
+	          return { value: product.id, label: product.name };
+	        });
+	        component.setState({ products: data });
 	      });
 	    }
 	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.getProcessesForInventory();
+	      this.getProductsForInventory();
+	    }
+	  }, {
+	    key: 'handleProductFilter',
+	    value: function handleProductFilter(which, val) {
+	      var component = this;
+	      this.setState(_defineProperty({}, which, val), function () {
+	        component.getProcessesForInventory();
+	      });
 	    }
 	  }, {
 	    key: 'render',
@@ -65387,16 +65457,12 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: "inventory-list " + (props.match.params.id ? "smallDetail" : "") },
-	          _react2.default.createElement(_Inputs.Filters, {
-	            label: "",
-	            filters: {},
-	            active: 1,
-	            processes: 0,
-	            products: 0,
-	            dates: false,
-	            onFilter: function onFilter(object) {},
-	            initialDates: { start: null, end: null }
-	          }),
+	          _react2.default.createElement(
+	            'h2',
+	            null,
+	            'Inventory'
+	          ),
+	          _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter }),
 	          _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
 	          this.state.processes.map(function (process, i) {
 	            var _this2 = this;
@@ -65413,11 +65479,6 @@
 	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.state.processes[this.state.selected], { match: props.match, showDetail: props.match.params.id }))
 	      );
 	    }
-
-	    // handleClick(i) {
-	    //   this.setState({selected: i})
-	    // }
-
 	  }]);
 
 	  return Inventory;
@@ -65611,13 +65672,18 @@
 
 
 	function Item(props) {
+	  var src = window.location.origin + "/static/dashboard/img/qricon@2x.png";
 	  return _react2.default.createElement(
 	    'div',
 	    { className: 'item', onClick: props.onClick },
 	    _react2.default.createElement(
 	      'div',
 	      { className: 'flex' },
-	      _react2.default.createElement('div', { className: 'item-img' }),
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'item-img' },
+	        _react2.default.createElement('img', { src: src })
+	      ),
 	      _react2.default.createElement(
 	        'div',
 	        null,

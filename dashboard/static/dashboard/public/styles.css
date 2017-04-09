@@ -705,7 +705,10 @@ table {
     flex: 1;
     max-width: 900px;
     margin: 0 auto;
-    padding-top: 100px; }
+    padding-top: 36px; }
+    .inventory .inventory-list h2 {
+      font-size: 20px;
+      padding: 20px 0px; }
     .inventory .inventory-list.smallDetail {
       max-height: 100vh;
       overflow: scroll; }
@@ -731,7 +734,8 @@ table {
       .inventory .inventory-detail .i-detail-header .i-detail-outputdesc {
         font-size: 18px;
         font-weight: bold;
-        margin-bottom: 12px; }
+        margin-bottom: 12px;
+        text-transform: capitalize; }
       .inventory .inventory-detail .i-detail-header .i-detail-count {
         color: rgba(0, 0, 0, 0.4); }
     .inventory .inventory-detail .i-detail-content {
@@ -744,10 +748,11 @@ table {
         flex-direction: row;
         padding: 8px 0px; }
         .inventory .inventory-detail .i-detail-content .item .item-img {
-          background-color: rgba(0, 0, 0, 0.3);
           height: 12px;
           width: 12px;
           display: inline-block; }
+          .inventory .inventory-detail .i-detail-content .item .item-img img {
+            height: 12px; }
         .inventory .inventory-detail .i-detail-content .item > div > div {
           vertical-align: middle;
           display: inline-block;

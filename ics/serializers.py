@@ -56,11 +56,11 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
 class NestedItemSerializer(serializers.ModelSerializer):
   creating_task = BasicTaskSerializer(many=False, read_only=True)
-  inventory = serializers.CharField(source='getInventory')
+  #inventory = serializers.CharField(source='getInventory')
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory')
+    fields = ('id', 'item_qr', 'creating_task',)
 
 class BasicInputSerializer(serializers.ModelSerializer):
   class Meta:

@@ -113,6 +113,23 @@ class Multiselect extends React.Component {
 
 }
 
+class InventoryFilter extends React.Component {
+  render() {
+    return (
+    <div>
+      <Select multi
+        options={this.props.options} 
+        value={this.props.selected} 
+        placeholder="All products" 
+        labelKey="name"
+        valueKey="id"
+        onChange={(val) => this.props.onFilter("productFilter", val)}
+      />
+    </div>
+    )
+  }
+}
+
 class Filters extends React.Component {
 
   constructor(props) {
@@ -182,4 +199,4 @@ class Filters extends React.Component {
   }
 }
 
-export { Filters };
+export { Filters, InventoryFilter };

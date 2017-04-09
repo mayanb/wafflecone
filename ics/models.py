@@ -49,7 +49,7 @@ class Attribute(models.Model):
 
 
 class Task(models.Model):
-    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name="tasks")
     product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
     label = models.CharField(max_length=20, db_index=True)  
     label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
@@ -288,6 +288,7 @@ class Movement(models.Model):
     deliverable = models.BooleanField(default=False)
     group_qr = models.CharField(max_length=50, blank=True)
     team = models.ForeignKey(User, related_name="movements", on_delete=models.CASCADE)
+
 
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
