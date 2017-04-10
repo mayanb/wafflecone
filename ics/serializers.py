@@ -149,3 +149,8 @@ class MovementReceiveSerializer(serializers.ModelSerializer):
   class Meta:
     model = Movement
     fields = ('id', 'status', 'destination')
+
+class InventoryListSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Item
+    fields = ('creating_task__process_type', 'count')

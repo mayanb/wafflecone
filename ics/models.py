@@ -224,36 +224,15 @@ class Item(models.Model):
     item_qr = models.CharField(max_length=100, unique=True)
     creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
     created_at = models.DateTimeField(auto_now_add=True)
+    inventory = models.ForeignKey(User, on_delete=models.CASCADE, related_name="items", null=True)
 
     def __str__(self):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
     
-
-    # def getInventory(self):
-    #     """
-    #     Returns the inventory this item is currently in; if this item no longer exists
-    #     in real life OR the item has been delivered but not received into any inventory,
-    #     the function returns None.
-    #     ----
-    #     containing_inventory = item.getInventory()
-    #     """
-    #     # if it's been used, it definitely is in no inventory
-    #     if self.input_set.all().exists():
-    #         return None
-
-    #     # see if it's been moved to a different inventory
-    #     try:
-    #         last_movementItem = self.movementitem_set.latest('movement__timestamp').select_related()
-    #         last_movement = last_movementItem.movement
-    #         if last_movement.status == Movement.RECEIVED:
-    #             return last_movement.team
-    #         return None
-
-    #     # no, then return the creating inventory
-    #     except ObjectDoesNotExist:
-    #         print("no movement")
-    #         return self.creating_task.process_type.created_by
-
+    def save(self):
+        if self.pk is None:
+            self.inventory = self.creating_task.process_type.created_by
+        super(Item, self).save(*args, **kwargs)
 
 class Input(models.Model):
     input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
@@ -283,6 +262,13 @@ class Movement(models.Model):
     group_qr = models.CharField(max_length=50, blank=True)
     origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
     destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
+
+    def save(self):
+        if self.status is 'RC':
+            self.items.update(inventory=destination)
+        if self.status is 'IT':
+            self.items.update(inventory=None)
+        super(Movement, self).save(*args, **kwargs)
 
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)

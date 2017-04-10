@@ -144,7 +144,48 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
 
+class InventoryList(generics.ListAPIView):
+  queryset = Item.objects.filter(input__isnull=True)
+  serializer_class = InventoryListSerializer
 
+  def get_queryset(self):
+    queryset = Item.objects.all()
+
+    # filter by team
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset.filter(inventory=team)
+
+    # filter by products
+    products = self.request.query_params.get('products', None)
+    if products is not None:
+      products = products.strip().split(',')
+    else:
+      products = []
+    queryset.filter(creating_task__product_type__in=products)
+
+    return queryset.values('creating_task__process_type', 'creating_task__process_type__output_desc').annotate(
+      count=models.Count(creating_task__process_type),
+    )
+
+# class ProcessInventoryDetail(generics.RetrieveAPIView):
+#   def get_queryset(self):
+#     queryset = Item.objects.filter(input__isnull=True)
+
+#     # filter by team
+#     team = self.request.query_params.get('team', None)
+#     if team is not None:
+#       queryset.filter(inventory=team)
+
+#     # filter by products
+#     products = self.request.query_params.get('products', None)
+#     if products is not None:
+#       products = products.strip().split(',')
+#     else:
+#       products = []
+#     queryset.filter(creating_task__product_type__in=products)
+
+#     return queryset.objects.filter(creating_task__process_type__output_desc__iexact='nibs')
 
 
 class ProductList(generics.ListCreateAPIView):
