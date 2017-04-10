@@ -10,7 +10,13 @@ var getOptions = function(input, callback) {
   if (input.length < 2) {
     callback(null, { optionss: [] })
   } else {
-    $.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+    let params = {
+      limit: true,
+      ordering: '-created_at',
+      label: input,
+      team: window.localStorage.getItem("team") || "1"
+    }
+    $.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
       var options = data.map(function (x) {
         return { value: x.id, label: display(x)}
       })

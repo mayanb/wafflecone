@@ -26,8 +26,8 @@ class Navbar extends React.Component {
   }
 
   render () {
-    let options = ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]
-    let links = ["dsda", "", "inventory", "labels", "settings"]
+    let options = ["Activity Log", "Inventory", "Labels", "Settings"]
+    let links = ["", "inventory", "labels", "settings"]
 
     var navbarSizeClass = "bigNav"
     if (this.props.match.params.id) {

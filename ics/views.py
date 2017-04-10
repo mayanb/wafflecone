@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Count
 from ics.models import *
 from django.contrib.auth.models import User
 from ics.serializers import *
@@ -95,7 +95,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.filter(is_trashed=True)
+  queryset = Task.objects.filter(is_trashed=False)
   serializer_class = NestedTaskSerializer
 
 
@@ -140,15 +140,6 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeSerializer
 
-  # def get_queryset(self):
-  #   queryset = ProcessType.objects.annotate(
-        
-  #     )
-  #   team = self.request.query_params.get('team', None)
-  #   if team is not None:
-  #     queryset.filter(created_by=team)
-  #   return queryset
-
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
@@ -157,16 +148,8 @@ class InventoryList(generics.ListAPIView):
   queryset = Item.objects.filter(input__isnull=True)
   serializer_class = InventoryListSerializer
 
-class ProcessInventoryList(generics.ListAPIView):
-  queryset = ProcessType.objects.filter()
-  serializer_class = ProcessInventoryListSerializer
-
-class ProcessInventoryDetail(generics.RetrieveAPIView):
-  queryset = ProcessType.objects.all()
-  serializer_class = ProcessInventoryDetailSerializer
-
   def get_queryset(self):
-    queryset = Item.objects.all()
+    queryset = Item.objects.filter(input__isnull=True)
 
     # filter by team
     team = self.request.query_params.get('team', None)
@@ -181,28 +164,33 @@ class ProcessInventoryDetail(generics.RetrieveAPIView):
       products = []
     queryset.filter(creating_task__product_type__in=products)
 
-    return queryset.values('creating_task__process_type', 'creating_task__process_type__output_desc').annotate(
-      count=models.Count(creating_task__process_type),
+    return queryset.values('creating_task__process_type', 'creating_task__process_type__output_desc', 'creating_task__process_type__unit').annotate(
+      count=Count('creating_task__process_type'),
     )
 
-# class ProcessInventoryDetail(generics.RetrieveAPIView):
-#   def get_queryset(self):
-#     queryset = Item.objects.filter(input__isnull=True)
+class InventoryDetail(generics.ListAPIView):
+  queryset = Item.objects.filter(creating_task=533)
+  serializer_class = BasicItemSerializer
 
-#     # filter by team
-#     team = self.request.query_params.get('team', None)
-#     if team is not None:
-#       queryset.filter(inventory=team)
+  def get_queryset(self):
+    queryset = Item.objects.filter(input__isnull=True)
 
-#     # filter by products
-#     products = self.request.query_params.get('products', None)
-#     if products is not None:
-#       products = products.strip().split(',')
-#     else:
-#       products = []
-#     queryset.filter(creating_task__product_type__in=products)
+    # filter by team
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset.filter(inventory=team)
 
-#     return queryset.objects.filter(creating_task__process_type__output_desc__iexact='nibs')
+    # filter by products
+    products = self.request.query_params.get('products', None)
+    if products is not None:
+      products = products.strip().split(',')
+    else:
+      products = []
+    queryset.filter(creating_task__product_type__in=products)
+
+    # filter by output type
+    output = self.request.query_params.get('output', '')
+    return queryset.filter(creating_task__process_type__output_desc__iexact=output)
 
 
 class ProductList(generics.ListCreateAPIView):

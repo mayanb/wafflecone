@@ -50133,8 +50133,8 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var options = ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"];
-	      var links = ["dsda", "", "inventory", "labels", "settings"];
+	      var options = ["Activity Log", "Inventory", "Labels", "Settings"];
+	      var links = ["", "inventory", "labels", "settings"];
 
 	      var navbarSizeClass = "bigNav";
 	      if (this.props.match.params.id) {
@@ -53067,7 +53067,13 @@
 	  if (input.length < 2) {
 	    callback(null, { optionss: [] });
 	  } else {
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+	    var params = {
+	      limit: true,
+	      ordering: '-created_at',
+	      label: input,
+	      team: window.localStorage.getItem("team") || "1"
+	    };
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
 	      var options = data.map(function (x) {
 	        return { value: x.id, label: (0, _Task.display)(x) };
 	      });
@@ -64719,7 +64725,13 @@
 	  if (input.length < 2) {
 	    callback(null, { optionss: [] });
 	  } else {
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/?limit&ordering=-created_at&label=" + input).done(function (data) {
+	    var params = {
+	      limit: true,
+	      ordering: '-created_at',
+	      label: input,
+	      team: window.localStorage.getItem("team") || "1"
+	    };
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
 	      var options = data.map(function (x) {
 	        return { value: x.id, label: (0, _Task.display)(x), data: x };
 	      });
@@ -65409,7 +65421,7 @@
 	    value: function getProcessesForInventory() {
 	      this.setState({ loading: true });
 
-	      var url = window.location.origin + "/ics/processes/inventory/";
+	      var url = window.location.origin + "/ics/inventory/";
 	      var params = { products: this.state.productFilter };
 	      var component = this;
 	      var requestID = Math.floor(Math.random() * 1000);
@@ -65448,6 +65460,14 @@
 	      });
 	    }
 	  }, {
+	    key: 'getSelectedProcess',
+	    value: function getSelectedProcess() {
+	      var a = this.state.processes.find(function (x) {
+	        return x.process_id == this.props.match.params.id;
+	      }, this);
+	      return a;
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
@@ -65465,18 +65485,14 @@
 	          _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter }),
 	          _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
 	          this.state.processes.map(function (process, i) {
-	            var _this2 = this;
-
 	            return _react2.default.createElement(
 	              _reactRouterDom.Link,
-	              { key: i, to: "/dashboard/inventory/" + process.id },
-	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.match.params.id }, process, { onClick: function onClick() {
-	                  return _this2.handleClick(i);
-	                } }))
+	              { key: i, to: "/dashboard/inventory/" + process.process_id },
+	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.match.params.id }, process))
 	            );
 	          }, this)
 	        ),
-	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.state.processes[this.state.selected], { match: props.match, showDetail: props.match.params.id }))
+	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), { match: props.match, showDetail: props.match.params.id }))
 	      );
 	    }
 	  }]);
@@ -65536,7 +65552,7 @@
 
 	function isSelected(props) {
 	  if (isHeader(props)) return false;
-	  return props.id == props.selected ? "selected" : "";
+	  return props.process_id == props.selected ? "selected" : "";
 	}
 
 	String.prototype.sentenceCase = function () {
@@ -65585,7 +65601,7 @@
 
 	    _this.latestRequestID = -1;
 	    _this.state = {
-	      process: {}
+	      items: []
 	    };
 	    return _this;
 	  }
@@ -65604,6 +65620,7 @@
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
+	      console.log(props);
 	      return _react2.default.createElement(
 	        'div',
 	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
@@ -65616,7 +65633,7 @@
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              this.state.process.output_desc
+	              this.props.output_desc
 	            )
 	          ),
 	          _react2.default.createElement(
@@ -65625,14 +65642,14 @@
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              (this.state.process.items || []).length + " " + this.state.process.unit + "s"
+	              (this.state.items || []).length + " " + this.props.unit + "s"
 	            )
 	          )
 	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'i-detail-content' },
-	          (this.state.process.items || []).map(function (item, i) {
+	          (this.state.items || []).map(function (item, i) {
 	            return _react2.default.createElement(Item, _extends({ key: i }, item));
 	          }, this)
 	        ),
@@ -65654,13 +65671,15 @@
 	        return;
 	      }
 
-	      var url = window.location.origin + "/ics/processes/inventory/" + props.match.params.id;
+	      var url = window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
+	      var g = { output: props.output_desc };
+	      console.log(g);
 	      var random = Math.floor(Math.random() * 1000);
 	      this.latestRequestID = random;
 
 	      var component = this;
-	      _jquery2.default.get(url).done(function (data, d, jqxhr) {
-	        if (component.latestRequestID == random) component.setState({ process: data });
+	      _jquery2.default.get(url, g).done(function (data, d, jqxhr) {
+	        if (component.latestRequestID == random) component.setState({ items: data });
 	      });
 	    }
 	  }]);

@@ -235,7 +235,7 @@ class Item(models.Model):
     def __str__(self):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
     
-    def save(self):
+    def save(self, *args, **kwargs):
         if self.pk is None:
             self.inventory = self.creating_task.process_type.created_by
         super(Item, self).save(*args, **kwargs)
@@ -269,7 +269,7 @@ class Movement(models.Model):
     origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
     destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         if self.status is 'RC':
             self.items.update(inventory=destination)
         if self.status is 'IT':
