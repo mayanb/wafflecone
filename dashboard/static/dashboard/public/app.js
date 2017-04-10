@@ -82,6 +82,10 @@
 
 	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
 
+	var _Inventory = __webpack_require__(417);
+
+	var _Inventory2 = _interopRequireDefault(_Inventory);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -96,13 +100,17 @@
 	  function Main() {
 	    _classCallCheck(this, Main);
 
-	    return _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
+	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
+
+	    _this.handleExpandRequest = _this.handleExpandRequest.bind(_this);
+	    _this.handleShrinkRequest = _this.handleShrinkRequest.bind(_this);
+	    _this.state = { shrink: false };
+	    return _this;
 	  }
 
 	  _createClass(Main, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
-
 	      // handle cross-site forgery request stuff
 	      var csrftoken = (0, _csrf.getCookie)('csrftoken');
 	      _jquery2.default.ajaxSetup({
@@ -114,6 +122,16 @@
 	      });
 	    }
 	  }, {
+	    key: 'handleExpandRequest',
+	    value: function handleExpandRequest() {
+	      this.setState({ shrink: true });
+	    }
+	  }, {
+	    key: 'handleShrinkRequest',
+	    value: function handleShrinkRequest() {
+	      this.setState({ shrink: false });
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
@@ -121,15 +139,21 @@
 	        null,
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'parent' },
-	          _react2.default.createElement(_Layout.Navbar, {
-	            options: ["Activity Log", "Inventory", "Labels", "Settings"],
-	            links: ["", "inventory", "labels", "settings"]
-	          }),
-	          _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/", component: Inventory }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
-	          _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
+	          null,
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'parent' },
+	            _react2.default.createElement(
+	              'main',
+	              { className: 'd-content' },
+	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: Invent }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
+	            ),
+	            _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
+	            _react2.default.createElement('aside', { className: 'd-ads' })
+	          )
 	        )
 	      );
 	    }
@@ -138,15 +162,22 @@
 	  return Main;
 	}(_react2.default.Component);
 
+	/*
+	            <Navbar 
+	              className="d-nav" 
+	              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
+	              links={["dsda", "", "inventory", "labels", "settings"]}
+	              shouldShrink={this.state.shrink}
+	            ></Navbar>
+	*/
+
 	function ActivityLog(props) {
 	  return _react2.default.createElement(_Tasks2.default, { inventory: false, filters: getFilters() });
 	}
 
-	function Inventory(props) {
-	  return _react2.default.createElement(_Tasks2.default, { inventory: true, filters: getFilters() });
+	function Invent(props) {
+	  return _react2.default.createElement(_Inventory2.default, { inventory: true, filters: getFilters(), match: props.match });
 	}
-
-	_reactDom2.default.render(_react2.default.createElement(Main, null), document.getElementById('root'));
 
 	// QUERY STRING STUFF
 
@@ -176,6 +207,8 @@
 	  }
 	  return filters;
 	}
+
+	_reactDom2.default.render(_react2.default.createElement(Main, null), document.getElementById('root'));
 
 /***/ },
 /* 1 */
@@ -50100,43 +50133,33 @@
 	    value: function render() {
 	      var _this2 = this;
 
+	      var options = ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"];
+	      var links = ["dsda", "", "inventory", "labels", "settings"];
+
+	      var navbarSizeClass = "bigNav";
+	      if (this.props.match.params.id) {
+	        navbarSizeClass = "littleNav";
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'navbar' },
+	        { className: "d-nav " + navbarSizeClass },
+	        _react2.default.createElement(
+	          _reactRouterDom.Link,
+	          { to: "/dashboard/" + (this.props.match.params.section || "") + "/", style: { "display": this.props.match.params.id ? "" : "none" } },
+	          _react2.default.createElement('div', { className: 'pushout' })
+	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'content-area' },
+	          { className: 'bar' },
 	          _react2.default.createElement(
 	            'div',
-	            { className: 'left' },
-	            _react2.default.createElement(
-	              'h1',
-	              null,
-	              'Scoop'
-	            )
+	            { className: 'nav-brand' },
+	            'SCOOP'
 	          ),
 	          _react2.default.createElement(
 	            'div',
-	            { className: 'nav center' },
-	            _react2.default.createElement(
-	              'ul',
-	              null,
-	              this.props.options.map(function (x, i) {
-	                return _react2.default.createElement(
-	                  'li',
-	                  { key: i },
-	                  _react2.default.createElement(
-	                    _reactRouterDom.NavLink,
-	                    { exact: true, to: "/dashboard/" + this.props.links[i], activeClassName: 'active' },
-	                    x
-	                  )
-	                );
-	              }, this)
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'right' },
+	            { className: 'nav-team' },
 	            _react2.default.createElement(_dropdown.Dropdown, {
 	              source: teams,
 	              onChange: function onChange(val) {
@@ -50144,6 +50167,25 @@
 	              },
 	              value: this.state.team
 	            })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            null,
+	            _react2.default.createElement(
+	              'ul',
+	              null,
+	              options.map(function (x, i) {
+	                return _react2.default.createElement(
+	                  'li',
+	                  { key: i },
+	                  _react2.default.createElement(
+	                    _reactRouterDom.NavLink,
+	                    { exact: true, to: "/dashboard/" + links[i], activeClassName: "active" },
+	                    x
+	                  )
+	                );
+	              }, this)
+	            )
 	          )
 	        )
 	      );
@@ -52981,7 +53023,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.Filters = undefined;
+	exports.InventoryFilter = exports.Filters = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -53155,22 +53197,56 @@
 	  return Multiselect;
 	}(_react2.default.Component);
 
-	var Filters = function (_React$Component3) {
-	  _inherits(Filters, _React$Component3);
+	var InventoryFilter = function (_React$Component3) {
+	  _inherits(InventoryFilter, _React$Component3);
+
+	  function InventoryFilter() {
+	    _classCallCheck(this, InventoryFilter);
+
+	    return _possibleConstructorReturn(this, (InventoryFilter.__proto__ || Object.getPrototypeOf(InventoryFilter)).apply(this, arguments));
+	  }
+
+	  _createClass(InventoryFilter, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this4 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(_reactSelect2.default, { multi: true,
+	          options: this.props.options,
+	          value: this.props.selected,
+	          placeholder: 'All products',
+	          labelKey: 'name',
+	          valueKey: 'id',
+	          onChange: function onChange(val) {
+	            return _this4.props.onFilter("productFilter", val);
+	          }
+	        })
+	      );
+	    }
+	  }]);
+
+	  return InventoryFilter;
+	}(_react2.default.Component);
+
+	var Filters = function (_React$Component4) {
+	  _inherits(Filters, _React$Component4);
 
 	  function Filters(props) {
 	    _classCallCheck(this, Filters);
 
-	    var _this3 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
+	    var _this5 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
 
-	    _this3.handleChange = _this3.handleChange.bind(_this3);
-	    _this3.handleDateRangeChange = _this3.handleDateRangeChange.bind(_this3);
-	    _this3.state = {
+	    _this5.handleChange = _this5.handleChange.bind(_this5);
+	    _this5.handleDateRangeChange = _this5.handleDateRangeChange.bind(_this5);
+	    _this5.state = {
 	      start: "",
 	      end: "",
 	      active: 1
 	    };
-	    return _this3;
+	    return _this5;
 	  }
 
 	  _createClass(Filters, [{
@@ -53199,14 +53275,14 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this4 = this;
+	      var _this6 = this;
 
 	      var obj = false;
 
 	      if (this.props.dates) {
 	        obj = _react2.default.createElement(
 	          'div',
-	          { style: { marginLeft: "8px", flex: "1 auto" } },
+	          null,
 	          _react2.default.createElement(_Datepicker2.default, { initialDates: this.props.initialDates, onChange: this.handleDateRangeChange })
 	        );
 	      }
@@ -53224,28 +53300,24 @@
 	              'div',
 	              null,
 	              _react2.default.createElement(TaskSelect, { placeholder: 'All tasks', value: this.props.label, onChange: function onChange(val) {
-	                  return _this4.handleChange("label", val);
+	                  return _this6.handleChange("label", val);
 	                } })
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: "flex", flexdirection: "row" } },
-	              _react2.default.createElement(
-	                'div',
-	                { style: { marginRight: "8px", flex: "1 auto" } },
-	                _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                    return _this4.handleChange("processes", val);
-	                  } })
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { style: { flex: "1 auto" } },
-	                _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
-	                    return _this4.handleChange("products", val);
-	                  } })
-	              ),
-	              obj
-	            )
+	              null,
+	              _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	                  return _this6.handleChange("processes", val);
+	                } })
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              null,
+	              _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
+	                  return _this6.handleChange("products", val);
+	                } })
+	            ),
+	            obj
 	          )
 	        )
 	      );
@@ -53256,6 +53328,7 @@
 	}(_react2.default.Component);
 
 	exports.Filters = Filters;
+	exports.InventoryFilter = InventoryFilter;
 
 /***/ },
 /* 352 */
@@ -65270,6 +65343,369 @@
 	}
 
 	exports.Label = Label;
+
+/***/ },
+/* 417 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _InventoryDetail = __webpack_require__(418);
+
+	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
+
+	var _Inputs = __webpack_require__(351);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Inventory = function (_React$Component) {
+	  _inherits(Inventory, _React$Component);
+
+	  function Inventory(props) {
+	    _classCallCheck(this, Inventory);
+
+	    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
+
+	    _this.handleProductFilter = _this.handleProductFilter.bind(_this);
+	    _this.latestRequestID = -1;
+	    _this.state = {
+	      processes: [],
+	      products: [],
+	      loading: false,
+	      selected: -1,
+	      productFilter: []
+	    };
+	    return _this;
+	  }
+
+	  _createClass(Inventory, [{
+	    key: 'getProcessesForInventory',
+	    value: function getProcessesForInventory() {
+	      this.setState({ loading: true });
+
+	      var url = window.location.origin + "/ics/processes/inventory/";
+	      var params = { products: this.state.productFilter };
+	      var component = this;
+	      var requestID = Math.floor(Math.random() * 1000);
+	      this.latestRequestID = requestID;
+
+	      _jquery2.default.get(url, params).done(function (data) {
+	        if (component.latestRequestID == requestID) component.setState({ processes: data });
+	      }).always(function () {
+	        if (component.latestRequestID == requestID) component.setState({ loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'getProductsForInventory',
+	    value: function getProductsForInventory() {
+	      var component = this;
+	      var url = window.location.origin + "/ics/products/";
+	      _jquery2.default.get(url).done(function (data) {
+	        var mappedProducts = data.map(function (product, i) {
+	          return { value: product.id, label: product.name };
+	        });
+	        component.setState({ products: data });
+	      });
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getProcessesForInventory();
+	      this.getProductsForInventory();
+	    }
+	  }, {
+	    key: 'handleProductFilter',
+	    value: function handleProductFilter(which, val) {
+	      var component = this;
+	      this.setState(_defineProperty({}, which, val), function () {
+	        component.getProcessesForInventory();
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var props = this.props;
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'inventory' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: "inventory-list " + (props.match.params.id ? "smallDetail" : "") },
+	          _react2.default.createElement(
+	            'h2',
+	            null,
+	            'Inventory'
+	          ),
+	          _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter }),
+	          _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
+	          this.state.processes.map(function (process, i) {
+	            var _this2 = this;
+
+	            return _react2.default.createElement(
+	              _reactRouterDom.Link,
+	              { key: i, to: "/dashboard/inventory/" + process.id },
+	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.match.params.id }, process, { onClick: function onClick() {
+	                  return _this2.handleClick(i);
+	                } }))
+	            );
+	          }, this)
+	        ),
+	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.state.processes[this.state.selected], { match: props.match, showDetail: props.match.params.id }))
+	      );
+	    }
+	  }]);
+
+	  return Inventory;
+	}(_react2.default.Component);
+
+	exports.default = Inventory;
+
+
+	function InventoryItem(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-outputdesc' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.output_desc.sentenceCase()
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-count' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.count
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-unit' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.unit.sentenceCase() + "s"
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-date' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.date
+	      )
+	    )
+	  );
+	}
+
+	function isHeader(props) {
+	  return props.header == true ? "inventoryClass-header" : "";
+	}
+
+	function isSelected(props) {
+	  if (isHeader(props)) return false;
+	  return props.id == props.selected ? "selected" : "";
+	}
+
+	String.prototype.sentenceCase = function () {
+	  return this.charAt(0).toUpperCase() + this.slice(1);
+	};
+
+/***/ },
+/* 418 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _Task = __webpack_require__(349);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var InventoryDetail = function (_React$Component) {
+	  _inherits(InventoryDetail, _React$Component);
+
+	  function InventoryDetail(props) {
+	    _classCallCheck(this, InventoryDetail);
+
+	    var _this = _possibleConstructorReturn(this, (InventoryDetail.__proto__ || Object.getPrototypeOf(InventoryDetail)).call(this, props));
+
+	    _this.latestRequestID = -1;
+	    _this.state = {
+	      process: {}
+	    };
+	    return _this;
+	  }
+
+	  _createClass(InventoryDetail, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getInventoryItems(this.props);
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.getInventoryItems(np);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var props = this.props;
+	      return _react2.default.createElement(
+	        'div',
+	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-header' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'i-detail-outputdesc' },
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              this.state.process.output_desc
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'i-detail-count' },
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              (this.state.process.items || []).length + " " + this.state.process.unit + "s"
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-content' },
+	          (this.state.process.items || []).map(function (item, i) {
+	            return _react2.default.createElement(Item, _extends({ key: i }, item));
+	          }, this)
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-footer' },
+	          _react2.default.createElement(
+	            'button',
+	            null,
+	            'Deliver these items'
+	          )
+	        )
+	      );
+	    }
+	  }, {
+	    key: 'getInventoryItems',
+	    value: function getInventoryItems(props) {
+	      if (!props.match.params.id) {
+	        return;
+	      }
+
+	      var url = window.location.origin + "/ics/processes/inventory/" + props.match.params.id;
+	      var random = Math.floor(Math.random() * 1000);
+	      this.latestRequestID = random;
+
+	      var component = this;
+	      _jquery2.default.get(url).done(function (data, d, jqxhr) {
+	        if (component.latestRequestID == random) component.setState({ process: data });
+	      });
+	    }
+	  }]);
+
+	  return InventoryDetail;
+	}(_react2.default.Component);
+
+	exports.default = InventoryDetail;
+
+
+	function Item(props) {
+	  var src = window.location.origin + "/static/dashboard/img/qricon@2x.png";
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'item', onClick: props.onClick },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'flex' },
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'item-img' },
+	        _react2.default.createElement('img', { src: src })
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'item-qr' },
+	          props.item_qr.substring(42)
+	        ),
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'item-task' },
+	          (0, _Task.display)(props.creating_task)
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'unflex' },
+	      _react2.default.createElement('input', { type: 'checkbox', onChange: null })
+	    )
+	  );
+	}
 
 /***/ }
 /******/ ]);

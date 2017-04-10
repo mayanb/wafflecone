@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import {NavLink} from 'react-router-dom'
+import {Link, NavLink} from 'react-router-dom'
 import {Dropdown} from 'react-toolbox/lib/dropdown'
 
 var teams = [
@@ -25,36 +25,46 @@ class Navbar extends React.Component {
     window.location.reload()
   }
 
-  render() {
+  render () {
+    let options = ["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]
+    let links = ["dsda", "", "inventory", "labels", "settings"]
+
+    var navbarSizeClass = "bigNav"
+    if (this.props.match.params.id) {
+      navbarSizeClass = "littleNav"
+    }
+
     return (
-    <div className="navbar">
-    	<div className="content-area">
-  	 	 <div className="left">
-	  		<h1>Scoop</h1>
-	  	  </div>
-	  	  <div className="nav center">
-	  		<ul>
-		      { 
-            this.props.options.map(function (x, i) {
-		    	    return (
+      <div className={"d-nav " + navbarSizeClass}>
+        <Link to={"/dashboard/" + (this.props.match.params.section||"") + "/"} style={{"display": this.props.match.params.id?"":"none"}}>
+          <div className="pushout">
+          </div>
+        </Link>
+        <div className="bar">
+          <div className="nav-brand">SCOOP</div>
+          <div className="nav-team">
+          <Dropdown
+            source={teams}
+            onChange={(val) => this.handleTeamChange(val)}
+            value={this.state.team}
+          />
+          </div>
+          <div>
+          <ul>
+            { 
+              options.map(function (x, i) {
+                return (
                 <li key={i}> 
-                <NavLink exact to={ "/dashboard/" + this.props.links[i]} activeClassName="active">{x}</NavLink>
-              </li>
-            )
-		      }, this )}
-		    </ul>
-	  	</div>
-  		<div className="right">
-  			<Dropdown
-          source={teams}
-          onChange={(val) => this.handleTeamChange(val)}
-          value={this.state.team}
-        />
-	    </div>
-	</div>
-  </div>
-  )
-}
+                  <NavLink exact to={ "/dashboard/" + links[i]} activeClassName={"active"}>{x}</NavLink>
+                </li>
+                )
+            }, this )}
+          </ul>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }
 
 const ContentDescriptor = (props) => (

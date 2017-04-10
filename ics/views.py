@@ -140,6 +140,15 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeSerializer
 
+  # def get_queryset(self):
+  #   queryset = ProcessType.objects.annotate(
+        
+  #     )
+  #   team = self.request.query_params.get('team', None)
+  #   if team is not None:
+  #     queryset.filter(created_by=team)
+  #   return queryset
+
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
@@ -147,6 +156,14 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
 class InventoryList(generics.ListAPIView):
   queryset = Item.objects.filter(input__isnull=True)
   serializer_class = InventoryListSerializer
+
+class ProcessInventoryList(generics.ListAPIView):
+  queryset = ProcessType.objects.filter()
+  serializer_class = ProcessInventoryListSerializer
+
+class ProcessInventoryDetail(generics.RetrieveAPIView):
+  queryset = ProcessType.objects.all()
+  serializer_class = ProcessInventoryDetailSerializer
 
   def get_queryset(self):
     queryset = Item.objects.all()

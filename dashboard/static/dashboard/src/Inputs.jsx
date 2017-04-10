@@ -113,6 +113,23 @@ class Multiselect extends React.Component {
 
 }
 
+class InventoryFilter extends React.Component {
+  render() {
+    return (
+    <div>
+      <Select multi
+        options={this.props.options} 
+        value={this.props.selected} 
+        placeholder="All products" 
+        labelKey="name"
+        valueKey="id"
+        onChange={(val) => this.props.onFilter("productFilter", val)}
+      />
+    </div>
+    )
+  }
+}
+
 class Filters extends React.Component {
 
   constructor(props) {
@@ -151,39 +168,35 @@ class Filters extends React.Component {
     var obj = false
 
     if (this.props.dates) {
-      obj = <div style={{marginLeft: "8px", flex: "1 auto"}}><Datepicker initialDates={this.props.initialDates} onChange={this.handleDateRangeChange} /></div>
+      obj = <div><Datepicker initialDates={this.props.initialDates} onChange={this.handleDateRangeChange} /></div>
     }
 
     return (
       <div className="filters inputs">
 
-            <div className="active section">
-              
-              <div className="section-content">
+        <div className="active section">
+          
+          <div className="section-content">
 
-                <div>
-                  <TaskSelect placeholder="All tasks" value={this.props.label} onChange={(val) => this.handleChange("label", val)} />
-                </div>
-
-                <div style={{display: "flex", flexdirection: "row"}}>
-                  <div style={{marginRight: "8px", flex: "1 auto"}}>
-                    <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
-                  </div>
-
-                  <div style={{flex: "1 auto"}}>
-                    <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
-                  </div>
-
-                  {obj}
-
-                </div>
-
-
-              </div>
+            <div>
+              <TaskSelect placeholder="All tasks" value={this.props.label} onChange={(val) => this.handleChange("label", val)} />
             </div>
+
+            <div>
+              <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
+            </div>
+
+            <div>
+              <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
+            </div>
+
+            {obj}
+
+          </div>
         </div>
+      </div>
     );
   }
 }
 
-export { Filters };
+export { Filters, InventoryFilter };

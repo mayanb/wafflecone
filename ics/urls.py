@@ -24,6 +24,8 @@ urlpatterns = [
     url(r'^processes/$', views.ProcessList.as_view()),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view()),
     url(r'^processes/move/(?P<pk>[0-9]+)/$', views.ProcessMoveDetail.as_view()),
+    url(r'^processes/inventory/$', views.ProcessInventoryList.as_view()),
+    url(r'^processes/inventory/(?P<pk>[0-9]+)/$', views.ProcessInventoryDetail.as_view()),
 
     url(r'^products/$', views.ProductList.as_view()),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view()),

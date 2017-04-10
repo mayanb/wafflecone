@@ -22,6 +22,12 @@ class ProcessType(models.Model):
     def getAllAttributes(self):
         return self.attribute_set.all()
 
+    def getInventoryCount(self):
+        return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self).count()
+
+    def getInventoryItems(self):
+        return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self)
+
     class Meta:
         ordering = ['x',]
 
@@ -43,7 +49,7 @@ class Attribute(models.Model):
 
 
 class Task(models.Model):
-    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+    process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name="tasks")
     product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
     label = models.CharField(max_length=20, db_index=True)  
     label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
@@ -269,6 +275,7 @@ class Movement(models.Model):
         if self.status is 'IT':
             self.items.update(inventory=None)
         super(Movement, self).save(*args, **kwargs)
+
 
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)

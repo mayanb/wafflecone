@@ -9,14 +9,17 @@ import {Navbar} from './Layout.jsx'
 import Tasks from './Tasks.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
+import Inventory from './Inventory2.jsx'
 
 class Main extends React.Component {
   constructor() {
     super();
+    this.handleExpandRequest = this.handleExpandRequest.bind(this)
+    this.handleShrinkRequest = this.handleShrinkRequest.bind(this)
+    this.state = { shrink: false }
   }
 
   componentDidMount() {
-
     // handle cross-site forgery request stuff
     let csrftoken = getCookie('csrftoken');
     $.ajaxSetup({
@@ -26,29 +29,46 @@ class Main extends React.Component {
         }
       }
     })
+  }
 
+  handleExpandRequest() {
+    this.setState({ shrink: true})
+  }
+
+  handleShrinkRequest() {
+    this.setState({ shrink: false})
   }
 
   render () {
     return (
-
       <Router>
-        <div className="parent">
-        <Navbar 
-          options={["Activity Log", "Inventory", "Labels", "Settings"]}
-          links={["", "inventory", "labels", "settings"]} 
-        />
+          <div>
+          <div className="parent">
+            <main className="d-content">
+              <Route exact path={"/dashboard/"} component={ActivityLog} />
+              <Route path={"/dashboard/inventory/:id?"} component={Invent} />
+              <Route path={"/dashboard/labels/"} component={LabelPrinter} />
+              <Route path={"/dashboard/settings/"} component={FactoryMap} />
+            </main>
 
-          <Route exact path={"/dashboard/"} component={ActivityLog} />
-          <Route path={"/dashboard/inventory/"} component={Inventory} />
-          <Route path={"/dashboard/labels/"} component={LabelPrinter} />
-          <Route path={"/dashboard/settings/"} component={FactoryMap} />
-
-        </div>
+            <Route path="/dashboard/:section?/:id?" component={Navbar} />
+            <aside className="d-ads"></aside>
+          </div>
+          </div>
       </Router>
     )
   }
 }
+
+/*
+            <Navbar 
+              className="d-nav" 
+              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
+              links={["dsda", "", "inventory", "labels", "settings"]}
+              shouldShrink={this.state.shrink}
+            ></Navbar>
+*/
+
 
 function ActivityLog(props) {
   return (
@@ -56,16 +76,11 @@ function ActivityLog(props) {
   )
 }
 
-function Inventory(props) {
+function Invent(props) {
   return (
-    <Tasks inventory={true} filters={getFilters()} />
+    <Inventory inventory={true} filters={getFilters()} match={props.match}/>
   )
 }
-
-ReactDOM.render(
-  <Main />,
-  document.getElementById('root')
-);
 
 
 
@@ -98,3 +113,8 @@ function getFilters() {
   }
   return filters
 }
+
+ReactDOM.render(
+  <Main />,
+  document.getElementById('root')
+);
