@@ -811,4 +811,49 @@ table {
 .flex {
   flex: 1; }
 
+.task-detail {
+  padding: 56px;
+  max-width: 900px; }
+  .task-detail .task-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: row; }
+    .task-detail .task-header span:last-child {
+      text-align: right;
+      vertical-align: baseline;
+      flex: 1;
+      display: inline-block;
+      line-height: 20px;
+      padding: 10px 0px; }
+    .task-detail .task-header h1:first-child {
+      flex: 1; }
+    .task-detail .task-header h1 {
+      font-size: 20px;
+      line-height: 20px;
+      padding: 10px 0px; }
+  .task-detail .task-content {
+    padding: 20px 0px; }
+  .task-detail .task-attribute-table {
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    max-width: 400px; }
+    .task-detail .task-attribute-table .task-attribute-table-row {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 8px;
+      display: flex;
+      flex-direction: row; }
+      .task-detail .task-attribute-table .task-attribute-table-row span {
+        flex: 1; }
+        .task-detail .task-attribute-table .task-attribute-table-row span:last-child {
+          text-align: right; }
+      .task-detail .task-attribute-table .task-attribute-table-row:last-child {
+        border-bottom: none; }
+      .task-detail .task-attribute-table .task-attribute-table-row.task-attribute-table-row-header {
+        background-color: rgba(0, 0, 0, 0.05); }
+      .task-detail .task-attribute-table .task-attribute-table-row.zero-state {
+        padding: 16px; }
+        .task-detail .task-attribute-table .task-attribute-table-row.zero-state span {
+          text-align: center;
+          color: rgba(0, 0, 0, 0.4); }
+
 /*# sourceMappingURL=styles.css.map */

@@ -86,6 +86,10 @@
 
 	var _Inventory2 = _interopRequireDefault(_Inventory);
 
+	var _Task = __webpack_require__(420);
+
+	var _Task2 = _interopRequireDefault(_Task);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -149,7 +153,8 @@
 	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: Invent }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default })
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default })
 	            ),
 	            _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
 	            _react2.default.createElement('aside', { className: 'd-ads' })
@@ -165,8 +170,8 @@
 	/*
 	            <Navbar 
 	              className="d-nav" 
-	              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
-	              links={["dsda", "", "inventory", "labels", "settings"]}
+	              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings", "Task Viewer"]}
+	              links={["dsda", "", "inventory", "labels", "settings", "task"]}
 	              shouldShrink={this.state.shrink}
 	            ></Navbar>
 	*/
@@ -50133,11 +50138,11 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var options = ["Activity Log", "Inventory", "Labels", "Settings"];
-	      var links = ["", "inventory", "labels", "settings"];
+	      var options = ["Activity Log", "Inventory", "Labels", "Settings", "Task View"];
+	      var links = ["", "inventory", "labels", "settings", "task"];
 
 	      var navbarSizeClass = "bigNav";
-	      if (this.props.match.params.id) {
+	      if (this.props.match.params.id && this.props.match.params.section == "inventory") {
 	        navbarSizeClass = "littleNav";
 	      }
 
@@ -50146,7 +50151,7 @@
 	        { className: "d-nav " + navbarSizeClass },
 	        _react2.default.createElement(
 	          _reactRouterDom.Link,
-	          { to: "/dashboard/" + (this.props.match.params.section || "") + "/", style: { "display": this.props.match.params.id ? "" : "none" } },
+	          { to: "/dashboard/" + (this.props.match.params.section || "") + "/", style: { "display": navbarSizeClass == "littleNav" ? "" : "none" } },
 	          _react2.default.createElement('div', { className: 'pushout' })
 	        ),
 	        _react2.default.createElement(
@@ -53224,8 +53229,8 @@
 	          options: this.props.options,
 	          value: this.props.selected,
 	          placeholder: 'All products',
-	          labelKey: 'name',
-	          valueKey: 'id',
+	          labelKey: 'code',
+	          valueKey: 'code',
 	          onChange: function onChange(val) {
 	            return _this4.props.onFilter("productFilter", val);
 	          }
@@ -65386,6 +65391,8 @@
 
 	var _Inputs = __webpack_require__(351);
 
+	var _APIManager = __webpack_require__(419);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -65411,7 +65418,8 @@
 	      products: [],
 	      loading: false,
 	      selected: -1,
-	      productFilter: []
+	      productFilter: [],
+	      productFilterStr: ""
 	    };
 	    return _this;
 	  }
@@ -65422,12 +65430,17 @@
 	      this.setState({ loading: true });
 
 	      var url = window.location.origin + "/ics/inventory/";
-	      var params = { products: this.state.productFilter };
+
+	      var params = {};
+	      if (this.state.productFilter.length > 0) params = { products: this.state.productFilterStr };
+
+	      console.log(params);
+
 	      var component = this;
 	      var requestID = Math.floor(Math.random() * 1000);
 	      this.latestRequestID = requestID;
 
-	      _jquery2.default.get(url, params).done(function (data) {
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
 	        if (component.latestRequestID == requestID) component.setState({ processes: data });
 	      }).always(function () {
 	        if (component.latestRequestID == requestID) component.setState({ loading: false });
@@ -65437,7 +65450,7 @@
 	    key: 'getProductsForInventory',
 	    value: function getProductsForInventory() {
 	      var component = this;
-	      var url = window.location.origin + "/ics/products/";
+	      var url = window.location.origin + "/ics/products/codes/";
 	      _jquery2.default.get(url).done(function (data) {
 	        var mappedProducts = data.map(function (product, i) {
 	          return { value: product.id, label: product.name };
@@ -65454,8 +65467,13 @@
 	  }, {
 	    key: 'handleProductFilter',
 	    value: function handleProductFilter(which, val) {
+	      var _setState;
+
 	      var component = this;
-	      this.setState(_defineProperty({}, which, val), function () {
+	      var valStr = val.map(function (v, i) {
+	        return v.code;
+	      }).join();
+	      this.setState((_setState = {}, _defineProperty(_setState, which, val), _defineProperty(_setState, 'productFilterStr', valStr), _setState), function () {
 	        component.getProcessesForInventory();
 	      });
 	    }
@@ -65492,7 +65510,7 @@
 	            );
 	          }, this)
 	        ),
-	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), { match: props.match, showDetail: props.match.params.id }))
+	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), { filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null, match: props.match, showDetail: props.match.params.id }))
 	      );
 	    }
 	  }]);
@@ -65504,6 +65522,9 @@
 
 
 	function InventoryItem(props) {
+	  var teamStyle = { color: "rgba(0,0,0,0.3", paddingLeft: "4px", fontSize: "10px" };
+	  var currTeam = window.localStorage.getItem("team") || "1";
+	  teamStyle["display"] = currTeam == props.team_id ? "none" : "";
 	  return _react2.default.createElement(
 	    'div',
 	    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
@@ -65514,6 +65535,11 @@
 	        'span',
 	        null,
 	        props.output_desc.sentenceCase()
+	      ),
+	      _react2.default.createElement(
+	        'span',
+	        { style: teamStyle },
+	        props.team
 	      )
 	    ),
 	    _react2.default.createElement(
@@ -65583,6 +65609,12 @@
 
 	var _Task = __webpack_require__(349);
 
+	var _APIManager = __webpack_require__(419);
+
+	var _immutabilityHelper = __webpack_require__(377);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -65600,8 +65632,11 @@
 	    var _this = _possibleConstructorReturn(this, (InventoryDetail.__proto__ || Object.getPrototypeOf(InventoryDetail)).call(this, props));
 
 	    _this.latestRequestID = -1;
+	    _this.handleLoadClick = _this.handleLoadClick.bind(_this);
 	    _this.state = {
-	      items: []
+	      items: [],
+	      next: null,
+	      loading: false
 	    };
 	    return _this;
 	  }
@@ -65617,10 +65652,55 @@
 	      this.getInventoryItems(np);
 	    }
 	  }, {
+	    key: 'handleLoadClick',
+	    value: function handleLoadClick() {
+	      this.getInventoryItems(this.props, this.state.next);
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
-	      console.log(props);
+
+	      if (!this.state.items || this.state.items.length == 0) {
+	        if (this.state.loading) {
+	          return _react2.default.createElement(
+	            'div',
+	            { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'i-detail-header' },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'i-detail-outputdesc' },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  this.props.output_desc
+	                )
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'i-detail-count' },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  (this.props.count || 0) + " " + this.props.unit + "s"
+	                )
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'i-detail-content' },
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                'Loading...'
+	              )
+	            )
+	          );
+	        }
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
@@ -65642,7 +65722,7 @@
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              (this.state.items || []).length + " " + this.props.unit + "s"
+	              (this.props.count || 0) + " " + this.props.unit + "s"
 	            )
 	          )
 	        ),
@@ -65658,28 +65738,40 @@
 	          { className: 'i-detail-footer' },
 	          _react2.default.createElement(
 	            'button',
-	            null,
-	            'Deliver these items'
+	            { style: { display: this.state.next && !this.state.loading ? "" : "none" }, onClick: this.handleLoadClick },
+	            'Load more'
 	          )
 	        )
 	      );
 	    }
 	  }, {
 	    key: 'getInventoryItems',
-	    value: function getInventoryItems(props) {
+	    value: function getInventoryItems(props, u) {
 	      if (!props.match.params.id) {
 	        return;
 	      }
 
-	      var url = window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
+	      this.setState({ loading: true });
+
+	      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
 	      var g = { output: props.output_desc };
-	      console.log(g);
+	      if (this.props.filter) {
+	        g["products"] = this.props.filter;
+	      }
 	      var random = Math.floor(Math.random() * 1000);
 	      this.latestRequestID = random;
 
 	      var component = this;
-	      _jquery2.default.get(url, g).done(function (data, d, jqxhr) {
-	        if (component.latestRequestID == random) component.setState({ items: data });
+	      (0, _APIManager.fetch)(url, g).done(function (data, d, jqxhr) {
+	        if (component.latestRequestID == random) {
+	          var items = data.results;
+	          if (u) {
+	            items = (0, _immutabilityHelper2.default)(component.state.items, { $push: items });
+	          }
+	          component.setState({ items: items, next: data.next });
+	        }
+	      }).always(function () {
+	        component.setState({ loading: false });
 	      });
 	    }
 	  }]);
@@ -65723,6 +65815,192 @@
 	      { className: 'unflex' },
 	      _react2.default.createElement('input', { type: 'checkbox', onChange: null })
 	    )
+	  );
+	}
+
+/***/ },
+/* 419 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.fetch = undefined;
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function fetch(url, params) {
+	  var team = window.localStorage.getItem("team") || "1";
+	  var np = _jquery2.default.extend(true, { team: team }, params);
+	  return _jquery2.default.get(url, np);
+	}
+
+	exports.fetch = fetch;
+
+/***/ },
+/* 420 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _InventoryDetail = __webpack_require__(418);
+
+	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
+
+	var _Inputs = __webpack_require__(351);
+
+	var _APIManager = __webpack_require__(419);
+
+	var _Task = __webpack_require__(349);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Task = function (_React$Component) {
+	  _inherits(Task, _React$Component);
+
+	  function Task(props) {
+	    _classCallCheck(this, Task);
+
+	    var _this = _possibleConstructorReturn(this, (Task.__proto__ || Object.getPrototypeOf(Task)).call(this, props));
+
+	    _this.state = {
+	      task: {},
+	      loading: true
+	    };
+	    return _this;
+	  }
+
+	  _createClass(Task, [{
+	    key: 'getTask',
+	    value: function getTask() {
+	      this.setState({ loading: true });
+	      var id = this.props.match.params.id || 0;
+	      var url = window.location.origin + "/ics/tasks/" + id + "/";
+	      var component = this;
+	      (0, _APIManager.fetch)(url).done(function (data) {
+	        component.setState({ task: data });
+	      }).always(function () {
+	        component.setState({ loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getTask();
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'task-detail' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'task-header' },
+	          _react2.default.createElement(
+	            'h1',
+	            null,
+	            (0, _Task.display)(this.state.task)
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            null,
+	            'Created at 2:15pm on 2/12/17'
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'task-content' },
+	          _react2.default.createElement(
+	            Table,
+	            { title: 'Information' },
+	            [1, 2, 3, 4].map(function (row, i) {
+	              return _react2.default.createElement(
+	                'div',
+	                { key: i, className: 'task-attribute-table-row' },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'TITLE'
+	                ),
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'answer'
+	                )
+	              );
+	            })
+	          ),
+	          _react2.default.createElement(Table, { title: 'Inputs (0)' })
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Task;
+	}(_react2.default.Component);
+
+	exports.default = Task;
+
+
+	function Table(props) {
+
+	  var inside = _react2.default.createElement(
+	    'div',
+	    { className: 'task-attribute-table-row zero-state' },
+	    ' ',
+	    _react2.default.createElement(
+	      'span',
+	      null,
+	      ' Nothing to show here :( '
+	    )
+	  );
+	  if (props.children) {
+	    inside = props.children;
+	  }
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'task-attribute-table' },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'task-attribute-table-row task-attribute-table-row-header' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.title
+	      ),
+	      _react2.default.createElement('span', null)
+	    ),
+	    inside
 	  );
 	}
 

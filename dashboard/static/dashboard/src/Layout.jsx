@@ -26,17 +26,17 @@ class Navbar extends React.Component {
   }
 
   render () {
-    let options = ["Activity Log", "Inventory", "Labels", "Settings"]
-    let links = ["", "inventory", "labels", "settings"]
+    let options = ["Activity Log", "Inventory", "Labels", "Settings", "Task View"]
+    let links = ["", "inventory", "labels", "settings", "task"]
 
     var navbarSizeClass = "bigNav"
-    if (this.props.match.params.id) {
+    if (this.props.match.params.id && this.props.match.params.section == "inventory") {
       navbarSizeClass = "littleNav"
     }
 
     return (
       <div className={"d-nav " + navbarSizeClass}>
-        <Link to={"/dashboard/" + (this.props.match.params.section||"") + "/"} style={{"display": this.props.match.params.id?"":"none"}}>
+        <Link to={"/dashboard/" + (this.props.match.params.section||"") + "/"} style={{"display":(navbarSizeClass=="littleNav")?"":"none"}}>
           <div className="pushout">
           </div>
         </Link>

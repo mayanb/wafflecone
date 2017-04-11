@@ -127,8 +127,8 @@ class InventoryFilter extends React.Component {
         options={this.props.options} 
         value={this.props.selected} 
         placeholder="All products" 
-        labelKey="name"
-        valueKey="id"
+        labelKey="code"
+        valueKey="code"
         onChange={(val) => this.props.onFilter("productFilter", val)}
       />
     </div>

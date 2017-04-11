@@ -10,6 +10,7 @@ import Tasks from './Tasks.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
 import Inventory from './Inventory2.jsx'
+import Task from './Task-2.jsx'
 
 class Main extends React.Component {
   constructor() {
@@ -49,6 +50,7 @@ class Main extends React.Component {
               <Route path={"/dashboard/inventory/:id?"} component={Invent} />
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
+              <Route path={"/dashboard/task/:id?"} component={Task} />
             </main>
 
             <Route path="/dashboard/:section?/:id?" component={Navbar} />
@@ -63,8 +65,8 @@ class Main extends React.Component {
 /*
             <Navbar 
               className="d-nav" 
-              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings"]}
-              links={["dsda", "", "inventory", "labels", "settings"]}
+              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings", "Task Viewer"]}
+              links={["dsda", "", "inventory", "labels", "settings", "task"]}
               shouldShrink={this.state.shrink}
             ></Navbar>
 */

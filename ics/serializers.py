@@ -30,6 +30,11 @@ class ProductTypeSerializer(serializers.ModelSerializer):
     model = ProductType
     fields = ('id', 'name', 'code')
 
+class ProductCodeSerializer(serializers.ModelSerializer):
+  class Meta:
+    model=ProductType
+    fields = ('code',)
+
 class UserSerializer(serializers.ModelSerializer):
   processes = ProcessTypeSerializer(many=True, read_only=True)
   products = ProductTypeSerializer(many=True, read_only=True)
@@ -60,7 +65,7 @@ class NestedItemSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task',)
+    fields = ('id', 'item_qr', 'creating_task', 'inventory')
 
 class BasicInputSerializer(serializers.ModelSerializer):
   class Meta:
@@ -75,9 +80,11 @@ class NestedInputSerializer(serializers.ModelSerializer):
     fields = ('id', 'input_item', 'task')
 
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
+  att_name = serializers.CharField(source='attribute__name', read_only=True)
+  
   class Meta:
     model = TaskAttribute
-    fields = ('id', 'attribute', 'task', 'value')
+    fields = ('id', 'attribute', 'task', 'value', 'att_name')
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
   attribute = AttributeSerializer(many=False, read_only=True)
@@ -104,10 +111,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
   def getItems(self, task):
     if self.context.get('inventory', None) is not None:
-      print("inventory")
       return BasicItemSerializer(task.items.all().filter(input__isnull=True), many=True).data
     else:
-      print("not inventory")
       return BasicItemSerializer(task.items.all(), many=True).data
 
   class Meta:
@@ -168,6 +173,8 @@ class InventoryListSerializer(serializers.ModelSerializer):
   output_desc=serializers.CharField(source='creating_task__process_type__output_desc', read_only=True)
   count=serializers.CharField(read_only=True)
   unit=serializers.CharField(source='creating_task__process_type__unit', read_only=True)
+  team=serializers.CharField(source='creating_task__process_type__created_by__username', read_only=True)
+  team_id=serializers.CharField(source='creating_task__process_type__created_by', read_only=True)
   class Meta:
     model = Item
-    fields = ('process_id', 'count', 'output_desc', 'unit')
+    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id')

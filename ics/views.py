@@ -145,7 +145,6 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   serializer_class = ProcessTypePositionSerializer
 
 class InventoryList(generics.ListAPIView):
-  queryset = Item.objects.filter(input__isnull=True)
   serializer_class = InventoryListSerializer
 
   def get_queryset(self):
@@ -154,23 +153,28 @@ class InventoryList(generics.ListAPIView):
     # filter by team
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset.filter(inventory=team)
+      print(team)
+      queryset = queryset.filter(inventory=team)
 
     # filter by products
     products = self.request.query_params.get('products', None)
     if products is not None:
       products = products.strip().split(',')
-    else:
-      products = []
-    queryset.filter(creating_task__product_type__in=products)
+      queryset = queryset.filter(creating_task__product_type__code__in=products)
 
-    return queryset.values('creating_task__process_type', 'creating_task__process_type__output_desc', 'creating_task__process_type__unit').annotate(
-      count=Count('creating_task__process_type'),
+    return queryset.values(
+      'creating_task__process_type', 
+      'creating_task__process_type__output_desc', 
+      'creating_task__process_type__unit', 
+      'creating_task__process_type__created_by__username',
+      'creating_task__process_type__created_by').annotate(
+        count=Count('creating_task__process_type'),
     )
 
 class InventoryDetail(generics.ListAPIView):
   queryset = Item.objects.filter(creating_task=533)
-  serializer_class = BasicItemSerializer
+  serializer_class = NestedItemSerializer
+  pagination_class = SmallPagination
 
   def get_queryset(self):
     queryset = Item.objects.filter(input__isnull=True)
@@ -178,19 +182,21 @@ class InventoryDetail(generics.ListAPIView):
     # filter by team
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset.filter(inventory=team)
+      queryset = queryset.filter(inventory=team)
 
     # filter by products
     products = self.request.query_params.get('products', None)
     if products is not None:
       products = products.strip().split(',')
-    else:
-      products = []
-    queryset.filter(creating_task__product_type__in=products)
+      queryset = queryset.filter(creating_task__product_type__code__in=products)
 
     # filter by output type
     output = self.request.query_params.get('output', '')
-    return queryset.filter(creating_task__process_type__output_desc__iexact=output)
+    return queryset.filter(creating_task__process_type__output_desc__iexact=output).order_by('creating_task__created_at')
+
+class ProductCodes(generics.ListAPIView):
+  queryset = ProductType.objects.all().distinct('code')
+  serializer_class = ProductCodeSerializer
 
 
 class ProductList(generics.ListCreateAPIView):
@@ -200,10 +206,6 @@ class ProductList(generics.ListCreateAPIView):
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.all()
   serializer_class = ProductTypeSerializer
-
-
-
-
 
 class AttributeList(generics.ListCreateAPIView):
   queryset = Attribute.objects.all()
