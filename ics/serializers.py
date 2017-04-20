@@ -77,8 +77,8 @@ class NestedItemSerializer(serializers.ModelSerializer):
     fields = ('id', 'item_qr', 'creating_task', 'inventory')
 
 class BasicInputSerializer(serializers.ModelSerializer):
-  input_task_display = serializers.CharField(source='input_item.creating_task')
-  input_task = serializers.CharField(source='input_item.creating_task.id')
+  input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
+  input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
 
   class Meta:
     model = Input
