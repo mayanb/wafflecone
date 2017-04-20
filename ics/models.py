@@ -268,12 +268,16 @@ class Movement(models.Model):
     group_qr = models.CharField(max_length=50, blank=True)
     origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
     destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
+    notes = models.CharField(max_length=100, blank=True)
 
     def save(self, *args, **kwargs):
+        print(self.destination)
+        print(self.status)
+        print(self.items)
         if self.status is 'RC':
-            self.items.update(inventory=destination)
+            self.items.all().update(inventory=self.destination)
         if self.status is 'IT':
-            self.items.update(inventory=None)
+            self.items.all().update(inventory=None)
         super(Movement, self).save(*args, **kwargs)
 
 

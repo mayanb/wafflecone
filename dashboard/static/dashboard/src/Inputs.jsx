@@ -122,7 +122,7 @@ class Multiselect extends React.Component {
 class InventoryFilter extends React.Component {
   render() {
     return (
-    <div>
+    <div className="filters inputs">
       <Select multi
         options={this.props.options} 
         value={this.props.selected} 
@@ -179,27 +179,20 @@ class Filters extends React.Component {
 
     return (
       <div className="filters inputs">
-
-        <div className="active section">
-          
-          <div className="section-content">
-
-            <div>
-              <TaskSelect placeholder="All tasks" value={this.props.label} onChange={(val) => this.handleChange("label", val)} />
-            </div>
-
-            <div>
-              <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
-            </div>
-
-            <div>
-              <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
-            </div>
-
-            {obj}
-
-          </div>
+        <div>
+          <TaskSelect placeholder="All tasks" value={this.props.label} onChange={(val) => this.handleChange("label", val)} />
         </div>
+
+        <div>
+          <Multiselect options={this.props.processes} value={this.props.filters.processes} placeholder="All processes" onChange={(val) => this.handleChange("processes", val)}/>
+        </div>
+
+        <div>
+          <Multiselect options={this.props.products} value={this.props.filters.products} valueArray={this.props.filters.products} placeholder="All products" onChange={(val) => this.handleChange("products", val)}/>
+        </div>
+
+        {obj}
+
       </div>
     );
   }

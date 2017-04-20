@@ -1,108 +1,22 @@
 .filters.inputs {
 	background-color: white;
-	border-radius: 4px;
-	border-top: none;
+	border-radius: 10px;
 	display: flex;
-	flex-direction: column;
-	margin-top: 40px;
+	flex-direction: row;
+	border: 1px solid rgba(0,0,0,0.1);
 
-		.section {
-
-			.section-content {
-				& > div {
-				}
-			}
-
-			&.inactive > .section-content {
-				max-height: 0; 
-				padding-top: 0px;
-				overflow: hidden;
-			}
-
-			&.active > .section-content {
-				max-height: 999;
-				overflow: initial;
-			}
-
-			.header {
-				cursor: pointer;
-			}
-
-			h2 {
-				font-size: 12px;
-				font-weight: normal;
-				color: rgba(0,0,0,0.87);
-				margin: 0;
-				display: inline-block;
-				vertical-align: middle;
-				text-transform: uppercase;
-				letter-spacing: 1px;
-			}
-
-			.header i {
-				font-size: 16px;
-				line-height: 24px;
-				display: inline-block;
-				vertical-align: middle;
-
-				-webkit-transition-duration: 0.2s;
-			    -moz-transition-duration: 0.2s;
-			    -o-transition-duration: 0.2s;
-			    transition-duration: 0.2s;
-
-				-webkit-transition-property: -webkit-transform;
-				-moz-transition-property: -moz-transform;
-				-o-transition-property: -o-transform;
-				transition-property: transform;
-			}
-
-			&.active {
-				h2 { color: $primary; }
-				.header i {
-					-webkit-transform: rotate(90deg);
-    				-moz-transform: rotate(90deg);
-    				-ms-transform: rotate(90deg);
-    				-o-transform: rotate(90deg);
-    				transform: rotate(90deg);
-				}
-
-			}
-
-			.section-content {
-				display: flex;
-				font-size: 14px;
-
-				&>div {
-					border: 1px solid #e7e7e7;
-					flex: 1;
-					margin-left: -1px;
-					padding-left: 8px;
-
-					&:first-child {
-						border-radius: 4px 0px 0px 4px;
-						flex: 2;
-						margin-left: 0px;
-					}
-
-					&:last-child {
-						border-radius: 0px 4px 4px 0px;
-					}
-
-					
-				}
-			}
-		}
-	
-
-
-		h1 {
-			font-size: 13px;
-			color: rgba(0,0,0,0.4);
-			font-weight: normal;
-			margin: 4px 0px;
-		}
-
+	&>div {
+		flex: 2;
+		border-left: 1px solid rgba(0,0,0,0.1);
+		padding: 0px 8px;
 	}
+
+	&>div:first-child {
+		flex: 3;
+		border: none;
+	}
+}
+
 
 .multiselect {
 	padding-right: 24px;

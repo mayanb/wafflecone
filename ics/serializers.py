@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ics.models import *
 from django.contrib.auth.models import User
+from uuid import uuid4
 
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -9,9 +10,10 @@ class AttributeSerializer(serializers.ModelSerializer):
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
+  created_by_name = serializers.CharField(source='created_by.username', read_only=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name')
 
 class ProcessInventoryListSerializer(serializers.ModelSerializer):
   count = serializers.IntegerField(source='getInventoryCount')
@@ -55,9 +57,16 @@ class BasicTaskSerializer(serializers.ModelSerializer):
     fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
 
 class BasicItemSerializer(serializers.ModelSerializer):
+  is_used = serializers.SerializerMethodField('check')
+
+  def check(self, item):
+    if item.input_set.all().exists():
+      return True
+    return False
+
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used')
 
 class NestedItemSerializer(serializers.ModelSerializer):
   creating_task = BasicTaskSerializer(many=False, read_only=True)
@@ -68,9 +77,12 @@ class NestedItemSerializer(serializers.ModelSerializer):
     fields = ('id', 'item_qr', 'creating_task', 'inventory')
 
 class BasicInputSerializer(serializers.ModelSerializer):
+  input_task_display = serializers.CharField(source='input_item.creating_task')
+  input_task = serializers.CharField(source='input_item.creating_task.id')
+
   class Meta:
     model = Input
-    fields = ('id', 'input_item', 'task')
+    fields = ('id', 'input_item', 'task', 'input_task', 'input_task_display')
 
 class NestedInputSerializer(serializers.ModelSerializer):
   input_item = NestedItemSerializer(many=False, read_only=True)
@@ -80,7 +92,7 @@ class NestedInputSerializer(serializers.ModelSerializer):
     fields = ('id', 'input_item', 'task')
 
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
-  att_name = serializers.CharField(source='attribute__name', read_only=True)
+  att_name = serializers.CharField(source='attribute.name', read_only=True)
   
   class Meta:
     model = TaskAttribute
@@ -101,11 +113,12 @@ class NestedTaskSerializer(serializers.ModelSerializer):
   attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
   product_type = ProductTypeSerializer(many=False, read_only=True)
   process_type = ProcessTypeSerializer(many=False, read_only=True)
+  display = serializers.CharField(source='*')
 
   def getInputUnit(self, task):
     input = task.inputs.first()
     if input is not None:
-      return input.task.process_type.unit
+      return input.input_item.creating_task.process_type.unit
     else: 
       return ''
 
@@ -117,7 +130,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attribute_values')
+    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attribute_values', 'display')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
@@ -150,23 +163,27 @@ class MovementListSerializer(serializers.ModelSerializer):
 
 class MovementCreateSerializer(serializers.ModelSerializer):
   items = MovementItemSerializer(many=True, read_only=False)
+  group_qr = serializers.CharField(default='group_qr_gen')
 
   class Meta:
     model = Movement
-    fields = ('id', 'status', 'intended_destination', 'deliverable', 'group_qr', 'origin', 'items')
+    fields = ('id', 'status', 'destination', 'notes', 'deliverable', 'group_qr', 'origin', 'items')
 
   def create(self, validated_data):
+    print(validated_data)
     items_data = validated_data.pop('items')
     movement = Movement.objects.create(**validated_data)
     for item in items_data:
       MovementItem.objects.create(movement=movement, **item)
     return movement
 
+def group_qr_gen():
+  return "dande.li/g/" + str(uuid4())
+
 class MovementReceiveSerializer(serializers.ModelSerializer):
   class Meta:
     model = Movement
     fields = ('id', 'status', 'destination')
-
 
 class InventoryListSerializer(serializers.ModelSerializer):
   process_id=serializers.CharField(source='creating_task__process_type', read_only=True)
@@ -178,3 +195,27 @@ class InventoryListSerializer(serializers.ModelSerializer):
   class Meta:
     model = Item
     fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id')
+
+class ActivityListSerializer(serializers.ModelSerializer):
+  process_id=serializers.CharField(source='process_type', read_only=True)
+  process_name=serializers.CharField(source='process_type__name', read_only=True)
+  process_unit=serializers.CharField(source='process_type__unit', read_only=True)
+  product_id=serializers.CharField(source='product_type', read_only=True)
+  product_code=serializers.CharField(source='product_type__code', read_only=True)
+  runs=serializers.CharField(read_only=True)
+  outputs=serializers.CharField(read_only=True)
+  flagged=serializers.CharField(read_only=True)
+
+  class Meta:
+    model=Task
+    fields = ('runs', 'outputs', 'flagged', 'process_id', 'process_name', 'process_unit', 'product_id', 'product_code')
+
+class ActivityListDetailSerializer(serializers.ModelSerializer):
+  outputs=serializers.CharField(read_only=True)
+
+  class Meta:
+    model=Task
+    fields = ('id', 'label', 'label_index', 'custom_display', 'outputs')
+
+
+

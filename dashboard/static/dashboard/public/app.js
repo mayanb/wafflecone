@@ -86,9 +86,13 @@
 
 	var _Inventory2 = _interopRequireDefault(_Inventory);
 
-	var _Task = __webpack_require__(420);
+	var _Task = __webpack_require__(421);
 
 	var _Task2 = _interopRequireDefault(_Task);
+
+	var _ActivityLog = __webpack_require__(422);
+
+	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -150,7 +154,7 @@
 	            _react2.default.createElement(
 	              'main',
 	              { className: 'd-content' },
-	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: ActivityLog }),
+	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: _ActivityLog2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: Invent }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default }),
@@ -53224,7 +53228,7 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        null,
+	        { className: 'filters inputs' },
 	        _react2.default.createElement(_reactSelect2.default, { multi: true,
 	          options: this.props.options,
 	          value: this.props.selected,
@@ -53303,34 +53307,26 @@
 	        { className: 'filters inputs' },
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'active section' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'section-content' },
-	            _react2.default.createElement(
-	              'div',
-	              null,
-	              _react2.default.createElement(TaskSelect, { placeholder: 'All tasks', value: this.props.label, onChange: function onChange(val) {
-	                  return _this6.handleChange("label", val);
-	                } })
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              null,
-	              _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	                  return _this6.handleChange("processes", val);
-	                } })
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              null,
-	              _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
-	                  return _this6.handleChange("products", val);
-	                } })
-	            ),
-	            obj
-	          )
-	        )
+	          null,
+	          _react2.default.createElement(TaskSelect, { placeholder: 'All tasks', value: this.props.label, onChange: function onChange(val) {
+	              return _this6.handleChange("label", val);
+	            } })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	              return _this6.handleChange("processes", val);
+	            } })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
+	              return _this6.handleChange("products", val);
+	            } })
+	        ),
+	        obj
 	      );
 	    }
 	  }]);
@@ -65393,6 +65389,10 @@
 
 	var _APIManager = __webpack_require__(419);
 
+	var _Loading = __webpack_require__(420);
+
+	var _Loading2 = _interopRequireDefault(_Loading);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -65437,13 +65437,13 @@
 	      console.log(params);
 
 	      var component = this;
-	      var requestID = Math.floor(Math.random() * 1000);
-	      this.latestRequestID = requestID;
+	      var rid = (0, _APIManager.requestID)();
+	      this.latestRequestID = rid;
 
 	      (0, _APIManager.fetch)(url, params).done(function (data) {
-	        if (component.latestRequestID == requestID) component.setState({ processes: data });
+	        if (component.latestRequestID == rid) component.setState({ processes: data });
 	      }).always(function () {
-	        if (component.latestRequestID == requestID) component.setState({ loading: false });
+	        if (component.latestRequestID == rid) component.setState({ loading: false });
 	      });
 	    }
 	  }, {
@@ -65489,28 +65489,37 @@
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
+
+	      var contentArea = _react2.default.createElement(InventoryList, { processes: this.state.processes, selected: props.match.params.id });
+	      if (this.state.loading) {
+	        contentArea = _react2.default.createElement(_Loading2.default, null);
+	      } else if (!this.state.processes || this.state.processes.length == 0) {
+	        contentArea = _react2.default.createElement(_APIManager.ZeroState, { filtered: this.state.productFilter && this.state.productFilter.length });
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'inventory' },
 	        _react2.default.createElement(
 	          'div',
-	          { className: "inventory-list " + (props.match.params.id ? "smallDetail" : "") },
+	          { className: "page inventory-list " + (props.match.params.id ? "smallDetail" : "") },
 	          _react2.default.createElement(
-	            'h2',
-	            null,
-	            'Inventory'
+	            'div',
+	            { className: 'inventory-header page-header' },
+	            _react2.default.createElement(
+	              'h2',
+	              null,
+	              'Inventory'
+	            ),
+	            _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter })
 	          ),
-	          _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter }),
-	          _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
-	          this.state.processes.map(function (process, i) {
-	            return _react2.default.createElement(
-	              _reactRouterDom.Link,
-	              { key: i, to: "/dashboard/inventory/" + process.process_id },
-	              _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.match.params.id }, process))
-	            );
-	          }, this)
+	          contentArea
 	        ),
-	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), { filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null, match: props.match, showDetail: props.match.params.id }))
+	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), {
+	          filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null,
+	          match: props.match,
+	          showDetail: props.match.params.id
+	        }))
 	      );
 	    }
 	  }]);
@@ -65520,6 +65529,21 @@
 
 	exports.default = Inventory;
 
+
+	function InventoryList(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    null,
+	    _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
+	    props.processes.map(function (process, i) {
+	      return _react2.default.createElement(
+	        _reactRouterDom.Link,
+	        { key: i, to: "/dashboard/inventory/" + process.process_id },
+	        _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.selected }, process))
+	      );
+	    }, this)
+	  );
+	}
 
 	function InventoryItem(props) {
 	  var teamStyle = { color: "rgba(0,0,0,0.3", paddingLeft: "4px", fontSize: "10px" };
@@ -65615,6 +65639,12 @@
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _Loading = __webpack_require__(420);
+
+	var _Loading2 = _interopRequireDefault(_Loading);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -65661,43 +65691,10 @@
 	    value: function render() {
 	      var props = this.props;
 
+	      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, { items: this.state.items }));
 	      if (!this.state.items || this.state.items.length == 0) {
 	        if (this.state.loading) {
-	          return _react2.default.createElement(
-	            'div',
-	            { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'i-detail-header' },
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'i-detail-outputdesc' },
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  this.props.output_desc
-	                )
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'i-detail-count' },
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  (this.props.count || 0) + " " + this.props.unit + "s"
-	                )
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'i-detail-content' },
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                'Loading...'
-	              )
-	            )
-	          );
+	          contentArea = _react2.default.createElement(_Loading2.default, null);
 	        }
 	      }
 
@@ -65709,11 +65706,24 @@
 	          { className: 'i-detail-header' },
 	          _react2.default.createElement(
 	            'div',
-	            { className: 'i-detail-outputdesc' },
+	            { className: 'i-detail-outputdesc', style: { display: "flex", flexDirection: "row" } },
+	            _react2.default.createElement(
+	              'span',
+	              { style: { flex: "1" } },
+	              this.props.output_desc
+	            ),
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              this.props.output_desc
+	              _react2.default.createElement(
+	                _reactRouterDom.Link,
+	                { to: '/dashboard/inventory/' },
+	                _react2.default.createElement(
+	                  'i',
+	                  { style: { verticalAlign: "middle", fontSize: "16px", flex: "0" }, className: 'material-icons' },
+	                  'close'
+	                )
+	              )
 	            )
 	          ),
 	          _react2.default.createElement(
@@ -65729,18 +65739,7 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'i-detail-content' },
-	          (this.state.items || []).map(function (item, i) {
-	            return _react2.default.createElement(Item, _extends({ key: i }, item));
-	          }, this)
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'i-detail-footer' },
-	          _react2.default.createElement(
-	            'button',
-	            { style: { display: this.state.next && !this.state.loading ? "" : "none" }, onClick: this.handleLoadClick },
-	            'Load more'
-	          )
+	          contentArea
 	        )
 	      );
 	    }
@@ -65754,7 +65753,7 @@
 	      this.setState({ loading: true });
 
 	      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
-	      var g = { output: props.output_desc };
+	      var g = { process: props.process_id };
 	      if (this.props.filter) {
 	        g["products"] = this.props.filter;
 	      }
@@ -65781,6 +65780,16 @@
 
 	exports.default = InventoryDetail;
 
+
+	function ItemList(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    null,
+	    (props.items || []).map(function (item, i) {
+	      return _react2.default.createElement(Item, _extends({ key: i }, item));
+	    }, this)
+	  );
+	}
 
 	function Item(props) {
 	  var src = window.location.origin + "/static/dashboard/img/qricon@2x.png";
@@ -65822,12 +65831,16 @@
 /* 419 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.fetch = undefined;
+	exports.post = exports.ZeroState = exports.requestID = exports.fetch = undefined;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
 
 	var _jquery = __webpack_require__(179);
 
@@ -65841,10 +65854,72 @@
 	  return _jquery2.default.get(url, np);
 	}
 
+	function post(url, params) {
+	  return _jquery2.default.ajax({
+	    method: "POST",
+	    url: url,
+	    data: params,
+	    contentType: 'application/json',
+	    processData: false
+	  });
+	}
+
+	function requestID() {
+	  return Math.floor(Math.random() * 1000);
+	}
+
+	function ZeroState(props) {
+	  var sentence = "Looks like there's nothing here!";
+	  if (props.filtered) {
+	    sentence = "Looks like there's nothing here. Try expanding your search.";
+	  }
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'zero-state' },
+	    _react2.default.createElement(
+	      'span',
+	      null,
+	      sentence
+	    )
+	  );
+	}
+
 	exports.fetch = fetch;
+	exports.requestID = requestID;
+	exports.ZeroState = ZeroState;
+	exports.post = post;
 
 /***/ },
 /* 420 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = Loading;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function Loading(props) {
+	  return _react2.default.createElement(
+	    "div",
+	    { className: "zero-state" },
+	    _react2.default.createElement(
+	      "span",
+	      null,
+	      "Loading..."
+	    )
+	  );
+	}
+
+/***/ },
+/* 421 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65875,13 +65950,31 @@
 
 	var _Task = __webpack_require__(349);
 
+	var _moment = __webpack_require__(217);
+
+	var _moment2 = _interopRequireDefault(_moment);
+
+	var _immutabilityHelper = __webpack_require__(377);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var dialogs = {
+	  deleteTask: {
+	    title: "Are you sure you want to delete this task?",
+	    text: "You can't undo this action.",
+	    okText: "Yes, I'm sure"
+	  }
+	};
 
 	var Task = function (_React$Component) {
 	  _inherits(Task, _React$Component);
@@ -65893,7 +65986,14 @@
 
 	    _this.state = {
 	      task: {},
-	      loading: true
+	      ancestors: [],
+	      descendents: [],
+	      attributes: [],
+	      loading: true,
+	      ancestorsLoading: true,
+	      descendentsLoading: true,
+	      activeDialog: dialogs.deleteTask,
+	      showDialog: false
 	    };
 	    return _this;
 	  }
@@ -65906,60 +66006,193 @@
 	      var url = window.location.origin + "/ics/tasks/" + id + "/";
 	      var component = this;
 	      (0, _APIManager.fetch)(url).done(function (data) {
-	        component.setState({ task: data });
+	        var attrs = component.organizeAttributes(data);
+	        component.setState({ task: data, attributes: attrs });
 	      }).always(function () {
 	        component.setState({ loading: false });
 	      });
 	    }
 	  }, {
+	    key: 'getAncestors',
+	    value: function getAncestors() {
+	      this.setState({ ancestorsLoading: true });
+	      var id = this.props.match.params.id || 0;
+	      var url = window.location.origin + "/ics/tasks/";
+	      var params = { child: this.props.match.params.id };
+	      var component = this;
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
+	        component.setState({ ancestors: data });
+	      }).always(function (data) {
+	        component.setState({ ancestorsLoading: false });
+	      });
+	    }
+	  }, {
+	    key: 'getDescendents',
+	    value: function getDescendents() {
+	      this.setState({ descendentsLoading: true });
+	      var id = this.props.match.params.id || 0;
+	      var url = window.location.origin + "/ics/tasks/";
+	      var params = { parent: this.props.match.params.id };
+	      var component = this;
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
+	        component.setState({ descendents: data });
+	      }).always(function (data) {
+	        component.setState({ descendentsLoading: false });
+	      });
+	    }
+	  }, {
+	    key: 'showDialog',
+	    value: function showDialog(dialog, action) {
+	      var d = dialog;
+	      d.onCancel = this.hideDialog.bind(this);
+	      d.onOK = action;
+	      this.setState({ showDialog: true, activeDialog: d });
+	    }
+	  }, {
+	    key: 'hideDialog',
+	    value: function hideDialog() {
+	      this.setState({ showDialog: false });
+	    }
+	  }, {
+	    key: 'closeTask',
+	    value: function closeTask() {
+	      var url = window.location.origin + "ics/tasks/edit/" + this.props.match.params.id;
+	      var params = {
+	        open: false
+	      };
+	    }
+	  }, {
+	    key: 'deleteTask',
+	    value: function deleteTask() {}
+	  }, {
+	    key: 'markAsUsed',
+	    value: function markAsUsed(index, id) {
+	      var component = this;
+	      var url = '/ics/movements/create/';
+	      var team = window.localStorage.getItem("team") || "1";
+
+	      //'id', 'status', 'destination', 'notes', 'deliverable', 'group_qr', 'origin', 'items'
+	      var params = {
+	        status: "RC",
+	        origin: team,
+	        destination: null,
+	        notes: "MARK AS USED",
+	        items: [{ item: '' + id }]
+	      };
+
+	      (0, _APIManager.post)(url, JSON.stringify(params)).done(function (data) {
+	        var newObj = (0, _immutabilityHelper2.default)(component.state.task, {
+	          items: _defineProperty({}, index, {
+	            $merge: { is_used: true }
+	          })
+	        });
+	        component.setState({ task: newObj });
+	      }).fail(function (req, err) {
+	        var qr = component.state.task.items[index].item_qr;
+	        console.log(id);
+	        //alert(`Couldn't mark the item with QR ${qr.substring(qr.length-6)} as used. :( \n ${err}`)
+	        console.log(req.responseText);
+	      });
+	    }
+	  }, {
+	    key: 'printSticker',
+	    value: function printSticker(id) {}
+	  }, {
+	    key: 'organizeAttributes',
+	    value: function organizeAttributes(taskData) {
+	      var attributes = taskData.process_type.attributes;
+	      var values = taskData.attribute_values;
+	      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.created_at).format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.updated_at).format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
+
+	      attributes.map(function (attr, i) {
+	        var val = values.find(function (e) {
+	          return e.attribute == attr.id;
+	        });
+	        organized.push({ attribute: attr.id, value: val ? val.value : "", name: attr.name, editable: true });
+	      });
+
+	      organized.push({ attribute: -1, value: pl(taskData.inputs.length, taskData.inputUnit), name: "# INPUTS", editable: false });
+	      organized.push({ attribute: -1, value: pl(taskData.items.length, taskData.process_type.unit), name: "# OUTPUTS", editable: false });
+
+	      return organized;
+	    }
+	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.getTask();
+	      this.getAncestors();
+	      this.getDescendents();
 	    }
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var _this2 = this;
+
+	      if (!this.state.task || !Object.values(this.state.task).length) {
+	        return _react2.default.createElement('div', null);
+	      }
+
+	      var dialog = false;
+	      if (this.state.showDialog) {
+	        dialog = _react2.default.createElement(Dialog, this.state.activeDialog);
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'task-detail' },
+	        dialog,
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'task-header' },
 	          _react2.default.createElement(
-	            'h1',
-	            null,
-	            (0, _Task.display)(this.state.task)
+	            'div',
+	            { className: 'header-left' },
+	            _react2.default.createElement('img', { src: (0, _Task.icon)(this.state.task.process_type.icon) }),
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              this.state.task.display
+	            )
 	          ),
 	          _react2.default.createElement(
 	            'span',
 	            null,
-	            'Created at 2:15pm on 2/12/17'
+	            (0, _moment2.default)(this.state.task.created_at).format('dddd, MMMM Do YYYY, h:mm a')
 	          )
 	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'task-content' },
 	          _react2.default.createElement(
-	            Table,
-	            { title: 'Information' },
-	            [1, 2, 3, 4].map(function (row, i) {
-	              return _react2.default.createElement(
-	                'div',
-	                { key: i, className: 'task-attribute-table-row' },
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  'TITLE'
-	                ),
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  'answer'
-	                )
-	              );
-	            })
+	            'div',
+	            null,
+	            _react2.default.createElement(InformationTable, { attributes: this.state.attributes }),
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'task_button', onClick: function onClick() {
+	                  return _this2.showDialog(dialogs.deleteTask, _this2.closeTask);
+	                } },
+	              'Close Task'
+	            ),
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'task_button' },
+	              'Toggle flag'
+	            ),
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'task_button' },
+	              'Delete Task'
+	            )
 	          ),
-	          _react2.default.createElement(Table, { title: 'Inputs (0)' })
+	          _react2.default.createElement(
+	            'div',
+	            null,
+	            _react2.default.createElement(InputTable, { inputs: this.state.task.inputs }),
+	            _react2.default.createElement(OutputTable, { outputs: this.state.task.items, onMark: this.markAsUsed.bind(this) }),
+	            _react2.default.createElement(TaskTable, { title: 'Ancestors', tasks: this.state.ancestors, loading: this.state.ancestorsLoading }),
+	            _react2.default.createElement(TaskTable, { title: 'Descendents', tasks: this.state.descendents, loading: this.state.descendentsLoading })
+	          )
 	        )
 	      );
 	    }
@@ -65971,26 +66204,173 @@
 	exports.default = Task;
 
 
-	function Table(props) {
+	function TaskTable(props) {
+	  return _react2.default.createElement(
+	    Table,
+	    { title: props.title },
+	    props.tasks.map(function (task, i) {
+	      return _react2.default.createElement(
+	        'a',
+	        {
+	          href: window.location.origin + "/dashboard/task/" + task.id,
+	          target: '_blank', key: i,
+	          className: 'task-attribute-table-row input-table-row'
+	        },
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'task-row-header' },
+	          _react2.default.createElement('img', { src: (0, _Task.icon)(task.process_type.icon) }),
+	          task.display,
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons expand-i' },
+	            'open_in_new'
+	          )
+	        ),
+	        _react2.default.createElement('span', { className: '' })
+	      );
+	    })
+	  );
+	}
 
+	function InformationTable(props) {
+	  return _react2.default.createElement(
+	    Table,
+	    null,
+	    props.attributes.map(function (attr, i) {
+	      var isEmpty = attr.value == "";
+	      return _react2.default.createElement(
+	        'div',
+	        { key: i, className: 'task-attribute-table-row' },
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'information-table-title' },
+	          attr.name
+	        ),
+	        _react2.default.createElement(
+	          'span',
+	          { className: "information-table-answer " + (isEmpty ? "empty-answer" : "") },
+	          isEmpty ? "n/a" : attr.value
+	        )
+	      );
+	    })
+	  );
+	}
+
+	function OutputTable(props) {
+	  var team = window.localStorage.getItem("team") || "1";
+	  return _react2.default.createElement(
+	    Table,
+	    { title: 'Outputs (' + (props.outputs || []).length + ')' },
+	    (props.outputs || []).map(function (item, i) {
+	      var isInInventory = !item.is_used && item.inventory && item.inventory.toString() == team;
+	      var inventory = false;
+	      var markAsUsed = false;
+	      if (isInInventory) {
+	        inventory = _react2.default.createElement(
+	          'span',
+	          { className: 'items-inventory' },
+	          _react2.default.createElement('div', { className: 'inv-circle' }),
+	          'Inventory'
+	        );
+	        markAsUsed = _react2.default.createElement(
+	          'button',
+	          { className: 'small-mark-button', onClick: function onClick() {
+	              return props.onMark(i, item.id);
+	            } },
+	          'MARK AS USED'
+	        );
+	      }
+	      return _react2.default.createElement(
+	        'div',
+	        { key: item.id, className: 'task-attribute-table-row output-table-row' },
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'items-qr' },
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons' },
+	            'select_all'
+	          ),
+	          subs(item.item_qr),
+	          _react2.default.createElement(
+	            'button',
+	            { style: { display: "none" }, className: 'small-print-button' },
+	            'PRINT'
+	          ),
+	          markAsUsed
+	        ),
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'items-inventory' },
+	          inventory
+	        )
+	      );
+	    })
+	  );
+	}
+
+	function InputTable(props) {
+	  var grouped = {};
+	  (props.inputs || []).map(function (input, i) {
+	    if (grouped[input.input_task]) {
+	      grouped[input.input_task].push(input);
+	    } else {
+	      grouped[input.input_task] = [input];
+	    }
+	  });
+	  return _react2.default.createElement(
+	    Table,
+	    { title: 'Inputs (' + (props.inputs || []).length + ')' },
+	    Object.values(grouped).map(function (group, i) {
+	      return _react2.default.createElement(
+	        'a',
+	        { href: window.location.origin + "/dashboard/task/" + group[0].input_task,
+	          target: '_blank', key: i,
+	          className: 'task-attribute-table-row input-table-row'
+	        },
+	        _react2.default.createElement(
+	          'span',
+	          null,
+	          group[0].input_task_display,
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons expand-i' },
+	            'open_in_new'
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'input-count' },
+	          pl(group.length, "item")
+	        )
+	      );
+	    })
+	  );
+	}
+
+	function subs(qr) {
+	  return qr.substring(qr.length - 6);
+	}
+
+	function Table(props) {
 	  var inside = _react2.default.createElement(
 	    'div',
-	    { className: 'task-attribute-table-row zero-state' },
+	    { className: 'task-attribute-table-row zero-state zero-state-clean' },
 	    ' ',
 	    _react2.default.createElement(
 	      'span',
 	      null,
-	      ' Nothing to show here :( '
+	      ' Nothing to show here \xAF \\_(\u30C4)_/\xAF '
 	    )
 	  );
 	  if (props.children) {
 	    inside = props.children;
 	  }
 
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'task-attribute-table' },
-	    _react2.default.createElement(
+	  var header = false;
+	  if (props.title) {
+	    header = _react2.default.createElement(
 	      'div',
 	      { className: 'task-attribute-table-row task-attribute-table-row-header' },
 	      _react2.default.createElement(
@@ -65999,9 +66379,479 @@
 	        props.title
 	      ),
 	      _react2.default.createElement('span', null)
-	    ),
+	    );
+	  }
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'task-attribute-table' },
+	    header,
 	    inside
 	  );
+	}
+
+	function pl(count, unit) {
+	  if (count) {}
+	  if (count == 1) return count + " " + unit;
+	  return count + " " + unit + "s";
+	}
+
+	function Dialog(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'dialog-shim' },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'dialog-box' },
+	      _react2.default.createElement(
+	        'span',
+	        { className: 'dialog-title' },
+	        props.title
+	      ),
+	      _react2.default.createElement(
+	        'span',
+	        { className: 'dialog-text' },
+	        props.text
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'dialog-actions' },
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'dialog-button dialog-cancel', onClick: props.onCancel },
+	          props.cancelText || "Cancel"
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'dialog-button', onClick: props.onOK },
+	          props.okText
+	        )
+	      )
+	    )
+	  );
+	}
+
+/***/ },
+/* 422 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _InventoryDetail = __webpack_require__(418);
+
+	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
+
+	var _Inputs = __webpack_require__(351);
+
+	var _APIManager = __webpack_require__(419);
+
+	var _Loading = __webpack_require__(420);
+
+	var _Loading2 = _interopRequireDefault(_Loading);
+
+	var _immutabilityHelper = __webpack_require__(377);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	var _Task = __webpack_require__(349);
+
+	var _moment = __webpack_require__(217);
+
+	var _moment2 = _interopRequireDefault(_moment);
+
+	var _Datepicker = __webpack_require__(363);
+
+	var _Datepicker2 = _interopRequireDefault(_Datepicker);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var process = {
+	  process_name: "Roasting",
+	  runs: 16,
+	  outputs: 24,
+	  process_unit: "red bins",
+	  flagged: 0,
+	  experimental: 0,
+	  origins: [{ id: 1, product_code: "MM", runs: "10", outputs: "10", flagged: "0", experimental: "0" }, { id: 2, product_code: "BON", runs: "6", outputs: "14", flagged: "0", experimental: "0" }]
+	};
+
+	var Activity = function (_React$Component) {
+	  _inherits(Activity, _React$Component);
+
+	  function Activity(props) {
+	    _classCallCheck(this, Activity);
+
+	    var _this = _possibleConstructorReturn(this, (Activity.__proto__ || Object.getPrototypeOf(Activity)).call(this, props));
+
+	    _this.lastRequestID = -1;
+	    _this.lastTaskRequestID = -1;
+	    _this.state = {
+	      dates: { start: (0, _moment2.default)(new Date()).format("YYYY-MM-DD"), end: (0, _moment2.default)(new Date()).format("YYYY-MM-DD") },
+	      processes: {},
+
+	      expanded: { process: 0, origin: 0 },
+	      expandedTasks: [],
+
+	      loading: true,
+	      taskLoading: false
+	    };
+	    return _this;
+	  }
+
+	  _createClass(Activity, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getActivity(this.state.dates);
+	    }
+	  }, {
+	    key: 'handleDateRangeChange',
+	    value: function handleDateRangeChange(obj) {
+	      this.setState({ dates: obj });
+	      this.getActivity(obj);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+
+	      var contentArea = false;
+	      if (this.state.loading) {
+	        contentArea = _react2.default.createElement(_Loading2.default, null);
+	      } else if (!this.state.processes || Object.values(this.state.processes).length == 0) {
+	        contentArea = _react2.default.createElement(_APIManager.ZeroState, null);
+	      } else {
+	        contentArea = Object.values(this.state.processes).map(function (process, i) {
+	          return _react2.default.createElement(Process, _extends({ key: i, dates: this.state.dates }, process, { expandedTasks: this.state.expandedTasks, onClick: this.handleProcessClick.bind(this), onOriginClick: this.handleOriginClick.bind(this), expanded: this.state.expanded.process == process.process_id ? this.state.expanded : null }));
+	        }, this);
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'activity page' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'activity-header page-header' },
+	          _react2.default.createElement(
+	            'h2',
+	            null,
+	            'Activity Log'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            null,
+	            _react2.default.createElement(_Datepicker2.default, { initialDates: this.state.dates, onChange: this.handleDateRangeChange.bind(this) })
+	          )
+	        ),
+	        contentArea
+	      );
+	    }
+	  }, {
+	    key: 'handleOriginClick',
+	    value: function handleOriginClick(process, origin) {
+	      if (process == this.state.expanded.process && origin == this.state.expanded.origin) {
+	        this.setState({ expanded: { process: process, origin: -1 } });
+	      } else {
+	        this.setState({ expanded: { process: process, origin: origin } });
+	        this.getTasks(this.state.processes[process], this.state.processes[process].origins[origin]);
+	      }
+	    }
+	  }, {
+	    key: 'handleProcessClick',
+	    value: function handleProcessClick(process) {
+	      if (process == this.state.expanded.process) {
+	        this.setState({ expanded: { process: -1, origin: -1 } });
+	      } else {
+	        this.setState({ expanded: { process: process, origin: -1 } });
+	      }
+	    }
+	  }, {
+	    key: 'getTasks',
+	    value: function getTasks(process, origin) {
+	      var range = this.state.dates;
+	      this.setState({ taskLoading: true });
+	      var processID = process.process_id;
+	      var productID = origin.product_id;
+
+	      console.log(processID + " " + productID);
+	      var params = { process_type: processID, product_type: productID, start: range.start, end: range.end };
+	      var url = window.location.origin + "/ics/activity/detail/";
+	      var component = this;
+
+	      var rID = (0, _APIManager.requestID)();
+	      this.lastTaskRequestID = rID;
+
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
+	        console.log(data);
+	        if (component.lastTaskRequestID != rID) return;
+	        component.setState({ expandedTasks: data });
+	      }).always(function (data) {
+	        if (component.lastTaskRequestID != rID) return;
+	        component.setState({ taskLoading: false });
+	      });
+	    }
+	  }, {
+	    key: 'getActivity',
+	    value: function getActivity(range) {
+	      console.log(range);
+	      this.setState({ loading: true });
+	      var url = window.location.origin + "/ics/activity/";
+	      var params = { start: range.start, end: range.end };
+	      var component = this;
+
+	      var rID = (0, _APIManager.requestID)();
+	      this.lastRequestID = rID;
+
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
+	        if (component.lastRequestID != rID) return;
+
+	        component.lastTaskRequestID = -1;
+	        component.setState({
+	          processes: component.nestProcesses(data),
+	          expanded: { process: -1, origin: -1 },
+	          expandedTasks: []
+	        });
+	      }).always(function () {
+	        if (component.lastRequestID != rID) return;
+	        component.setState({ taskLoading: false, loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'nestProcesses',
+	    value: function nestProcesses(data) {
+	      var processes = {};
+	      for (var s in data) {
+	        var skew = data[s];
+	        var pid = skew.process_id;
+	        if (!processes[pid]) {
+	          processes[pid] = (0, _immutabilityHelper2.default)({}, { $merge: skew });
+	          processes[pid].origins = [];
+	          processes[pid].runs = 0;
+	          processes[pid].outputs = 0;
+	        }
+	        processes[pid].runs += parseInt(skew.runs);
+	        processes[pid].outputs += parseInt(skew.outputs);
+	        processes[pid].origins.push(skew);
+	      }
+	      return processes;
+	    }
+	  }]);
+
+	  return Activity;
+	}(_react2.default.Component);
+
+	exports.default = Activity;
+
+
+	function Process(props) {
+	  var origins = false;
+	  if (props.expanded != null) {
+	    origins = props.origins.map(function (origin, i) {
+	      return _react2.default.createElement(Origin, _extends({
+	        key: origin.id
+	      }, origin, {
+	        onClick: function onClick() {
+	          return props.onOriginClick(props.process_id, i);
+	        },
+	        process_unit: props.process_unit,
+	        expanded: props.expanded.origin == i,
+	        expandedTasks: props.expandedTasks
+	      }));
+	    }, this);
+	  }
+
+	  var link = window.location.origin + "/ics/potatoes/?";
+	  var team = window.localStorage.getItem("team") || "1";
+	  var downloadURL = window.location.origin + '/ics/potatoes/?team=' + team + '&process=' + props.process_id + '&start=' + props.dates.start + '&end=' + props.dates.end;
+
+	  var button = _react2.default.createElement(
+	    'a',
+	    {
+	      href: downloadURL,
+	      onClick: function onClick(e) {
+	        return e.stopPropagation();
+	      }
+	    },
+	    _react2.default.createElement(
+	      'i',
+	      { className: 'material-icons' },
+	      'file_download'
+	    )
+	  );
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: "activity-process " + (props.expanded ? "expanded" : "") },
+	    _react2.default.createElement(
+	      'div',
+	      { onClick: function onClick() {
+	          return props.onClick(props.process_id);
+	        } },
+	      _react2.default.createElement(Row, { className: 'activity-process-header',
+	        img: props.process_name.toLowerCase().replace(/\s/g, ''),
+	        first: props.process_name,
+	        second: pl(props.runs, "run"),
+	        third: pl(props.outputs, props.process_unit),
+	        fourth: "0 flagged",
+	        fifth: "0 experimental",
+	        sixth: button
+	      })
+	    ),
+	    origins
+	  );
+	}
+
+	function Origin(props) {
+	  var taskList = false;
+	  if (props.expanded) {
+	    taskList = props.expandedTasks.map(function (task) {
+	      return _react2.default.createElement(TaskList, _extends({}, task, { process_unit: props.process_unit }));
+	    });
+	  }
+	  return _react2.default.createElement(
+	    'div',
+	    { className: props.expanded ? "expanded-origin" : "" },
+	    _react2.default.createElement(
+	      'div',
+	      { onClick: props.onClick },
+	      _react2.default.createElement(Row, { className: 'process-origin-header',
+	        icon: props.expanded ? "expand_more" : "chevron_right",
+	        first: props.product_code,
+	        second: pl(props.runs, "run"),
+	        third: pl(props.outputs, props.process_unit),
+	        fourth: !props.flagged ? "--" : props.flagged + " flagged",
+	        fifth: !props.experimental ? "--" : props.experimental + " experimental"
+	      })
+	    ),
+	    taskList
+	  );
+	}
+
+	function Row(props) {
+	  var symbol = false;
+	  if (props.img) {
+	    symbol = _react2.default.createElement('img', { src: window.location.origin + '/static/dashboard/img/' + props.img + '@3x.png' });
+	  } else if (props.icon) {
+	    symbol = _react2.default.createElement(
+	      'span',
+	      null,
+	      _react2.default.createElement(
+	        'i',
+	        { className: 'material-icons arrow' },
+	        props.icon
+	      )
+	    );
+	  }
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: "activity-process-row " + props.className },
+	    _react2.default.createElement(
+	      'div',
+	      { className: "min " + (props.img ? "img" : "") },
+	      symbol
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'process-name' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.first
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'process-runs tiny' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.second
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'process-outputs' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.third
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'process-flagged tiny' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.fourth
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'process-experimental tiny' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.fifth
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'process-button no' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.sixth
+	      )
+	    )
+	  );
+	}
+
+	function TaskList(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'task-list' },
+	    _react2.default.createElement(Row, { className: 'process-origin-task',
+	      first: " ",
+	      second: _react2.default.createElement(
+	        'a',
+	        { href: window.location.origin + "/dashboard/task/" + props.id, target: '_blank' },
+	        (0, _Task.display)(props)
+	      ),
+	      third: pl(props.outputs, props.process_unit),
+	      fourth: "--",
+	      fifth: "--"
+	    })
+	  );
+	}
+
+	function pl(count, unit) {
+	  if (count) {}
+	  if (count == 1) return count + " " + unit;
+	  return count + " " + unit + "s";
 	}
 
 /***/ }

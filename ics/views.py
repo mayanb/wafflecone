@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, Min
 from ics.models import *
 from django.contrib.auth.models import User
 from ics.serializers import *
@@ -11,13 +11,15 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
-import datetime
+from datetime import date, datetime, timedelta
+from django.http import HttpResponse
+import csv
 
 class UserList(generics.ListAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
 
-
+# ----------------------------------
 class TaskFilter(django_filters.rest_framework.FilterSet):
   created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
   class Meta:
@@ -153,7 +155,6 @@ class InventoryList(generics.ListAPIView):
     # filter by team
     team = self.request.query_params.get('team', None)
     if team is not None:
-      print(team)
       queryset = queryset.filter(inventory=team)
 
     # filter by products
@@ -191,8 +192,69 @@ class InventoryDetail(generics.ListAPIView):
       queryset = queryset.filter(creating_task__product_type__code__in=products)
 
     # filter by output type
-    output = self.request.query_params.get('output', '')
-    return queryset.filter(creating_task__process_type__output_desc__iexact=output).order_by('creating_task__created_at')
+    process = self.request.query_params.get('process', '')
+    return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
+
+
+class ActivityList(generics.ListAPIView):
+  serializer_class = ActivityListSerializer
+
+  def get_queryset(self):
+    queryset = Task.objects.filter(is_trashed=False)
+
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(process_type__created_by=team)
+
+    start = self.request.query_params.get('start', None)
+    end = self.request.query_params.get('end', None)
+    if start is not None and end is not None:
+      start = start.strip().split('-')
+      end = end.strip().split('-')
+      startDate = date(int(start[0]), int(start[1]), int(start[2]))
+      endDate = date(int(end[0]), int(end[1]), int(end[2]))
+      queryset = queryset.filter(created_at__date__range=(startDate, endDate))
+
+    # separate by process type
+    return queryset.values(
+      'process_type',
+      'product_type',
+      'process_type__name',
+      'product_type__code',
+      'process_type__unit').annotate(
+      runs=Count('id', distinct=True)
+    ).annotate(outputs=Count('items', distinct=True))
+
+class ActivityListDetail(generics.ListAPIView):
+  serializer_class = ActivityListDetailSerializer
+
+  def get_queryset(self):
+    queryset = Task.objects.filter(is_trashed=False)
+
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(process_type__created_by=team)
+
+    process_type = self.request.query_params.get('process_type', None)
+    if process_type is not None:
+      queryset = queryset.filter(process_type=process_type)
+
+    product_type = self.request.query_params.get('product_type', None)
+    if product_type is not None:
+      queryset = queryset.filter(product_type=product_type)
+
+
+    start = self.request.query_params.get('start', None)
+    end = self.request.query_params.get('end', None)
+    if start is not None and end is not None:
+      start = start.strip().split('-')
+      end = end.strip().split('-')
+      startDate = date(int(start[0]), int(start[1]), int(start[2]))
+      endDate = date(int(end[0]), int(end[1]), int(end[2]))
+      queryset = queryset.filter(created_at__date__range=(startDate, endDate))
+
+    return queryset.annotate(outputs=Count('items'))
+
 
 class ProductCodes(generics.ListAPIView):
   queryset = ProductType.objects.all().distinct('code')
@@ -250,9 +312,92 @@ class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
 
+def potatoes(request):
+ # Create the HttpResponse object with the appropriate CSV header.
+  response = HttpResponse(content_type='text/csv')
+  response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+
+  writer = csv.writer(response)
+  writer.writerow(['id', 'melanger name', 'origin', 'start time', 'end time', 'time delta'])
+
+  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__created_by=1, process_type__code="MP")
+  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__created_by=1, process_type__code="MS")
+
+  for pulled_melanger in pulled_melangers:
+    melange_input = pulled_melanger.inputs.first()
+    if melange_input:
+      melange_start = melange_input.input_item.creating_task
+      start_time = melange_start.created_at
+      end_time = pulled_melanger.created_at
+      delta = end_time - start_time
+      origin = pulled_melanger.product_type.code
+      melanger_name = melange_start.attribute_values.filter(attribute=melanger_attr)
+      if melanger_name.count():
+        melanger_name = melanger_name[0].value
+      else:
+        melanger_name = ""
+
+      writer.writerow([pulled_melanger.id, melanger_name, origin, start_time, end_time, delta])
+
+  return response
+
+def activityCSV(request):
+  response = HttpResponse(content_type='text/csv')
+  response['Content-Disposition'] = 'attachment; filename="logs.csv"'
+
+  process = request.GET.get('process', None)
+  start = request.GET.get('start', None)
+  end = request.GET.get('end', None)
+  team = request.GET.get('team', None)
+  if not process or not start or not end or not team:
+    return response
+
+  start = start.strip().split('-')
+  end = end.strip().split('-')
+  startDate = date(int(start[0]), int(start[1]), int(start[2]))
+  endDate = date(int(end[0]), int(end[1]), int(end[2]))
+
+  fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
+  attrs = Attribute.objects.filter(process_type=process).order_by('rank')
+  attrVals = attrs.values_list('name', flat=True)
+  fields = fields + [str(x) for x in attrVals]
+
+  writer = csv.writer(response)
+  writer.writerow(fields)
+
+  tasks = Task.objects.filter(is_trashed=False, 
+    process_type__created_by=team, process_type=process, 
+    created_at__date__range=(startDate, endDate)).annotate(
+    inputcount=Count('inputs')).annotate(
+    outputcount=Count('items')).annotate(
+    first_use_date=Min('items__input__task__created_at'))
+
+  for t in tasks:
+    tid = t.id
+    display = str(t)
+    product_type = t.product_type.code
+    inputs = t.inputcount
+    outputs = t.outputcount
+    creation_date = t.created_at
+    close_date = t.updated_at
+    first_use_date = t.first_use_date
+    results = [tid, display, product_type, inputs, outputs, creation_date, close_date, first_use_date]
+    vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
+    for attr in attrs:
+      results = results + [vals.get(attr.id, '')]
+    writer.writerow(results)
+
+  return response
+
 class MovementCreate(generics.CreateAPIView):
-  queryset = Movement.objects.all()
+  #queryset = Movement.objects.all()
   serializer_class=MovementCreateSerializer
+
+  def get_queryset(self):
+    print("Hello")
+    print(self.request.stream)
+    return Movement.objects.all()
+
 
 class MovementList(generics.ListAPIView):
   queryset = Movement.objects.all()

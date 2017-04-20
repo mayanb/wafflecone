@@ -11,6 +11,7 @@ import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
 import Inventory from './Inventory2.jsx'
 import Task from './Task-2.jsx'
+import Activity from './ActivityLog-2.jsx'
 
 class Main extends React.Component {
   constructor() {
@@ -46,7 +47,7 @@ class Main extends React.Component {
           <div>
           <div className="parent">
             <main className="d-content">
-              <Route exact path={"/dashboard/"} component={ActivityLog} />
+              <Route exact path={"/dashboard/"} component={Activity} />
               <Route path={"/dashboard/inventory/:id?"} component={Invent} />
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
