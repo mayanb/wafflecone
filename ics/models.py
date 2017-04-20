@@ -271,9 +271,6 @@ class Movement(models.Model):
     notes = models.CharField(max_length=100, blank=True)
 
     def save(self, *args, **kwargs):
-        print(self.destination)
-        print(self.status)
-        print(self.items)
         if self.status is 'RC':
             self.items.all().update(inventory=self.destination)
         if self.status is 'IT':
@@ -284,3 +281,9 @@ class Movement(models.Model):
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     movement = models.ForeignKey(Movement, on_delete=models.CASCADE, related_name="items")
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            self.item.inventory = self.movement.destination
+            self.item.save()
+        super(MovementItem, self).save(*args, **kwargs)

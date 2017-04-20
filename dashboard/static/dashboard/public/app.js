@@ -65828,7 +65828,7 @@
 	        ),
 	        _react2.default.createElement(
 	          'a',
-	          { href: window.location.origin + "/dashboard/task/" + props.creating_task.id },
+	          { href: window.location.origin + "/dashboard/task/" + props.creating_task.id, target: '_blank' },
 	          _react2.default.createElement(
 	            'span',
 	            { className: 'item-task' },
@@ -66023,7 +66023,7 @@
 	      var id = this.props.match.params.id || 0;
 	      var url = window.location.origin + "/ics/tasks/" + id + "/";
 	      var component = this;
-	      (0, _APIManager.fetch)(url).done(function (data) {
+	      (0, _APIManager.fetch)(url, {}).done(function (data) {
 	        var attrs = component.organizeAttributes(data);
 	        component.setState({ task: data, attributes: attrs });
 	      }).always(function () {
