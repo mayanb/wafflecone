@@ -65698,6 +65698,15 @@
 	        }
 	      }
 
+	      var loadMore = false;
+	      if (this.state.next) {
+	        loadMore = _react2.default.createElement(
+	          'button',
+	          { onClick: this.handleLoadClick },
+	          'Load More'
+	        );
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
@@ -65740,6 +65749,11 @@
 	          'div',
 	          { className: 'i-detail-content' },
 	          contentArea
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-footer' },
+	          loadMore
 	        )
 	      );
 	    }
@@ -65755,7 +65769,7 @@
 	      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
 	      var g = { process: props.process_id };
 	      if (this.props.filter) {
-	        g["products"] = this.props.filter;
+	        g.products = this.props.filter;
 	      }
 	      var random = Math.floor(Math.random() * 1000);
 	      this.latestRequestID = random;
@@ -65813,9 +65827,13 @@
 	          props.item_qr.substring(42)
 	        ),
 	        _react2.default.createElement(
-	          'span',
-	          { className: 'item-task' },
-	          (0, _Task.display)(props.creating_task)
+	          'a',
+	          { href: window.location.origin + "/dashboard/task/" + props.creating_task.id },
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'item-task' },
+	            (0, _Task.display)(props.creating_task)
+	          )
 	        )
 	      )
 	    ),
@@ -65850,8 +65868,8 @@
 
 	function fetch(url, params) {
 	  var team = window.localStorage.getItem("team") || "1";
-	  var np = _jquery2.default.extend(true, { team: team }, params);
-	  return _jquery2.default.get(url, np);
+	  params.team = team;
+	  return _jquery2.default.get(url, params);
 	}
 
 	function post(url, params) {
