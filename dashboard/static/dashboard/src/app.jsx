@@ -6,7 +6,6 @@ import $ from 'jquery'
 import moment from 'moment'
 
 import {Navbar} from './Layout.jsx'
-import Tasks from './Tasks.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
 import Inventory from './Inventory2.jsx'
@@ -48,7 +47,7 @@ class Main extends React.Component {
           <div className="parent">
             <main className="d-content">
               <Route exact path={"/dashboard/"} component={Activity} />
-              <Route path={"/dashboard/inventory/:id?"} component={Invent} />
+              <Route path={"/dashboard/inventory/:id?"} component={Inventory} />
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
@@ -61,28 +60,6 @@ class Main extends React.Component {
       </Router>
     )
   }
-}
-
-/*
-            <Navbar 
-              className="d-nav" 
-              options={["Dashboard", "Activity Log", "Inventory", "Labels", "Settings", "Task Viewer"]}
-              links={["dsda", "", "inventory", "labels", "settings", "task"]}
-              shouldShrink={this.state.shrink}
-            ></Navbar>
-*/
-
-
-function ActivityLog(props) {
-  return (
-    <Tasks inventory={false} filters={getFilters()} />
-  )
-}
-
-function Invent(props) {
-  return (
-    <Inventory inventory={true} filters={getFilters()} match={props.match}/>
-  )
 }
 
 

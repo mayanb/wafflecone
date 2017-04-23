@@ -18,7 +18,7 @@ var getOptions = function(input, callback) {
     }
     $.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
       var options = data.map(function (x) {
-        return { value: x.id, label: display(x)}
+        return { value: x.id, label: x.display}
       })
       callback(null, {options : options, complete: false})
     })
@@ -26,48 +26,38 @@ var getOptions = function(input, callback) {
 }
 
 class TaskSelect extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
     this.handleChange = this.handleChange.bind(this);
-    this.handleEnter = this.handleEnter.bind(this);
-    this.state = {value: props.label || ""}
+    this.state = {}
+
   }
 
-  handleChange(event) {
-    this.setState({value: event.target.value})
-  }
+  handleChange(value) {
+    var v;
+    if (value != undefined && value != null && value.length != 0)
+      v = value
+    else v = {value: ""}
 
-  handleEnter(event) {
-    if(event.keyCode == 13) {
-      this.props.onChange(this.state.value)
-    }
-  }
-
-  componentWillReceiveProps(np) {
-    console.log(np)
-    if (np.value != this.state.value) {
-      this.setState({value: np.value || "" })
-    }
-  }
+    this.setState(v)
+    this.props.onChange(v)
+  };
 
   render () {
     return (
-      <div className="task-select">
+      <div className="multiselect filters inputs">
         <i className="material-icons">search</i>
-        <input
-          type="text"
+        <Select.Async
           name="form-field-name"
           value={this.state.value}
+          loadOptions={getOptions}
           onChange={this.handleChange}
-          onKeyDown={this.handleEnter}
           placeholder={this.props.placeholder}
         />
       </div>
     );
   }
 
-  componentDidMount() {
-  }
 
 }
 
@@ -198,4 +188,4 @@ class Filters extends React.Component {
   }
 }
 
-export { Filters, InventoryFilter };
+export { Filters, InventoryFilter, TaskSelect };
