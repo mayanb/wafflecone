@@ -70,23 +70,23 @@
 
 	var _Layout = __webpack_require__(328);
 
-	var _FactoryMap = __webpack_require__(412);
+	var _FactoryMap = __webpack_require__(347);
 
 	var _FactoryMap2 = _interopRequireDefault(_FactoryMap);
 
-	var _LabelPrinter = __webpack_require__(414);
+	var _LabelPrinter = __webpack_require__(351);
 
 	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
 
-	var _Inventory = __webpack_require__(417);
+	var _Inventory = __webpack_require__(365);
 
 	var _Inventory2 = _interopRequireDefault(_Inventory);
 
-	var _Task = __webpack_require__(421);
+	var _Task = __webpack_require__(405);
 
 	var _Task2 = _interopRequireDefault(_Task);
 
-	var _ActivityLog = __webpack_require__(422);
+	var _ActivityLog = __webpack_require__(406);
 
 	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
@@ -51913,9 +51913,2314 @@
 	};
 
 /***/ },
-/* 347 */,
-/* 348 */,
+/* 347 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _moment = __webpack_require__(217);
+
+	var _moment2 = _interopRequireDefault(_moment);
+
+	var _reactDraggable = __webpack_require__(348);
+
+	var _reactDraggable2 = _interopRequireDefault(_reactDraggable);
+
+	var _immutabilityHelper = __webpack_require__(349);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	var _Task = __webpack_require__(350);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var connectionBlue = "#2196F3";
+
+	var FactoryMap = function (_React$Component) {
+	  _inherits(FactoryMap, _React$Component);
+
+	  function FactoryMap(props) {
+	    _classCallCheck(this, FactoryMap);
+
+	    var _this = _possibleConstructorReturn(this, (FactoryMap.__proto__ || Object.getPrototypeOf(FactoryMap)).call(this, props));
+
+	    _this.handleStop = _this.handleStop.bind(_this);
+	    _this.handleConnectionEnd = _this.handleConnectionEnd.bind(_this);
+	    _this.handleConnectionDelete = _this.handleConnectionDelete.bind(_this);
+	    _this.setDimensions = _this.setDimensions.bind(_this);
+	    _this.state = {
+	      processes: [],
+	      connections: [],
+	      selectedProcess: -1,
+	      selectedConnection: -1,
+	      height: 0,
+	      width: 0
+	    };
+	    return _this;
+	  }
+
+	  _createClass(FactoryMap, [{
+	    key: 'render',
+	    value: function render() {
+	      var thisObj = this;
+
+	      if (this.state.processes.length == 0) {
+	        return _react2.default.createElement('svg', { className: 'factorymap', style: { width: this.state.width, height: this.state.height, backgroundColor: "green" } });
+	      }
+
+	      return _react2.default.createElement(
+	        'svg',
+	        { className: 'factorymap', style: { width: this.state.width, height: this.state.height, backgroundColor: "#1565C0" } },
+	        _react2.default.createElement(
+	          'defs',
+	          null,
+	          _react2.default.createElement(
+	            'filter',
+	            { id: 'f3', x: '0', y: '0', width: '200%', height: '200%' },
+	            _react2.default.createElement('feOffset', { result: 'offOut', 'in': 'SourceAlpha', dx: '2', dy: '2' }),
+	            _react2.default.createElement('feGaussianBlur', { result: 'blurOut', 'in': 'offOut', stdDeviation: '2' }),
+	            _react2.default.createElement('feBlend', { 'in': 'SourceGraphic', in2: 'blurOut', mode: 'normal' }),
+	            _react2.default.createElement('feColorMatrix', { values: '1 0 0 0 0   1 0 0 0 0   1 0 0 0 0  1 0 0 0.4 0', type: 'matrix', 'in': 'shadowBlurOuter1' })
+	          ),
+	          _react2.default.createElement(
+	            'marker',
+	            { id: 'bluearrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
+	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: connectionBlue, fill: 'transparent' })
+	          ),
+	          _react2.default.createElement(
+	            'marker',
+	            { id: 'redarrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
+	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: "red", fill: 'transparent' })
+	          )
+	        ),
+	        Object.keys(this.state.connections).map(function (cid) {
+	          var _this2 = this;
+
+	          var connection = this.state.connections[cid];
+	          if (connection == undefined) return;
+	          {
+	            false;
+	          }
+
+	          var p1 = this.state.processes[connection.process_type];
+	          var p2 = this.state.processes[connection.recommended_input];
+
+	          return _react2.default.createElement(DirectedLine, _extends({
+	            p1: this.unscale(p1), p2: this.unscale(p2),
+	            p1Width: width(p1), p2Width: width(p2)
+	          }, connection, { key: cid,
+	            selected: cid == this.state.selectedConnection,
+	            onClick: function onClick() {
+	              return _this2.selectConnection(cid);
+	            }
+	          }));
+	        }, this),
+	        Object.keys(this.state.processes).map(function (pid) {
+	          var _this3 = this;
+
+	          var p = thisObj.state.processes[pid];
+	          if (p == undefined) return { false: false };
+	          var coords = this.unscale(p);
+	          //let newp = update(p, {$merge: coords})
+	          return _react2.default.createElement(ProcessTile, _extends({
+	            width: width(p), height: 40
+	          }, p, { nx: coords.x, ny: coords.y, key: pid,
+	            selected: pid == this.state.selectProcess,
+	            onStop: function onStop(e, ui) {
+	              return _this3.handleStop(e, ui, pid);
+	            },
+	            onConnectionEnd: function onConnectionEnd(x, y) {
+	              return _this3.handleConnectionEnd(pid, x, y);
+	            },
+	            onClick: function onClick() {
+	              return _this3.selectProcess(pid);
+	            }
+	          }));
+	        }, this)
+	      );
+	    }
+	  }, {
+	    key: 'selectProcess',
+	    value: function selectProcess(pid) {
+	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectedConnection: -1, selectedProcess: pid } });
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'selectConnection',
+	    value: function selectConnection(cid) {
+	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectedConnection: cid, selectedProcess: -1 } });
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.setDimensions();
+	    }
+	  }, {
+	    key: 'setDimensions',
+	    value: function setDimensions() {
+	      this.setState({ height: (0, _jquery2.default)(window).height() - 64, width: (0, _jquery2.default)(window).width() });
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var thisObj = this;
+	      var container = {};
+	      var defs = [this.getProcesses(container), this.getConnections(container)];
+
+	      _jquery2.default.when.apply(null, defs).done(function () {
+	        thisObj.setState(container);
+	      });
+
+	      var url = window.location.origin + '/ics/recommendedInputs/';
+	      window.addEventListener('keyup', this.handleConnectionDelete);
+	      window.addEventListener('resize', this.setDimensions);
+	    }
+	  }, {
+	    key: 'handleConnectionDelete',
+	    value: function handleConnectionDelete(e) {
+	      var thisObj = this;
+
+	      if (e.key == "Backspace" && this.state.selectedConnection != -1) {
+
+	        var url = window.location.origin + "/ics/recommendedInputs/" + this.state.selectedConnection + "/";
+	        _jquery2.default.ajax({ method: "DELETE", url: url }).done(function (e) {
+	          var ns = (0, _immutabilityHelper2.default)(thisObj.state, {
+	            connections: {
+	              $merge: _defineProperty({}, thisObj.state.selectedConnection, undefined)
+	            }, selectedConnection: { $set: -1 }
+	          });
+	          thisObj.setState(ns);
+	        });
+	      }
+	    }
+	  }, {
+	    key: 'getProcesses',
+	    value: function getProcesses(container) {
+	      var deferred = _jquery2.default.Deferred();
+	      var req = { created_by: window.localStorage.getItem("team") || "1" };
+	      if (!req.created_by) {
+	        alert("No teams loaded:(((");
+	      }
+
+	      _jquery2.default.get(window.location.origin + "/ics/processes/", req).done(function (data) {
+	        var processes = {};
+	        data.map(function (p, i) {
+	          processes[p.id] = p;
+	        });
+	        container.processes = processes;
+	        deferred.resolve();
+	      });
+	      return deferred.promise();
+	    }
+	  }, {
+	    key: 'getConnections',
+	    value: function getConnections(container) {
+	      var deferred = _jquery2.default.Deferred();
+	      var req = { created_by: window.localStorage.getItem("team") || "1" };
+	      if (!req.created_by) {
+	        alert("No teams loaded:(((");
+	      }
+
+	      _jquery2.default.get(window.location.origin + "/ics/recommendedInputs/", req).done(function (data) {
+	        console.log(data);
+	        var connections = {};
+	        data.map(function (c, i) {
+	          connections[c.id] = c;
+	        });
+	        container.connections = connections;
+	        deferred.resolve();
+	      });
+	      return deferred.promise();
+	    }
+	  }, {
+	    key: 'handleStop',
+	    value: function handleStop(e, ui, id) {
+	      this.forceUpdate();
+	      var url = window.location.origin + "/ics/processes/move/" + id + "/";
+	      var p = this.state.processes[id];
+	      var data = this.scale({ x: ui.x, y: ui.y });
+	      var thisObj = this;
+
+	      _jquery2.default.ajax({ url: url, method: 'PUT', data: data }).done(function (responseData) {
+	        var newState = (0, _immutabilityHelper2.default)(thisObj.state, { processes: _defineProperty({}, id, { $merge: { x: responseData.x, y: responseData.y }
+	          })
+	        });
+	        thisObj.setState(newState);
+	      });
+	    }
+	  }, {
+	    key: 'handleConnectionEnd',
+	    value: function handleConnectionEnd(id, x, y) {
+	      var found = -1;
+	      var o = this.unscale(this.state.processes[id]);
+
+	      Object.keys(this.state.processes).map(function (pid) {
+	        var p = this.state.processes[pid];
+	        var n = this.unscale(p);
+	        var w = width(p);
+
+	        if (pid == id) return;
+
+	        if (Math.abs(parseFloat(x) + o.x - (n.x + w / 2)) <= w / 2 + 10 && Math.abs(parseFloat(y) + o.y - (n.y + 10)) <= 20) {
+	          found = pid;
+	        }
+	      }, this);
+
+	      if (found == -1) return;
+
+	      Object.keys(this.state.connections).map(function (cid) {
+	        var c = this.state.connections[cid];
+	        if (c && c.process_type == id && c.recommended_input == found) found = -1;
+	      }, this);
+
+	      if (found == -1) return;
+
+	      var nc = { process_type: found, recommended_input: id };
+	      this.makeNewConnection(this, nc);
+	    }
+	  }, {
+	    key: 'makeNewConnection',
+	    value: function makeNewConnection(thisObj, data) {
+	      var url = window.location.origin + '/ics/recommendedInputs/';
+	      _jquery2.default.ajax({ url: url, data: data, method: 'POST' }).done(function (d) {
+	        var obj = {};
+	        obj[d.id] = d;
+	        var ns = (0, _immutabilityHelper2.default)(thisObj.state, { connections: { $merge: obj } });
+	        thisObj.setState(ns);
+	      });
+	    }
+	  }, {
+	    key: 'scale',
+	    value: function scale(coords) {
+	      var h = this.state.height;
+	      var w = this.state.width;
+
+	      var x = parseFloat(coords.x);
+	      var y = parseFloat(coords.y);
+
+	      var v = { x: trim(coords.x / w * 100), y: trim(coords.y / h * 100) };
+
+	      return v;
+	    }
+	  }, {
+	    key: 'unscale',
+	    value: function unscale(coords) {
+	      var h = this.state.height;
+	      var w = this.state.width;
+
+	      var x = parseFloat(coords.x);
+	      var y = parseFloat(coords.y);
+
+	      var v = { x: x / 100 * w, y: y / 100 * h };
+	      return v;
+	    }
+	  }, {
+	    key: 'handleDelete',
+	    value: function handleDelete(cid) {
+	      var url = window.location.origin + "/ics/recommendedInputs/" + cid + "/";
+	      _jquery2.default.ajax({ url: url, method: "DELETE" }).done(function () {
+	        var ns = (0, _immutabilityHelper2.default)(this.state, { connections: { $merge: { cid: undefined } } });
+	        this.setState(ns);
+	      });
+	    }
+	  }]);
+
+	  return FactoryMap;
+	}(_react2.default.Component);
+
+	exports.default = FactoryMap;
+
+
+	function trim(n) {
+	  return Math.floor(n * 1000) / 1000;
+	}
+
+	var DirectedLine = function (_React$Component2) {
+	  _inherits(DirectedLine, _React$Component2);
+
+	  function DirectedLine(props) {
+	    _classCallCheck(this, DirectedLine);
+
+	    return _possibleConstructorReturn(this, (DirectedLine.__proto__ || Object.getPrototypeOf(DirectedLine)).call(this, props));
+	  }
+
+	  _createClass(DirectedLine, [{
+	    key: 'getMidPoint',
+	    value: function getMidPoint() {
+	      var halfLength = this.path.getTotalLength() * 2 / 3;
+	      var p1 = this.path.getPointAtLength(halfLength - 4);
+	      var p2 = this.path.getPointAtLength(halfLength + 4);
+	      this.sample.setAttribute("x1", p1.x);
+	      this.sample.setAttribute("y1", p1.y);
+	      this.sample.setAttribute("x2", p2.x);
+	      this.sample.setAttribute("y2", p2.y);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getMidPoint();
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.getMidPoint();
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this5 = this;
+
+	      var x1 = this.props.p1.x + this.props.p1Width / 2;
+	      var y1 = this.props.p1.y + 40 / 2;
+	      var x2 = this.props.p2.x + this.props.p2Width / 2;
+	      var y2 = this.props.p2.y + 40 / 2;
+	      var path = 'M' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + y1 + ', ' + x2 + ' ' + y2 + ', ' + x2 + ' ' + y2;
+	      return _react2.default.createElement(
+	        'g',
+	        null,
+	        _react2.default.createElement('path', {
+	          d: path,
+	          stroke: this.props.selected ? "red" : connectionBlue, strokeWidth: '4', fill: 'transparent',
+	          ref: function ref(path) {
+	            _this5.path = path;
+	          },
+	          onClick: this.props.onClick
+	        }),
+	        _react2.default.createElement('line', { ref: function ref(line) {
+	            _this5.sample = line;
+	          }, strokeWidth: '4', markerEnd: this.props.selected ? "url(#redarrow)" : "url(#bluearrow)" })
+	      );
+	    }
+	  }]);
+
+	  return DirectedLine;
+	}(_react2.default.Component);
+
+	function ProcessTile(props) {
+	  return _react2.default.createElement(
+	    _reactDraggable2.default,
+	    { onDrag: function onDrag(e, ui) {
+	        return props.onStop(e, ui);
+	      }, defaultPosition: { x: props.nx, y: props.ny } },
+	    _react2.default.createElement(
+	      'g',
+	      null,
+	      _react2.default.createElement(DraggableLine, { className: 'connectionTemp', x: props.width, y: props.height / 2, onStop: function onStop(x, y) {
+	          return props.onConnectionEnd(x, y);
+	        } }),
+	      _react2.default.createElement('rect', { className: 'processTile', width: props.width, height: props.height, rx: '4', ry: '4', filter: 'url(#f3)' }),
+	      _react2.default.createElement('image', { x: 10, y: 10, height: 20, width: 20, xlinkHref: (0, _Task.icon)(props.icon) }),
+	      _react2.default.createElement(
+	        'text',
+	        { textAnchor: 'middle', x: (props.width - 25) / 2 + 25, y: props.height / 2 + 4 },
+	        props.name + " (" + props.code + ")"
+	      )
+	    )
+	  );
+	}
+
+	var DraggableLine = function (_React$Component3) {
+	  _inherits(DraggableLine, _React$Component3);
+
+	  function DraggableLine(props) {
+	    _classCallCheck(this, DraggableLine);
+
+	    var _this6 = _possibleConstructorReturn(this, (DraggableLine.__proto__ || Object.getPrototypeOf(DraggableLine)).call(this, props));
+
+	    _this6.handleDrag = _this6.handleDrag.bind(_this6);
+	    _this6.handleDragStop = _this6.handleDragStop.bind(_this6);
+	    _this6.state = { x1: props.x + 5, y1: props.y + 5, x2: props.x + 5, y2: props.y + 5 };
+	    return _this6;
+	  }
+
+	  _createClass(DraggableLine, [{
+	    key: 'handleDrag',
+	    value: function handleDrag() {
+	      var _this7 = this;
+
+	      return function (e, _ref) {
+	        var node = _ref.node,
+	            deltaX = _ref.deltaX,
+	            deltaY = _ref.deltaY;
+
+	        e.stopImmediatePropagation();
+
+	        var state = (0, _immutabilityHelper2.default)(_this7.state, { $merge: { x2: _this7.state.x2 + deltaX, y2: _this7.state.y2 + deltaY } });
+	        _this7.setState(state);
+	      };
+	    }
+	  }, {
+	    key: 'handleDragStop',
+	    value: function handleDragStop() {
+	      var _this8 = this;
+
+	      return function (e, _ref2) {
+	        var node = _ref2.node,
+	            deltaX = _ref2.deltaX,
+	            deltaY = _ref2.deltaY;
+
+	        _this8.props.onStop(_this8.state.x2, _this8.state.y2);
+	        var state = (0, _immutabilityHelper2.default)(_this8.state, { $merge: { x2: _this8.props.x + 5, y2: _this8.props.y + 5 } });
+	        _this8.setState(state);
+	      };
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(props) {
+	      this.setState({ x1: props.x + 5, y1: props.y + 5, x2: props.x + 5, y2: props.y + 5 });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        _reactDraggable.DraggableCore,
+	        { onDrag: this.handleDrag(), onStop: this.handleDragStop() },
+	        _react2.default.createElement(
+	          'g',
+	          null,
+	          _react2.default.createElement('line', _extends({}, this.state, { stroke: '#1976D2', strokeWidth: '4', strokeDasharray: '8, 8' })),
+	          _react2.default.createElement('rect', { x: this.props.x - 2, y: this.props.y, height: '15', width: '15', rx: '2', ry: '2', style: { fill: "#64B5F6" } })
+	        )
+	      );
+	    }
+	  }]);
+
+	  return DraggableLine;
+	}(_react2.default.Component);
+
+	function width(p) {
+	  return (p.name.length + p.code.length + 5) * 7 + 25;
+	}
+
+/***/ },
+/* 348 */
+/***/ function(module, exports, __webpack_require__) {
+
+	(function webpackUniversalModuleDefinition(root, factory) {
+		if(true)
+			module.exports = factory(__webpack_require__(1), __webpack_require__(32));
+		else if(typeof define === 'function' && define.amd)
+			define(["react", "react-dom"], factory);
+		else if(typeof exports === 'object')
+			exports["ReactDraggable"] = factory(require("react"), require("react-dom"));
+		else
+			root["ReactDraggable"] = factory(root["React"], root["ReactDOM"]);
+	})(this, function(__WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_3__) {
+	return /******/ (function(modules) { // webpackBootstrap
+	/******/ 	// The module cache
+	/******/ 	var installedModules = {};
+	/******/
+	/******/ 	// The require function
+	/******/ 	function __webpack_require__(moduleId) {
+	/******/
+	/******/ 		// Check if module is in cache
+	/******/ 		if(installedModules[moduleId])
+	/******/ 			return installedModules[moduleId].exports;
+	/******/
+	/******/ 		// Create a new module (and put it into the cache)
+	/******/ 		var module = installedModules[moduleId] = {
+	/******/ 			exports: {},
+	/******/ 			id: moduleId,
+	/******/ 			loaded: false
+	/******/ 		};
+	/******/
+	/******/ 		// Execute the module function
+	/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+	/******/
+	/******/ 		// Flag the module as loaded
+	/******/ 		module.loaded = true;
+	/******/
+	/******/ 		// Return the exports of the module
+	/******/ 		return module.exports;
+	/******/ 	}
+	/******/
+	/******/
+	/******/ 	// expose the modules object (__webpack_modules__)
+	/******/ 	__webpack_require__.m = modules;
+	/******/
+	/******/ 	// expose the module cache
+	/******/ 	__webpack_require__.c = installedModules;
+	/******/
+	/******/ 	// __webpack_public_path__
+	/******/ 	__webpack_require__.p = "";
+	/******/
+	/******/ 	// Load entry module and return exports
+	/******/ 	return __webpack_require__(0);
+	/******/ })
+	/************************************************************************/
+	/******/ ([
+	/* 0 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		'use strict';
+		
+		module.exports = __webpack_require__(1).default;
+		module.exports.DraggableCore = __webpack_require__(9).default;
+
+	/***/ },
+	/* 1 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		
+		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+		
+		var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+		
+		var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+		
+		var _react = __webpack_require__(2);
+		
+		var _react2 = _interopRequireDefault(_react);
+		
+		var _reactDom = __webpack_require__(3);
+		
+		var _reactDom2 = _interopRequireDefault(_reactDom);
+		
+		var _classnames = __webpack_require__(4);
+		
+		var _classnames2 = _interopRequireDefault(_classnames);
+		
+		var _domFns = __webpack_require__(5);
+		
+		var _positionFns = __webpack_require__(8);
+		
+		var _shims = __webpack_require__(6);
+		
+		var _DraggableCore = __webpack_require__(9);
+		
+		var _DraggableCore2 = _interopRequireDefault(_DraggableCore);
+		
+		var _log = __webpack_require__(11);
+		
+		var _log2 = _interopRequireDefault(_log);
+		
+		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+		
+		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+		
+		function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+		
+		function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+		
+		function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+		// $FlowIgnore
+		
+		
+		/*:: import type {DraggableEventHandler} from './utils/types';*/
+		/*:: type DraggableState = {
+		  dragging: boolean,
+		  dragged: boolean,
+		  x: number, y: number,
+		  slackX: number, slackY: number,
+		  isElementSVG: boolean
+		};*/
+		
+		
+		//
+		// Define <Draggable>
+		//
+		
+		/*:: type ConstructorProps = {
+		  position: { x: number, y: number },
+		  defaultPosition: { x: number, y: number }
+		};*/
+		
+		var Draggable = function (_React$Component) {
+		  _inherits(Draggable, _React$Component);
+		
+		  function Draggable(props /*: ConstructorProps*/) {
+		    _classCallCheck(this, Draggable);
+		
+		    var _this = _possibleConstructorReturn(this, (Draggable.__proto__ || Object.getPrototypeOf(Draggable)).call(this, props));
+		
+		    _this.onDragStart = function (e, coreData) {
+		      (0, _log2.default)('Draggable: onDragStart: %j', coreData);
+		
+		      // Short-circuit if user's callback killed it.
+		      var shouldStart = _this.props.onStart(e, (0, _positionFns.createDraggableData)(_this, coreData));
+		      // Kills start event on core as well, so move handlers are never bound.
+		      if (shouldStart === false) return false;
+		
+		      _this.setState({ dragging: true, dragged: true });
+		    };
+		
+		    _this.onDrag = function (e, coreData) {
+		      if (!_this.state.dragging) return false;
+		      (0, _log2.default)('Draggable: onDrag: %j', coreData);
+		
+		      var uiData = (0, _positionFns.createDraggableData)(_this, coreData);
+		
+		      var newState /*: $Shape<DraggableState>*/ = {
+		        x: uiData.x,
+		        y: uiData.y
+		      };
+		
+		      // Keep within bounds.
+		      if (_this.props.bounds) {
+		        // Save original x and y.
+		        var _x = newState.x,
+		            _y = newState.y;
+		
+		        // Add slack to the values used to calculate bound position. This will ensure that if
+		        // we start removing slack, the element won't react to it right away until it's been
+		        // completely removed.
+		
+		        newState.x += _this.state.slackX;
+		        newState.y += _this.state.slackY;
+		
+		        // Get bound position. This will ceil/floor the x and y within the boundaries.
+		        // $FlowBug
+		
+		        // Recalculate slack by noting how much was shaved by the boundPosition handler.
+		        var _getBoundPosition = (0, _positionFns.getBoundPosition)(_this, newState.x, newState.y);
+		
+		        var _getBoundPosition2 = _slicedToArray(_getBoundPosition, 2);
+		
+		        newState.x = _getBoundPosition2[0];
+		        newState.y = _getBoundPosition2[1];
+		        newState.slackX = _this.state.slackX + (_x - newState.x);
+		        newState.slackY = _this.state.slackY + (_y - newState.y);
+		
+		        // Update the event we fire to reflect what really happened after bounds took effect.
+		        uiData.x = _x;
+		        uiData.y = _y;
+		        uiData.deltaX = newState.x - _this.state.x;
+		        uiData.deltaY = newState.y - _this.state.y;
+		      }
+		
+		      // Short-circuit if user's callback killed it.
+		      var shouldUpdate = _this.props.onDrag(e, uiData);
+		      if (shouldUpdate === false) return false;
+		
+		      _this.setState(newState);
+		    };
+		
+		    _this.onDragStop = function (e, coreData) {
+		      if (!_this.state.dragging) return false;
+		
+		      // Short-circuit if user's callback killed it.
+		      var shouldStop = _this.props.onStop(e, (0, _positionFns.createDraggableData)(_this, coreData));
+		      if (shouldStop === false) return false;
+		
+		      (0, _log2.default)('Draggable: onDragStop: %j', coreData);
+		
+		      var newState /*: $Shape<DraggableState>*/ = {
+		        dragging: false,
+		        slackX: 0,
+		        slackY: 0
+		      };
+		
+		      // If this is a controlled component, the result of this operation will be to
+		      // revert back to the old position. We expect a handler on `onDragStop`, at the least.
+		      var controlled = Boolean(_this.props.position);
+		      if (controlled) {
+		        var _this$props$position = _this.props.position,
+		            _x2 = _this$props$position.x,
+		            _y2 = _this$props$position.y;
+		
+		        newState.x = _x2;
+		        newState.y = _y2;
+		      }
+		
+		      _this.setState(newState);
+		    };
+		
+		    _this.state = {
+		      // Whether or not we are currently dragging.
+		      dragging: false,
+		
+		      // Whether or not we have been dragged before.
+		      dragged: false,
+		
+		      // Current transform x and y.
+		      x: props.position ? props.position.x : props.defaultPosition.x,
+		      y: props.position ? props.position.y : props.defaultPosition.y,
+		
+		      // Used for compensating for out-of-bounds drags
+		      slackX: 0, slackY: 0,
+		
+		      // Can only determine if SVG after mounting
+		      isElementSVG: false
+		    };
+		    return _this;
+		  }
+		
+		  _createClass(Draggable, [{
+		    key: 'componentWillMount',
+		    value: function componentWillMount() {
+		      if (this.props.position && !(this.props.onDrag || this.props.onStop)) {
+		        // eslint-disable-next-line
+		        console.warn('A `position` was applied to this <Draggable>, without drag handlers. This will make this ' + 'component effectively undraggable. Please attach `onDrag` or `onStop` handlers so you can adjust the ' + '`position` of this element.');
+		      }
+		    }
+		  }, {
+		    key: 'componentDidMount',
+		    value: function componentDidMount() {
+		      // Check to see if the element passed is an instanceof SVGElement
+		      if (typeof SVGElement !== 'undefined' && _reactDom2.default.findDOMNode(this) instanceof SVGElement) {
+		        this.setState({ isElementSVG: true });
+		      }
+		    }
+		  }, {
+		    key: 'componentWillReceiveProps',
+		    value: function componentWillReceiveProps(nextProps /*: Object*/) {
+		      // Set x/y if position has changed
+		      if (nextProps.position && (!this.props.position || nextProps.position.x !== this.props.position.x || nextProps.position.y !== this.props.position.y)) {
+		        this.setState({ x: nextProps.position.x, y: nextProps.position.y });
+		      }
+		    }
+		  }, {
+		    key: 'componentWillUnmount',
+		    value: function componentWillUnmount() {
+		      this.setState({ dragging: false }); // prevents invariant if unmounted while dragging
+		    }
+		  }, {
+		    key: 'render',
+		    value: function render() /*: React.Element<any>*/ {
+		      var _classNames;
+		
+		      var style = {},
+		          svgTransform = null;
+		
+		      // If this is controlled, we don't want to move it - unless it's dragging.
+		      var controlled = Boolean(this.props.position);
+		      var draggable = !controlled || this.state.dragging;
+		
+		      var position = this.props.position || this.props.defaultPosition;
+		      var transformOpts = {
+		        // Set left if horizontal drag is enabled
+		        x: (0, _positionFns.canDragX)(this) && draggable ? this.state.x : position.x,
+		
+		        // Set top if vertical drag is enabled
+		        y: (0, _positionFns.canDragY)(this) && draggable ? this.state.y : position.y
+		      };
+		
+		      // If this element was SVG, we use the `transform` attribute.
+		      if (this.state.isElementSVG) {
+		        svgTransform = (0, _domFns.createSVGTransform)(transformOpts);
+		      } else {
+		        // Add a CSS transform to move the element around. This allows us to move the element around
+		        // without worrying about whether or not it is relatively or absolutely positioned.
+		        // If the item you are dragging already has a transform set, wrap it in a <span> so <Draggable>
+		        // has a clean slate.
+		        style = (0, _domFns.createCSSTransform)(transformOpts);
+		      }
+		
+		      var _props = this.props,
+		          defaultClassName = _props.defaultClassName,
+		          defaultClassNameDragging = _props.defaultClassNameDragging,
+		          defaultClassNameDragged = _props.defaultClassNameDragged;
+		
+		      // Mark with class while dragging
+		
+		      var className = (0, _classnames2.default)(this.props.children.props.className || '', defaultClassName, (_classNames = {}, _defineProperty(_classNames, defaultClassNameDragging, this.state.dragging), _defineProperty(_classNames, defaultClassNameDragged, this.state.dragged), _classNames));
+		
+		      // Reuse the child provided
+		      // This makes it flexible to use whatever element is wanted (div, ul, etc)
+		      return _react2.default.createElement(
+		        _DraggableCore2.default,
+		        _extends({}, this.props, { onStart: this.onDragStart, onDrag: this.onDrag, onStop: this.onDragStop }),
+		        _react2.default.cloneElement(_react2.default.Children.only(this.props.children), {
+		          className: className,
+		          style: _extends({}, this.props.children.props.style, style),
+		          transform: svgTransform
+		        })
+		      );
+		    }
+		  }]);
+		
+		  return Draggable;
+		}(_react2.default.Component);
+		
+		Draggable.displayName = 'Draggable';
+		Draggable.propTypes = _extends({}, _DraggableCore2.default.propTypes, {
+		
+		  /**
+		   * `axis` determines which axis the draggable can move.
+		   *
+		   *  Note that all callbacks will still return data as normal. This only
+		   *  controls flushing to the DOM.
+		   *
+		   * 'both' allows movement horizontally and vertically.
+		   * 'x' limits movement to horizontal axis.
+		   * 'y' limits movement to vertical axis.
+		   * 'none' limits all movement.
+		   *
+		   * Defaults to 'both'.
+		   */
+		  axis: _react.PropTypes.oneOf(['both', 'x', 'y', 'none']),
+		
+		  /**
+		   * `bounds` determines the range of movement available to the element.
+		   * Available values are:
+		   *
+		   * 'parent' restricts movement within the Draggable's parent node.
+		   *
+		   * Alternatively, pass an object with the following properties, all of which are optional:
+		   *
+		   * {left: LEFT_BOUND, right: RIGHT_BOUND, bottom: BOTTOM_BOUND, top: TOP_BOUND}
+		   *
+		   * All values are in px.
+		   *
+		   * Example:
+		   *
+		   * ```jsx
+		   *   let App = React.createClass({
+		   *       render: function () {
+		   *         return (
+		   *            <Draggable bounds={{right: 300, bottom: 300}}>
+		   *              <div>Content</div>
+		   *           </Draggable>
+		   *         );
+		   *       }
+		   *   });
+		   * ```
+		   */
+		  bounds: _react.PropTypes.oneOfType([_react.PropTypes.shape({
+		    left: _react.PropTypes.number,
+		    right: _react.PropTypes.number,
+		    top: _react.PropTypes.number,
+		    bottom: _react.PropTypes.number
+		  }), _react.PropTypes.string, _react.PropTypes.oneOf([false])]),
+		
+		  defaultClassName: _react.PropTypes.string,
+		  defaultClassNameDragging: _react.PropTypes.string,
+		  defaultClassNameDragged: _react.PropTypes.string,
+		
+		  /**
+		   * `defaultPosition` specifies the x and y that the dragged item should start at
+		   *
+		   * Example:
+		   *
+		   * ```jsx
+		   *      let App = React.createClass({
+		   *          render: function () {
+		   *              return (
+		   *                  <Draggable defaultPosition={{x: 25, y: 25}}>
+		   *                      <div>I start with transformX: 25px and transformY: 25px;</div>
+		   *                  </Draggable>
+		   *              );
+		   *          }
+		   *      });
+		   * ```
+		   */
+		  defaultPosition: _react.PropTypes.shape({
+		    x: _react.PropTypes.number,
+		    y: _react.PropTypes.number
+		  }),
+		
+		  /**
+		   * `position`, if present, defines the current position of the element.
+		   *
+		   *  This is similar to how form elements in React work - if no `position` is supplied, the component
+		   *  is uncontrolled.
+		   *
+		   * Example:
+		   *
+		   * ```jsx
+		   *      let App = React.createClass({
+		   *          render: function () {
+		   *              return (
+		   *                  <Draggable position={{x: 25, y: 25}}>
+		   *                      <div>I start with transformX: 25px and transformY: 25px;</div>
+		   *                  </Draggable>
+		   *              );
+		   *          }
+		   *      });
+		   * ```
+		   */
+		  position: _react.PropTypes.shape({
+		    x: _react.PropTypes.number,
+		    y: _react.PropTypes.number
+		  }),
+		
+		  /**
+		   * These properties should be defined on the child, not here.
+		   */
+		  className: _shims.dontSetMe,
+		  style: _shims.dontSetMe,
+		  transform: _shims.dontSetMe
+		});
+		Draggable.defaultProps = _extends({}, _DraggableCore2.default.defaultProps, {
+		  axis: 'both',
+		  bounds: false,
+		  defaultClassName: 'react-draggable',
+		  defaultClassNameDragging: 'react-draggable-dragging',
+		  defaultClassNameDragged: 'react-draggable-dragged',
+		  defaultPosition: { x: 0, y: 0 },
+		  position: null
+		});
+		exports.default = Draggable;
+
+	/***/ },
+	/* 2 */
+	/***/ function(module, exports) {
+
+		module.exports = __WEBPACK_EXTERNAL_MODULE_2__;
+
+	/***/ },
+	/* 3 */
+	/***/ function(module, exports) {
+
+		module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
+
+	/***/ },
+	/* 4 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+		  Copyright (c) 2016 Jed Watson.
+		  Licensed under the MIT License (MIT), see
+		  http://jedwatson.github.io/classnames
+		*/
+		/* global define */
+		
+		(function () {
+			'use strict';
+		
+			var hasOwn = {}.hasOwnProperty;
+		
+			function classNames () {
+				var classes = [];
+		
+				for (var i = 0; i < arguments.length; i++) {
+					var arg = arguments[i];
+					if (!arg) continue;
+		
+					var argType = typeof arg;
+		
+					if (argType === 'string' || argType === 'number') {
+						classes.push(arg);
+					} else if (Array.isArray(arg)) {
+						classes.push(classNames.apply(null, arg));
+					} else if (argType === 'object') {
+						for (var key in arg) {
+							if (hasOwn.call(arg, key) && arg[key]) {
+								classes.push(key);
+							}
+						}
+					}
+				}
+		
+				return classes.join(' ');
+			}
+		
+			if (typeof module !== 'undefined' && module.exports) {
+				module.exports = classNames;
+			} else if (true) {
+				// register as 'classnames', consistent with npm package name
+				!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+					return classNames;
+				}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			} else {
+				window.classNames = classNames;
+			}
+		}());
+
+
+	/***/ },
+	/* 5 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		
+		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+		
+		exports.matchesSelector = matchesSelector;
+		exports.matchesSelectorAndParentsTo = matchesSelectorAndParentsTo;
+		exports.addEvent = addEvent;
+		exports.removeEvent = removeEvent;
+		exports.outerHeight = outerHeight;
+		exports.outerWidth = outerWidth;
+		exports.innerHeight = innerHeight;
+		exports.innerWidth = innerWidth;
+		exports.offsetXYFromParent = offsetXYFromParent;
+		exports.createCSSTransform = createCSSTransform;
+		exports.createSVGTransform = createSVGTransform;
+		exports.getTouch = getTouch;
+		exports.getTouchIdentifier = getTouchIdentifier;
+		exports.addUserSelectStyles = addUserSelectStyles;
+		exports.removeUserSelectStyles = removeUserSelectStyles;
+		exports.styleHacks = styleHacks;
+		
+		var _shims = __webpack_require__(6);
+		
+		var _getPrefix = __webpack_require__(7);
+		
+		var _getPrefix2 = _interopRequireDefault(_getPrefix);
+		
+		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+		
+		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+		
+		/*:: import type {ControlPosition} from './types';*/
+		
+		
+		var matchesSelectorFunc = '';
+		function matchesSelector(el /*: Node*/, selector /*: string*/) /*: boolean*/ {
+		  if (!matchesSelectorFunc) {
+		    matchesSelectorFunc = (0, _shims.findInArray)(['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'], function (method) {
+		      // $FlowIgnore: Doesn't think elements are indexable
+		      return (0, _shims.isFunction)(el[method]);
+		    });
+		  }
+		
+		  // $FlowIgnore: Doesn't think elements are indexable
+		  return el[matchesSelectorFunc].call(el, selector);
+		}
+		
+		// Works up the tree to the draggable itself attempting to match selector.
+		function matchesSelectorAndParentsTo(el /*: Node*/, selector /*: string*/, baseNode /*: Node*/) /*: boolean*/ {
+		  var node = el;
+		  do {
+		    if (matchesSelector(node, selector)) return true;
+		    if (node === baseNode) return false;
+		    node = node.parentNode;
+		  } while (node);
+		
+		  return false;
+		}
+		
+		function addEvent(el /*: ?Node*/, event /*: string*/, handler /*: Function*/) /*: void*/ {
+		  if (!el) {
+		    return;
+		  }
+		  if (el.attachEvent) {
+		    el.attachEvent('on' + event, handler);
+		  } else if (el.addEventListener) {
+		    el.addEventListener(event, handler, true);
+		  } else {
+		    // $FlowIgnore: Doesn't think elements are indexable
+		    el['on' + event] = handler;
+		  }
+		}
+		
+		function removeEvent(el /*: ?Node*/, event /*: string*/, handler /*: Function*/) /*: void*/ {
+		  if (!el) {
+		    return;
+		  }
+		  if (el.detachEvent) {
+		    el.detachEvent('on' + event, handler);
+		  } else if (el.removeEventListener) {
+		    el.removeEventListener(event, handler, true);
+		  } else {
+		    // $FlowIgnore: Doesn't think elements are indexable
+		    el['on' + event] = null;
+		  }
+		}
+		
+		function outerHeight(node /*: HTMLElement*/) /*: number*/ {
+		  // This is deliberately excluding margin for our calculations, since we are using
+		  // offsetTop which is including margin. See getBoundPosition
+		  var height = node.clientHeight;
+		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+		  height += (0, _shims.int)(computedStyle.borderTopWidth);
+		  height += (0, _shims.int)(computedStyle.borderBottomWidth);
+		  return height;
+		}
+		
+		function outerWidth(node /*: HTMLElement*/) /*: number*/ {
+		  // This is deliberately excluding margin for our calculations, since we are using
+		  // offsetLeft which is including margin. See getBoundPosition
+		  var width = node.clientWidth;
+		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+		  width += (0, _shims.int)(computedStyle.borderLeftWidth);
+		  width += (0, _shims.int)(computedStyle.borderRightWidth);
+		  return width;
+		}
+		function innerHeight(node /*: HTMLElement*/) /*: number*/ {
+		  var height = node.clientHeight;
+		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+		  height -= (0, _shims.int)(computedStyle.paddingTop);
+		  height -= (0, _shims.int)(computedStyle.paddingBottom);
+		  return height;
+		}
+		
+		function innerWidth(node /*: HTMLElement*/) /*: number*/ {
+		  var width = node.clientWidth;
+		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+		  width -= (0, _shims.int)(computedStyle.paddingLeft);
+		  width -= (0, _shims.int)(computedStyle.paddingRight);
+		  return width;
+		}
+		
+		// Get from offsetParent
+		function offsetXYFromParent(evt /*: {clientX: number, clientY: number}*/, offsetParent /*: HTMLElement*/) /*: ControlPosition*/ {
+		  var isBody = offsetParent === offsetParent.ownerDocument.body;
+		  var offsetParentRect = isBody ? { left: 0, top: 0 } : offsetParent.getBoundingClientRect();
+		
+		  var x = evt.clientX + offsetParent.scrollLeft - offsetParentRect.left;
+		  var y = evt.clientY + offsetParent.scrollTop - offsetParentRect.top;
+		
+		  return { x: x, y: y };
+		}
+		
+		function createCSSTransform(_ref) /*: Object*/ {
+		  var x = _ref.x,
+		      y = _ref.y;
+		
+		  // Replace unitless items with px
+		  return _defineProperty({}, (0, _getPrefix.browserPrefixToKey)('transform', _getPrefix2.default), 'translate(' + x + 'px,' + y + 'px)');
+		}
+		
+		function createSVGTransform(_ref3) /*: string*/ {
+		  var x = _ref3.x,
+		      y = _ref3.y;
+		
+		  return 'translate(' + x + ',' + y + ')';
+		}
+		
+		function getTouch(e /*: MouseTouchEvent*/, identifier /*: number*/) /*: ?{clientX: number, clientY: number}*/ {
+		  return e.targetTouches && (0, _shims.findInArray)(e.targetTouches, function (t) {
+		    return identifier === t.identifier;
+		  }) || e.changedTouches && (0, _shims.findInArray)(e.changedTouches, function (t) {
+		    return identifier === t.identifier;
+		  });
+		}
+		
+		function getTouchIdentifier(e /*: MouseTouchEvent*/) /*: ?number*/ {
+		  if (e.targetTouches && e.targetTouches[0]) return e.targetTouches[0].identifier;
+		  if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].identifier;
+		}
+		
+		// User-select Hacks:
+		//
+		// Useful for preventing blue highlights all over everything when dragging.
+		var userSelectPrefix = (0, _getPrefix.getPrefix)('user-select');
+		var userSelect = (0, _getPrefix.browserPrefixToStyle)('user-select', userSelectPrefix);
+		var userSelectStyle = ';' + userSelect + ': none;';
+		var userSelectReplaceRegExp = new RegExp(';?' + userSelect + ': none;'); // leading ; not present on IE
+		
+		// Note we're passing `document` b/c we could be iframed
+		function addUserSelectStyles(body /*: HTMLElement*/) {
+		  var style = body.getAttribute('style') || '';
+		  body.setAttribute('style', style + userSelectStyle);
+		}
+		
+		function removeUserSelectStyles(body /*: HTMLElement*/) {
+		  var style = body.getAttribute('style') || '';
+		  body.setAttribute('style', style.replace(userSelectReplaceRegExp, ''));
+		}
+		
+		function styleHacks() /*: Object*/ {
+		  var childStyle /*: Object*/ = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+		
+		  // Workaround IE pointer events; see #51
+		  // https://github.com/mzabriskie/react-draggable/issues/51#issuecomment-103488278
+		  return _extends({
+		    touchAction: 'none'
+		  }, childStyle);
+		}
+
+	/***/ },
+	/* 6 */
+	/***/ function(module, exports) {
+
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		exports.findInArray = findInArray;
+		exports.isFunction = isFunction;
+		exports.isNum = isNum;
+		exports.int = int;
+		exports.dontSetMe = dontSetMe;
+		
+		// @credits https://gist.github.com/rogozhnikoff/a43cfed27c41e4e68cdc
+		function findInArray(array /*: Array<any> | TouchList*/, callback /*: Function*/) /*: any*/ {
+		  for (var i = 0, length = array.length; i < length; i++) {
+		    if (callback.apply(callback, [array[i], i, array])) return array[i];
+		  }
+		}
+		
+		function isFunction(func /*: any*/) /*: boolean*/ {
+		  return typeof func === 'function' || Object.prototype.toString.call(func) === '[object Function]';
+		}
+		
+		function isNum(num /*: any*/) /*: boolean*/ {
+		  return typeof num === 'number' && !isNaN(num);
+		}
+		
+		function int(a /*: string*/) /*: number*/ {
+		  return parseInt(a, 10);
+		}
+		
+		function dontSetMe(props /*: Object*/, propName /*: string*/, componentName /*: string*/) {
+		  if (props[propName]) {
+		    return new Error('Invalid prop ' + propName + ' passed to ' + componentName + ' - do not set this, set it on the child.');
+		  }
+		}
+
+	/***/ },
+	/* 7 */
+	/***/ function(module, exports) {
+
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		exports.getPrefix = getPrefix;
+		exports.browserPrefixToKey = browserPrefixToKey;
+		exports.browserPrefixToStyle = browserPrefixToStyle;
+		var prefixes = ['Moz', 'Webkit', 'O', 'ms'];
+		function getPrefix() /*: string*/ {
+		  var prop /*: string*/ = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'transform';
+		
+		  // Checking specifically for 'window.document' is for pseudo-browser server-side
+		  // environments that define 'window' as the global context.
+		  // E.g. React-rails (see https://github.com/reactjs/react-rails/pull/84)
+		  if (typeof window === 'undefined' || typeof window.document === 'undefined') return '';
+		
+		  var style = window.document.documentElement.style;
+		
+		  if (prop in style) return '';
+		
+		  for (var i = 0; i < prefixes.length; i++) {
+		    if (browserPrefixToKey(prop, prefixes[i]) in style) return prefixes[i];
+		  }
+		
+		  return '';
+		}
+		
+		function browserPrefixToKey(prop /*: string*/, prefix /*: string*/) /*: string*/ {
+		  return prefix ? '' + prefix + kebabToTitleCase(prop) : prop;
+		}
+		
+		function browserPrefixToStyle(prop /*: string*/, prefix /*: string*/) /*: string*/ {
+		  return prefix ? '-' + prefix.toLowerCase() + '-' + prop : prop;
+		}
+		
+		function kebabToTitleCase(str /*: string*/) /*: string*/ {
+		  var out = '';
+		  var shouldCapitalize = true;
+		  for (var i = 0; i < str.length; i++) {
+		    if (shouldCapitalize) {
+		      out += str[i].toUpperCase();
+		      shouldCapitalize = false;
+		    } else if (str[i] === '-') {
+		      shouldCapitalize = true;
+		    } else {
+		      out += str[i];
+		    }
+		  }
+		  return out;
+		}
+		
+		// Default export is the prefix itself, like 'Moz', 'Webkit', etc
+		// Note that you may have to re-test for certain things; for instance, Chrome 50
+		// can handle unprefixed `transform`, but not unprefixed `user-select`
+		exports.default = getPrefix();
+
+	/***/ },
+	/* 8 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		exports.getBoundPosition = getBoundPosition;
+		exports.snapToGrid = snapToGrid;
+		exports.canDragX = canDragX;
+		exports.canDragY = canDragY;
+		exports.getControlPosition = getControlPosition;
+		exports.createCoreData = createCoreData;
+		exports.createDraggableData = createDraggableData;
+		
+		var _shims = __webpack_require__(6);
+		
+		var _reactDom = __webpack_require__(3);
+		
+		var _reactDom2 = _interopRequireDefault(_reactDom);
+		
+		var _domFns = __webpack_require__(5);
+		
+		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+		
+		/*:: import type Draggable from '../Draggable';*/
+		/*:: import type {Bounds, ControlPosition, DraggableData} from './types';*/
+		/*:: import type DraggableCore from '../DraggableCore';*/
+		function getBoundPosition(draggable /*: Draggable*/, x /*: number*/, y /*: number*/) /*: [number, number]*/ {
+		  // If no bounds, short-circuit and move on
+		  if (!draggable.props.bounds) return [x, y];
+		
+		  // Clone new bounds
+		  var bounds = draggable.props.bounds;
+		
+		  bounds = typeof bounds === 'string' ? bounds : cloneBounds(bounds);
+		  var node = _reactDom2.default.findDOMNode(draggable);
+		
+		  if (typeof bounds === 'string') {
+		    var ownerDocument = node.ownerDocument;
+		
+		    var ownerWindow = ownerDocument.defaultView;
+		    var boundNode = void 0;
+		    if (bounds === 'parent') {
+		      boundNode = node.parentNode;
+		    } else {
+		      boundNode = ownerDocument.querySelector(bounds);
+		      if (!boundNode) throw new Error('Bounds selector "' + bounds + '" could not find an element.');
+		    }
+		    var nodeStyle = ownerWindow.getComputedStyle(node);
+		    var boundNodeStyle = ownerWindow.getComputedStyle(boundNode);
+		    // Compute bounds. This is a pain with padding and offsets but this gets it exactly right.
+		    bounds = {
+		      left: -node.offsetLeft + (0, _shims.int)(boundNodeStyle.paddingLeft) + (0, _shims.int)(nodeStyle.borderLeftWidth) + (0, _shims.int)(nodeStyle.marginLeft),
+		      top: -node.offsetTop + (0, _shims.int)(boundNodeStyle.paddingTop) + (0, _shims.int)(nodeStyle.borderTopWidth) + (0, _shims.int)(nodeStyle.marginTop),
+		      right: (0, _domFns.innerWidth)(boundNode) - (0, _domFns.outerWidth)(node) - node.offsetLeft,
+		      bottom: (0, _domFns.innerHeight)(boundNode) - (0, _domFns.outerHeight)(node) - node.offsetTop
+		    };
+		  }
+		
+		  // Keep x and y below right and bottom limits...
+		  if ((0, _shims.isNum)(bounds.right)) x = Math.min(x, bounds.right);
+		  if ((0, _shims.isNum)(bounds.bottom)) y = Math.min(y, bounds.bottom);
+		
+		  // But above left and top limits.
+		  if ((0, _shims.isNum)(bounds.left)) x = Math.max(x, bounds.left);
+		  if ((0, _shims.isNum)(bounds.top)) y = Math.max(y, bounds.top);
+		
+		  return [x, y];
+		}
+		
+		function snapToGrid(grid /*: [number, number]*/, pendingX /*: number*/, pendingY /*: number*/) /*: [number, number]*/ {
+		  var x = Math.round(pendingX / grid[0]) * grid[0];
+		  var y = Math.round(pendingY / grid[1]) * grid[1];
+		  return [x, y];
+		}
+		
+		function canDragX(draggable /*: Draggable*/) /*: boolean*/ {
+		  return draggable.props.axis === 'both' || draggable.props.axis === 'x';
+		}
+		
+		function canDragY(draggable /*: Draggable*/) /*: boolean*/ {
+		  return draggable.props.axis === 'both' || draggable.props.axis === 'y';
+		}
+		
+		// Get {x, y} positions from event.
+		function getControlPosition(e /*: MouseTouchEvent*/, touchIdentifier /*: ?number*/, draggableCore /*: DraggableCore*/) /*: ?ControlPosition*/ {
+		  var touchObj = typeof touchIdentifier === 'number' ? (0, _domFns.getTouch)(e, touchIdentifier) : null;
+		  if (typeof touchIdentifier === 'number' && !touchObj) return null; // not the right touch
+		  var node = _reactDom2.default.findDOMNode(draggableCore);
+		  // User can provide an offsetParent if desired.
+		  var offsetParent = draggableCore.props.offsetParent || node.offsetParent || node.ownerDocument.body;
+		  return (0, _domFns.offsetXYFromParent)(touchObj || e, offsetParent);
+		}
+		
+		// Create an data object exposed by <DraggableCore>'s events
+		function createCoreData(draggable /*: DraggableCore*/, x /*: number*/, y /*: number*/) /*: DraggableData*/ {
+		  var state = draggable.state;
+		  var isStart = !(0, _shims.isNum)(state.lastX);
+		
+		  if (isStart) {
+		    // If this is our first move, use the x and y as last coords.
+		    return {
+		      node: _reactDom2.default.findDOMNode(draggable),
+		      deltaX: 0, deltaY: 0,
+		      lastX: x, lastY: y,
+		      x: x, y: y
+		    };
+		  } else {
+		    // Otherwise calculate proper values.
+		    return {
+		      node: _reactDom2.default.findDOMNode(draggable),
+		      deltaX: x - state.lastX, deltaY: y - state.lastY,
+		      lastX: state.lastX, lastY: state.lastY,
+		      x: x, y: y
+		    };
+		  }
+		}
+		
+		// Create an data exposed by <Draggable>'s events
+		function createDraggableData(draggable /*: Draggable*/, coreData /*: DraggableData*/) /*: DraggableData*/ {
+		  return {
+		    node: coreData.node,
+		    x: draggable.state.x + coreData.deltaX,
+		    y: draggable.state.y + coreData.deltaY,
+		    deltaX: coreData.deltaX,
+		    deltaY: coreData.deltaY,
+		    lastX: draggable.state.x,
+		    lastY: draggable.state.y
+		  };
+		}
+		
+		// A lot faster than stringify/parse
+		function cloneBounds(bounds /*: Bounds*/) /*: Bounds*/ {
+		  return {
+		    left: bounds.left,
+		    top: bounds.top,
+		    right: bounds.right,
+		    bottom: bounds.bottom
+		  };
+		}
+
+	/***/ },
+	/* 9 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		
+		var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+		
+		var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+		
+		var _react = __webpack_require__(2);
+		
+		var _react2 = _interopRequireDefault(_react);
+		
+		var _reactDom = __webpack_require__(3);
+		
+		var _reactDom2 = _interopRequireDefault(_reactDom);
+		
+		var _domFns = __webpack_require__(5);
+		
+		var _positionFns = __webpack_require__(8);
+		
+		var _shims = __webpack_require__(6);
+		
+		var _log = __webpack_require__(11);
+		
+		var _log2 = _interopRequireDefault(_log);
+		
+		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+		
+		function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+		
+		function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+		
+		function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+		
+		// Simple abstraction for dragging events names.
+		/*:: import type {EventHandler} from './utils/types';*/
+		var eventsFor = {
+		  touch: {
+		    start: 'touchstart',
+		    move: 'touchmove',
+		    stop: 'touchend'
+		  },
+		  mouse: {
+		    start: 'mousedown',
+		    move: 'mousemove',
+		    stop: 'mouseup'
+		  }
+		};
+		
+		// Default to mouse events.
+		var dragEventFor = eventsFor.mouse;
+		
+		//
+		// Define <DraggableCore>.
+		//
+		// <DraggableCore> is for advanced usage of <Draggable>. It maintains minimal internal state so it can
+		// work well with libraries that require more control over the element.
+		//
+		
+		/*:: type CoreState = {
+		  dragging: boolean,
+		  lastX: number,
+		  lastY: number,
+		  touchIdentifier: ?number
+		};*/
+		
+		var DraggableCore = function (_React$Component) {
+		  _inherits(DraggableCore, _React$Component);
+		
+		  function DraggableCore() {
+		    var _ref;
+		
+		    var _temp, _this, _ret;
+		
+		    _classCallCheck(this, DraggableCore);
+		
+		    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+		      args[_key] = arguments[_key];
+		    }
+		
+		    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = DraggableCore.__proto__ || Object.getPrototypeOf(DraggableCore)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+		      dragging: false,
+		      // Used while dragging to determine deltas.
+		      lastX: NaN, lastY: NaN,
+		      touchIdentifier: null
+		    }, _this.handleDragStart = function (e) {
+		      // Make it possible to attach event handlers on top of this one.
+		      _this.props.onMouseDown(e);
+		
+		      // Only accept left-clicks.
+		      if (!_this.props.allowAnyClick && typeof e.button === 'number' && e.button !== 0) return false;
+		
+		      // Get nodes. Be sure to grab relative document (could be iframed)
+		      var domNode = _reactDom2.default.findDOMNode(_this);
+		      var ownerDocument = domNode.ownerDocument;
+		
+		      // Short circuit if handle or cancel prop was provided and selector doesn't match.
+		
+		      if (_this.props.disabled || !(e.target instanceof ownerDocument.defaultView.Node) || _this.props.handle && !(0, _domFns.matchesSelectorAndParentsTo)(e.target, _this.props.handle, domNode) || _this.props.cancel && (0, _domFns.matchesSelectorAndParentsTo)(e.target, _this.props.cancel, domNode)) {
+		        return;
+		      }
+		
+		      // Set touch identifier in component state if this is a touch event. This allows us to
+		      // distinguish between individual touches on multitouch screens by identifying which
+		      // touchpoint was set to this element.
+		      var touchIdentifier = (0, _domFns.getTouchIdentifier)(e);
+		      _this.setState({ touchIdentifier: touchIdentifier });
+		
+		      // Get the current drag point from the event. This is used as the offset.
+		      var position = (0, _positionFns.getControlPosition)(e, touchIdentifier, _this);
+		      if (position == null) return; // not possible but satisfies flow
+		      var x = position.x,
+		          y = position.y;
+		
+		      // Create an event object with all the data parents need to make a decision here.
+		
+		      var coreEvent = (0, _positionFns.createCoreData)(_this, x, y);
+		
+		      (0, _log2.default)('DraggableCore: handleDragStart: %j', coreEvent);
+		
+		      // Call event handler. If it returns explicit false, cancel.
+		      (0, _log2.default)('calling', _this.props.onStart);
+		      var shouldUpdate = _this.props.onStart(e, coreEvent);
+		      if (shouldUpdate === false) return;
+		
+		      // Add a style to the body to disable user-select. This prevents text from
+		      // being selected all over the page.
+		      if (_this.props.enableUserSelectHack) (0, _domFns.addUserSelectStyles)(ownerDocument.body);
+		
+		      // Initiate dragging. Set the current x and y as offsets
+		      // so we know how much we've moved during the drag. This allows us
+		      // to drag elements around even if they have been moved, without issue.
+		      _this.setState({
+		        dragging: true,
+		
+		        lastX: x,
+		        lastY: y
+		      });
+		
+		      // Add events to the document directly so we catch when the user's mouse/touch moves outside of
+		      // this element. We use different events depending on whether or not we have detected that this
+		      // is a touch-capable device.
+		      (0, _domFns.addEvent)(ownerDocument, dragEventFor.move, _this.handleDrag);
+		      (0, _domFns.addEvent)(ownerDocument, dragEventFor.stop, _this.handleDragStop);
+		    }, _this.handleDrag = function (e) {
+		
+		      // Prevent scrolling on mobile devices, like ipad/iphone.
+		      if (e.type === 'touchmove') e.preventDefault();
+		
+		      // Get the current drag point from the event. This is used as the offset.
+		      var position = (0, _positionFns.getControlPosition)(e, _this.state.touchIdentifier, _this);
+		      if (position == null) return;
+		      var x = position.x,
+		          y = position.y;
+		
+		      // Snap to grid if prop has been provided
+		
+		      if (x !== x) debugger;
+		
+		      if (Array.isArray(_this.props.grid)) {
+		        var deltaX = x - _this.state.lastX,
+		            deltaY = y - _this.state.lastY;
+		
+		        var _snapToGrid = (0, _positionFns.snapToGrid)(_this.props.grid, deltaX, deltaY);
+		
+		        var _snapToGrid2 = _slicedToArray(_snapToGrid, 2);
+		
+		        deltaX = _snapToGrid2[0];
+		        deltaY = _snapToGrid2[1];
+		
+		        if (!deltaX && !deltaY) return; // skip useless drag
+		        x = _this.state.lastX + deltaX, y = _this.state.lastY + deltaY;
+		      }
+		
+		      var coreEvent = (0, _positionFns.createCoreData)(_this, x, y);
+		
+		      (0, _log2.default)('DraggableCore: handleDrag: %j', coreEvent);
+		
+		      // Call event handler. If it returns explicit false, trigger end.
+		      var shouldUpdate = _this.props.onDrag(e, coreEvent);
+		      if (shouldUpdate === false) {
+		        try {
+		          // $FlowIgnore
+		          _this.handleDragStop(new MouseEvent('mouseup'));
+		        } catch (err) {
+		          // Old browsers
+		          var event = ((document.createEvent('MouseEvents') /*: any*/) /*: MouseTouchEvent*/);
+		          // I see why this insanity was deprecated
+		          // $FlowIgnore
+		          event.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		          _this.handleDragStop(event);
+		        }
+		        return;
+		      }
+		
+		      _this.setState({
+		        lastX: x,
+		        lastY: y
+		      });
+		    }, _this.handleDragStop = function (e) {
+		      if (!_this.state.dragging) return;
+		
+		      var position = (0, _positionFns.getControlPosition)(e, _this.state.touchIdentifier, _this);
+		      if (position == null) return;
+		      var x = position.x,
+		          y = position.y;
+		
+		      var coreEvent = (0, _positionFns.createCoreData)(_this, x, y);
+		
+		      var _ReactDOM$findDOMNode = _reactDom2.default.findDOMNode(_this),
+		          ownerDocument = _ReactDOM$findDOMNode.ownerDocument;
+		
+		      // Remove user-select hack
+		
+		
+		      if (_this.props.enableUserSelectHack) (0, _domFns.removeUserSelectStyles)(ownerDocument.body);
+		
+		      (0, _log2.default)('DraggableCore: handleDragStop: %j', coreEvent);
+		
+		      // Reset the el.
+		      _this.setState({
+		        dragging: false,
+		        lastX: NaN,
+		        lastY: NaN
+		      });
+		
+		      // Call event handler
+		      _this.props.onStop(e, coreEvent);
+		
+		      // Remove event handlers
+		      (0, _log2.default)('DraggableCore: Removing handlers');
+		      (0, _domFns.removeEvent)(ownerDocument, dragEventFor.move, _this.handleDrag);
+		      (0, _domFns.removeEvent)(ownerDocument, dragEventFor.stop, _this.handleDragStop);
+		    }, _this.onMouseDown = function (e) {
+		      dragEventFor = eventsFor.mouse; // on touchscreen laptops we could switch back to mouse
+		
+		      return _this.handleDragStart(e);
+		    }, _this.onMouseUp = function (e) {
+		      dragEventFor = eventsFor.mouse;
+		
+		      return _this.handleDragStop(e);
+		    }, _this.onTouchStart = function (e) {
+		      // We're on a touch device now, so change the event handlers
+		      dragEventFor = eventsFor.touch;
+		
+		      return _this.handleDragStart(e);
+		    }, _this.onTouchEnd = function (e) {
+		      // We're on a touch device now, so change the event handlers
+		      dragEventFor = eventsFor.touch;
+		
+		      return _this.handleDragStop(e);
+		    }, _temp), _possibleConstructorReturn(_this, _ret);
+		  }
+		
+		  _createClass(DraggableCore, [{
+		    key: 'componentWillUnmount',
+		    value: function componentWillUnmount() {
+		      // Remove any leftover event handlers. Remove both touch and mouse handlers in case
+		      // some browser quirk caused a touch event to fire during a mouse move, or vice versa.
+		      var _ReactDOM$findDOMNode2 = _reactDom2.default.findDOMNode(this),
+		          ownerDocument = _ReactDOM$findDOMNode2.ownerDocument;
+		
+		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.mouse.move, this.handleDrag);
+		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.touch.move, this.handleDrag);
+		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.mouse.stop, this.handleDragStop);
+		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.touch.stop, this.handleDragStop);
+		      if (this.props.enableUserSelectHack) (0, _domFns.removeUserSelectStyles)(ownerDocument.body);
+		    }
+		
+		    // Same as onMouseDown (start drag), but now consider this a touch device.
+		
+		  }, {
+		    key: 'render',
+		    value: function render() /*: React.Element<any>*/ {
+		      // Reuse the child provided
+		      // This makes it flexible to use whatever element is wanted (div, ul, etc)
+		      return _react2.default.cloneElement(_react2.default.Children.only(this.props.children), {
+		        style: (0, _domFns.styleHacks)(this.props.children.props.style),
+		
+		        // Note: mouseMove handler is attached to document so it will still function
+		        // when the user drags quickly and leaves the bounds of the element.
+		        onMouseDown: this.onMouseDown,
+		        onTouchStart: this.onTouchStart,
+		        onMouseUp: this.onMouseUp,
+		        onTouchEnd: this.onTouchEnd
+		      });
+		    }
+		  }]);
+		
+		  return DraggableCore;
+		}(_react2.default.Component);
+		
+		DraggableCore.displayName = 'DraggableCore';
+		DraggableCore.propTypes = {
+		  /**
+		   * `allowAnyClick` allows dragging using any mouse button.
+		   * By default, we only accept the left button.
+		   *
+		   * Defaults to `false`.
+		   */
+		  allowAnyClick: _react.PropTypes.bool,
+		
+		  /**
+		   * `disabled`, if true, stops the <Draggable> from dragging. All handlers,
+		   * with the exception of `onMouseDown`, will not fire.
+		   */
+		  disabled: _react.PropTypes.bool,
+		
+		  /**
+		   * By default, we add 'user-select:none' attributes to the document body
+		   * to prevent ugly text selection during drag. If this is causing problems
+		   * for your app, set this to `false`.
+		   */
+		  enableUserSelectHack: _react.PropTypes.bool,
+		
+		  /**
+		   * `offsetParent`, if set, uses the passed DOM node to compute drag offsets
+		   * instead of using the parent node.
+		   */
+		  offsetParent: function offsetParent(props, propName) {
+		    if (process.browser && props[propName] && props[propName].nodeType !== 1) {
+		      throw new Error('Draggable\'s offsetParent must be a DOM Node.');
+		    }
+		  },
+		
+		  /**
+		   * `grid` specifies the x and y that dragging should snap to.
+		   */
+		  grid: _react.PropTypes.arrayOf(_react.PropTypes.number),
+		
+		  /**
+		   * `handle` specifies a selector to be used as the handle that initiates drag.
+		   *
+		   * Example:
+		   *
+		   * ```jsx
+		   *   let App = React.createClass({
+		   *       render: function () {
+		   *         return (
+		   *            <Draggable handle=".handle">
+		   *              <div>
+		   *                  <div className="handle">Click me to drag</div>
+		   *                  <div>This is some other content</div>
+		   *              </div>
+		   *           </Draggable>
+		   *         );
+		   *       }
+		   *   });
+		   * ```
+		   */
+		  handle: _react.PropTypes.string,
+		
+		  /**
+		   * `cancel` specifies a selector to be used to prevent drag initialization.
+		   *
+		   * Example:
+		   *
+		   * ```jsx
+		   *   let App = React.createClass({
+		   *       render: function () {
+		   *           return(
+		   *               <Draggable cancel=".cancel">
+		   *                   <div>
+		   *                     <div className="cancel">You can't drag from here</div>
+		   *                     <div>Dragging here works fine</div>
+		   *                   </div>
+		   *               </Draggable>
+		   *           );
+		   *       }
+		   *   });
+		   * ```
+		   */
+		  cancel: _react.PropTypes.string,
+		
+		  /**
+		   * Called when dragging starts.
+		   * If this function returns the boolean false, dragging will be canceled.
+		   */
+		  onStart: _react.PropTypes.func,
+		
+		  /**
+		   * Called while dragging.
+		   * If this function returns the boolean false, dragging will be canceled.
+		   */
+		  onDrag: _react.PropTypes.func,
+		
+		  /**
+		   * Called when dragging stops.
+		   * If this function returns the boolean false, the drag will remain active.
+		   */
+		  onStop: _react.PropTypes.func,
+		
+		  /**
+		   * A workaround option which can be passed if onMouseDown needs to be accessed,
+		   * since it'll always be blocked (as there is internal use of onMouseDown)
+		   */
+		  onMouseDown: _react.PropTypes.func,
+		
+		  /**
+		   * These properties should be defined on the child, not here.
+		   */
+		  className: _shims.dontSetMe,
+		  style: _shims.dontSetMe,
+		  transform: _shims.dontSetMe
+		};
+		DraggableCore.defaultProps = {
+		  allowAnyClick: false, // by default only accept left click
+		  cancel: null,
+		  disabled: false,
+		  enableUserSelectHack: true,
+		  offsetParent: null,
+		  handle: null,
+		  grid: null,
+		  transform: null,
+		  onStart: function onStart() {},
+		  onDrag: function onDrag() {},
+		  onStop: function onStop() {},
+		  onMouseDown: function onMouseDown() {}
+		};
+		exports.default = DraggableCore;
+		/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(10)))
+
+	/***/ },
+	/* 10 */
+	/***/ function(module, exports) {
+
+		// shim for using process in browser
+		var process = module.exports = {};
+		
+		// cached from whatever global is present so that test runners that stub it
+		// don't break things.  But we need to wrap it in a try catch in case it is
+		// wrapped in strict mode code which doesn't define any globals.  It's inside a
+		// function because try/catches deoptimize in certain engines.
+		
+		var cachedSetTimeout;
+		var cachedClearTimeout;
+		
+		function defaultSetTimout() {
+		    throw new Error('setTimeout has not been defined');
+		}
+		function defaultClearTimeout () {
+		    throw new Error('clearTimeout has not been defined');
+		}
+		(function () {
+		    try {
+		        if (typeof setTimeout === 'function') {
+		            cachedSetTimeout = setTimeout;
+		        } else {
+		            cachedSetTimeout = defaultSetTimout;
+		        }
+		    } catch (e) {
+		        cachedSetTimeout = defaultSetTimout;
+		    }
+		    try {
+		        if (typeof clearTimeout === 'function') {
+		            cachedClearTimeout = clearTimeout;
+		        } else {
+		            cachedClearTimeout = defaultClearTimeout;
+		        }
+		    } catch (e) {
+		        cachedClearTimeout = defaultClearTimeout;
+		    }
+		} ())
+		function runTimeout(fun) {
+		    if (cachedSetTimeout === setTimeout) {
+		        //normal enviroments in sane situations
+		        return setTimeout(fun, 0);
+		    }
+		    // if setTimeout wasn't available but was latter defined
+		    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+		        cachedSetTimeout = setTimeout;
+		        return setTimeout(fun, 0);
+		    }
+		    try {
+		        // when when somebody has screwed with setTimeout but no I.E. maddness
+		        return cachedSetTimeout(fun, 0);
+		    } catch(e){
+		        try {
+		            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+		            return cachedSetTimeout.call(null, fun, 0);
+		        } catch(e){
+		            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+		            return cachedSetTimeout.call(this, fun, 0);
+		        }
+		    }
+		
+		
+		}
+		function runClearTimeout(marker) {
+		    if (cachedClearTimeout === clearTimeout) {
+		        //normal enviroments in sane situations
+		        return clearTimeout(marker);
+		    }
+		    // if clearTimeout wasn't available but was latter defined
+		    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+		        cachedClearTimeout = clearTimeout;
+		        return clearTimeout(marker);
+		    }
+		    try {
+		        // when when somebody has screwed with setTimeout but no I.E. maddness
+		        return cachedClearTimeout(marker);
+		    } catch (e){
+		        try {
+		            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+		            return cachedClearTimeout.call(null, marker);
+		        } catch (e){
+		            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+		            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+		            return cachedClearTimeout.call(this, marker);
+		        }
+		    }
+		
+		
+		
+		}
+		var queue = [];
+		var draining = false;
+		var currentQueue;
+		var queueIndex = -1;
+		
+		function cleanUpNextTick() {
+		    if (!draining || !currentQueue) {
+		        return;
+		    }
+		    draining = false;
+		    if (currentQueue.length) {
+		        queue = currentQueue.concat(queue);
+		    } else {
+		        queueIndex = -1;
+		    }
+		    if (queue.length) {
+		        drainQueue();
+		    }
+		}
+		
+		function drainQueue() {
+		    if (draining) {
+		        return;
+		    }
+		    var timeout = runTimeout(cleanUpNextTick);
+		    draining = true;
+		
+		    var len = queue.length;
+		    while(len) {
+		        currentQueue = queue;
+		        queue = [];
+		        while (++queueIndex < len) {
+		            if (currentQueue) {
+		                currentQueue[queueIndex].run();
+		            }
+		        }
+		        queueIndex = -1;
+		        len = queue.length;
+		    }
+		    currentQueue = null;
+		    draining = false;
+		    runClearTimeout(timeout);
+		}
+		
+		process.nextTick = function (fun) {
+		    var args = new Array(arguments.length - 1);
+		    if (arguments.length > 1) {
+		        for (var i = 1; i < arguments.length; i++) {
+		            args[i - 1] = arguments[i];
+		        }
+		    }
+		    queue.push(new Item(fun, args));
+		    if (queue.length === 1 && !draining) {
+		        runTimeout(drainQueue);
+		    }
+		};
+		
+		// v8 likes predictible objects
+		function Item(fun, array) {
+		    this.fun = fun;
+		    this.array = array;
+		}
+		Item.prototype.run = function () {
+		    this.fun.apply(null, this.array);
+		};
+		process.title = 'browser';
+		process.browser = true;
+		process.env = {};
+		process.argv = [];
+		process.version = ''; // empty string to avoid regexp issues
+		process.versions = {};
+		
+		function noop() {}
+		
+		process.on = noop;
+		process.addListener = noop;
+		process.once = noop;
+		process.off = noop;
+		process.removeListener = noop;
+		process.removeAllListeners = noop;
+		process.emit = noop;
+		
+		process.binding = function (name) {
+		    throw new Error('process.binding is not supported');
+		};
+		
+		process.cwd = function () { return '/' };
+		process.chdir = function (dir) {
+		    throw new Error('process.chdir is not supported');
+		};
+		process.umask = function() { return 0; };
+
+
+	/***/ },
+	/* 11 */
+	/***/ function(module, exports, __webpack_require__) {
+
+		"use strict";
+		
+		Object.defineProperty(exports, "__esModule", {
+		  value: true
+		});
+		exports.default = log;
+		
+		/*eslint no-console:0*/
+		function log() {
+		  var _console;
+		
+		  if ((undefined)) (_console = console).log.apply(_console, arguments);
+		}
+
+	/***/ }
+	/******/ ])
+	});
+	;
+	//# sourceMappingURL=react-draggable.js.map
+
+/***/ },
 /* 349 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var invariant = __webpack_require__(184);
+
+	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var splice = Array.prototype.splice;
+
+	var assign = Object.assign || function assign(target, source) {
+	  var keys = getAllKeys(source);
+	  for (var i = 0; i < keys.length; i++) {
+	    var key = keys[i];
+	    if (hasOwnProperty.call(source, key)) {
+	      target[key] = source[key];
+	    }
+	  }
+	  return target;
+	}
+
+	var getAllKeys = typeof Object.getOwnPropertySymbols === 'function' ?
+	  function(obj) { return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj)) } :
+	  function(obj) { return Object.keys(obj) }
+	;
+
+	function copy(object) {
+	  if (object instanceof Array) {
+	    return object.slice();
+	  } else if (object && typeof object === 'object') {
+	    return assign(new object.constructor(), object);
+	  } else {
+	    return object;
+	  }
+	}
+
+
+	function newContext() {
+	  var commands = assign({}, defaultCommands);
+	  update.extend = function(directive, fn) {
+	    commands[directive] = fn;
+	  }
+
+	  return update;
+
+	  function update(object, spec) {
+	    invariant(
+	      !Array.isArray(spec),
+	      'update(): You provided an invalid spec to update(). The spec may ' +
+	      'not contain an array except as the value of $set, $push, $unshift, ' +
+	      '$splice or any custom command allowing an array value.'
+	    );
+
+	    invariant(
+	      typeof spec === 'object' && spec !== null,
+	      'update(): You provided an invalid spec to update(). The spec and ' +
+	      'every included key path must be plain objects containing one of the ' +
+	      'following commands: %s.',
+	      Object.keys(commands).join(', ')
+	    );
+
+	    var nextObject = object;
+	    var specKeys = getAllKeys(spec)
+	    var index, key;
+	    for (index = 0; index < specKeys.length; index++) {
+	      var key = specKeys[index];
+	      if (hasOwnProperty.call(commands, key)) {
+	        nextObject = commands[key](spec[key], nextObject, spec, object);
+	      } else {
+	        var nextValueForKey = update(object[key], spec[key]);
+	        if (nextValueForKey !== nextObject[key]) {
+	          if (nextObject === object) {
+	            nextObject = copy(object);
+	          }
+	          nextObject[key] = nextValueForKey;
+	        }
+	      }
+	    }
+	    return nextObject;
+	  }
+
+	}
+
+	var defaultCommands = {
+	  $push: function(value, original, spec) {
+	    invariantPushAndUnshift(original, spec, '$push');
+	    return original.concat(value);
+	  },
+	  $unshift: function(value, original, spec) {
+	    invariantPushAndUnshift(original, spec, '$unshift');
+	    return value.concat(original);
+	  },
+	  $splice: function(value, nextObject, spec, object) {
+	    var originalValue = nextObject === object ? copy(object) : nextObject;
+	    invariantSplices(originalValue, spec);
+	    value.forEach(function(args) {
+	      invariantSplice(args);
+	      splice.apply(originalValue, args);
+	    });
+	    return originalValue;
+	  },
+	  $set: function(value, original, spec) {
+	    invariantSet(spec);
+	    return value;
+	  },
+	  $merge: function(value, nextObject, spec, object) {
+	    var originalValue = nextObject === object ? copy(object) : nextObject;
+	    invariantMerge(originalValue, value);
+	    getAllKeys(value).forEach(function(key) {
+	      originalValue[key] = value[key];
+	    });
+	    return originalValue;
+	  },
+	  $apply: function(value, original) {
+	    invariantApply(value);
+	    return value(original);
+	  }
+	};
+
+
+
+	module.exports = newContext();
+	module.exports.newContext = newContext;
+
+
+	// invariants
+
+	function invariantPushAndUnshift(value, spec, command) {
+	  invariant(
+	    Array.isArray(value),
+	    'update(): expected target of %s to be an array; got %s.',
+	    command,
+	    value
+	  );
+	  var specValue = spec[command];
+	  invariant(
+	    Array.isArray(specValue),
+	    'update(): expected spec of %s to be an array; got %s. ' +
+	    'Did you forget to wrap your parameter in an array?',
+	    command,
+	    specValue
+	  );
+	}
+
+	function invariantSplices(value, spec) {
+	  invariant(
+	    Array.isArray(value),
+	    'Expected $splice target to be an array; got %s',
+	    value
+	  );
+	  invariantSplice(spec['$splice']);
+	}
+
+	function invariantSplice(value) {
+	  invariant(
+	    Array.isArray(value),
+	    'update(): expected spec of $splice to be an array of arrays; got %s. ' +
+	    'Did you forget to wrap your parameters in an array?',
+	    value
+	  );
+	}
+
+	function invariantApply(fn) {
+	  invariant(
+	    typeof fn === 'function',
+	    'update(): expected spec of $apply to be a function; got %s.',
+	    fn
+	  );
+	}
+
+	function invariantSet(spec) {
+	  invariant(
+	    Object.keys(spec).length === 1,
+	    'Cannot have more than one key in an object with $set'
+	  );
+	}
+
+	function invariantMerge(target, specValue) {
+	  invariant(
+	    specValue && typeof specValue === 'object',
+	    'update(): $merge expects a spec of type \'object\'; got %s',
+	    specValue
+	  );
+	  invariant(
+	    target && typeof target === 'object',
+	    'update(): $merge expects a target of type \'object\'; got %s',
+	    target
+	  );
+	}
+
+
+/***/ },
+/* 350 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -52115,7 +54420,6 @@
 	exports.icon = icon;
 
 /***/ },
-/* 350 */,
 /* 351 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -52124,7 +54428,6 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.TaskSelect = exports.InventoryFilter = exports.Filters = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -52132,27 +54435,23 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactDom = __webpack_require__(32);
+	var _jquery = __webpack_require__(179);
 
-	var _reactDom2 = _interopRequireDefault(_reactDom);
+	var _jquery2 = _interopRequireDefault(_jquery);
 
 	var _reactSelect = __webpack_require__(352);
 
 	var _reactSelect2 = _interopRequireDefault(_reactSelect);
 
-	var _Datepicker = __webpack_require__(363);
+	var _Task = __webpack_require__(350);
 
-	var _Datepicker2 = _interopRequireDefault(_Datepicker);
+	var _immutabilityHelper = __webpack_require__(349);
 
-	var _WrapMenu = __webpack_require__(398);
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-	var _WrapMenu2 = _interopRequireDefault(_WrapMenu);
+	var _qr = __webpack_require__(363);
 
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _Task = __webpack_require__(349);
+	var _Label = __webpack_require__(364);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -52175,8 +54474,8 @@
 	      team: window.localStorage.getItem("team") || "1"
 	    };
 	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
-	      var options = data.results.map(function (x) {
-	        return { value: x.id, label: x.display };
+	      var options = data.map(function (x) {
+	        return { value: x.id, label: (0, _Task.display)(x), data: x };
 	      });
 	      callback(null, { options: options, complete: false });
 	    });
@@ -52189,39 +54488,23 @@
 	  function TaskSelect() {
 	    _classCallCheck(this, TaskSelect);
 
-	    var _this = _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
-
-	    _this.handleChange = _this.handleChange.bind(_this);
-	    _this.state = {};
-
-	    return _this;
+	    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
 	  }
 
 	  _createClass(TaskSelect, [{
-	    key: 'handleChange',
-	    value: function handleChange(value) {
-	      var v;
-	      if (value != undefined && value != null && value.length != 0) v = value;else v = { value: "" };
-
-	      this.setState(v);
-	      this.props.onChange(v);
-	    }
-	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'multiselect filters inputs' },
-	        _react2.default.createElement(
-	          'i',
-	          { className: 'material-icons' },
-	          'search'
-	        ),
+	        { className: 'multiselect' },
 	        _react2.default.createElement(_reactSelect2.default.Async, {
 	          name: 'form-field-name',
-	          value: this.state.value,
+	          value: this.props.value,
+	          optionRenderer: function optionRenderer(option, i) {
+	            return (0, _Task.display)(option.data);
+	          },
 	          loadOptions: getOptions,
-	          onChange: this.handleChange,
+	          onChange: this.props.onChange,
 	          placeholder: this.props.placeholder
 	        })
 	      );
@@ -52231,189 +54514,364 @@
 	  return TaskSelect;
 	}(_react2.default.Component);
 
-	var Multiselect = function (_React$Component2) {
-	  _inherits(Multiselect, _React$Component2);
+	var LabelPrinter = function (_React$Component2) {
+	  _inherits(LabelPrinter, _React$Component2);
 
-	  function Multiselect() {
-	    _classCallCheck(this, Multiselect);
+	  function LabelPrinter(props) {
+	    _classCallCheck(this, LabelPrinter);
 
-	    var _this2 = _possibleConstructorReturn(this, (Multiselect.__proto__ || Object.getPrototypeOf(Multiselect)).call(this));
+	    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
 
-	    _this2.handleMultipleChange = _this2.handleMultipleChange.bind(_this2);
+	    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
+	    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
+	    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
+	    _this2.handleChange = _this2.handleChange.bind(_this2);
+	    _this2.handlePrint = _this2.handlePrint.bind(_this2);
 	    _this2.state = {
-	      value: []
+	      expanded: false,
+	      numberLabels: "",
+	      notes: "",
+	      task: "",
+	      qrValue: "",
+	      items: [],
+	      selectedItem: ""
 	    };
 	    return _this2;
 	  }
 
-	  _createClass(Multiselect, [{
-	    key: 'handleMultipleChange',
-	    value: function handleMultipleChange(value) {
-	      this.props.onChange(value);
-	      this.setState({ value: value });
+	  _createClass(LabelPrinter, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      (0, _qr.mountQR)();
 	    }
 	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(nextProps) {
-	      if (nextProps.value != this.state.value) {
-	        this.setState({ value: nextProps.value });
-	      }
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'multiselect' },
-	        _react2.default.createElement(_reactSelect2.default, { multi: true,
-	          name: 'form-field-name',
-	          value: this.state.value,
-	          options: this.getSelect(this.props.options),
-	          onChange: this.handleMultipleChange,
-	          placeholder: this.props.placeholder,
-	          clearable: false
-	        })
-	      );
-	    }
-	  }, {
-	    key: 'getSelect',
-	    value: function getSelect(options) {
-	      if (!options) return;
-
-	      return Object.keys(options).map(function (key, i) {
-	        return { value: options[key].id, label: options[key].name };
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var q = new QRCode(document.getElementById("qrtest"), {
+	        text: "",
+	        width: 128,
+	        height: 128,
+	        colorDark: "#000000",
+	        colorLight: "#ffffff",
+	        correctLevel: QRCode.CorrectLevel.Q
 	      });
+	      this.setState({ qrcode: q });
 	    }
-	  }]);
+	  }, {
+	    key: 'handlePrint',
+	    value: function handlePrint() {
+	      var numLabels = parseInt(this.state.numberLabels) || -1;
 
-	  return Multiselect;
-	}(_react2.default.Component);
-
-	var InventoryFilter = function (_React$Component3) {
-	  _inherits(InventoryFilter, _React$Component3);
-
-	  function InventoryFilter() {
-	    _classCallCheck(this, InventoryFilter);
-
-	    return _possibleConstructorReturn(this, (InventoryFilter.__proto__ || Object.getPrototypeOf(InventoryFilter)).apply(this, arguments));
-	  }
-
-	  _createClass(InventoryFilter, [{
-	    key: 'render',
-	    value: function render() {
-	      var _this4 = this;
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'filters inputs' },
-	        _react2.default.createElement(_reactSelect2.default, { multi: true,
-	          options: this.props.options,
-	          value: this.props.selected,
-	          placeholder: 'All products',
-	          labelKey: 'code',
-	          valueKey: 'code',
-	          onChange: function onChange(val) {
-	            return _this4.props.onFilter("productFilter", val);
-	          }
-	        })
-	      );
-	    }
-	  }]);
-
-	  return InventoryFilter;
-	}(_react2.default.Component);
-
-	var Filters = function (_React$Component4) {
-	  _inherits(Filters, _React$Component4);
-
-	  function Filters(props) {
-	    _classCallCheck(this, Filters);
-
-	    var _this5 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
-
-	    _this5.handleChange = _this5.handleChange.bind(_this5);
-	    _this5.handleDateRangeChange = _this5.handleDateRangeChange.bind(_this5);
-	    _this5.state = {
-	      start: "",
-	      end: "",
-	      active: 1
-	    };
-	    return _this5;
-	  }
-
-	  _createClass(Filters, [{
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(nextProps) {
-	      if (this.props.dates != nextProps.dates) {
-	        this.setState({
-	          processes: [],
-	          products: [],
-	          parent: "",
-	          start: "",
-	          end: "",
-	          active: 1 });
+	      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
+	        alert("Please enter a valid number between 0 and 100!");
+	        return;
 	      }
+
+	      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
+	        alert("Please print labels for a valid task.");
+	        return;
+	      }
+
+	      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
+	        alert("Please choose a valid specific item to reprint.");
+	        return;
+	      }
+
+	      this.setState({ disabled: true });
+
+	      if (this.state.expanded) {
+	        var uuid = this.state.selectedItem.data.item_qr;
+	        (0, _qr.printQRs)([uuid], this.state.qrcode);
+	        this.setState({ disabled: false });
+	        return;
+	      }
+
+	      var thisObj = this;
+	      _jquery2.default.ajax({
+	        url: "../../../qr/codes/",
+	        data: { count: numLabels }
+	      }).done(function (data) {
+	        var uuids = data.split(/\s+/);
+	        (0, _qr.printQRs)(data.split(/\s+/), thisObj.state.qrcode);
+	      }).always(function () {
+	        thisObj.setState({ disabled: false });
+	      });
 	    }
 	  }, {
 	    key: 'handleChange',
 	    value: function handleChange(which, payload) {
-	      this.props.onFilter(_defineProperty({}, which, payload));
+	      this.setState(_defineProperty({}, which, payload));
 	    }
 	  }, {
-	    key: 'handleDateRangeChange',
-	    value: function handleDateRangeChange(date) {
-	      this.props.onFilter(date);
+	    key: 'handleExpandClick',
+	    value: function handleExpandClick() {
+	      var ns = {
+	        expanded: !this.state.expanded,
+	        numberLabels: "",
+	        notes: "",
+	        task: "",
+	        qrValue: "",
+	        items: [],
+	        selectedItem: ""
+	      };
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'handleTaskChange',
+	    value: function handleTaskChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({
+	        task: v,
+	        items: [],
+	        selectedItem: "" });
+
+	      if (this.state.expanded) this.reloadItems(v.data);
+	    }
+	  }, {
+	    key: 'handleItemChange',
+	    value: function handleItemChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({ selectedItem: v });
+	    }
+	  }, {
+	    key: 'reloadItems',
+	    value: function reloadItems(task) {
+	      var options = {};
+	      if (task.items) {
+	        options = task.items.map(function (x) {
+	          return { id: x.id, label: getQR(x), data: x };
+	        });
+	      }
+	      this.setState({ items: options });
 	    }
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this6 = this;
-
-	      var obj = false;
-
-	      if (this.props.dates) {
-	        obj = _react2.default.createElement(
-	          'div',
-	          null,
-	          _react2.default.createElement(_Datepicker2.default, { initialDates: this.props.initialDates, onChange: this.handleDateRangeChange })
-	        );
-	      }
+	      var _this3 = this;
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'filters inputs' },
+	        { className: 'labelPrinter' },
 	        _react2.default.createElement(
 	          'div',
-	          null,
-	          _react2.default.createElement(TaskSelect, { placeholder: 'All tasks', value: this.props.label, onChange: function onChange(val) {
-	              return _this6.handleChange("label", val);
-	            } })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          null,
-	          _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
-	              return _this6.handleChange("processes", val);
-	            } })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          null,
-	          _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
-	              return _this6.handleChange("products", val);
-	            } })
-	        ),
-	        obj
+	          { className: 'marginer' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'stuff' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' Print me some labels '
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Number of labels'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'eg. 20',
+	                style: { width: "100%" },
+	                value: this.state.numberLabels,
+	                onChange: function onChange(e) {
+	                  return _this3.handleChange("numberLabels", e.target.value);
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Extra notes'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'max 20 characters',
+	                style: { width: "100%" },
+	                value: this.state.notes,
+	                onChange: function onChange(e) {
+	                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                ' '
+	              ),
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'I need to reprint a label'
+	                )
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'i',
+	                  { className: 'material-icons' },
+	                  'arrow_back'
+	                ),
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'Back to regular printing'
+	                )
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Item'
+	              ),
+	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
+	                name: 'item-select',
+	                placeholder: 'Choose one',
+	                options: this.state.items,
+	                valueKey: 'id',
+	                value: this.state.selectedItem,
+	                onChange: this.handleItemChange
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                '  '
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'playground', style: { position: "relative", margin: "20px" } },
+	            _react2.default.createElement(_Label.Label, { taskLabel: (0, _Task.display)(this.state.task),
+	              originLabel: getCode((0, _Task.display)(this.state.task)),
+	              notesLabel: this.state.expanded ? "" : this.state.notes
+	            }),
+	            _react2.default.createElement(
+	              'div',
+	              { id: 'canvastest' },
+	              _react2.default.createElement('canvas', { height: '241', width: '431' })
+	            ),
+	            _react2.default.createElement('div', { id: 'qrtest' }),
+	            _react2.default.createElement('div', { id: 'blocker' })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'trouble' },
+	            _react2.default.createElement('hr', null),
+	            _react2.default.createElement(
+	              'h6',
+	              null,
+	              ' Troubleshooting '
+	            ),
+	            _react2.default.createElement(
+	              'p',
+	              null,
+	              ' You need to run the Dymo toolbar app to make this work.'
+	            ),
+	            _react2.default.createElement(
+	              'ul',
+	              null,
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'Find the little ',
+	                _react2.default.createElement(
+	                  'b',
+	                  null,
+	                  'Dymo icon on the top toolbar'
+	                ),
+	                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If you can\'t find the Dymo Service icon, open ',
+	                _react2.default.createElement(
+	                  'b',
+	                  null,
+	                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
+	                ),
+	                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If that folder doesn\'t exist, make sure you have the latest version of the ',
+	                _react2.default.createElement(
+	                  'a',
+	                  { href: '' },
+	                  'dymo software installed.'
+	                ),
+	                ' Once you do, you should have that folder. '
+	              ),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                'If you\'re still having problems, tell whoever is running the site!'
+	              ),
+	              _react2.default.createElement('hr', null),
+	              _react2.default.createElement(
+	                'li',
+	                null,
+	                ' (If you are the person running the site, check the ',
+	                _react2.default.createElement(
+	                  'a',
+	                  { href: '' },
+	                  ' Dymo developers blog'
+	                ),
+	                ' because that\'s the only place they document...)'
+	              )
+	            )
+	          )
+	        )
 	      );
 	    }
 	  }]);
 
-	  return Filters;
+	  return LabelPrinter;
 	}(_react2.default.Component);
 
-	exports.Filters = Filters;
-	exports.InventoryFilter = InventoryFilter;
-	exports.TaskSelect = TaskSelect;
+	exports.default = LabelPrinter;
+
+
+	function getCode(str) {
+	  var codes = str.split('-');
+	  if (codes[1]) return codes[1];
+	  return str;
+	}
+
+	function getQR(item) {
+	  if (item && item.item_qr) {
+	    var len = item.item_qr.length;
+	    return item.item_qr.substr(len - 6, len);
+	  }
+	  return "";
+	}
 
 /***/ },
 /* 352 */
@@ -54671,6 +57129,1110 @@
 
 /***/ },
 /* 363 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	function mountQR() {
+	  if (dymo.label.framework.init) dymo.label.framework.init(init);else init();
+	}
+
+	/* function : init
+	 * ---------------
+	 * This function is called after the Dymo Framework inits and sets up the webpage.
+	 */
+
+	function init() {}
+
+	function print(numLabels, text, success, always) {
+	  $.ajax({
+	    url: "codes/",
+	    data: { count: numLabels }
+	  }).done(function (data) {
+	    success(data);
+	  }).always(function () {
+	    always();
+	  });
+	}
+
+	function printQRs(uuids, qrcode) {
+	  try {
+	    var label;
+	    var labelSetBuilder;
+	    var DOMURL;
+	    var svgString;
+	    var svg;
+	    var url;
+	    var img;
+
+	    (function () {
+
+	      // get a printer 
+	      var printer = getPrinter();
+
+	      // clear the current qr code
+	      qrcode.clear();
+
+	      // get the label printing xml
+	      label = dymo.label.framework.openLabelXml(getXML());
+	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
+
+	      // convert the svg to an image url
+
+	      DOMURL = self.URL || self.webkitURL || self;
+	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+	      url = DOMURL.createObjectURL(svg);
+
+	      // create an image and set the URL to the svg image. Then when it's loaded,
+	      // convert the svg to canvas, and then attach it to the label record
+	      // And then attach the qr code.
+
+	      img = new Image();
+
+	      img.onload = function () {
+	        var canvas = document.getElementById('canvastest').querySelector('canvas');
+	        var ctx = canvas.getContext('2d');
+
+	        uuids.map(function (uuid) {
+	          createBackingImage(ctx, img, uuid);
+	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
+	          var qrImage = getQRimage(qrcode, uuid);
+	          var record = labelSetBuilder.addRecord();
+	          record.setText('qrImage', qrImage);
+	          record.setText('backingImage', backingImage);
+	        });
+
+	        // print the qr code
+	        label.print(printer, "", labelSetBuilder);
+	        qrcode.clear();
+	      };
+
+	      img.src = url;
+	    })();
+	  } catch (e) {
+	    alert(e.message || e);
+	  }
+	}
+
+	// the backing image is all the text
+	function createBackingImage(ctx, svg, uuid) {
+	  // clear canvas
+	  ctx.fillStyle = '#fff';
+	  ctx.fillRect(0, 0, 431, 241);
+
+	  // add backing image + qr text
+	  ctx.fillStyle = '#000';
+	  ctx.drawImage(svg, 0, 0);
+	  ctx.font = "20px Overpass Mono";
+	  ctx.fillText(uuid.substr(uuid.length - 6), 71, 216);
+	}
+
+	function getQRimage(qrcode, uuid) {
+	  qrcode.clear();
+	  qrcode.makeCode(uuid);
+	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
+	  var pngBase64 = url.substr('data:image/png;base64,'.length);
+	  return pngBase64;
+	}
+
+	/* function : getPrinter
+	 * ---------------
+	 * Gets a DYMO printer. TODO: Maybe update this to use CUPS API?
+	 */
+	function getPrinter() {
+	  // select printer to print on
+	  // for simplicity sake just use the first LabelWriter printer
+	  var printers = dymo.label.framework.getPrinters();
+	  console.log(printers);
+	  if (!printers || printers.length == 0) throw "No DYMO printers are installed. Install DYMO printers.";
+
+	  var i = -1;
+	  for (var j = 0; j < printers.length; ++j) {
+	    var printer = printers[j];
+	    if (printer.printerType == "LabelWriterPrinter" && printer.isConnected) {
+	      i = j;
+	      break;
+	    }
+	  }
+
+	  if (i == -1) throw "No DYMO printers are connected.";
+
+	  return printers[i].name;
+	}
+
+	/* function : getXML
+	 * -----------------
+	 * Returns XML format of a label. TODO: Change this to AJAX get.
+	 */
+	function getXML() {
+	  var labelXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<DieCutLabel Version=\"8.0\" Units=\"twips\">\n  <PaperOrientation>Landscape</PaperOrientation>\n  <Id>LargeShipping</Id>\n  <PaperName>30256 Shipping</PaperName>\n  <DrawCommands>\n    <RoundRectangle X=\"0\" Y=\"0\" Width=\"3331\" Height=\"5715\" Rx=\"270\" Ry=\"270\"/>\n  </DrawCommands>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>backingImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"211.2\" Y=\"57.6001\" Width=\"5337.6\" Height=\"3192\"/>\n  </ObjectInfo>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>qrImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"579.9039\" Y=\"531\" Width=\"1900\" Height=\"1900\"/>\n  </ObjectInfo>\n</DieCutLabel>\n";
+	  return labelXml;
+	}
+
+	exports.mountQR = mountQR;
+	exports.printQRs = printQRs;
+
+/***/ },
+/* 364 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.Label = undefined;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function Label(props) {
+	  console.log(props);
+	  return _react2.default.createElement(
+	    "svg",
+	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
+	    _react2.default.createElement("defs", null),
+	    _react2.default.createElement(
+	      "g",
+	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
+	      _react2.default.createElement(
+	        "g",
+	        { id: "Artboard" },
+	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "135.102905" },
+	            props.taskLabel || ""
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "91" },
+	            props.originLabel
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "179.205811" },
+	            props.notesLabel
+	          )
+	        ),
+	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
+	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "70.885882", y: "216.037" },
+	            props.qrCode
+	          )
+	        )
+	      )
+	    )
+	  );
+	}
+
+	exports.Label = Label;
+
+/***/ },
+/* 365 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _InventoryDetail = __webpack_require__(366);
+
+	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
+
+	var _Inputs = __webpack_require__(369);
+
+	var _APIManager = __webpack_require__(367);
+
+	var _Loading = __webpack_require__(368);
+
+	var _Loading2 = _interopRequireDefault(_Loading);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Inventory = function (_React$Component) {
+	  _inherits(Inventory, _React$Component);
+
+	  function Inventory(props) {
+	    _classCallCheck(this, Inventory);
+
+	    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
+
+	    _this.handleProductFilter = _this.handleProductFilter.bind(_this);
+	    _this.latestRequestID = -1;
+	    _this.state = {
+	      processes: [],
+	      products: [],
+	      loading: false,
+	      selected: -1,
+	      productFilter: [],
+	      productFilterStr: ""
+	    };
+	    return _this;
+	  }
+
+	  _createClass(Inventory, [{
+	    key: 'getProcessesForInventory',
+	    value: function getProcessesForInventory() {
+	      this.setState({ loading: true });
+
+	      var url = window.location.origin + "/ics/inventory/";
+
+	      var params = {};
+	      if (this.state.productFilter.length > 0) params = { products: this.state.productFilterStr };
+
+	      console.log(params);
+
+	      var component = this;
+	      var rid = (0, _APIManager.requestID)();
+	      this.latestRequestID = rid;
+
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
+	        if (component.latestRequestID == rid) component.setState({ processes: data });
+	      }).always(function () {
+	        if (component.latestRequestID == rid) component.setState({ loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'getProductsForInventory',
+	    value: function getProductsForInventory() {
+	      var component = this;
+	      var url = window.location.origin + "/ics/products/codes/";
+	      _jquery2.default.get(url).done(function (data) {
+	        var mappedProducts = data.map(function (product, i) {
+	          return { value: product.id, label: product.name };
+	        });
+	        component.setState({ products: data });
+	      });
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getProcessesForInventory();
+	      this.getProductsForInventory();
+	    }
+	  }, {
+	    key: 'handleProductFilter',
+	    value: function handleProductFilter(which, val) {
+	      var _setState;
+
+	      var component = this;
+	      var valStr = val.map(function (v, i) {
+	        return v.code;
+	      }).join();
+	      this.setState((_setState = {}, _defineProperty(_setState, which, val), _defineProperty(_setState, 'productFilterStr', valStr), _setState), function () {
+	        component.getProcessesForInventory();
+	      });
+	    }
+	  }, {
+	    key: 'getSelectedProcess',
+	    value: function getSelectedProcess() {
+	      var a = this.state.processes.find(function (x) {
+	        return x.process_id == this.props.match.params.id;
+	      }, this);
+	      return a;
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var props = this.props;
+
+	      var contentArea = _react2.default.createElement(InventoryList, { processes: this.state.processes, selected: props.match.params.id });
+	      if (this.state.loading) {
+	        contentArea = _react2.default.createElement(_Loading2.default, null);
+	      } else if (!this.state.processes || this.state.processes.length == 0) {
+	        contentArea = _react2.default.createElement(_APIManager.ZeroState, { filtered: this.state.productFilter && this.state.productFilter.length });
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'inventory' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: "page inventory-list " + (props.match.params.id ? "smallDetail" : "") },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'inventory-header page-header' },
+	            _react2.default.createElement(
+	              'h2',
+	              null,
+	              'Inventory'
+	            ),
+	            _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter })
+	          ),
+	          contentArea
+	        ),
+	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), {
+	          filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null,
+	          match: props.match,
+	          showDetail: props.match.params.id
+	        }))
+	      );
+	    }
+	  }]);
+
+	  return Inventory;
+	}(_react2.default.Component);
+
+	exports.default = Inventory;
+
+
+	function InventoryList(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    null,
+	    _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
+	    props.processes.map(function (process, i) {
+	      return _react2.default.createElement(
+	        _reactRouterDom.Link,
+	        { key: i, to: "/dashboard/inventory/" + process.process_id },
+	        _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.selected }, process))
+	      );
+	    }, this)
+	  );
+	}
+
+	function InventoryItem(props) {
+	  var teamStyle = { color: "rgba(0,0,0,0.3", paddingLeft: "4px", fontSize: "10px" };
+	  var currTeam = window.localStorage.getItem("team") || "1";
+	  teamStyle["display"] = currTeam == props.team_id ? "none" : "";
+	  return _react2.default.createElement(
+	    'div',
+	    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-outputdesc' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.output_desc.sentenceCase()
+	      ),
+	      _react2.default.createElement(
+	        'span',
+	        { style: teamStyle },
+	        props.team
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-count' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.count
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-unit' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.unit.sentenceCase() + "s"
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'i-date' },
+	      _react2.default.createElement(
+	        'span',
+	        null,
+	        props.date
+	      )
+	    )
+	  );
+	}
+
+	function isHeader(props) {
+	  return props.header == true ? "inventoryClass-header" : "";
+	}
+
+	function isSelected(props) {
+	  if (isHeader(props)) return false;
+	  return props.process_id == props.selected ? "selected" : "";
+	}
+
+	String.prototype.sentenceCase = function () {
+	  return this.charAt(0).toUpperCase() + this.slice(1);
+	};
+
+/***/ },
+/* 366 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _Task = __webpack_require__(350);
+
+	var _APIManager = __webpack_require__(367);
+
+	var _immutabilityHelper = __webpack_require__(349);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _Loading = __webpack_require__(368);
+
+	var _Loading2 = _interopRequireDefault(_Loading);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var InventoryDetail = function (_React$Component) {
+	  _inherits(InventoryDetail, _React$Component);
+
+	  function InventoryDetail(props) {
+	    _classCallCheck(this, InventoryDetail);
+
+	    var _this = _possibleConstructorReturn(this, (InventoryDetail.__proto__ || Object.getPrototypeOf(InventoryDetail)).call(this, props));
+
+	    _this.latestRequestID = -1;
+	    _this.handleLoadClick = _this.handleLoadClick.bind(_this);
+	    _this.state = {
+	      items: [],
+	      next: null,
+	      loading: false
+	    };
+	    return _this;
+	  }
+
+	  _createClass(InventoryDetail, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getInventoryItems(this.props);
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(np) {
+	      this.getInventoryItems(np);
+	    }
+	  }, {
+	    key: 'handleLoadClick',
+	    value: function handleLoadClick() {
+	      this.getInventoryItems(this.props, this.state.next);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var props = this.props;
+
+	      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, { items: this.state.items }));
+	      if (!this.state.items || this.state.items.length == 0) {
+	        if (this.state.loading) {
+	          contentArea = _react2.default.createElement(_Loading2.default, null);
+	        }
+	      }
+
+	      var loadMore = false;
+	      if (this.state.next) {
+	        loadMore = _react2.default.createElement(
+	          'button',
+	          { onClick: this.handleLoadClick },
+	          'Load More'
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-header' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'i-detail-outputdesc', style: { display: "flex", flexDirection: "row" } },
+	            _react2.default.createElement(
+	              'span',
+	              { style: { flex: "1" } },
+	              this.props.output_desc
+	            ),
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              _react2.default.createElement(
+	                _reactRouterDom.Link,
+	                { to: '/dashboard/inventory/' },
+	                _react2.default.createElement(
+	                  'i',
+	                  { style: { verticalAlign: "middle", fontSize: "16px", flex: "0" }, className: 'material-icons' },
+	                  'close'
+	                )
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'i-detail-count' },
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              (this.props.count || 0) + " " + this.props.unit + "s"
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-content' },
+	          contentArea
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'i-detail-footer' },
+	          loadMore
+	        )
+	      );
+	    }
+	  }, {
+	    key: 'getInventoryItems',
+	    value: function getInventoryItems(props, u) {
+	      if (!props.match.params.id) {
+	        return;
+	      }
+
+	      this.setState({ loading: true });
+
+	      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
+	      var g = { process: props.process_id };
+	      if (this.props.filter) {
+	        g.products = this.props.filter;
+	      }
+	      var random = Math.floor(Math.random() * 1000);
+	      this.latestRequestID = random;
+
+	      var component = this;
+	      (0, _APIManager.fetch)(url, g).done(function (data, d, jqxhr) {
+	        if (component.latestRequestID == random) {
+	          var items = data.results;
+	          if (u) {
+	            items = (0, _immutabilityHelper2.default)(component.state.items, { $push: items });
+	          }
+	          component.setState({ items: items, next: data.next });
+	        }
+	      }).always(function () {
+	        component.setState({ loading: false });
+	      });
+	    }
+	  }]);
+
+	  return InventoryDetail;
+	}(_react2.default.Component);
+
+	exports.default = InventoryDetail;
+
+
+	function ItemList(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    null,
+	    (props.items || []).map(function (item, i) {
+	      return _react2.default.createElement(Item, _extends({ key: i }, item));
+	    }, this)
+	  );
+	}
+
+	function Item(props) {
+	  var src = window.location.origin + "/static/dashboard/img/qricon@2x.png";
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'item', onClick: props.onClick },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'flex' },
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'item-img' },
+	        _react2.default.createElement('img', { src: src })
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'item-qr' },
+	          props.item_qr.substring(42)
+	        ),
+	        _react2.default.createElement(
+	          'a',
+	          { href: window.location.origin + "/dashboard/task/" + props.creating_task.id, target: '_blank' },
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'item-task' },
+	            (0, _Task.display)(props.creating_task)
+	          )
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'unflex' },
+	      _react2.default.createElement('input', { type: 'checkbox', onChange: null })
+	    )
+	  );
+	}
+
+/***/ },
+/* 367 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.post = exports.ZeroState = exports.requestID = exports.fetch = undefined;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function fetch(url, params) {
+	  var team = window.localStorage.getItem("team") || "1";
+	  params.team = team;
+	  return _jquery2.default.get(url, params);
+	}
+
+	function post(url, params) {
+	  return _jquery2.default.ajax({
+	    method: "POST",
+	    url: url,
+	    data: params,
+	    contentType: 'application/json',
+	    processData: false
+	  });
+	}
+
+	function requestID() {
+	  return Math.floor(Math.random() * 1000);
+	}
+
+	function ZeroState(props) {
+	  var sentence = "Looks like there's nothing here!";
+	  if (props.filtered) {
+	    sentence = "Looks like there's nothing here. Try expanding your search.";
+	  }
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'zero-state' },
+	    _react2.default.createElement(
+	      'span',
+	      null,
+	      sentence
+	    )
+	  );
+	}
+
+	exports.fetch = fetch;
+	exports.requestID = requestID;
+	exports.ZeroState = ZeroState;
+	exports.post = post;
+
+/***/ },
+/* 368 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = Loading;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function Loading(props) {
+	  return _react2.default.createElement(
+	    "div",
+	    { className: "zero-state" },
+	    _react2.default.createElement(
+	      "span",
+	      null,
+	      "Loading..."
+	    )
+	  );
+	}
+
+/***/ },
+/* 369 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.TaskSelect = exports.InventoryFilter = exports.Filters = undefined;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _reactSelect = __webpack_require__(352);
+
+	var _reactSelect2 = _interopRequireDefault(_reactSelect);
+
+	var _Datepicker = __webpack_require__(370);
+
+	var _Datepicker2 = _interopRequireDefault(_Datepicker);
+
+	var _WrapMenu = __webpack_require__(404);
+
+	var _WrapMenu2 = _interopRequireDefault(_WrapMenu);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _Task = __webpack_require__(350);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var getOptions = function getOptions(input, callback) {
+	  if (input.length < 2) {
+	    callback(null, { optionss: [] });
+	  } else {
+	    var params = {
+	      limit: true,
+	      ordering: '-created_at',
+	      label: input,
+	      team: window.localStorage.getItem("team") || "1"
+	    };
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
+	      var options = data.results.map(function (x) {
+	        return { value: x.id, label: x.display };
+	      });
+	      callback(null, { options: options, complete: false });
+	    });
+	  }
+	};
+
+	var TaskSelect = function (_React$Component) {
+	  _inherits(TaskSelect, _React$Component);
+
+	  function TaskSelect() {
+	    _classCallCheck(this, TaskSelect);
+
+	    var _this = _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
+
+	    _this.handleChange = _this.handleChange.bind(_this);
+	    _this.state = {};
+
+	    return _this;
+	  }
+
+	  _createClass(TaskSelect, [{
+	    key: 'handleChange',
+	    value: function handleChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = { value: "" };
+
+	      this.setState(v);
+	      this.props.onChange(v);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'multiselect filters inputs' },
+	        _react2.default.createElement(
+	          'i',
+	          { className: 'material-icons' },
+	          'search'
+	        ),
+	        _react2.default.createElement(_reactSelect2.default.Async, {
+	          name: 'form-field-name',
+	          value: this.state.value,
+	          loadOptions: getOptions,
+	          onChange: this.handleChange,
+	          placeholder: this.props.placeholder
+	        })
+	      );
+	    }
+	  }]);
+
+	  return TaskSelect;
+	}(_react2.default.Component);
+
+	var Multiselect = function (_React$Component2) {
+	  _inherits(Multiselect, _React$Component2);
+
+	  function Multiselect() {
+	    _classCallCheck(this, Multiselect);
+
+	    var _this2 = _possibleConstructorReturn(this, (Multiselect.__proto__ || Object.getPrototypeOf(Multiselect)).call(this));
+
+	    _this2.handleMultipleChange = _this2.handleMultipleChange.bind(_this2);
+	    _this2.state = {
+	      value: []
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(Multiselect, [{
+	    key: 'handleMultipleChange',
+	    value: function handleMultipleChange(value) {
+	      this.props.onChange(value);
+	      this.setState({ value: value });
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (nextProps.value != this.state.value) {
+	        this.setState({ value: nextProps.value });
+	      }
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'multiselect' },
+	        _react2.default.createElement(_reactSelect2.default, { multi: true,
+	          name: 'form-field-name',
+	          value: this.state.value,
+	          options: this.getSelect(this.props.options),
+	          onChange: this.handleMultipleChange,
+	          placeholder: this.props.placeholder,
+	          clearable: false
+	        })
+	      );
+	    }
+	  }, {
+	    key: 'getSelect',
+	    value: function getSelect(options) {
+	      if (!options) return;
+
+	      return Object.keys(options).map(function (key, i) {
+	        return { value: options[key].id, label: options[key].name };
+	      });
+	    }
+	  }]);
+
+	  return Multiselect;
+	}(_react2.default.Component);
+
+	var InventoryFilter = function (_React$Component3) {
+	  _inherits(InventoryFilter, _React$Component3);
+
+	  function InventoryFilter() {
+	    _classCallCheck(this, InventoryFilter);
+
+	    return _possibleConstructorReturn(this, (InventoryFilter.__proto__ || Object.getPrototypeOf(InventoryFilter)).apply(this, arguments));
+	  }
+
+	  _createClass(InventoryFilter, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this4 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'filters inputs' },
+	        _react2.default.createElement(_reactSelect2.default, { multi: true,
+	          options: this.props.options,
+	          value: this.props.selected,
+	          placeholder: 'All products',
+	          labelKey: 'code',
+	          valueKey: 'code',
+	          onChange: function onChange(val) {
+	            return _this4.props.onFilter("productFilter", val);
+	          }
+	        })
+	      );
+	    }
+	  }]);
+
+	  return InventoryFilter;
+	}(_react2.default.Component);
+
+	var Filters = function (_React$Component4) {
+	  _inherits(Filters, _React$Component4);
+
+	  function Filters(props) {
+	    _classCallCheck(this, Filters);
+
+	    var _this5 = _possibleConstructorReturn(this, (Filters.__proto__ || Object.getPrototypeOf(Filters)).call(this, props));
+
+	    _this5.handleChange = _this5.handleChange.bind(_this5);
+	    _this5.handleDateRangeChange = _this5.handleDateRangeChange.bind(_this5);
+	    _this5.state = {
+	      start: "",
+	      end: "",
+	      active: 1
+	    };
+	    return _this5;
+	  }
+
+	  _createClass(Filters, [{
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (this.props.dates != nextProps.dates) {
+	        this.setState({
+	          processes: [],
+	          products: [],
+	          parent: "",
+	          start: "",
+	          end: "",
+	          active: 1 });
+	      }
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, payload) {
+	      this.props.onFilter(_defineProperty({}, which, payload));
+	    }
+	  }, {
+	    key: 'handleDateRangeChange',
+	    value: function handleDateRangeChange(date) {
+	      this.props.onFilter(date);
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this6 = this;
+
+	      var obj = false;
+
+	      if (this.props.dates) {
+	        obj = _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(_Datepicker2.default, { initialDates: this.props.initialDates, onChange: this.handleDateRangeChange })
+	        );
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'filters inputs' },
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(TaskSelect, { placeholder: 'All tasks', value: this.props.label, onChange: function onChange(val) {
+	              return _this6.handleChange("label", val);
+	            } })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(Multiselect, { options: this.props.processes, value: this.props.filters.processes, placeholder: 'All processes', onChange: function onChange(val) {
+	              return _this6.handleChange("processes", val);
+	            } })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(Multiselect, { options: this.props.products, value: this.props.filters.products, valueArray: this.props.filters.products, placeholder: 'All products', onChange: function onChange(val) {
+	              return _this6.handleChange("products", val);
+	            } })
+	        ),
+	        obj
+	      );
+	    }
+	  }]);
+
+	  return Filters;
+	}(_react2.default.Component);
+
+	exports.Filters = Filters;
+	exports.InventoryFilter = InventoryFilter;
+	exports.TaskSelect = TaskSelect;
+
+/***/ },
+/* 370 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -54685,11 +58247,11 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactDateRange = __webpack_require__(364);
+	var _reactDateRange = __webpack_require__(371);
 
-	var _menu = __webpack_require__(373);
+	var _menu = __webpack_require__(380);
 
-	var _momentTimezone = __webpack_require__(395);
+	var _momentTimezone = __webpack_require__(401);
 
 	var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
 
@@ -54824,7 +58386,7 @@
 	exports.default = Datepicker;
 
 /***/ },
-/* 364 */
+/* 371 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -54835,15 +58397,15 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _DateRangeJs = __webpack_require__(365);
+	var _DateRangeJs = __webpack_require__(372);
 
 	var _DateRangeJs2 = _interopRequireDefault(_DateRangeJs);
 
-	var _CalendarJs = __webpack_require__(367);
+	var _CalendarJs = __webpack_require__(374);
 
 	var _CalendarJs2 = _interopRequireDefault(_CalendarJs);
 
-	var _defaultRangesJs = __webpack_require__(372);
+	var _defaultRangesJs = __webpack_require__(379);
 
 	var _defaultRangesJs2 = _interopRequireDefault(_defaultRangesJs);
 
@@ -54851,7 +58413,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 365 */
+/* 372 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -54880,19 +58442,19 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _utilsParseInputJs = __webpack_require__(366);
+	var _utilsParseInputJs = __webpack_require__(373);
 
 	var _utilsParseInputJs2 = _interopRequireDefault(_utilsParseInputJs);
 
-	var _CalendarJs = __webpack_require__(367);
+	var _CalendarJs = __webpack_require__(374);
 
 	var _CalendarJs2 = _interopRequireDefault(_CalendarJs);
 
-	var _PredefinedRangesJs = __webpack_require__(371);
+	var _PredefinedRangesJs = __webpack_require__(378);
 
 	var _PredefinedRangesJs2 = _interopRequireDefault(_PredefinedRangesJs);
 
-	var _stylesJs = __webpack_require__(369);
+	var _stylesJs = __webpack_require__(376);
 
 	var _stylesJs2 = _interopRequireDefault(_stylesJs);
 
@@ -55121,7 +58683,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 366 */
+/* 373 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -55156,7 +58718,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 367 */
+/* 374 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -55185,19 +58747,19 @@
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _utilsParseInputJs = __webpack_require__(366);
+	var _utilsParseInputJs = __webpack_require__(373);
 
 	var _utilsParseInputJs2 = _interopRequireDefault(_utilsParseInputJs);
 
-	var _DayCellJs = __webpack_require__(368);
+	var _DayCellJs = __webpack_require__(375);
 
 	var _DayCellJs2 = _interopRequireDefault(_DayCellJs);
 
-	var _LangDicJs = __webpack_require__(370);
+	var _LangDicJs = __webpack_require__(377);
 
 	var _LangDicJs2 = _interopRequireDefault(_LangDicJs);
 
-	var _stylesJs = __webpack_require__(369);
+	var _stylesJs = __webpack_require__(376);
 
 	var _stylesJs2 = _interopRequireDefault(_stylesJs);
 
@@ -55558,7 +59120,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 368 */
+/* 375 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -55589,7 +59151,7 @@
 
 	var _classnames3 = _interopRequireDefault(_classnames2);
 
-	var _stylesJs = __webpack_require__(369);
+	var _stylesJs = __webpack_require__(376);
 
 	var DayCell = (function (_Component) {
 	  _inherits(DayCell, _Component);
@@ -55750,7 +59312,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 369 */
+/* 376 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -55998,7 +59560,7 @@
 	};
 
 /***/ },
-/* 370 */
+/* 377 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -56053,7 +59615,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 371 */
+/* 378 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -56088,11 +59650,11 @@
 
 	var _classnames3 = _interopRequireDefault(_classnames2);
 
-	var _utilsParseInputJs = __webpack_require__(366);
+	var _utilsParseInputJs = __webpack_require__(373);
 
 	var _utilsParseInputJs2 = _interopRequireDefault(_utilsParseInputJs);
 
-	var _stylesJs = __webpack_require__(369);
+	var _stylesJs = __webpack_require__(376);
 
 	var PredefinedRanges = (function (_Component) {
 	  _inherits(PredefinedRanges, _Component);
@@ -56190,7 +59752,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 372 */
+/* 379 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -56238,7 +59800,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 373 */
+/* 380 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -56252,21 +59814,21 @@
 
 	var _identifiers = __webpack_require__(334);
 
-	var _button = __webpack_require__(374);
+	var _button = __webpack_require__(381);
 
-	var _MenuDivider = __webpack_require__(387);
+	var _MenuDivider = __webpack_require__(393);
 
-	var _MenuItem = __webpack_require__(388);
+	var _MenuItem = __webpack_require__(394);
 
-	var _Menu = __webpack_require__(389);
+	var _Menu = __webpack_require__(395);
 
-	var _IconMenu = __webpack_require__(392);
+	var _IconMenu = __webpack_require__(398);
 
-	var _ripple = __webpack_require__(382);
+	var _ripple = __webpack_require__(388);
 
 	var _ripple2 = _interopRequireDefault(_ripple);
 
-	var _theme = __webpack_require__(393);
+	var _theme = __webpack_require__(399);
 
 	var _theme2 = _interopRequireDefault(_theme);
 
@@ -56286,7 +59848,7 @@
 	exports.IconMenu = ThemedIconMenu;
 
 /***/ },
-/* 374 */
+/* 381 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -56300,21 +59862,21 @@
 
 	var _reactCssThemr = __webpack_require__(330);
 
-	var _Button = __webpack_require__(375);
+	var _Button = __webpack_require__(382);
 
-	var _BrowseButton = __webpack_require__(380);
+	var _BrowseButton = __webpack_require__(386);
 
-	var _IconButton = __webpack_require__(381);
+	var _IconButton = __webpack_require__(387);
 
 	var _FontIcon = __webpack_require__(338);
 
 	var _FontIcon2 = _interopRequireDefault(_FontIcon);
 
-	var _ripple = __webpack_require__(382);
+	var _ripple = __webpack_require__(388);
 
 	var _ripple2 = _interopRequireDefault(_ripple);
 
-	var _theme = __webpack_require__(385);
+	var _theme = __webpack_require__(391);
 
 	var _theme2 = _interopRequireDefault(_theme);
 
@@ -56333,7 +59895,7 @@
 	exports.BrowseButton = ThemedBrowseButton;
 
 /***/ },
-/* 375 */
+/* 382 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -56363,7 +59925,7 @@
 
 	var _FontIcon2 = _interopRequireDefault(_FontIcon);
 
-	var _Ripple = __webpack_require__(376);
+	var _Ripple = __webpack_require__(383);
 
 	var _Ripple2 = _interopRequireDefault(_Ripple);
 
@@ -56505,7 +60067,7 @@
 	exports.Button = Button;
 
 /***/ },
-/* 376 */
+/* 383 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -56530,7 +60092,7 @@
 
 	var _classnames3 = _interopRequireDefault(_classnames2);
 
-	var _immutabilityHelper = __webpack_require__(377);
+	var _immutabilityHelper = __webpack_require__(349);
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
@@ -56542,11 +60104,11 @@
 
 	var _events2 = _interopRequireDefault(_events);
 
-	var _prefixer = __webpack_require__(378);
+	var _prefixer = __webpack_require__(384);
 
 	var _prefixer2 = _interopRequireDefault(_prefixer);
 
-	var _utils = __webpack_require__(379);
+	var _utils = __webpack_require__(385);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -56897,197 +60459,7 @@
 	exports.default = rippleFactory;
 
 /***/ },
-/* 377 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var invariant = __webpack_require__(184);
-
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
-	var splice = Array.prototype.splice;
-
-	var assign = Object.assign || function assign(target, source) {
-	  var keys = getAllKeys(source);
-	  for (var i = 0; i < keys.length; i++) {
-	    var key = keys[i];
-	    if (hasOwnProperty.call(source, key)) {
-	      target[key] = source[key];
-	    }
-	  }
-	  return target;
-	}
-
-	var getAllKeys = typeof Object.getOwnPropertySymbols === 'function' ?
-	  function(obj) { return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj)) } :
-	  function(obj) { return Object.keys(obj) }
-	;
-
-	function copy(object) {
-	  if (object instanceof Array) {
-	    return object.slice();
-	  } else if (object && typeof object === 'object') {
-	    return assign(new object.constructor(), object);
-	  } else {
-	    return object;
-	  }
-	}
-
-
-	function newContext() {
-	  var commands = assign({}, defaultCommands);
-	  update.extend = function(directive, fn) {
-	    commands[directive] = fn;
-	  }
-
-	  return update;
-
-	  function update(object, spec) {
-	    invariant(
-	      !Array.isArray(spec),
-	      'update(): You provided an invalid spec to update(). The spec may ' +
-	      'not contain an array except as the value of $set, $push, $unshift, ' +
-	      '$splice or any custom command allowing an array value.'
-	    );
-
-	    invariant(
-	      typeof spec === 'object' && spec !== null,
-	      'update(): You provided an invalid spec to update(). The spec and ' +
-	      'every included key path must be plain objects containing one of the ' +
-	      'following commands: %s.',
-	      Object.keys(commands).join(', ')
-	    );
-
-	    var nextObject = object;
-	    var specKeys = getAllKeys(spec)
-	    var index, key;
-	    for (index = 0; index < specKeys.length; index++) {
-	      var key = specKeys[index];
-	      if (hasOwnProperty.call(commands, key)) {
-	        nextObject = commands[key](spec[key], nextObject, spec, object);
-	      } else {
-	        var nextValueForKey = update(object[key], spec[key]);
-	        if (nextValueForKey !== nextObject[key]) {
-	          if (nextObject === object) {
-	            nextObject = copy(object);
-	          }
-	          nextObject[key] = nextValueForKey;
-	        }
-	      }
-	    }
-	    return nextObject;
-	  }
-
-	}
-
-	var defaultCommands = {
-	  $push: function(value, original, spec) {
-	    invariantPushAndUnshift(original, spec, '$push');
-	    return original.concat(value);
-	  },
-	  $unshift: function(value, original, spec) {
-	    invariantPushAndUnshift(original, spec, '$unshift');
-	    return value.concat(original);
-	  },
-	  $splice: function(value, nextObject, spec, object) {
-	    var originalValue = nextObject === object ? copy(object) : nextObject;
-	    invariantSplices(originalValue, spec);
-	    value.forEach(function(args) {
-	      invariantSplice(args);
-	      splice.apply(originalValue, args);
-	    });
-	    return originalValue;
-	  },
-	  $set: function(value, original, spec) {
-	    invariantSet(spec);
-	    return value;
-	  },
-	  $merge: function(value, nextObject, spec, object) {
-	    var originalValue = nextObject === object ? copy(object) : nextObject;
-	    invariantMerge(originalValue, value);
-	    getAllKeys(value).forEach(function(key) {
-	      originalValue[key] = value[key];
-	    });
-	    return originalValue;
-	  },
-	  $apply: function(value, original) {
-	    invariantApply(value);
-	    return value(original);
-	  }
-	};
-
-
-
-	module.exports = newContext();
-	module.exports.newContext = newContext;
-
-
-	// invariants
-
-	function invariantPushAndUnshift(value, spec, command) {
-	  invariant(
-	    Array.isArray(value),
-	    'update(): expected target of %s to be an array; got %s.',
-	    command,
-	    value
-	  );
-	  var specValue = spec[command];
-	  invariant(
-	    Array.isArray(specValue),
-	    'update(): expected spec of %s to be an array; got %s. ' +
-	    'Did you forget to wrap your parameter in an array?',
-	    command,
-	    specValue
-	  );
-	}
-
-	function invariantSplices(value, spec) {
-	  invariant(
-	    Array.isArray(value),
-	    'Expected $splice target to be an array; got %s',
-	    value
-	  );
-	  invariantSplice(spec['$splice']);
-	}
-
-	function invariantSplice(value) {
-	  invariant(
-	    Array.isArray(value),
-	    'update(): expected spec of $splice to be an array of arrays; got %s. ' +
-	    'Did you forget to wrap your parameters in an array?',
-	    value
-	  );
-	}
-
-	function invariantApply(fn) {
-	  invariant(
-	    typeof fn === 'function',
-	    'update(): expected spec of $apply to be a function; got %s.',
-	    fn
-	  );
-	}
-
-	function invariantSet(spec) {
-	  invariant(
-	    Object.keys(spec).length === 1,
-	    'Cannot have more than one key in an object with $set'
-	  );
-	}
-
-	function invariantMerge(target, specValue) {
-	  invariant(
-	    specValue && typeof specValue === 'object',
-	    'update(): $merge expects a spec of type \'object\'; got %s',
-	    specValue
-	  );
-	  invariant(
-	    target && typeof target === 'object',
-	    'update(): $merge expects a target of type \'object\'; got %s',
-	    target
-	  );
-	}
-
-
-/***/ },
-/* 378 */
+/* 384 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -57139,7 +60511,7 @@
 	exports.default = prefixer;
 
 /***/ },
-/* 379 */
+/* 385 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -57217,7 +60589,7 @@
 	};
 
 /***/ },
-/* 380 */
+/* 386 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57247,7 +60619,7 @@
 
 	var _FontIcon2 = _interopRequireDefault(_FontIcon);
 
-	var _Ripple = __webpack_require__(376);
+	var _Ripple = __webpack_require__(383);
 
 	var _Ripple2 = _interopRequireDefault(_Ripple);
 
@@ -57390,7 +60762,7 @@
 	exports.BrowseButton = BrowseButton;
 
 /***/ },
-/* 381 */
+/* 387 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57420,7 +60792,7 @@
 
 	var _FontIcon2 = _interopRequireDefault(_FontIcon);
 
-	var _Ripple = __webpack_require__(376);
+	var _Ripple = __webpack_require__(383);
 
 	var _Ripple2 = _interopRequireDefault(_Ripple);
 
@@ -57533,7 +60905,7 @@
 	exports.IconButton = IconButton;
 
 /***/ },
-/* 382 */
+/* 388 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57544,11 +60916,11 @@
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	var _Ripple = __webpack_require__(376);
+	var _Ripple = __webpack_require__(383);
 
 	var _Ripple2 = _interopRequireDefault(_Ripple);
 
-	var _theme = __webpack_require__(383);
+	var _theme = __webpack_require__(389);
 
 	var _theme2 = _interopRequireDefault(_theme);
 
@@ -57559,13 +60931,13 @@
 	};
 
 /***/ },
-/* 383 */
+/* 389 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(384);
+	var content = __webpack_require__(390);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(344)(content, {});
@@ -57585,7 +60957,7 @@
 	}
 
 /***/ },
-/* 384 */
+/* 390 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(343)();
@@ -57604,13 +60976,13 @@
 	};
 
 /***/ },
-/* 385 */
+/* 391 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(386);
+	var content = __webpack_require__(392);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(344)(content, {});
@@ -57630,7 +61002,7 @@
 	}
 
 /***/ },
-/* 386 */
+/* 392 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(343)();
@@ -57657,7 +61029,7 @@
 	};
 
 /***/ },
-/* 387 */
+/* 393 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57692,7 +61064,7 @@
 	exports.MenuDivider = MenuDivider;
 
 /***/ },
-/* 388 */
+/* 394 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57722,7 +61094,7 @@
 
 	var _FontIcon2 = _interopRequireDefault(_FontIcon);
 
-	var _Ripple = __webpack_require__(376);
+	var _Ripple = __webpack_require__(383);
 
 	var _Ripple2 = _interopRequireDefault(_Ripple);
 
@@ -57833,7 +61205,7 @@
 	exports.MenuItem = MenuItem;
 
 /***/ },
-/* 389 */
+/* 395 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -57861,9 +61233,9 @@
 
 	var _identifiers = __webpack_require__(334);
 
-	var _utils = __webpack_require__(390);
+	var _utils = __webpack_require__(396);
 
-	var _MenuItem = __webpack_require__(388);
+	var _MenuItem = __webpack_require__(394);
 
 	var _MenuItem2 = _interopRequireDefault(_MenuItem);
 
@@ -58162,7 +61534,7 @@
 	exports.Menu = Menu;
 
 /***/ },
-/* 390 */
+/* 396 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -58176,15 +61548,15 @@
 
 	var _events2 = _interopRequireDefault(_events);
 
-	var _prefixer = __webpack_require__(378);
+	var _prefixer = __webpack_require__(384);
 
 	var _prefixer2 = _interopRequireDefault(_prefixer);
 
-	var _time = __webpack_require__(391);
+	var _time = __webpack_require__(397);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _utils = __webpack_require__(379);
+	var _utils = __webpack_require__(385);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -58197,7 +61569,7 @@
 	exports.utils = _utils2.default;
 
 /***/ },
-/* 391 */
+/* 397 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -58499,7 +61871,7 @@
 	exports.default = time;
 
 /***/ },
-/* 392 */
+/* 398 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -58525,11 +61897,11 @@
 
 	var _identifiers = __webpack_require__(334);
 
-	var _IconButton = __webpack_require__(381);
+	var _IconButton = __webpack_require__(387);
 
 	var _IconButton2 = _interopRequireDefault(_IconButton);
 
-	var _Menu = __webpack_require__(389);
+	var _Menu = __webpack_require__(395);
 
 	var _Menu2 = _interopRequireDefault(_Menu);
 
@@ -58655,13 +62027,13 @@
 	exports.IconMenu = IconMenu;
 
 /***/ },
-/* 393 */
+/* 399 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(394);
+	var content = __webpack_require__(400);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(344)(content, {});
@@ -58681,7 +62053,7 @@
 	}
 
 /***/ },
-/* 394 */
+/* 400 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(343)();
@@ -58715,15 +62087,15 @@
 	};
 
 /***/ },
-/* 395 */
+/* 401 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var moment = module.exports = __webpack_require__(396);
-	moment.tz.load(__webpack_require__(397));
+	var moment = module.exports = __webpack_require__(402);
+	moment.tz.load(__webpack_require__(403));
 
 
 /***/ },
-/* 396 */
+/* 402 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//! moment-timezone.js
@@ -59330,7 +62702,7 @@
 
 
 /***/ },
-/* 397 */
+/* 403 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -59934,7 +63306,7 @@
 	};
 
 /***/ },
-/* 398 */
+/* 404 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59949,9 +63321,9 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _menu = __webpack_require__(373);
+	var _menu = __webpack_require__(380);
 
-	var _button = __webpack_require__(374);
+	var _button = __webpack_require__(381);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -60007,20 +63379,7 @@
 	exports.default = WrapMenu;
 
 /***/ },
-/* 399 */,
-/* 400 */,
-/* 401 */,
-/* 402 */,
-/* 403 */,
-/* 404 */,
-/* 405 */,
-/* 406 */,
-/* 407 */,
-/* 408 */,
-/* 409 */,
-/* 410 */,
-/* 411 */,
-/* 412 */
+/* 405 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60028,8 +63387,6 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -60040,3401 +63397,28 @@
 	var _jquery = __webpack_require__(179);
 
 	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouterDom = __webpack_require__(180);
+
+	var _InventoryDetail = __webpack_require__(366);
+
+	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
+
+	var _Inputs = __webpack_require__(369);
+
+	var _APIManager = __webpack_require__(367);
+
+	var _Task = __webpack_require__(350);
 
 	var _moment = __webpack_require__(217);
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _reactDraggable = __webpack_require__(413);
-
-	var _reactDraggable2 = _interopRequireDefault(_reactDraggable);
-
-	var _immutabilityHelper = __webpack_require__(377);
+	var _immutabilityHelper = __webpack_require__(349);
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-	var _Task = __webpack_require__(349);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var connectionBlue = "#2196F3";
-
-	var FactoryMap = function (_React$Component) {
-	  _inherits(FactoryMap, _React$Component);
-
-	  function FactoryMap(props) {
-	    _classCallCheck(this, FactoryMap);
-
-	    var _this = _possibleConstructorReturn(this, (FactoryMap.__proto__ || Object.getPrototypeOf(FactoryMap)).call(this, props));
-
-	    _this.handleStop = _this.handleStop.bind(_this);
-	    _this.handleConnectionEnd = _this.handleConnectionEnd.bind(_this);
-	    _this.handleConnectionDelete = _this.handleConnectionDelete.bind(_this);
-	    _this.setDimensions = _this.setDimensions.bind(_this);
-	    _this.state = {
-	      processes: [],
-	      connections: [],
-	      selectedProcess: -1,
-	      selectedConnection: -1,
-	      height: 0,
-	      width: 0
-	    };
-	    return _this;
-	  }
-
-	  _createClass(FactoryMap, [{
-	    key: 'render',
-	    value: function render() {
-	      var thisObj = this;
-
-	      if (this.state.processes.length == 0) {
-	        return _react2.default.createElement('svg', { className: 'factorymap', style: { width: this.state.width, height: this.state.height, backgroundColor: "green" } });
-	      }
-
-	      return _react2.default.createElement(
-	        'svg',
-	        { className: 'factorymap', style: { width: this.state.width, height: this.state.height, backgroundColor: "#1565C0" } },
-	        _react2.default.createElement(
-	          'defs',
-	          null,
-	          _react2.default.createElement(
-	            'filter',
-	            { id: 'f3', x: '0', y: '0', width: '200%', height: '200%' },
-	            _react2.default.createElement('feOffset', { result: 'offOut', 'in': 'SourceAlpha', dx: '2', dy: '2' }),
-	            _react2.default.createElement('feGaussianBlur', { result: 'blurOut', 'in': 'offOut', stdDeviation: '2' }),
-	            _react2.default.createElement('feBlend', { 'in': 'SourceGraphic', in2: 'blurOut', mode: 'normal' }),
-	            _react2.default.createElement('feColorMatrix', { values: '1 0 0 0 0   1 0 0 0 0   1 0 0 0 0  1 0 0 0.4 0', type: 'matrix', 'in': 'shadowBlurOuter1' })
-	          ),
-	          _react2.default.createElement(
-	            'marker',
-	            { id: 'bluearrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
-	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: connectionBlue, fill: 'transparent' })
-	          ),
-	          _react2.default.createElement(
-	            'marker',
-	            { id: 'redarrow', markerWidth: '10', markerHeight: '10', refX: '0', refY: '3', orient: 'auto', markerUnits: 'strokeWidth' },
-	            _react2.default.createElement('path', { d: 'M4,0 L0,3 L4,6 ', stroke: "red", fill: 'transparent' })
-	          )
-	        ),
-	        Object.keys(this.state.connections).map(function (cid) {
-	          var _this2 = this;
-
-	          var connection = this.state.connections[cid];
-	          if (connection == undefined) return;
-	          {
-	            false;
-	          }
-
-	          var p1 = this.state.processes[connection.process_type];
-	          var p2 = this.state.processes[connection.recommended_input];
-
-	          return _react2.default.createElement(DirectedLine, _extends({
-	            p1: this.unscale(p1), p2: this.unscale(p2),
-	            p1Width: width(p1), p2Width: width(p2)
-	          }, connection, { key: cid,
-	            selected: cid == this.state.selectedConnection,
-	            onClick: function onClick() {
-	              return _this2.selectConnection(cid);
-	            }
-	          }));
-	        }, this),
-	        Object.keys(this.state.processes).map(function (pid) {
-	          var _this3 = this;
-
-	          var p = thisObj.state.processes[pid];
-	          if (p == undefined) return { false: false };
-	          var coords = this.unscale(p);
-	          //let newp = update(p, {$merge: coords})
-	          return _react2.default.createElement(ProcessTile, _extends({
-	            width: width(p), height: 40
-	          }, p, { nx: coords.x, ny: coords.y, key: pid,
-	            selected: pid == this.state.selectProcess,
-	            onStop: function onStop(e, ui) {
-	              return _this3.handleStop(e, ui, pid);
-	            },
-	            onConnectionEnd: function onConnectionEnd(x, y) {
-	              return _this3.handleConnectionEnd(pid, x, y);
-	            },
-	            onClick: function onClick() {
-	              return _this3.selectProcess(pid);
-	            }
-	          }));
-	        }, this)
-	      );
-	    }
-	  }, {
-	    key: 'selectProcess',
-	    value: function selectProcess(pid) {
-	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectedConnection: -1, selectedProcess: pid } });
-	      this.setState(ns);
-	    }
-	  }, {
-	    key: 'selectConnection',
-	    value: function selectConnection(cid) {
-	      var ns = (0, _immutabilityHelper2.default)(this.state, { $merge: { selectedConnection: cid, selectedProcess: -1 } });
-	      this.setState(ns);
-	    }
-	  }, {
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      this.setDimensions();
-	    }
-	  }, {
-	    key: 'setDimensions',
-	    value: function setDimensions() {
-	      this.setState({ height: (0, _jquery2.default)(window).height() - 64, width: (0, _jquery2.default)(window).width() });
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      var thisObj = this;
-	      var container = {};
-	      var defs = [this.getProcesses(container), this.getConnections(container)];
-
-	      _jquery2.default.when.apply(null, defs).done(function () {
-	        thisObj.setState(container);
-	      });
-
-	      var url = window.location.origin + '/ics/recommendedInputs/';
-	      window.addEventListener('keyup', this.handleConnectionDelete);
-	      window.addEventListener('resize', this.setDimensions);
-	    }
-	  }, {
-	    key: 'handleConnectionDelete',
-	    value: function handleConnectionDelete(e) {
-	      var thisObj = this;
-
-	      if (e.key == "Backspace" && this.state.selectedConnection != -1) {
-
-	        var url = window.location.origin + "/ics/recommendedInputs/" + this.state.selectedConnection + "/";
-	        _jquery2.default.ajax({ method: "DELETE", url: url }).done(function (e) {
-	          var ns = (0, _immutabilityHelper2.default)(thisObj.state, {
-	            connections: {
-	              $merge: _defineProperty({}, thisObj.state.selectedConnection, undefined)
-	            }, selectedConnection: { $set: -1 }
-	          });
-	          thisObj.setState(ns);
-	        });
-	      }
-	    }
-	  }, {
-	    key: 'getProcesses',
-	    value: function getProcesses(container) {
-	      var deferred = _jquery2.default.Deferred();
-	      var req = { created_by: window.localStorage.getItem("team") || "1" };
-	      if (!req.created_by) {
-	        alert("No teams loaded:(((");
-	      }
-
-	      _jquery2.default.get(window.location.origin + "/ics/processes/", req).done(function (data) {
-	        var processes = {};
-	        data.map(function (p, i) {
-	          processes[p.id] = p;
-	        });
-	        container.processes = processes;
-	        deferred.resolve();
-	      });
-	      return deferred.promise();
-	    }
-	  }, {
-	    key: 'getConnections',
-	    value: function getConnections(container) {
-	      var deferred = _jquery2.default.Deferred();
-	      var req = { created_by: window.localStorage.getItem("team") || "1" };
-	      if (!req.created_by) {
-	        alert("No teams loaded:(((");
-	      }
-
-	      _jquery2.default.get(window.location.origin + "/ics/recommendedInputs/", req).done(function (data) {
-	        console.log(data);
-	        var connections = {};
-	        data.map(function (c, i) {
-	          connections[c.id] = c;
-	        });
-	        container.connections = connections;
-	        deferred.resolve();
-	      });
-	      return deferred.promise();
-	    }
-	  }, {
-	    key: 'handleStop',
-	    value: function handleStop(e, ui, id) {
-	      this.forceUpdate();
-	      var url = window.location.origin + "/ics/processes/move/" + id + "/";
-	      var p = this.state.processes[id];
-	      var data = this.scale({ x: ui.x, y: ui.y });
-	      var thisObj = this;
-
-	      _jquery2.default.ajax({ url: url, method: 'PUT', data: data }).done(function (responseData) {
-	        var newState = (0, _immutabilityHelper2.default)(thisObj.state, { processes: _defineProperty({}, id, { $merge: { x: responseData.x, y: responseData.y }
-	          })
-	        });
-	        thisObj.setState(newState);
-	      });
-	    }
-	  }, {
-	    key: 'handleConnectionEnd',
-	    value: function handleConnectionEnd(id, x, y) {
-	      var found = -1;
-	      var o = this.unscale(this.state.processes[id]);
-
-	      Object.keys(this.state.processes).map(function (pid) {
-	        var p = this.state.processes[pid];
-	        var n = this.unscale(p);
-	        var w = width(p);
-
-	        if (pid == id) return;
-
-	        if (Math.abs(parseFloat(x) + o.x - (n.x + w / 2)) <= w / 2 + 10 && Math.abs(parseFloat(y) + o.y - (n.y + 10)) <= 20) {
-	          found = pid;
-	        }
-	      }, this);
-
-	      if (found == -1) return;
-
-	      Object.keys(this.state.connections).map(function (cid) {
-	        var c = this.state.connections[cid];
-	        if (c && c.process_type == id && c.recommended_input == found) found = -1;
-	      }, this);
-
-	      if (found == -1) return;
-
-	      var nc = { process_type: found, recommended_input: id };
-	      this.makeNewConnection(this, nc);
-	    }
-	  }, {
-	    key: 'makeNewConnection',
-	    value: function makeNewConnection(thisObj, data) {
-	      var url = window.location.origin + '/ics/recommendedInputs/';
-	      _jquery2.default.ajax({ url: url, data: data, method: 'POST' }).done(function (d) {
-	        var obj = {};
-	        obj[d.id] = d;
-	        var ns = (0, _immutabilityHelper2.default)(thisObj.state, { connections: { $merge: obj } });
-	        thisObj.setState(ns);
-	      });
-	    }
-	  }, {
-	    key: 'scale',
-	    value: function scale(coords) {
-	      var h = this.state.height;
-	      var w = this.state.width;
-
-	      var x = parseFloat(coords.x);
-	      var y = parseFloat(coords.y);
-
-	      var v = { x: trim(coords.x / w * 100), y: trim(coords.y / h * 100) };
-
-	      return v;
-	    }
-	  }, {
-	    key: 'unscale',
-	    value: function unscale(coords) {
-	      var h = this.state.height;
-	      var w = this.state.width;
-
-	      var x = parseFloat(coords.x);
-	      var y = parseFloat(coords.y);
-
-	      var v = { x: x / 100 * w, y: y / 100 * h };
-	      return v;
-	    }
-	  }, {
-	    key: 'handleDelete',
-	    value: function handleDelete(cid) {
-	      var url = window.location.origin + "/ics/recommendedInputs/" + cid + "/";
-	      _jquery2.default.ajax({ url: url, method: "DELETE" }).done(function () {
-	        var ns = (0, _immutabilityHelper2.default)(this.state, { connections: { $merge: { cid: undefined } } });
-	        this.setState(ns);
-	      });
-	    }
-	  }]);
-
-	  return FactoryMap;
-	}(_react2.default.Component);
-
-	exports.default = FactoryMap;
-
-
-	function trim(n) {
-	  return Math.floor(n * 1000) / 1000;
-	}
-
-	var DirectedLine = function (_React$Component2) {
-	  _inherits(DirectedLine, _React$Component2);
-
-	  function DirectedLine(props) {
-	    _classCallCheck(this, DirectedLine);
-
-	    return _possibleConstructorReturn(this, (DirectedLine.__proto__ || Object.getPrototypeOf(DirectedLine)).call(this, props));
-	  }
-
-	  _createClass(DirectedLine, [{
-	    key: 'getMidPoint',
-	    value: function getMidPoint() {
-	      var halfLength = this.path.getTotalLength() * 2 / 3;
-	      var p1 = this.path.getPointAtLength(halfLength - 4);
-	      var p2 = this.path.getPointAtLength(halfLength + 4);
-	      this.sample.setAttribute("x1", p1.x);
-	      this.sample.setAttribute("y1", p1.y);
-	      this.sample.setAttribute("x2", p2.x);
-	      this.sample.setAttribute("y2", p2.y);
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.getMidPoint();
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(np) {
-	      this.getMidPoint();
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this5 = this;
-
-	      var x1 = this.props.p1.x + this.props.p1Width / 2;
-	      var y1 = this.props.p1.y + 40 / 2;
-	      var x2 = this.props.p2.x + this.props.p2Width / 2;
-	      var y2 = this.props.p2.y + 40 / 2;
-	      var path = 'M' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + y1 + ', ' + x2 + ' ' + y2 + ', ' + x2 + ' ' + y2;
-	      return _react2.default.createElement(
-	        'g',
-	        null,
-	        _react2.default.createElement('path', {
-	          d: path,
-	          stroke: this.props.selected ? "red" : connectionBlue, strokeWidth: '4', fill: 'transparent',
-	          ref: function ref(path) {
-	            _this5.path = path;
-	          },
-	          onClick: this.props.onClick
-	        }),
-	        _react2.default.createElement('line', { ref: function ref(line) {
-	            _this5.sample = line;
-	          }, strokeWidth: '4', markerEnd: this.props.selected ? "url(#redarrow)" : "url(#bluearrow)" })
-	      );
-	    }
-	  }]);
-
-	  return DirectedLine;
-	}(_react2.default.Component);
-
-	function ProcessTile(props) {
-	  return _react2.default.createElement(
-	    _reactDraggable2.default,
-	    { onDrag: function onDrag(e, ui) {
-	        return props.onStop(e, ui);
-	      }, defaultPosition: { x: props.nx, y: props.ny } },
-	    _react2.default.createElement(
-	      'g',
-	      null,
-	      _react2.default.createElement(DraggableLine, { className: 'connectionTemp', x: props.width, y: props.height / 2, onStop: function onStop(x, y) {
-	          return props.onConnectionEnd(x, y);
-	        } }),
-	      _react2.default.createElement('rect', { className: 'processTile', width: props.width, height: props.height, rx: '4', ry: '4', filter: 'url(#f3)' }),
-	      _react2.default.createElement('image', { x: 10, y: 10, height: 20, width: 20, xlinkHref: (0, _Task.icon)(props.icon) }),
-	      _react2.default.createElement(
-	        'text',
-	        { textAnchor: 'middle', x: (props.width - 25) / 2 + 25, y: props.height / 2 + 4 },
-	        props.name + " (" + props.code + ")"
-	      )
-	    )
-	  );
-	}
-
-	var DraggableLine = function (_React$Component3) {
-	  _inherits(DraggableLine, _React$Component3);
-
-	  function DraggableLine(props) {
-	    _classCallCheck(this, DraggableLine);
-
-	    var _this6 = _possibleConstructorReturn(this, (DraggableLine.__proto__ || Object.getPrototypeOf(DraggableLine)).call(this, props));
-
-	    _this6.handleDrag = _this6.handleDrag.bind(_this6);
-	    _this6.handleDragStop = _this6.handleDragStop.bind(_this6);
-	    _this6.state = { x1: props.x + 5, y1: props.y + 5, x2: props.x + 5, y2: props.y + 5 };
-	    return _this6;
-	  }
-
-	  _createClass(DraggableLine, [{
-	    key: 'handleDrag',
-	    value: function handleDrag() {
-	      var _this7 = this;
-
-	      return function (e, _ref) {
-	        var node = _ref.node,
-	            deltaX = _ref.deltaX,
-	            deltaY = _ref.deltaY;
-
-	        e.stopImmediatePropagation();
-
-	        var state = (0, _immutabilityHelper2.default)(_this7.state, { $merge: { x2: _this7.state.x2 + deltaX, y2: _this7.state.y2 + deltaY } });
-	        _this7.setState(state);
-	      };
-	    }
-	  }, {
-	    key: 'handleDragStop',
-	    value: function handleDragStop() {
-	      var _this8 = this;
-
-	      return function (e, _ref2) {
-	        var node = _ref2.node,
-	            deltaX = _ref2.deltaX,
-	            deltaY = _ref2.deltaY;
-
-	        _this8.props.onStop(_this8.state.x2, _this8.state.y2);
-	        var state = (0, _immutabilityHelper2.default)(_this8.state, { $merge: { x2: _this8.props.x + 5, y2: _this8.props.y + 5 } });
-	        _this8.setState(state);
-	      };
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(props) {
-	      this.setState({ x1: props.x + 5, y1: props.y + 5, x2: props.x + 5, y2: props.y + 5 });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        _reactDraggable.DraggableCore,
-	        { onDrag: this.handleDrag(), onStop: this.handleDragStop() },
-	        _react2.default.createElement(
-	          'g',
-	          null,
-	          _react2.default.createElement('line', _extends({}, this.state, { stroke: '#1976D2', strokeWidth: '4', strokeDasharray: '8, 8' })),
-	          _react2.default.createElement('rect', { x: this.props.x - 2, y: this.props.y, height: '15', width: '15', rx: '2', ry: '2', style: { fill: "#64B5F6" } })
-	        )
-	      );
-	    }
-	  }]);
-
-	  return DraggableLine;
-	}(_react2.default.Component);
-
-	function width(p) {
-	  return (p.name.length + p.code.length + 5) * 7 + 25;
-	}
-
-/***/ },
-/* 413 */
-/***/ function(module, exports, __webpack_require__) {
-
-	(function webpackUniversalModuleDefinition(root, factory) {
-		if(true)
-			module.exports = factory(__webpack_require__(1), __webpack_require__(32));
-		else if(typeof define === 'function' && define.amd)
-			define(["react", "react-dom"], factory);
-		else if(typeof exports === 'object')
-			exports["ReactDraggable"] = factory(require("react"), require("react-dom"));
-		else
-			root["ReactDraggable"] = factory(root["React"], root["ReactDOM"]);
-	})(this, function(__WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_3__) {
-	return /******/ (function(modules) { // webpackBootstrap
-	/******/ 	// The module cache
-	/******/ 	var installedModules = {};
-	/******/
-	/******/ 	// The require function
-	/******/ 	function __webpack_require__(moduleId) {
-	/******/
-	/******/ 		// Check if module is in cache
-	/******/ 		if(installedModules[moduleId])
-	/******/ 			return installedModules[moduleId].exports;
-	/******/
-	/******/ 		// Create a new module (and put it into the cache)
-	/******/ 		var module = installedModules[moduleId] = {
-	/******/ 			exports: {},
-	/******/ 			id: moduleId,
-	/******/ 			loaded: false
-	/******/ 		};
-	/******/
-	/******/ 		// Execute the module function
-	/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-	/******/
-	/******/ 		// Flag the module as loaded
-	/******/ 		module.loaded = true;
-	/******/
-	/******/ 		// Return the exports of the module
-	/******/ 		return module.exports;
-	/******/ 	}
-	/******/
-	/******/
-	/******/ 	// expose the modules object (__webpack_modules__)
-	/******/ 	__webpack_require__.m = modules;
-	/******/
-	/******/ 	// expose the module cache
-	/******/ 	__webpack_require__.c = installedModules;
-	/******/
-	/******/ 	// __webpack_public_path__
-	/******/ 	__webpack_require__.p = "";
-	/******/
-	/******/ 	// Load entry module and return exports
-	/******/ 	return __webpack_require__(0);
-	/******/ })
-	/************************************************************************/
-	/******/ ([
-	/* 0 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		'use strict';
-		
-		module.exports = __webpack_require__(1).default;
-		module.exports.DraggableCore = __webpack_require__(9).default;
-
-	/***/ },
-	/* 1 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		
-		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-		
-		var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-		
-		var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-		
-		var _react = __webpack_require__(2);
-		
-		var _react2 = _interopRequireDefault(_react);
-		
-		var _reactDom = __webpack_require__(3);
-		
-		var _reactDom2 = _interopRequireDefault(_reactDom);
-		
-		var _classnames = __webpack_require__(4);
-		
-		var _classnames2 = _interopRequireDefault(_classnames);
-		
-		var _domFns = __webpack_require__(5);
-		
-		var _positionFns = __webpack_require__(8);
-		
-		var _shims = __webpack_require__(6);
-		
-		var _DraggableCore = __webpack_require__(9);
-		
-		var _DraggableCore2 = _interopRequireDefault(_DraggableCore);
-		
-		var _log = __webpack_require__(11);
-		
-		var _log2 = _interopRequireDefault(_log);
-		
-		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-		
-		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-		
-		function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-		
-		function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-		
-		function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-		// $FlowIgnore
-		
-		
-		/*:: import type {DraggableEventHandler} from './utils/types';*/
-		/*:: type DraggableState = {
-		  dragging: boolean,
-		  dragged: boolean,
-		  x: number, y: number,
-		  slackX: number, slackY: number,
-		  isElementSVG: boolean
-		};*/
-		
-		
-		//
-		// Define <Draggable>
-		//
-		
-		/*:: type ConstructorProps = {
-		  position: { x: number, y: number },
-		  defaultPosition: { x: number, y: number }
-		};*/
-		
-		var Draggable = function (_React$Component) {
-		  _inherits(Draggable, _React$Component);
-		
-		  function Draggable(props /*: ConstructorProps*/) {
-		    _classCallCheck(this, Draggable);
-		
-		    var _this = _possibleConstructorReturn(this, (Draggable.__proto__ || Object.getPrototypeOf(Draggable)).call(this, props));
-		
-		    _this.onDragStart = function (e, coreData) {
-		      (0, _log2.default)('Draggable: onDragStart: %j', coreData);
-		
-		      // Short-circuit if user's callback killed it.
-		      var shouldStart = _this.props.onStart(e, (0, _positionFns.createDraggableData)(_this, coreData));
-		      // Kills start event on core as well, so move handlers are never bound.
-		      if (shouldStart === false) return false;
-		
-		      _this.setState({ dragging: true, dragged: true });
-		    };
-		
-		    _this.onDrag = function (e, coreData) {
-		      if (!_this.state.dragging) return false;
-		      (0, _log2.default)('Draggable: onDrag: %j', coreData);
-		
-		      var uiData = (0, _positionFns.createDraggableData)(_this, coreData);
-		
-		      var newState /*: $Shape<DraggableState>*/ = {
-		        x: uiData.x,
-		        y: uiData.y
-		      };
-		
-		      // Keep within bounds.
-		      if (_this.props.bounds) {
-		        // Save original x and y.
-		        var _x = newState.x,
-		            _y = newState.y;
-		
-		        // Add slack to the values used to calculate bound position. This will ensure that if
-		        // we start removing slack, the element won't react to it right away until it's been
-		        // completely removed.
-		
-		        newState.x += _this.state.slackX;
-		        newState.y += _this.state.slackY;
-		
-		        // Get bound position. This will ceil/floor the x and y within the boundaries.
-		        // $FlowBug
-		
-		        // Recalculate slack by noting how much was shaved by the boundPosition handler.
-		        var _getBoundPosition = (0, _positionFns.getBoundPosition)(_this, newState.x, newState.y);
-		
-		        var _getBoundPosition2 = _slicedToArray(_getBoundPosition, 2);
-		
-		        newState.x = _getBoundPosition2[0];
-		        newState.y = _getBoundPosition2[1];
-		        newState.slackX = _this.state.slackX + (_x - newState.x);
-		        newState.slackY = _this.state.slackY + (_y - newState.y);
-		
-		        // Update the event we fire to reflect what really happened after bounds took effect.
-		        uiData.x = _x;
-		        uiData.y = _y;
-		        uiData.deltaX = newState.x - _this.state.x;
-		        uiData.deltaY = newState.y - _this.state.y;
-		      }
-		
-		      // Short-circuit if user's callback killed it.
-		      var shouldUpdate = _this.props.onDrag(e, uiData);
-		      if (shouldUpdate === false) return false;
-		
-		      _this.setState(newState);
-		    };
-		
-		    _this.onDragStop = function (e, coreData) {
-		      if (!_this.state.dragging) return false;
-		
-		      // Short-circuit if user's callback killed it.
-		      var shouldStop = _this.props.onStop(e, (0, _positionFns.createDraggableData)(_this, coreData));
-		      if (shouldStop === false) return false;
-		
-		      (0, _log2.default)('Draggable: onDragStop: %j', coreData);
-		
-		      var newState /*: $Shape<DraggableState>*/ = {
-		        dragging: false,
-		        slackX: 0,
-		        slackY: 0
-		      };
-		
-		      // If this is a controlled component, the result of this operation will be to
-		      // revert back to the old position. We expect a handler on `onDragStop`, at the least.
-		      var controlled = Boolean(_this.props.position);
-		      if (controlled) {
-		        var _this$props$position = _this.props.position,
-		            _x2 = _this$props$position.x,
-		            _y2 = _this$props$position.y;
-		
-		        newState.x = _x2;
-		        newState.y = _y2;
-		      }
-		
-		      _this.setState(newState);
-		    };
-		
-		    _this.state = {
-		      // Whether or not we are currently dragging.
-		      dragging: false,
-		
-		      // Whether or not we have been dragged before.
-		      dragged: false,
-		
-		      // Current transform x and y.
-		      x: props.position ? props.position.x : props.defaultPosition.x,
-		      y: props.position ? props.position.y : props.defaultPosition.y,
-		
-		      // Used for compensating for out-of-bounds drags
-		      slackX: 0, slackY: 0,
-		
-		      // Can only determine if SVG after mounting
-		      isElementSVG: false
-		    };
-		    return _this;
-		  }
-		
-		  _createClass(Draggable, [{
-		    key: 'componentWillMount',
-		    value: function componentWillMount() {
-		      if (this.props.position && !(this.props.onDrag || this.props.onStop)) {
-		        // eslint-disable-next-line
-		        console.warn('A `position` was applied to this <Draggable>, without drag handlers. This will make this ' + 'component effectively undraggable. Please attach `onDrag` or `onStop` handlers so you can adjust the ' + '`position` of this element.');
-		      }
-		    }
-		  }, {
-		    key: 'componentDidMount',
-		    value: function componentDidMount() {
-		      // Check to see if the element passed is an instanceof SVGElement
-		      if (typeof SVGElement !== 'undefined' && _reactDom2.default.findDOMNode(this) instanceof SVGElement) {
-		        this.setState({ isElementSVG: true });
-		      }
-		    }
-		  }, {
-		    key: 'componentWillReceiveProps',
-		    value: function componentWillReceiveProps(nextProps /*: Object*/) {
-		      // Set x/y if position has changed
-		      if (nextProps.position && (!this.props.position || nextProps.position.x !== this.props.position.x || nextProps.position.y !== this.props.position.y)) {
-		        this.setState({ x: nextProps.position.x, y: nextProps.position.y });
-		      }
-		    }
-		  }, {
-		    key: 'componentWillUnmount',
-		    value: function componentWillUnmount() {
-		      this.setState({ dragging: false }); // prevents invariant if unmounted while dragging
-		    }
-		  }, {
-		    key: 'render',
-		    value: function render() /*: React.Element<any>*/ {
-		      var _classNames;
-		
-		      var style = {},
-		          svgTransform = null;
-		
-		      // If this is controlled, we don't want to move it - unless it's dragging.
-		      var controlled = Boolean(this.props.position);
-		      var draggable = !controlled || this.state.dragging;
-		
-		      var position = this.props.position || this.props.defaultPosition;
-		      var transformOpts = {
-		        // Set left if horizontal drag is enabled
-		        x: (0, _positionFns.canDragX)(this) && draggable ? this.state.x : position.x,
-		
-		        // Set top if vertical drag is enabled
-		        y: (0, _positionFns.canDragY)(this) && draggable ? this.state.y : position.y
-		      };
-		
-		      // If this element was SVG, we use the `transform` attribute.
-		      if (this.state.isElementSVG) {
-		        svgTransform = (0, _domFns.createSVGTransform)(transformOpts);
-		      } else {
-		        // Add a CSS transform to move the element around. This allows us to move the element around
-		        // without worrying about whether or not it is relatively or absolutely positioned.
-		        // If the item you are dragging already has a transform set, wrap it in a <span> so <Draggable>
-		        // has a clean slate.
-		        style = (0, _domFns.createCSSTransform)(transformOpts);
-		      }
-		
-		      var _props = this.props,
-		          defaultClassName = _props.defaultClassName,
-		          defaultClassNameDragging = _props.defaultClassNameDragging,
-		          defaultClassNameDragged = _props.defaultClassNameDragged;
-		
-		      // Mark with class while dragging
-		
-		      var className = (0, _classnames2.default)(this.props.children.props.className || '', defaultClassName, (_classNames = {}, _defineProperty(_classNames, defaultClassNameDragging, this.state.dragging), _defineProperty(_classNames, defaultClassNameDragged, this.state.dragged), _classNames));
-		
-		      // Reuse the child provided
-		      // This makes it flexible to use whatever element is wanted (div, ul, etc)
-		      return _react2.default.createElement(
-		        _DraggableCore2.default,
-		        _extends({}, this.props, { onStart: this.onDragStart, onDrag: this.onDrag, onStop: this.onDragStop }),
-		        _react2.default.cloneElement(_react2.default.Children.only(this.props.children), {
-		          className: className,
-		          style: _extends({}, this.props.children.props.style, style),
-		          transform: svgTransform
-		        })
-		      );
-		    }
-		  }]);
-		
-		  return Draggable;
-		}(_react2.default.Component);
-		
-		Draggable.displayName = 'Draggable';
-		Draggable.propTypes = _extends({}, _DraggableCore2.default.propTypes, {
-		
-		  /**
-		   * `axis` determines which axis the draggable can move.
-		   *
-		   *  Note that all callbacks will still return data as normal. This only
-		   *  controls flushing to the DOM.
-		   *
-		   * 'both' allows movement horizontally and vertically.
-		   * 'x' limits movement to horizontal axis.
-		   * 'y' limits movement to vertical axis.
-		   * 'none' limits all movement.
-		   *
-		   * Defaults to 'both'.
-		   */
-		  axis: _react.PropTypes.oneOf(['both', 'x', 'y', 'none']),
-		
-		  /**
-		   * `bounds` determines the range of movement available to the element.
-		   * Available values are:
-		   *
-		   * 'parent' restricts movement within the Draggable's parent node.
-		   *
-		   * Alternatively, pass an object with the following properties, all of which are optional:
-		   *
-		   * {left: LEFT_BOUND, right: RIGHT_BOUND, bottom: BOTTOM_BOUND, top: TOP_BOUND}
-		   *
-		   * All values are in px.
-		   *
-		   * Example:
-		   *
-		   * ```jsx
-		   *   let App = React.createClass({
-		   *       render: function () {
-		   *         return (
-		   *            <Draggable bounds={{right: 300, bottom: 300}}>
-		   *              <div>Content</div>
-		   *           </Draggable>
-		   *         );
-		   *       }
-		   *   });
-		   * ```
-		   */
-		  bounds: _react.PropTypes.oneOfType([_react.PropTypes.shape({
-		    left: _react.PropTypes.number,
-		    right: _react.PropTypes.number,
-		    top: _react.PropTypes.number,
-		    bottom: _react.PropTypes.number
-		  }), _react.PropTypes.string, _react.PropTypes.oneOf([false])]),
-		
-		  defaultClassName: _react.PropTypes.string,
-		  defaultClassNameDragging: _react.PropTypes.string,
-		  defaultClassNameDragged: _react.PropTypes.string,
-		
-		  /**
-		   * `defaultPosition` specifies the x and y that the dragged item should start at
-		   *
-		   * Example:
-		   *
-		   * ```jsx
-		   *      let App = React.createClass({
-		   *          render: function () {
-		   *              return (
-		   *                  <Draggable defaultPosition={{x: 25, y: 25}}>
-		   *                      <div>I start with transformX: 25px and transformY: 25px;</div>
-		   *                  </Draggable>
-		   *              );
-		   *          }
-		   *      });
-		   * ```
-		   */
-		  defaultPosition: _react.PropTypes.shape({
-		    x: _react.PropTypes.number,
-		    y: _react.PropTypes.number
-		  }),
-		
-		  /**
-		   * `position`, if present, defines the current position of the element.
-		   *
-		   *  This is similar to how form elements in React work - if no `position` is supplied, the component
-		   *  is uncontrolled.
-		   *
-		   * Example:
-		   *
-		   * ```jsx
-		   *      let App = React.createClass({
-		   *          render: function () {
-		   *              return (
-		   *                  <Draggable position={{x: 25, y: 25}}>
-		   *                      <div>I start with transformX: 25px and transformY: 25px;</div>
-		   *                  </Draggable>
-		   *              );
-		   *          }
-		   *      });
-		   * ```
-		   */
-		  position: _react.PropTypes.shape({
-		    x: _react.PropTypes.number,
-		    y: _react.PropTypes.number
-		  }),
-		
-		  /**
-		   * These properties should be defined on the child, not here.
-		   */
-		  className: _shims.dontSetMe,
-		  style: _shims.dontSetMe,
-		  transform: _shims.dontSetMe
-		});
-		Draggable.defaultProps = _extends({}, _DraggableCore2.default.defaultProps, {
-		  axis: 'both',
-		  bounds: false,
-		  defaultClassName: 'react-draggable',
-		  defaultClassNameDragging: 'react-draggable-dragging',
-		  defaultClassNameDragged: 'react-draggable-dragged',
-		  defaultPosition: { x: 0, y: 0 },
-		  position: null
-		});
-		exports.default = Draggable;
-
-	/***/ },
-	/* 2 */
-	/***/ function(module, exports) {
-
-		module.exports = __WEBPACK_EXTERNAL_MODULE_2__;
-
-	/***/ },
-	/* 3 */
-	/***/ function(module, exports) {
-
-		module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
-
-	/***/ },
-	/* 4 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-		  Copyright (c) 2016 Jed Watson.
-		  Licensed under the MIT License (MIT), see
-		  http://jedwatson.github.io/classnames
-		*/
-		/* global define */
-		
-		(function () {
-			'use strict';
-		
-			var hasOwn = {}.hasOwnProperty;
-		
-			function classNames () {
-				var classes = [];
-		
-				for (var i = 0; i < arguments.length; i++) {
-					var arg = arguments[i];
-					if (!arg) continue;
-		
-					var argType = typeof arg;
-		
-					if (argType === 'string' || argType === 'number') {
-						classes.push(arg);
-					} else if (Array.isArray(arg)) {
-						classes.push(classNames.apply(null, arg));
-					} else if (argType === 'object') {
-						for (var key in arg) {
-							if (hasOwn.call(arg, key) && arg[key]) {
-								classes.push(key);
-							}
-						}
-					}
-				}
-		
-				return classes.join(' ');
-			}
-		
-			if (typeof module !== 'undefined' && module.exports) {
-				module.exports = classNames;
-			} else if (true) {
-				// register as 'classnames', consistent with npm package name
-				!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-					return classNames;
-				}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-			} else {
-				window.classNames = classNames;
-			}
-		}());
-
-
-	/***/ },
-	/* 5 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		
-		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-		
-		exports.matchesSelector = matchesSelector;
-		exports.matchesSelectorAndParentsTo = matchesSelectorAndParentsTo;
-		exports.addEvent = addEvent;
-		exports.removeEvent = removeEvent;
-		exports.outerHeight = outerHeight;
-		exports.outerWidth = outerWidth;
-		exports.innerHeight = innerHeight;
-		exports.innerWidth = innerWidth;
-		exports.offsetXYFromParent = offsetXYFromParent;
-		exports.createCSSTransform = createCSSTransform;
-		exports.createSVGTransform = createSVGTransform;
-		exports.getTouch = getTouch;
-		exports.getTouchIdentifier = getTouchIdentifier;
-		exports.addUserSelectStyles = addUserSelectStyles;
-		exports.removeUserSelectStyles = removeUserSelectStyles;
-		exports.styleHacks = styleHacks;
-		
-		var _shims = __webpack_require__(6);
-		
-		var _getPrefix = __webpack_require__(7);
-		
-		var _getPrefix2 = _interopRequireDefault(_getPrefix);
-		
-		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-		
-		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-		
-		/*:: import type {ControlPosition} from './types';*/
-		
-		
-		var matchesSelectorFunc = '';
-		function matchesSelector(el /*: Node*/, selector /*: string*/) /*: boolean*/ {
-		  if (!matchesSelectorFunc) {
-		    matchesSelectorFunc = (0, _shims.findInArray)(['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'], function (method) {
-		      // $FlowIgnore: Doesn't think elements are indexable
-		      return (0, _shims.isFunction)(el[method]);
-		    });
-		  }
-		
-		  // $FlowIgnore: Doesn't think elements are indexable
-		  return el[matchesSelectorFunc].call(el, selector);
-		}
-		
-		// Works up the tree to the draggable itself attempting to match selector.
-		function matchesSelectorAndParentsTo(el /*: Node*/, selector /*: string*/, baseNode /*: Node*/) /*: boolean*/ {
-		  var node = el;
-		  do {
-		    if (matchesSelector(node, selector)) return true;
-		    if (node === baseNode) return false;
-		    node = node.parentNode;
-		  } while (node);
-		
-		  return false;
-		}
-		
-		function addEvent(el /*: ?Node*/, event /*: string*/, handler /*: Function*/) /*: void*/ {
-		  if (!el) {
-		    return;
-		  }
-		  if (el.attachEvent) {
-		    el.attachEvent('on' + event, handler);
-		  } else if (el.addEventListener) {
-		    el.addEventListener(event, handler, true);
-		  } else {
-		    // $FlowIgnore: Doesn't think elements are indexable
-		    el['on' + event] = handler;
-		  }
-		}
-		
-		function removeEvent(el /*: ?Node*/, event /*: string*/, handler /*: Function*/) /*: void*/ {
-		  if (!el) {
-		    return;
-		  }
-		  if (el.detachEvent) {
-		    el.detachEvent('on' + event, handler);
-		  } else if (el.removeEventListener) {
-		    el.removeEventListener(event, handler, true);
-		  } else {
-		    // $FlowIgnore: Doesn't think elements are indexable
-		    el['on' + event] = null;
-		  }
-		}
-		
-		function outerHeight(node /*: HTMLElement*/) /*: number*/ {
-		  // This is deliberately excluding margin for our calculations, since we are using
-		  // offsetTop which is including margin. See getBoundPosition
-		  var height = node.clientHeight;
-		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-		  height += (0, _shims.int)(computedStyle.borderTopWidth);
-		  height += (0, _shims.int)(computedStyle.borderBottomWidth);
-		  return height;
-		}
-		
-		function outerWidth(node /*: HTMLElement*/) /*: number*/ {
-		  // This is deliberately excluding margin for our calculations, since we are using
-		  // offsetLeft which is including margin. See getBoundPosition
-		  var width = node.clientWidth;
-		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-		  width += (0, _shims.int)(computedStyle.borderLeftWidth);
-		  width += (0, _shims.int)(computedStyle.borderRightWidth);
-		  return width;
-		}
-		function innerHeight(node /*: HTMLElement*/) /*: number*/ {
-		  var height = node.clientHeight;
-		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-		  height -= (0, _shims.int)(computedStyle.paddingTop);
-		  height -= (0, _shims.int)(computedStyle.paddingBottom);
-		  return height;
-		}
-		
-		function innerWidth(node /*: HTMLElement*/) /*: number*/ {
-		  var width = node.clientWidth;
-		  var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-		  width -= (0, _shims.int)(computedStyle.paddingLeft);
-		  width -= (0, _shims.int)(computedStyle.paddingRight);
-		  return width;
-		}
-		
-		// Get from offsetParent
-		function offsetXYFromParent(evt /*: {clientX: number, clientY: number}*/, offsetParent /*: HTMLElement*/) /*: ControlPosition*/ {
-		  var isBody = offsetParent === offsetParent.ownerDocument.body;
-		  var offsetParentRect = isBody ? { left: 0, top: 0 } : offsetParent.getBoundingClientRect();
-		
-		  var x = evt.clientX + offsetParent.scrollLeft - offsetParentRect.left;
-		  var y = evt.clientY + offsetParent.scrollTop - offsetParentRect.top;
-		
-		  return { x: x, y: y };
-		}
-		
-		function createCSSTransform(_ref) /*: Object*/ {
-		  var x = _ref.x,
-		      y = _ref.y;
-		
-		  // Replace unitless items with px
-		  return _defineProperty({}, (0, _getPrefix.browserPrefixToKey)('transform', _getPrefix2.default), 'translate(' + x + 'px,' + y + 'px)');
-		}
-		
-		function createSVGTransform(_ref3) /*: string*/ {
-		  var x = _ref3.x,
-		      y = _ref3.y;
-		
-		  return 'translate(' + x + ',' + y + ')';
-		}
-		
-		function getTouch(e /*: MouseTouchEvent*/, identifier /*: number*/) /*: ?{clientX: number, clientY: number}*/ {
-		  return e.targetTouches && (0, _shims.findInArray)(e.targetTouches, function (t) {
-		    return identifier === t.identifier;
-		  }) || e.changedTouches && (0, _shims.findInArray)(e.changedTouches, function (t) {
-		    return identifier === t.identifier;
-		  });
-		}
-		
-		function getTouchIdentifier(e /*: MouseTouchEvent*/) /*: ?number*/ {
-		  if (e.targetTouches && e.targetTouches[0]) return e.targetTouches[0].identifier;
-		  if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].identifier;
-		}
-		
-		// User-select Hacks:
-		//
-		// Useful for preventing blue highlights all over everything when dragging.
-		var userSelectPrefix = (0, _getPrefix.getPrefix)('user-select');
-		var userSelect = (0, _getPrefix.browserPrefixToStyle)('user-select', userSelectPrefix);
-		var userSelectStyle = ';' + userSelect + ': none;';
-		var userSelectReplaceRegExp = new RegExp(';?' + userSelect + ': none;'); // leading ; not present on IE
-		
-		// Note we're passing `document` b/c we could be iframed
-		function addUserSelectStyles(body /*: HTMLElement*/) {
-		  var style = body.getAttribute('style') || '';
-		  body.setAttribute('style', style + userSelectStyle);
-		}
-		
-		function removeUserSelectStyles(body /*: HTMLElement*/) {
-		  var style = body.getAttribute('style') || '';
-		  body.setAttribute('style', style.replace(userSelectReplaceRegExp, ''));
-		}
-		
-		function styleHacks() /*: Object*/ {
-		  var childStyle /*: Object*/ = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-		
-		  // Workaround IE pointer events; see #51
-		  // https://github.com/mzabriskie/react-draggable/issues/51#issuecomment-103488278
-		  return _extends({
-		    touchAction: 'none'
-		  }, childStyle);
-		}
-
-	/***/ },
-	/* 6 */
-	/***/ function(module, exports) {
-
-		'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		exports.findInArray = findInArray;
-		exports.isFunction = isFunction;
-		exports.isNum = isNum;
-		exports.int = int;
-		exports.dontSetMe = dontSetMe;
-		
-		// @credits https://gist.github.com/rogozhnikoff/a43cfed27c41e4e68cdc
-		function findInArray(array /*: Array<any> | TouchList*/, callback /*: Function*/) /*: any*/ {
-		  for (var i = 0, length = array.length; i < length; i++) {
-		    if (callback.apply(callback, [array[i], i, array])) return array[i];
-		  }
-		}
-		
-		function isFunction(func /*: any*/) /*: boolean*/ {
-		  return typeof func === 'function' || Object.prototype.toString.call(func) === '[object Function]';
-		}
-		
-		function isNum(num /*: any*/) /*: boolean*/ {
-		  return typeof num === 'number' && !isNaN(num);
-		}
-		
-		function int(a /*: string*/) /*: number*/ {
-		  return parseInt(a, 10);
-		}
-		
-		function dontSetMe(props /*: Object*/, propName /*: string*/, componentName /*: string*/) {
-		  if (props[propName]) {
-		    return new Error('Invalid prop ' + propName + ' passed to ' + componentName + ' - do not set this, set it on the child.');
-		  }
-		}
-
-	/***/ },
-	/* 7 */
-	/***/ function(module, exports) {
-
-		'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		exports.getPrefix = getPrefix;
-		exports.browserPrefixToKey = browserPrefixToKey;
-		exports.browserPrefixToStyle = browserPrefixToStyle;
-		var prefixes = ['Moz', 'Webkit', 'O', 'ms'];
-		function getPrefix() /*: string*/ {
-		  var prop /*: string*/ = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'transform';
-		
-		  // Checking specifically for 'window.document' is for pseudo-browser server-side
-		  // environments that define 'window' as the global context.
-		  // E.g. React-rails (see https://github.com/reactjs/react-rails/pull/84)
-		  if (typeof window === 'undefined' || typeof window.document === 'undefined') return '';
-		
-		  var style = window.document.documentElement.style;
-		
-		  if (prop in style) return '';
-		
-		  for (var i = 0; i < prefixes.length; i++) {
-		    if (browserPrefixToKey(prop, prefixes[i]) in style) return prefixes[i];
-		  }
-		
-		  return '';
-		}
-		
-		function browserPrefixToKey(prop /*: string*/, prefix /*: string*/) /*: string*/ {
-		  return prefix ? '' + prefix + kebabToTitleCase(prop) : prop;
-		}
-		
-		function browserPrefixToStyle(prop /*: string*/, prefix /*: string*/) /*: string*/ {
-		  return prefix ? '-' + prefix.toLowerCase() + '-' + prop : prop;
-		}
-		
-		function kebabToTitleCase(str /*: string*/) /*: string*/ {
-		  var out = '';
-		  var shouldCapitalize = true;
-		  for (var i = 0; i < str.length; i++) {
-		    if (shouldCapitalize) {
-		      out += str[i].toUpperCase();
-		      shouldCapitalize = false;
-		    } else if (str[i] === '-') {
-		      shouldCapitalize = true;
-		    } else {
-		      out += str[i];
-		    }
-		  }
-		  return out;
-		}
-		
-		// Default export is the prefix itself, like 'Moz', 'Webkit', etc
-		// Note that you may have to re-test for certain things; for instance, Chrome 50
-		// can handle unprefixed `transform`, but not unprefixed `user-select`
-		exports.default = getPrefix();
-
-	/***/ },
-	/* 8 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		exports.getBoundPosition = getBoundPosition;
-		exports.snapToGrid = snapToGrid;
-		exports.canDragX = canDragX;
-		exports.canDragY = canDragY;
-		exports.getControlPosition = getControlPosition;
-		exports.createCoreData = createCoreData;
-		exports.createDraggableData = createDraggableData;
-		
-		var _shims = __webpack_require__(6);
-		
-		var _reactDom = __webpack_require__(3);
-		
-		var _reactDom2 = _interopRequireDefault(_reactDom);
-		
-		var _domFns = __webpack_require__(5);
-		
-		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-		
-		/*:: import type Draggable from '../Draggable';*/
-		/*:: import type {Bounds, ControlPosition, DraggableData} from './types';*/
-		/*:: import type DraggableCore from '../DraggableCore';*/
-		function getBoundPosition(draggable /*: Draggable*/, x /*: number*/, y /*: number*/) /*: [number, number]*/ {
-		  // If no bounds, short-circuit and move on
-		  if (!draggable.props.bounds) return [x, y];
-		
-		  // Clone new bounds
-		  var bounds = draggable.props.bounds;
-		
-		  bounds = typeof bounds === 'string' ? bounds : cloneBounds(bounds);
-		  var node = _reactDom2.default.findDOMNode(draggable);
-		
-		  if (typeof bounds === 'string') {
-		    var ownerDocument = node.ownerDocument;
-		
-		    var ownerWindow = ownerDocument.defaultView;
-		    var boundNode = void 0;
-		    if (bounds === 'parent') {
-		      boundNode = node.parentNode;
-		    } else {
-		      boundNode = ownerDocument.querySelector(bounds);
-		      if (!boundNode) throw new Error('Bounds selector "' + bounds + '" could not find an element.');
-		    }
-		    var nodeStyle = ownerWindow.getComputedStyle(node);
-		    var boundNodeStyle = ownerWindow.getComputedStyle(boundNode);
-		    // Compute bounds. This is a pain with padding and offsets but this gets it exactly right.
-		    bounds = {
-		      left: -node.offsetLeft + (0, _shims.int)(boundNodeStyle.paddingLeft) + (0, _shims.int)(nodeStyle.borderLeftWidth) + (0, _shims.int)(nodeStyle.marginLeft),
-		      top: -node.offsetTop + (0, _shims.int)(boundNodeStyle.paddingTop) + (0, _shims.int)(nodeStyle.borderTopWidth) + (0, _shims.int)(nodeStyle.marginTop),
-		      right: (0, _domFns.innerWidth)(boundNode) - (0, _domFns.outerWidth)(node) - node.offsetLeft,
-		      bottom: (0, _domFns.innerHeight)(boundNode) - (0, _domFns.outerHeight)(node) - node.offsetTop
-		    };
-		  }
-		
-		  // Keep x and y below right and bottom limits...
-		  if ((0, _shims.isNum)(bounds.right)) x = Math.min(x, bounds.right);
-		  if ((0, _shims.isNum)(bounds.bottom)) y = Math.min(y, bounds.bottom);
-		
-		  // But above left and top limits.
-		  if ((0, _shims.isNum)(bounds.left)) x = Math.max(x, bounds.left);
-		  if ((0, _shims.isNum)(bounds.top)) y = Math.max(y, bounds.top);
-		
-		  return [x, y];
-		}
-		
-		function snapToGrid(grid /*: [number, number]*/, pendingX /*: number*/, pendingY /*: number*/) /*: [number, number]*/ {
-		  var x = Math.round(pendingX / grid[0]) * grid[0];
-		  var y = Math.round(pendingY / grid[1]) * grid[1];
-		  return [x, y];
-		}
-		
-		function canDragX(draggable /*: Draggable*/) /*: boolean*/ {
-		  return draggable.props.axis === 'both' || draggable.props.axis === 'x';
-		}
-		
-		function canDragY(draggable /*: Draggable*/) /*: boolean*/ {
-		  return draggable.props.axis === 'both' || draggable.props.axis === 'y';
-		}
-		
-		// Get {x, y} positions from event.
-		function getControlPosition(e /*: MouseTouchEvent*/, touchIdentifier /*: ?number*/, draggableCore /*: DraggableCore*/) /*: ?ControlPosition*/ {
-		  var touchObj = typeof touchIdentifier === 'number' ? (0, _domFns.getTouch)(e, touchIdentifier) : null;
-		  if (typeof touchIdentifier === 'number' && !touchObj) return null; // not the right touch
-		  var node = _reactDom2.default.findDOMNode(draggableCore);
-		  // User can provide an offsetParent if desired.
-		  var offsetParent = draggableCore.props.offsetParent || node.offsetParent || node.ownerDocument.body;
-		  return (0, _domFns.offsetXYFromParent)(touchObj || e, offsetParent);
-		}
-		
-		// Create an data object exposed by <DraggableCore>'s events
-		function createCoreData(draggable /*: DraggableCore*/, x /*: number*/, y /*: number*/) /*: DraggableData*/ {
-		  var state = draggable.state;
-		  var isStart = !(0, _shims.isNum)(state.lastX);
-		
-		  if (isStart) {
-		    // If this is our first move, use the x and y as last coords.
-		    return {
-		      node: _reactDom2.default.findDOMNode(draggable),
-		      deltaX: 0, deltaY: 0,
-		      lastX: x, lastY: y,
-		      x: x, y: y
-		    };
-		  } else {
-		    // Otherwise calculate proper values.
-		    return {
-		      node: _reactDom2.default.findDOMNode(draggable),
-		      deltaX: x - state.lastX, deltaY: y - state.lastY,
-		      lastX: state.lastX, lastY: state.lastY,
-		      x: x, y: y
-		    };
-		  }
-		}
-		
-		// Create an data exposed by <Draggable>'s events
-		function createDraggableData(draggable /*: Draggable*/, coreData /*: DraggableData*/) /*: DraggableData*/ {
-		  return {
-		    node: coreData.node,
-		    x: draggable.state.x + coreData.deltaX,
-		    y: draggable.state.y + coreData.deltaY,
-		    deltaX: coreData.deltaX,
-		    deltaY: coreData.deltaY,
-		    lastX: draggable.state.x,
-		    lastY: draggable.state.y
-		  };
-		}
-		
-		// A lot faster than stringify/parse
-		function cloneBounds(bounds /*: Bounds*/) /*: Bounds*/ {
-		  return {
-		    left: bounds.left,
-		    top: bounds.top,
-		    right: bounds.right,
-		    bottom: bounds.bottom
-		  };
-		}
-
-	/***/ },
-	/* 9 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		/* WEBPACK VAR INJECTION */(function(process) {'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		
-		var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-		
-		var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-		
-		var _react = __webpack_require__(2);
-		
-		var _react2 = _interopRequireDefault(_react);
-		
-		var _reactDom = __webpack_require__(3);
-		
-		var _reactDom2 = _interopRequireDefault(_reactDom);
-		
-		var _domFns = __webpack_require__(5);
-		
-		var _positionFns = __webpack_require__(8);
-		
-		var _shims = __webpack_require__(6);
-		
-		var _log = __webpack_require__(11);
-		
-		var _log2 = _interopRequireDefault(_log);
-		
-		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-		
-		function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-		
-		function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-		
-		function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-		
-		// Simple abstraction for dragging events names.
-		/*:: import type {EventHandler} from './utils/types';*/
-		var eventsFor = {
-		  touch: {
-		    start: 'touchstart',
-		    move: 'touchmove',
-		    stop: 'touchend'
-		  },
-		  mouse: {
-		    start: 'mousedown',
-		    move: 'mousemove',
-		    stop: 'mouseup'
-		  }
-		};
-		
-		// Default to mouse events.
-		var dragEventFor = eventsFor.mouse;
-		
-		//
-		// Define <DraggableCore>.
-		//
-		// <DraggableCore> is for advanced usage of <Draggable>. It maintains minimal internal state so it can
-		// work well with libraries that require more control over the element.
-		//
-		
-		/*:: type CoreState = {
-		  dragging: boolean,
-		  lastX: number,
-		  lastY: number,
-		  touchIdentifier: ?number
-		};*/
-		
-		var DraggableCore = function (_React$Component) {
-		  _inherits(DraggableCore, _React$Component);
-		
-		  function DraggableCore() {
-		    var _ref;
-		
-		    var _temp, _this, _ret;
-		
-		    _classCallCheck(this, DraggableCore);
-		
-		    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-		      args[_key] = arguments[_key];
-		    }
-		
-		    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = DraggableCore.__proto__ || Object.getPrototypeOf(DraggableCore)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
-		      dragging: false,
-		      // Used while dragging to determine deltas.
-		      lastX: NaN, lastY: NaN,
-		      touchIdentifier: null
-		    }, _this.handleDragStart = function (e) {
-		      // Make it possible to attach event handlers on top of this one.
-		      _this.props.onMouseDown(e);
-		
-		      // Only accept left-clicks.
-		      if (!_this.props.allowAnyClick && typeof e.button === 'number' && e.button !== 0) return false;
-		
-		      // Get nodes. Be sure to grab relative document (could be iframed)
-		      var domNode = _reactDom2.default.findDOMNode(_this);
-		      var ownerDocument = domNode.ownerDocument;
-		
-		      // Short circuit if handle or cancel prop was provided and selector doesn't match.
-		
-		      if (_this.props.disabled || !(e.target instanceof ownerDocument.defaultView.Node) || _this.props.handle && !(0, _domFns.matchesSelectorAndParentsTo)(e.target, _this.props.handle, domNode) || _this.props.cancel && (0, _domFns.matchesSelectorAndParentsTo)(e.target, _this.props.cancel, domNode)) {
-		        return;
-		      }
-		
-		      // Set touch identifier in component state if this is a touch event. This allows us to
-		      // distinguish between individual touches on multitouch screens by identifying which
-		      // touchpoint was set to this element.
-		      var touchIdentifier = (0, _domFns.getTouchIdentifier)(e);
-		      _this.setState({ touchIdentifier: touchIdentifier });
-		
-		      // Get the current drag point from the event. This is used as the offset.
-		      var position = (0, _positionFns.getControlPosition)(e, touchIdentifier, _this);
-		      if (position == null) return; // not possible but satisfies flow
-		      var x = position.x,
-		          y = position.y;
-		
-		      // Create an event object with all the data parents need to make a decision here.
-		
-		      var coreEvent = (0, _positionFns.createCoreData)(_this, x, y);
-		
-		      (0, _log2.default)('DraggableCore: handleDragStart: %j', coreEvent);
-		
-		      // Call event handler. If it returns explicit false, cancel.
-		      (0, _log2.default)('calling', _this.props.onStart);
-		      var shouldUpdate = _this.props.onStart(e, coreEvent);
-		      if (shouldUpdate === false) return;
-		
-		      // Add a style to the body to disable user-select. This prevents text from
-		      // being selected all over the page.
-		      if (_this.props.enableUserSelectHack) (0, _domFns.addUserSelectStyles)(ownerDocument.body);
-		
-		      // Initiate dragging. Set the current x and y as offsets
-		      // so we know how much we've moved during the drag. This allows us
-		      // to drag elements around even if they have been moved, without issue.
-		      _this.setState({
-		        dragging: true,
-		
-		        lastX: x,
-		        lastY: y
-		      });
-		
-		      // Add events to the document directly so we catch when the user's mouse/touch moves outside of
-		      // this element. We use different events depending on whether or not we have detected that this
-		      // is a touch-capable device.
-		      (0, _domFns.addEvent)(ownerDocument, dragEventFor.move, _this.handleDrag);
-		      (0, _domFns.addEvent)(ownerDocument, dragEventFor.stop, _this.handleDragStop);
-		    }, _this.handleDrag = function (e) {
-		
-		      // Prevent scrolling on mobile devices, like ipad/iphone.
-		      if (e.type === 'touchmove') e.preventDefault();
-		
-		      // Get the current drag point from the event. This is used as the offset.
-		      var position = (0, _positionFns.getControlPosition)(e, _this.state.touchIdentifier, _this);
-		      if (position == null) return;
-		      var x = position.x,
-		          y = position.y;
-		
-		      // Snap to grid if prop has been provided
-		
-		      if (x !== x) debugger;
-		
-		      if (Array.isArray(_this.props.grid)) {
-		        var deltaX = x - _this.state.lastX,
-		            deltaY = y - _this.state.lastY;
-		
-		        var _snapToGrid = (0, _positionFns.snapToGrid)(_this.props.grid, deltaX, deltaY);
-		
-		        var _snapToGrid2 = _slicedToArray(_snapToGrid, 2);
-		
-		        deltaX = _snapToGrid2[0];
-		        deltaY = _snapToGrid2[1];
-		
-		        if (!deltaX && !deltaY) return; // skip useless drag
-		        x = _this.state.lastX + deltaX, y = _this.state.lastY + deltaY;
-		      }
-		
-		      var coreEvent = (0, _positionFns.createCoreData)(_this, x, y);
-		
-		      (0, _log2.default)('DraggableCore: handleDrag: %j', coreEvent);
-		
-		      // Call event handler. If it returns explicit false, trigger end.
-		      var shouldUpdate = _this.props.onDrag(e, coreEvent);
-		      if (shouldUpdate === false) {
-		        try {
-		          // $FlowIgnore
-		          _this.handleDragStop(new MouseEvent('mouseup'));
-		        } catch (err) {
-		          // Old browsers
-		          var event = ((document.createEvent('MouseEvents') /*: any*/) /*: MouseTouchEvent*/);
-		          // I see why this insanity was deprecated
-		          // $FlowIgnore
-		          event.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-		          _this.handleDragStop(event);
-		        }
-		        return;
-		      }
-		
-		      _this.setState({
-		        lastX: x,
-		        lastY: y
-		      });
-		    }, _this.handleDragStop = function (e) {
-		      if (!_this.state.dragging) return;
-		
-		      var position = (0, _positionFns.getControlPosition)(e, _this.state.touchIdentifier, _this);
-		      if (position == null) return;
-		      var x = position.x,
-		          y = position.y;
-		
-		      var coreEvent = (0, _positionFns.createCoreData)(_this, x, y);
-		
-		      var _ReactDOM$findDOMNode = _reactDom2.default.findDOMNode(_this),
-		          ownerDocument = _ReactDOM$findDOMNode.ownerDocument;
-		
-		      // Remove user-select hack
-		
-		
-		      if (_this.props.enableUserSelectHack) (0, _domFns.removeUserSelectStyles)(ownerDocument.body);
-		
-		      (0, _log2.default)('DraggableCore: handleDragStop: %j', coreEvent);
-		
-		      // Reset the el.
-		      _this.setState({
-		        dragging: false,
-		        lastX: NaN,
-		        lastY: NaN
-		      });
-		
-		      // Call event handler
-		      _this.props.onStop(e, coreEvent);
-		
-		      // Remove event handlers
-		      (0, _log2.default)('DraggableCore: Removing handlers');
-		      (0, _domFns.removeEvent)(ownerDocument, dragEventFor.move, _this.handleDrag);
-		      (0, _domFns.removeEvent)(ownerDocument, dragEventFor.stop, _this.handleDragStop);
-		    }, _this.onMouseDown = function (e) {
-		      dragEventFor = eventsFor.mouse; // on touchscreen laptops we could switch back to mouse
-		
-		      return _this.handleDragStart(e);
-		    }, _this.onMouseUp = function (e) {
-		      dragEventFor = eventsFor.mouse;
-		
-		      return _this.handleDragStop(e);
-		    }, _this.onTouchStart = function (e) {
-		      // We're on a touch device now, so change the event handlers
-		      dragEventFor = eventsFor.touch;
-		
-		      return _this.handleDragStart(e);
-		    }, _this.onTouchEnd = function (e) {
-		      // We're on a touch device now, so change the event handlers
-		      dragEventFor = eventsFor.touch;
-		
-		      return _this.handleDragStop(e);
-		    }, _temp), _possibleConstructorReturn(_this, _ret);
-		  }
-		
-		  _createClass(DraggableCore, [{
-		    key: 'componentWillUnmount',
-		    value: function componentWillUnmount() {
-		      // Remove any leftover event handlers. Remove both touch and mouse handlers in case
-		      // some browser quirk caused a touch event to fire during a mouse move, or vice versa.
-		      var _ReactDOM$findDOMNode2 = _reactDom2.default.findDOMNode(this),
-		          ownerDocument = _ReactDOM$findDOMNode2.ownerDocument;
-		
-		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.mouse.move, this.handleDrag);
-		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.touch.move, this.handleDrag);
-		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.mouse.stop, this.handleDragStop);
-		      (0, _domFns.removeEvent)(ownerDocument, eventsFor.touch.stop, this.handleDragStop);
-		      if (this.props.enableUserSelectHack) (0, _domFns.removeUserSelectStyles)(ownerDocument.body);
-		    }
-		
-		    // Same as onMouseDown (start drag), but now consider this a touch device.
-		
-		  }, {
-		    key: 'render',
-		    value: function render() /*: React.Element<any>*/ {
-		      // Reuse the child provided
-		      // This makes it flexible to use whatever element is wanted (div, ul, etc)
-		      return _react2.default.cloneElement(_react2.default.Children.only(this.props.children), {
-		        style: (0, _domFns.styleHacks)(this.props.children.props.style),
-		
-		        // Note: mouseMove handler is attached to document so it will still function
-		        // when the user drags quickly and leaves the bounds of the element.
-		        onMouseDown: this.onMouseDown,
-		        onTouchStart: this.onTouchStart,
-		        onMouseUp: this.onMouseUp,
-		        onTouchEnd: this.onTouchEnd
-		      });
-		    }
-		  }]);
-		
-		  return DraggableCore;
-		}(_react2.default.Component);
-		
-		DraggableCore.displayName = 'DraggableCore';
-		DraggableCore.propTypes = {
-		  /**
-		   * `allowAnyClick` allows dragging using any mouse button.
-		   * By default, we only accept the left button.
-		   *
-		   * Defaults to `false`.
-		   */
-		  allowAnyClick: _react.PropTypes.bool,
-		
-		  /**
-		   * `disabled`, if true, stops the <Draggable> from dragging. All handlers,
-		   * with the exception of `onMouseDown`, will not fire.
-		   */
-		  disabled: _react.PropTypes.bool,
-		
-		  /**
-		   * By default, we add 'user-select:none' attributes to the document body
-		   * to prevent ugly text selection during drag. If this is causing problems
-		   * for your app, set this to `false`.
-		   */
-		  enableUserSelectHack: _react.PropTypes.bool,
-		
-		  /**
-		   * `offsetParent`, if set, uses the passed DOM node to compute drag offsets
-		   * instead of using the parent node.
-		   */
-		  offsetParent: function offsetParent(props, propName) {
-		    if (process.browser && props[propName] && props[propName].nodeType !== 1) {
-		      throw new Error('Draggable\'s offsetParent must be a DOM Node.');
-		    }
-		  },
-		
-		  /**
-		   * `grid` specifies the x and y that dragging should snap to.
-		   */
-		  grid: _react.PropTypes.arrayOf(_react.PropTypes.number),
-		
-		  /**
-		   * `handle` specifies a selector to be used as the handle that initiates drag.
-		   *
-		   * Example:
-		   *
-		   * ```jsx
-		   *   let App = React.createClass({
-		   *       render: function () {
-		   *         return (
-		   *            <Draggable handle=".handle">
-		   *              <div>
-		   *                  <div className="handle">Click me to drag</div>
-		   *                  <div>This is some other content</div>
-		   *              </div>
-		   *           </Draggable>
-		   *         );
-		   *       }
-		   *   });
-		   * ```
-		   */
-		  handle: _react.PropTypes.string,
-		
-		  /**
-		   * `cancel` specifies a selector to be used to prevent drag initialization.
-		   *
-		   * Example:
-		   *
-		   * ```jsx
-		   *   let App = React.createClass({
-		   *       render: function () {
-		   *           return(
-		   *               <Draggable cancel=".cancel">
-		   *                   <div>
-		   *                     <div className="cancel">You can't drag from here</div>
-		   *                     <div>Dragging here works fine</div>
-		   *                   </div>
-		   *               </Draggable>
-		   *           );
-		   *       }
-		   *   });
-		   * ```
-		   */
-		  cancel: _react.PropTypes.string,
-		
-		  /**
-		   * Called when dragging starts.
-		   * If this function returns the boolean false, dragging will be canceled.
-		   */
-		  onStart: _react.PropTypes.func,
-		
-		  /**
-		   * Called while dragging.
-		   * If this function returns the boolean false, dragging will be canceled.
-		   */
-		  onDrag: _react.PropTypes.func,
-		
-		  /**
-		   * Called when dragging stops.
-		   * If this function returns the boolean false, the drag will remain active.
-		   */
-		  onStop: _react.PropTypes.func,
-		
-		  /**
-		   * A workaround option which can be passed if onMouseDown needs to be accessed,
-		   * since it'll always be blocked (as there is internal use of onMouseDown)
-		   */
-		  onMouseDown: _react.PropTypes.func,
-		
-		  /**
-		   * These properties should be defined on the child, not here.
-		   */
-		  className: _shims.dontSetMe,
-		  style: _shims.dontSetMe,
-		  transform: _shims.dontSetMe
-		};
-		DraggableCore.defaultProps = {
-		  allowAnyClick: false, // by default only accept left click
-		  cancel: null,
-		  disabled: false,
-		  enableUserSelectHack: true,
-		  offsetParent: null,
-		  handle: null,
-		  grid: null,
-		  transform: null,
-		  onStart: function onStart() {},
-		  onDrag: function onDrag() {},
-		  onStop: function onStop() {},
-		  onMouseDown: function onMouseDown() {}
-		};
-		exports.default = DraggableCore;
-		/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(10)))
-
-	/***/ },
-	/* 10 */
-	/***/ function(module, exports) {
-
-		// shim for using process in browser
-		var process = module.exports = {};
-		
-		// cached from whatever global is present so that test runners that stub it
-		// don't break things.  But we need to wrap it in a try catch in case it is
-		// wrapped in strict mode code which doesn't define any globals.  It's inside a
-		// function because try/catches deoptimize in certain engines.
-		
-		var cachedSetTimeout;
-		var cachedClearTimeout;
-		
-		function defaultSetTimout() {
-		    throw new Error('setTimeout has not been defined');
-		}
-		function defaultClearTimeout () {
-		    throw new Error('clearTimeout has not been defined');
-		}
-		(function () {
-		    try {
-		        if (typeof setTimeout === 'function') {
-		            cachedSetTimeout = setTimeout;
-		        } else {
-		            cachedSetTimeout = defaultSetTimout;
-		        }
-		    } catch (e) {
-		        cachedSetTimeout = defaultSetTimout;
-		    }
-		    try {
-		        if (typeof clearTimeout === 'function') {
-		            cachedClearTimeout = clearTimeout;
-		        } else {
-		            cachedClearTimeout = defaultClearTimeout;
-		        }
-		    } catch (e) {
-		        cachedClearTimeout = defaultClearTimeout;
-		    }
-		} ())
-		function runTimeout(fun) {
-		    if (cachedSetTimeout === setTimeout) {
-		        //normal enviroments in sane situations
-		        return setTimeout(fun, 0);
-		    }
-		    // if setTimeout wasn't available but was latter defined
-		    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-		        cachedSetTimeout = setTimeout;
-		        return setTimeout(fun, 0);
-		    }
-		    try {
-		        // when when somebody has screwed with setTimeout but no I.E. maddness
-		        return cachedSetTimeout(fun, 0);
-		    } catch(e){
-		        try {
-		            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-		            return cachedSetTimeout.call(null, fun, 0);
-		        } catch(e){
-		            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-		            return cachedSetTimeout.call(this, fun, 0);
-		        }
-		    }
-		
-		
-		}
-		function runClearTimeout(marker) {
-		    if (cachedClearTimeout === clearTimeout) {
-		        //normal enviroments in sane situations
-		        return clearTimeout(marker);
-		    }
-		    // if clearTimeout wasn't available but was latter defined
-		    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-		        cachedClearTimeout = clearTimeout;
-		        return clearTimeout(marker);
-		    }
-		    try {
-		        // when when somebody has screwed with setTimeout but no I.E. maddness
-		        return cachedClearTimeout(marker);
-		    } catch (e){
-		        try {
-		            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-		            return cachedClearTimeout.call(null, marker);
-		        } catch (e){
-		            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-		            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-		            return cachedClearTimeout.call(this, marker);
-		        }
-		    }
-		
-		
-		
-		}
-		var queue = [];
-		var draining = false;
-		var currentQueue;
-		var queueIndex = -1;
-		
-		function cleanUpNextTick() {
-		    if (!draining || !currentQueue) {
-		        return;
-		    }
-		    draining = false;
-		    if (currentQueue.length) {
-		        queue = currentQueue.concat(queue);
-		    } else {
-		        queueIndex = -1;
-		    }
-		    if (queue.length) {
-		        drainQueue();
-		    }
-		}
-		
-		function drainQueue() {
-		    if (draining) {
-		        return;
-		    }
-		    var timeout = runTimeout(cleanUpNextTick);
-		    draining = true;
-		
-		    var len = queue.length;
-		    while(len) {
-		        currentQueue = queue;
-		        queue = [];
-		        while (++queueIndex < len) {
-		            if (currentQueue) {
-		                currentQueue[queueIndex].run();
-		            }
-		        }
-		        queueIndex = -1;
-		        len = queue.length;
-		    }
-		    currentQueue = null;
-		    draining = false;
-		    runClearTimeout(timeout);
-		}
-		
-		process.nextTick = function (fun) {
-		    var args = new Array(arguments.length - 1);
-		    if (arguments.length > 1) {
-		        for (var i = 1; i < arguments.length; i++) {
-		            args[i - 1] = arguments[i];
-		        }
-		    }
-		    queue.push(new Item(fun, args));
-		    if (queue.length === 1 && !draining) {
-		        runTimeout(drainQueue);
-		    }
-		};
-		
-		// v8 likes predictible objects
-		function Item(fun, array) {
-		    this.fun = fun;
-		    this.array = array;
-		}
-		Item.prototype.run = function () {
-		    this.fun.apply(null, this.array);
-		};
-		process.title = 'browser';
-		process.browser = true;
-		process.env = {};
-		process.argv = [];
-		process.version = ''; // empty string to avoid regexp issues
-		process.versions = {};
-		
-		function noop() {}
-		
-		process.on = noop;
-		process.addListener = noop;
-		process.once = noop;
-		process.off = noop;
-		process.removeListener = noop;
-		process.removeAllListeners = noop;
-		process.emit = noop;
-		
-		process.binding = function (name) {
-		    throw new Error('process.binding is not supported');
-		};
-		
-		process.cwd = function () { return '/' };
-		process.chdir = function (dir) {
-		    throw new Error('process.chdir is not supported');
-		};
-		process.umask = function() { return 0; };
-
-
-	/***/ },
-	/* 11 */
-	/***/ function(module, exports, __webpack_require__) {
-
-		"use strict";
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		exports.default = log;
-		
-		/*eslint no-console:0*/
-		function log() {
-		  var _console;
-		
-		  if ((undefined)) (_console = console).log.apply(_console, arguments);
-		}
-
-	/***/ }
-	/******/ ])
-	});
-	;
-	//# sourceMappingURL=react-draggable.js.map
-
-/***/ },
-/* 414 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _reactSelect = __webpack_require__(352);
-
-	var _reactSelect2 = _interopRequireDefault(_reactSelect);
-
-	var _Task = __webpack_require__(349);
-
-	var _immutabilityHelper = __webpack_require__(377);
-
-	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-	var _qr = __webpack_require__(415);
-
-	var _Label = __webpack_require__(416);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var getOptions = function getOptions(input, callback) {
-	  if (input.length < 2) {
-	    callback(null, { optionss: [] });
-	  } else {
-	    var params = {
-	      limit: true,
-	      ordering: '-created_at',
-	      label: input,
-	      team: window.localStorage.getItem("team") || "1"
-	    };
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
-	      var options = data.map(function (x) {
-	        return { value: x.id, label: (0, _Task.display)(x), data: x };
-	      });
-	      callback(null, { options: options, complete: false });
-	    });
-	  }
-	};
-
-	var TaskSelect = function (_React$Component) {
-	  _inherits(TaskSelect, _React$Component);
-
-	  function TaskSelect() {
-	    _classCallCheck(this, TaskSelect);
-
-	    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
-	  }
-
-	  _createClass(TaskSelect, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'multiselect' },
-	        _react2.default.createElement(_reactSelect2.default.Async, {
-	          name: 'form-field-name',
-	          value: this.props.value,
-	          optionRenderer: function optionRenderer(option, i) {
-	            return (0, _Task.display)(option.data);
-	          },
-	          loadOptions: getOptions,
-	          onChange: this.props.onChange,
-	          placeholder: this.props.placeholder
-	        })
-	      );
-	    }
-	  }]);
-
-	  return TaskSelect;
-	}(_react2.default.Component);
-
-	var LabelPrinter = function (_React$Component2) {
-	  _inherits(LabelPrinter, _React$Component2);
-
-	  function LabelPrinter(props) {
-	    _classCallCheck(this, LabelPrinter);
-
-	    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
-
-	    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
-	    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
-	    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
-	    _this2.handleChange = _this2.handleChange.bind(_this2);
-	    _this2.handlePrint = _this2.handlePrint.bind(_this2);
-	    _this2.state = {
-	      expanded: false,
-	      numberLabels: "",
-	      notes: "",
-	      task: "",
-	      qrValue: "",
-	      items: [],
-	      selectedItem: ""
-	    };
-	    return _this2;
-	  }
-
-	  _createClass(LabelPrinter, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      (0, _qr.mountQR)();
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      var q = new QRCode(document.getElementById("qrtest"), {
-	        text: "",
-	        width: 128,
-	        height: 128,
-	        colorDark: "#000000",
-	        colorLight: "#ffffff",
-	        correctLevel: QRCode.CorrectLevel.Q
-	      });
-	      this.setState({ qrcode: q });
-	    }
-	  }, {
-	    key: 'handlePrint',
-	    value: function handlePrint() {
-	      var numLabels = parseInt(this.state.numberLabels) || -1;
-
-	      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
-	        alert("Please enter a valid number between 0 and 100!");
-	        return;
-	      }
-
-	      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
-	        alert("Please print labels for a valid task.");
-	        return;
-	      }
-
-	      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
-	        alert("Please choose a valid specific item to reprint.");
-	        return;
-	      }
-
-	      this.setState({ disabled: true });
-
-	      if (this.state.expanded) {
-	        var uuid = this.state.selectedItem.data.item_qr;
-	        (0, _qr.printQRs)([uuid], this.state.qrcode);
-	        this.setState({ disabled: false });
-	        return;
-	      }
-
-	      var thisObj = this;
-	      _jquery2.default.ajax({
-	        url: "../../../qr/codes/",
-	        data: { count: numLabels }
-	      }).done(function (data) {
-	        var uuids = data.split(/\s+/);
-	        (0, _qr.printQRs)(data.split(/\s+/), thisObj.state.qrcode);
-	      }).always(function () {
-	        thisObj.setState({ disabled: false });
-	      });
-	    }
-	  }, {
-	    key: 'handleChange',
-	    value: function handleChange(which, payload) {
-	      this.setState(_defineProperty({}, which, payload));
-	    }
-	  }, {
-	    key: 'handleExpandClick',
-	    value: function handleExpandClick() {
-	      var ns = {
-	        expanded: !this.state.expanded,
-	        numberLabels: "",
-	        notes: "",
-	        task: "",
-	        qrValue: "",
-	        items: [],
-	        selectedItem: ""
-	      };
-	      this.setState(ns);
-	    }
-	  }, {
-	    key: 'handleTaskChange',
-	    value: function handleTaskChange(value) {
-	      var v;
-	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
-
-	      this.setState({
-	        task: v,
-	        items: [],
-	        selectedItem: "" });
-
-	      if (this.state.expanded) this.reloadItems(v.data);
-	    }
-	  }, {
-	    key: 'handleItemChange',
-	    value: function handleItemChange(value) {
-	      var v;
-	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
-
-	      this.setState({ selectedItem: v });
-	    }
-	  }, {
-	    key: 'reloadItems',
-	    value: function reloadItems(task) {
-	      var options = {};
-	      if (task.items) {
-	        options = task.items.map(function (x) {
-	          return { id: x.id, label: getQR(x), data: x };
-	        });
-	      }
-	      this.setState({ items: options });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this3 = this;
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'labelPrinter' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'marginer' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'stuff' },
-	            _react2.default.createElement(
-	              'div',
-	              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
-	              _react2.default.createElement(
-	                'h2',
-	                null,
-	                ' Print me some labels '
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Number of labels'
-	              ),
-	              _react2.default.createElement('input', { type: 'text',
-	                placeholder: 'eg. 20',
-	                style: { width: "100%" },
-	                value: this.state.numberLabels,
-	                onChange: function onChange(e) {
-	                  return _this3.handleChange("numberLabels", e.target.value);
-	                }
-	              }),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Task'
-	              ),
-	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Extra notes'
-	              ),
-	              _react2.default.createElement('input', { type: 'text',
-	                placeholder: 'max 20 characters',
-	                style: { width: "100%" },
-	                value: this.state.notes,
-	                onChange: function onChange(e) {
-	                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
-	                }
-	              }),
-	              _react2.default.createElement(
-	                'button',
-	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
-	                ' ',
-	                this.state.disabled ? "Printing..." : "Print!",
-	                ' '
-	              ),
-	              _react2.default.createElement(
-	                'button',
-	                { className: 'expandReprint', onClick: this.handleExpandClick },
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  'I need to reprint a label'
-	                )
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
-	              _react2.default.createElement(
-	                'button',
-	                { className: 'expandReprint', onClick: this.handleExpandClick },
-	                _react2.default.createElement(
-	                  'i',
-	                  { className: 'material-icons' },
-	                  'arrow_back'
-	                ),
-	                _react2.default.createElement(
-	                  'span',
-	                  null,
-	                  'Back to regular printing'
-	                )
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Task'
-	              ),
-	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
-	              _react2.default.createElement(
-	                'span',
-	                { className: 'inputLabel' },
-	                'Item'
-	              ),
-	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
-	                name: 'item-select',
-	                placeholder: 'Choose one',
-	                options: this.state.items,
-	                valueKey: 'id',
-	                value: this.state.selectedItem,
-	                onChange: this.handleItemChange
-	              }),
-	              _react2.default.createElement(
-	                'button',
-	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
-	                ' ',
-	                this.state.disabled ? "Printing..." : "Print!",
-	                '  '
-	              )
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'playground', style: { position: "relative", margin: "20px" } },
-	            _react2.default.createElement(_Label.Label, { taskLabel: (0, _Task.display)(this.state.task),
-	              originLabel: getCode((0, _Task.display)(this.state.task)),
-	              notesLabel: this.state.expanded ? "" : this.state.notes
-	            }),
-	            _react2.default.createElement(
-	              'div',
-	              { id: 'canvastest' },
-	              _react2.default.createElement('canvas', { height: '241', width: '431' })
-	            ),
-	            _react2.default.createElement('div', { id: 'qrtest' }),
-	            _react2.default.createElement('div', { id: 'blocker' })
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'trouble' },
-	            _react2.default.createElement('hr', null),
-	            _react2.default.createElement(
-	              'h6',
-	              null,
-	              ' Troubleshooting '
-	            ),
-	            _react2.default.createElement(
-	              'p',
-	              null,
-	              ' You need to run the Dymo toolbar app to make this work.'
-	            ),
-	            _react2.default.createElement(
-	              'ul',
-	              null,
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'Find the little ',
-	                _react2.default.createElement(
-	                  'b',
-	                  null,
-	                  'Dymo icon on the top toolbar'
-	                ),
-	                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
-	              ),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'If you can\'t find the Dymo Service icon, open ',
-	                _react2.default.createElement(
-	                  'b',
-	                  null,
-	                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
-	                ),
-	                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
-	              ),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'If that folder doesn\'t exist, make sure you have the latest version of the ',
-	                _react2.default.createElement(
-	                  'a',
-	                  { href: '' },
-	                  'dymo software installed.'
-	                ),
-	                ' Once you do, you should have that folder. '
-	              ),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                'If you\'re still having problems, tell whoever is running the site!'
-	              ),
-	              _react2.default.createElement('hr', null),
-	              _react2.default.createElement(
-	                'li',
-	                null,
-	                ' (If you are the person running the site, check the ',
-	                _react2.default.createElement(
-	                  'a',
-	                  { href: '' },
-	                  ' Dymo developers blog'
-	                ),
-	                ' because that\'s the only place they document...)'
-	              )
-	            )
-	          )
-	        )
-	      );
-	    }
-	  }]);
-
-	  return LabelPrinter;
-	}(_react2.default.Component);
-
-	exports.default = LabelPrinter;
-
-
-	function getCode(str) {
-	  var codes = str.split('-');
-	  if (codes[1]) return codes[1];
-	  return str;
-	}
-
-	function getQR(item) {
-	  if (item && item.item_qr) {
-	    var len = item.item_qr.length;
-	    return item.item_qr.substr(len - 6, len);
-	  }
-	  return "";
-	}
-
-/***/ },
-/* 415 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	function mountQR() {
-	  if (dymo.label.framework.init) dymo.label.framework.init(init);else init();
-	}
-
-	/* function : init
-	 * ---------------
-	 * This function is called after the Dymo Framework inits and sets up the webpage.
-	 */
-
-	function init() {}
-
-	function print(numLabels, text, success, always) {
-	  $.ajax({
-	    url: "codes/",
-	    data: { count: numLabels }
-	  }).done(function (data) {
-	    success(data);
-	  }).always(function () {
-	    always();
-	  });
-	}
-
-	function printQRs(uuids, qrcode) {
-	  try {
-	    var label;
-	    var labelSetBuilder;
-	    var DOMURL;
-	    var svgString;
-	    var svg;
-	    var url;
-	    var img;
-
-	    (function () {
-
-	      // get a printer 
-	      var printer = getPrinter();
-
-	      // clear the current qr code
-	      qrcode.clear();
-
-	      // get the label printing xml
-	      label = dymo.label.framework.openLabelXml(getXML());
-	      labelSetBuilder = new dymo.label.framework.LabelSetBuilder();
-
-	      // convert the svg to an image url
-
-	      DOMURL = self.URL || self.webkitURL || self;
-	      svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
-	      svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-	      url = DOMURL.createObjectURL(svg);
-
-	      // create an image and set the URL to the svg image. Then when it's loaded,
-	      // convert the svg to canvas, and then attach it to the label record
-	      // And then attach the qr code.
-
-	      img = new Image();
-
-	      img.onload = function () {
-	        var canvas = document.getElementById('canvastest').querySelector('canvas');
-	        var ctx = canvas.getContext('2d');
-
-	        uuids.map(function (uuid) {
-	          createBackingImage(ctx, img, uuid);
-	          var backingImage = canvas.toDataURL().substr('data:image/png;base64,'.length);
-	          var qrImage = getQRimage(qrcode, uuid);
-	          var record = labelSetBuilder.addRecord();
-	          record.setText('qrImage', qrImage);
-	          record.setText('backingImage', backingImage);
-	        });
-
-	        // print the qr code
-	        label.print(printer, "", labelSetBuilder);
-	        qrcode.clear();
-	      };
-
-	      img.src = url;
-	    })();
-	  } catch (e) {
-	    alert(e.message || e);
-	  }
-	}
-
-	// the backing image is all the text
-	function createBackingImage(ctx, svg, uuid) {
-	  // clear canvas
-	  ctx.fillStyle = '#fff';
-	  ctx.fillRect(0, 0, 431, 241);
-
-	  // add backing image + qr text
-	  ctx.fillStyle = '#000';
-	  ctx.drawImage(svg, 0, 0);
-	  ctx.font = "20px Overpass Mono";
-	  ctx.fillText(uuid.substr(uuid.length - 6), 71, 216);
-	}
-
-	function getQRimage(qrcode, uuid) {
-	  qrcode.clear();
-	  qrcode.makeCode(uuid);
-	  var url = document.getElementById('qrtest').querySelector('canvas').toDataURL();
-	  var pngBase64 = url.substr('data:image/png;base64,'.length);
-	  return pngBase64;
-	}
-
-	/* function : getPrinter
-	 * ---------------
-	 * Gets a DYMO printer. TODO: Maybe update this to use CUPS API?
-	 */
-	function getPrinter() {
-	  // select printer to print on
-	  // for simplicity sake just use the first LabelWriter printer
-	  var printers = dymo.label.framework.getPrinters();
-	  console.log(printers);
-	  if (!printers || printers.length == 0) throw "No DYMO printers are installed. Install DYMO printers.";
-
-	  var i = -1;
-	  for (var j = 0; j < printers.length; ++j) {
-	    var printer = printers[j];
-	    if (printer.printerType == "LabelWriterPrinter" && printer.isConnected) {
-	      i = j;
-	      break;
-	    }
-	  }
-
-	  if (i == -1) throw "No DYMO printers are connected.";
-
-	  return printers[i].name;
-	}
-
-	/* function : getXML
-	 * -----------------
-	 * Returns XML format of a label. TODO: Change this to AJAX get.
-	 */
-	function getXML() {
-	  var labelXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<DieCutLabel Version=\"8.0\" Units=\"twips\">\n  <PaperOrientation>Landscape</PaperOrientation>\n  <Id>LargeShipping</Id>\n  <PaperName>30256 Shipping</PaperName>\n  <DrawCommands>\n    <RoundRectangle X=\"0\" Y=\"0\" Width=\"3331\" Height=\"5715\" Rx=\"270\" Ry=\"270\"/>\n  </DrawCommands>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>backingImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"211.2\" Y=\"57.6001\" Width=\"5337.6\" Height=\"3192\"/>\n  </ObjectInfo>\n  <ObjectInfo>\n    <ImageObject>\n      <Name>qrImage</Name>\n      <ForeColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <BackColor Alpha=\"0\" Red=\"255\" Green=\"255\" Blue=\"255\"/>\n      <LinkedObjectName></LinkedObjectName>\n      <Rotation>Rotation0</Rotation>\n      <IsMirrored>False</IsMirrored>\n      <IsVariable>False</IsVariable>\n      <Image></Image>\n      <ScaleMode>Uniform</ScaleMode>\n      <BorderWidth>0</BorderWidth>\n      <BorderColor Alpha=\"255\" Red=\"0\" Green=\"0\" Blue=\"0\"/>\n      <HorizontalAlignment>Center</HorizontalAlignment>\n      <VerticalAlignment>Center</VerticalAlignment>\n    </ImageObject>\n    <Bounds X=\"579.9039\" Y=\"531\" Width=\"1900\" Height=\"1900\"/>\n  </ObjectInfo>\n</DieCutLabel>\n";
-	  return labelXml;
-	}
-
-	exports.mountQR = mountQR;
-	exports.printQRs = printQRs;
-
-/***/ },
-/* 416 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.Label = undefined;
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function Label(props) {
-	  console.log(props);
-	  return _react2.default.createElement(
-	    "svg",
-	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
-	    _react2.default.createElement("defs", null),
-	    _react2.default.createElement(
-	      "g",
-	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
-	      _react2.default.createElement(
-	        "g",
-	        { id: "Artboard" },
-	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "135.102905" },
-	            props.taskLabel || ""
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "91" },
-	            props.originLabel
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "179.205811" },
-	            props.notesLabel
-	          )
-	        ),
-	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
-	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "70.885882", y: "216.037" },
-	            props.qrCode
-	          )
-	        )
-	      )
-	    )
-	  );
-	}
-
-	exports.Label = Label;
-
-/***/ },
-/* 417 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _reactRouterDom = __webpack_require__(180);
-
-	var _InventoryDetail = __webpack_require__(418);
-
-	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
-
-	var _Inputs = __webpack_require__(351);
-
-	var _APIManager = __webpack_require__(419);
-
-	var _Loading = __webpack_require__(420);
-
-	var _Loading2 = _interopRequireDefault(_Loading);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Inventory = function (_React$Component) {
-	  _inherits(Inventory, _React$Component);
-
-	  function Inventory(props) {
-	    _classCallCheck(this, Inventory);
-
-	    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
-
-	    _this.handleProductFilter = _this.handleProductFilter.bind(_this);
-	    _this.latestRequestID = -1;
-	    _this.state = {
-	      processes: [],
-	      products: [],
-	      loading: false,
-	      selected: -1,
-	      productFilter: [],
-	      productFilterStr: ""
-	    };
-	    return _this;
-	  }
-
-	  _createClass(Inventory, [{
-	    key: 'getProcessesForInventory',
-	    value: function getProcessesForInventory() {
-	      this.setState({ loading: true });
-
-	      var url = window.location.origin + "/ics/inventory/";
-
-	      var params = {};
-	      if (this.state.productFilter.length > 0) params = { products: this.state.productFilterStr };
-
-	      console.log(params);
-
-	      var component = this;
-	      var rid = (0, _APIManager.requestID)();
-	      this.latestRequestID = rid;
-
-	      (0, _APIManager.fetch)(url, params).done(function (data) {
-	        if (component.latestRequestID == rid) component.setState({ processes: data });
-	      }).always(function () {
-	        if (component.latestRequestID == rid) component.setState({ loading: false });
-	      });
-	    }
-	  }, {
-	    key: 'getProductsForInventory',
-	    value: function getProductsForInventory() {
-	      var component = this;
-	      var url = window.location.origin + "/ics/products/codes/";
-	      _jquery2.default.get(url).done(function (data) {
-	        var mappedProducts = data.map(function (product, i) {
-	          return { value: product.id, label: product.name };
-	        });
-	        component.setState({ products: data });
-	      });
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.getProcessesForInventory();
-	      this.getProductsForInventory();
-	    }
-	  }, {
-	    key: 'handleProductFilter',
-	    value: function handleProductFilter(which, val) {
-	      var _setState;
-
-	      var component = this;
-	      var valStr = val.map(function (v, i) {
-	        return v.code;
-	      }).join();
-	      this.setState((_setState = {}, _defineProperty(_setState, which, val), _defineProperty(_setState, 'productFilterStr', valStr), _setState), function () {
-	        component.getProcessesForInventory();
-	      });
-	    }
-	  }, {
-	    key: 'getSelectedProcess',
-	    value: function getSelectedProcess() {
-	      var a = this.state.processes.find(function (x) {
-	        return x.process_id == this.props.match.params.id;
-	      }, this);
-	      return a;
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var props = this.props;
-
-	      var contentArea = _react2.default.createElement(InventoryList, { processes: this.state.processes, selected: props.match.params.id });
-	      if (this.state.loading) {
-	        contentArea = _react2.default.createElement(_Loading2.default, null);
-	      } else if (!this.state.processes || this.state.processes.length == 0) {
-	        contentArea = _react2.default.createElement(_APIManager.ZeroState, { filtered: this.state.productFilter && this.state.productFilter.length });
-	      }
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'inventory' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: "page inventory-list " + (props.match.params.id ? "smallDetail" : "") },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'inventory-header page-header' },
-	            _react2.default.createElement(
-	              'h2',
-	              null,
-	              'Inventory'
-	            ),
-	            _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter })
-	          ),
-	          contentArea
-	        ),
-	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), {
-	          filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null,
-	          match: props.match,
-	          showDetail: props.match.params.id
-	        }))
-	      );
-	    }
-	  }]);
-
-	  return Inventory;
-	}(_react2.default.Component);
-
-	exports.default = Inventory;
-
-
-	function InventoryList(props) {
-	  return _react2.default.createElement(
-	    'div',
-	    null,
-	    _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
-	    props.processes.map(function (process, i) {
-	      return _react2.default.createElement(
-	        _reactRouterDom.Link,
-	        { key: i, to: "/dashboard/inventory/" + process.process_id },
-	        _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.selected }, process))
-	      );
-	    }, this)
-	  );
-	}
-
-	function InventoryItem(props) {
-	  var teamStyle = { color: "rgba(0,0,0,0.3", paddingLeft: "4px", fontSize: "10px" };
-	  var currTeam = window.localStorage.getItem("team") || "1";
-	  teamStyle["display"] = currTeam == props.team_id ? "none" : "";
-	  return _react2.default.createElement(
-	    'div',
-	    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'i-outputdesc' },
-	      _react2.default.createElement(
-	        'span',
-	        null,
-	        props.output_desc.sentenceCase()
-	      ),
-	      _react2.default.createElement(
-	        'span',
-	        { style: teamStyle },
-	        props.team
-	      )
-	    ),
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'i-count' },
-	      _react2.default.createElement(
-	        'span',
-	        null,
-	        props.count
-	      )
-	    ),
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'i-unit' },
-	      _react2.default.createElement(
-	        'span',
-	        null,
-	        props.unit.sentenceCase() + "s"
-	      )
-	    ),
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'i-date' },
-	      _react2.default.createElement(
-	        'span',
-	        null,
-	        props.date
-	      )
-	    )
-	  );
-	}
-
-	function isHeader(props) {
-	  return props.header == true ? "inventoryClass-header" : "";
-	}
-
-	function isSelected(props) {
-	  if (isHeader(props)) return false;
-	  return props.process_id == props.selected ? "selected" : "";
-	}
-
-	String.prototype.sentenceCase = function () {
-	  return this.charAt(0).toUpperCase() + this.slice(1);
-	};
-
-/***/ },
-/* 418 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _Task = __webpack_require__(349);
-
-	var _APIManager = __webpack_require__(419);
-
-	var _immutabilityHelper = __webpack_require__(377);
-
-	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-	var _reactRouterDom = __webpack_require__(180);
-
-	var _Loading = __webpack_require__(420);
-
-	var _Loading2 = _interopRequireDefault(_Loading);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var InventoryDetail = function (_React$Component) {
-	  _inherits(InventoryDetail, _React$Component);
-
-	  function InventoryDetail(props) {
-	    _classCallCheck(this, InventoryDetail);
-
-	    var _this = _possibleConstructorReturn(this, (InventoryDetail.__proto__ || Object.getPrototypeOf(InventoryDetail)).call(this, props));
-
-	    _this.latestRequestID = -1;
-	    _this.handleLoadClick = _this.handleLoadClick.bind(_this);
-	    _this.state = {
-	      items: [],
-	      next: null,
-	      loading: false
-	    };
-	    return _this;
-	  }
-
-	  _createClass(InventoryDetail, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.getInventoryItems(this.props);
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(np) {
-	      this.getInventoryItems(np);
-	    }
-	  }, {
-	    key: 'handleLoadClick',
-	    value: function handleLoadClick() {
-	      this.getInventoryItems(this.props, this.state.next);
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var props = this.props;
-
-	      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, { items: this.state.items }));
-	      if (!this.state.items || this.state.items.length == 0) {
-	        if (this.state.loading) {
-	          contentArea = _react2.default.createElement(_Loading2.default, null);
-	        }
-	      }
-
-	      var loadMore = false;
-	      if (this.state.next) {
-	        loadMore = _react2.default.createElement(
-	          'button',
-	          { onClick: this.handleLoadClick },
-	          'Load More'
-	        );
-	      }
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: "inventory-detail " + (props.showDetail ? "" : "smallDetail") },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'i-detail-header' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'i-detail-outputdesc', style: { display: "flex", flexDirection: "row" } },
-	            _react2.default.createElement(
-	              'span',
-	              { style: { flex: "1" } },
-	              this.props.output_desc
-	            ),
-	            _react2.default.createElement(
-	              'span',
-	              null,
-	              _react2.default.createElement(
-	                _reactRouterDom.Link,
-	                { to: '/dashboard/inventory/' },
-	                _react2.default.createElement(
-	                  'i',
-	                  { style: { verticalAlign: "middle", fontSize: "16px", flex: "0" }, className: 'material-icons' },
-	                  'close'
-	                )
-	              )
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'i-detail-count' },
-	            _react2.default.createElement(
-	              'span',
-	              null,
-	              (this.props.count || 0) + " " + this.props.unit + "s"
-	            )
-	          )
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'i-detail-content' },
-	          contentArea
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'i-detail-footer' },
-	          loadMore
-	        )
-	      );
-	    }
-	  }, {
-	    key: 'getInventoryItems',
-	    value: function getInventoryItems(props, u) {
-	      if (!props.match.params.id) {
-	        return;
-	      }
-
-	      this.setState({ loading: true });
-
-	      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
-	      var g = { process: props.process_id };
-	      if (this.props.filter) {
-	        g.products = this.props.filter;
-	      }
-	      var random = Math.floor(Math.random() * 1000);
-	      this.latestRequestID = random;
-
-	      var component = this;
-	      (0, _APIManager.fetch)(url, g).done(function (data, d, jqxhr) {
-	        if (component.latestRequestID == random) {
-	          var items = data.results;
-	          if (u) {
-	            items = (0, _immutabilityHelper2.default)(component.state.items, { $push: items });
-	          }
-	          component.setState({ items: items, next: data.next });
-	        }
-	      }).always(function () {
-	        component.setState({ loading: false });
-	      });
-	    }
-	  }]);
-
-	  return InventoryDetail;
-	}(_react2.default.Component);
-
-	exports.default = InventoryDetail;
-
-
-	function ItemList(props) {
-	  return _react2.default.createElement(
-	    'div',
-	    null,
-	    (props.items || []).map(function (item, i) {
-	      return _react2.default.createElement(Item, _extends({ key: i }, item));
-	    }, this)
-	  );
-	}
-
-	function Item(props) {
-	  var src = window.location.origin + "/static/dashboard/img/qricon@2x.png";
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'item', onClick: props.onClick },
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'flex' },
-	      _react2.default.createElement(
-	        'div',
-	        { className: 'item-img' },
-	        _react2.default.createElement('img', { src: src })
-	      ),
-	      _react2.default.createElement(
-	        'div',
-	        null,
-	        _react2.default.createElement(
-	          'span',
-	          { className: 'item-qr' },
-	          props.item_qr.substring(42)
-	        ),
-	        _react2.default.createElement(
-	          'a',
-	          { href: window.location.origin + "/dashboard/task/" + props.creating_task.id, target: '_blank' },
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'item-task' },
-	            (0, _Task.display)(props.creating_task)
-	          )
-	        )
-	      )
-	    ),
-	    _react2.default.createElement(
-	      'div',
-	      { className: 'unflex' },
-	      _react2.default.createElement('input', { type: 'checkbox', onChange: null })
-	    )
-	  );
-	}
-
-/***/ },
-/* 419 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.post = exports.ZeroState = exports.requestID = exports.fetch = undefined;
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function fetch(url, params) {
-	  var team = window.localStorage.getItem("team") || "1";
-	  params.team = team;
-	  return _jquery2.default.get(url, params);
-	}
-
-	function post(url, params) {
-	  return _jquery2.default.ajax({
-	    method: "POST",
-	    url: url,
-	    data: params,
-	    contentType: 'application/json',
-	    processData: false
-	  });
-	}
-
-	function requestID() {
-	  return Math.floor(Math.random() * 1000);
-	}
-
-	function ZeroState(props) {
-	  var sentence = "Looks like there's nothing here!";
-	  if (props.filtered) {
-	    sentence = "Looks like there's nothing here. Try expanding your search.";
-	  }
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'zero-state' },
-	    _react2.default.createElement(
-	      'span',
-	      null,
-	      sentence
-	    )
-	  );
-	}
-
-	exports.fetch = fetch;
-	exports.requestID = requestID;
-	exports.ZeroState = ZeroState;
-	exports.post = post;
-
-/***/ },
-/* 420 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = Loading;
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function Loading(props) {
-	  return _react2.default.createElement(
-	    "div",
-	    { className: "zero-state" },
-	    _react2.default.createElement(
-	      "span",
-	      null,
-	      "Loading..."
-	    )
-	  );
-	}
-
-/***/ },
-/* 421 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _reactRouterDom = __webpack_require__(180);
-
-	var _InventoryDetail = __webpack_require__(418);
-
-	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
-
-	var _Inputs = __webpack_require__(351);
-
-	var _APIManager = __webpack_require__(419);
-
-	var _Task = __webpack_require__(349);
-
-	var _moment = __webpack_require__(217);
-
-	var _moment2 = _interopRequireDefault(_moment);
-
-	var _immutabilityHelper = __webpack_require__(377);
-
-	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-	var _qr = __webpack_require__(415);
+	var _qr = __webpack_require__(363);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -63917,7 +63901,7 @@
 	}
 
 /***/ },
-/* 422 */
+/* 406 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -63940,29 +63924,29 @@
 
 	var _reactRouterDom = __webpack_require__(180);
 
-	var _InventoryDetail = __webpack_require__(418);
+	var _InventoryDetail = __webpack_require__(366);
 
 	var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
 
-	var _Inputs = __webpack_require__(351);
+	var _Inputs = __webpack_require__(369);
 
-	var _APIManager = __webpack_require__(419);
+	var _APIManager = __webpack_require__(367);
 
-	var _Loading = __webpack_require__(420);
+	var _Loading = __webpack_require__(368);
 
 	var _Loading2 = _interopRequireDefault(_Loading);
 
-	var _immutabilityHelper = __webpack_require__(377);
+	var _immutabilityHelper = __webpack_require__(349);
 
 	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-	var _Task = __webpack_require__(349);
+	var _Task = __webpack_require__(350);
 
 	var _moment = __webpack_require__(217);
 
 	var _moment2 = _interopRequireDefault(_moment);
 
-	var _Datepicker = __webpack_require__(363);
+	var _Datepicker = __webpack_require__(370);
 
 	var _Datepicker2 = _interopRequireDefault(_Datepicker);
 
