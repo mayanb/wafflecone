@@ -39,10 +39,10 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class TaskSearch(generics.ListAPIView):
   serializer_class = EditTaskSerializer
   pagination_class = SmallPagination
-  ordering_fields = ('created_at',)
+  ordering_fields = ('created_at', 'updated_at')
 
   def get_queryset(self):
-    queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
+    queryset = Task.objects.filter(is_trashed=False).order_by('-created_at')
 
     team = self.request.query_params.get('team', None)
     if team is not None:
