@@ -234,8 +234,8 @@ export default class LabelPrinter extends React.Component {
           </div>
 
           <div className="playground" style={{position: "relative", margin: "20px"}}>
-            <Label taskLabel={this.state.task.data.display || ""} 
-              originLabel={getCode(this.state.task.data.display || "")} 
+            <Label taskLabel={this.state.task.label} 
+              originLabel={getCode(this.state.task.label || "")} 
               notesLabel={this.state.expanded?"":this.state.notes}
             />
             <div id="canvastest">
