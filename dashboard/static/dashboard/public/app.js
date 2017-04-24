@@ -54473,9 +54473,10 @@
 	      label: input,
 	      team: window.localStorage.getItem("team") || "1"
 	    };
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
+	      console.log(data);
 	      var options = data.results.map(function (x) {
-	        return { value: x.id, label: (0, _Task.display)(x), data: x };
+	        return { value: x.id, label: x.display, data: x };
 	      });
 	      callback(null, { options: options, complete: false });
 	    });
@@ -54501,7 +54502,7 @@
 	          name: 'form-field-name',
 	          value: this.props.value,
 	          optionRenderer: function optionRenderer(option, i) {
-	            return (0, _Task.display)(option.data);
+	            return option.label;
 	          },
 	          loadOptions: getOptions,
 	          onChange: this.props.onChange,
@@ -54767,8 +54768,8 @@
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'playground', style: { position: "relative", margin: "20px" } },
-	            _react2.default.createElement(_Label.Label, { taskLabel: (0, _Task.display)(this.state.task),
-	              originLabel: getCode((0, _Task.display)(this.state.task)),
+	            _react2.default.createElement(_Label.Label, { taskLabel: this.state.task.display,
+	              originLabel: getCode(this.state.task.display || ""),
 	              notesLabel: this.state.expanded ? "" : this.state.notes
 	            }),
 	            _react2.default.createElement(
@@ -57990,7 +57991,8 @@
 	      label: input,
 	      team: window.localStorage.getItem("team") || "1"
 	    };
-	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
+	      print(data);
 	      var options = data.results.map(function (x) {
 	        return { value: x.id, label: x.display };
 	      });

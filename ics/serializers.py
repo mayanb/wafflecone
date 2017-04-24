@@ -2,6 +2,7 @@ from rest_framework import serializers
 from ics.models import *
 from django.contrib.auth.models import User
 from uuid import uuid4
+from django.db.models import F
 
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -46,9 +47,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 # serializes only post-editable fields of task
 class EditTaskSerializer(serializers.ModelSerializer):
+  id = serializers.IntegerField(read_only=True)
+  display = serializers.CharField(source='*', read_only=True)
   class Meta:
     model = Task
-    fields = ('label', 'is_open', 'label_index', 'custom_display', 'is_trashed', 'is_flagged')
+    fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display')
 
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
@@ -57,12 +60,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
     fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
 
 class BasicItemSerializer(serializers.ModelSerializer):
-  is_used = serializers.SerializerMethodField('check')
-
-  def check(self, item):
-    if item.input_set.all().exists():
-      return True
-    return False
+  is_used = serializers.CharField()
 
   class Meta:
     model = Item
@@ -109,7 +107,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 class NestedTaskSerializer(serializers.ModelSerializer):
   items = serializers.SerializerMethodField('getItems')
   inputs = BasicInputSerializer(many=True, read_only=True)
-  inputUnit = serializers.SerializerMethodField('getInputUnit')
+  inputUnit = serializers.CharField()
   attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
   product_type = ProductTypeSerializer(many=False, read_only=True)
   process_type = ProcessTypeSerializer(many=False, read_only=True)
@@ -126,7 +124,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
     if self.context.get('inventory', None) is not None:
       return BasicItemSerializer(task.items.all().filter(input__isnull=True), many=True).data
     else:
-      return BasicItemSerializer(task.items.all(), many=True).data
+      return BasicItemSerializer(task.items.all().annotate(is_used=F('input__task')), many=True).data
 
   class Meta:
     model = Task

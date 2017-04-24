@@ -16,9 +16,10 @@ var getOptions = function(input, callback) {
       label: input,
       team: window.localStorage.getItem("team") || "1"
     }
-      $.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
+      $.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
+        console.log(data)
         var options = data.results.map(function (x) {
-          return { value: x.id, label: display(x), data: x}
+          return { value: x.id, label: x.display, data: x}
         })
         callback(null, {options : options, complete: false})
       })
@@ -37,7 +38,7 @@ class TaskSelect extends React.Component {
         <Select.Async
           name="form-field-name"
           value={this.props.value}
-          optionRenderer={(option, i) => display(option.data)}
+          optionRenderer={(option, i) => option.label}
           loadOptions={getOptions}
           onChange={this.props.onChange}
           placeholder={this.props.placeholder}
@@ -233,8 +234,8 @@ export default class LabelPrinter extends React.Component {
           </div>
 
           <div className="playground" style={{position: "relative", margin: "20px"}}>
-            <Label taskLabel={display(this.state.task)} 
-              originLabel={getCode(display(this.state.task))} 
+            <Label taskLabel={this.state.task.display} 
+              originLabel={getCode(this.state.task.display || "")} 
               notesLabel={this.state.expanded?"":this.state.notes}
             />
             <div id="canvastest">

@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
-from django.db.models import Q, Count, Case, When, Min
+from django.db.models import F, Q, Count, Case, When, Min
 from ics.models import *
 from django.contrib.auth.models import User
 from ics.serializers import *
@@ -36,16 +36,39 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
+class TaskSearch(generics.ListAPIView):
+  serializer_class = EditTaskSerializer
+  pagination_class = SmallPagination
+  ordering_fields = ('created_at',)
+
+  def get_queryset(self):
+    queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
+
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(process_type__created_by=team)
+
+    label = self.request.query_params.get('label', None)
+    dashboard = self.request.query_params.get('dashboard', None)
+    if label is not None and dashboard is not None:
+      queryset = queryset.filter(Q(keywords__icontains=label))
+    elif label is not None:
+      queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+
+    return queryset
+
+
 # tasks/
 class TaskList(generics.ListAPIView):
   serializer_class = NestedTaskSerializer
   filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_class = TaskFilter
   ordering_fields = ('updated_at', 'created_at', 'label_index', 'process_type__x')
-  pagination_class = SmallPagination
+  #pagination_class = SmallPagination
 
   def get_queryset(self):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
+        queryset = queryset.annotate(inputUnit=F('inputs__input_item__creating_task__process_type__unit'))
 
         team = self.request.query_params.get('team', None)
         if team is not None:

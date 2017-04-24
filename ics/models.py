@@ -3,6 +3,8 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.postgres.search import SearchVectorField, SearchVector
+
 
 # Create your models here.
 
@@ -62,7 +64,8 @@ class Task(models.Model):
     is_flagged = models.BooleanField(default=False)
     experiment = models.CharField(max_length=25, blank=True)
     keywords = models.CharField(max_length=200, blank=True)
- 
+    search = SearchVectorField(null=True)
+
     def __str__(self):
         if self.custom_display:
             return self.custom_display
@@ -140,7 +143,7 @@ class Task(models.Model):
             p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
 
         self.keywords = " ".join([p1, p2, p3, p4])[:200]
-
+        self.search = SearchVector('label', 'custom_display')
 
     
     def descendents(self):
