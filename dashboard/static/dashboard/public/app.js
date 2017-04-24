@@ -52175,7 +52175,7 @@
 	      team: window.localStorage.getItem("team") || "1"
 	    };
 	    _jquery2.default.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
-	      var options = data.map(function (x) {
+	      var options = data.results.map(function (x) {
 	        return { value: x.id, label: x.display };
 	      });
 	      callback(null, { options: options, complete: false });
