@@ -54768,7 +54768,7 @@
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'playground', style: { position: "relative", margin: "20px" } },
-	            _react2.default.createElement(_Label.Label, { taskLabel: this.state.task.data.display,
+	            _react2.default.createElement(_Label.Label, { taskLabel: this.state.task.data.display || "",
 	              originLabel: getCode(this.state.task.data.display || ""),
 	              notesLabel: this.state.expanded ? "" : this.state.notes
 	            }),
