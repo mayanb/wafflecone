@@ -42,7 +42,7 @@ class TaskList(generics.ListAPIView):
   filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_class = TaskFilter
   ordering_fields = ('updated_at', 'created_at', 'label_index', 'process_type__x')
-  #pagination_class = SmallPagination
+  pagination_class = SmallPagination
 
   def get_queryset(self):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
