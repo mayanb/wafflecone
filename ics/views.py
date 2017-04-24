@@ -68,7 +68,7 @@ class TaskList(generics.ListAPIView):
 
   def get_queryset(self):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
-        queryset = queryset.annotate(inputUnit=F('inputs__input_item__creating_task__process_type__unit'))
+        #queryset = queryset.annotate(inputUnit=F('inputs__input_item__creating_task__process_type__unit'))
 
         team = self.request.query_params.get('team', None)
         if team is not None:

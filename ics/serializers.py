@@ -107,7 +107,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 class NestedTaskSerializer(serializers.ModelSerializer):
   items = serializers.SerializerMethodField('getItems')
   inputs = BasicInputSerializer(many=True, read_only=True)
-  inputUnit = serializers.CharField()
+  inputUnit = serializers.SerializerMethodField('getInputUnit')
   attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
   product_type = ProductTypeSerializer(many=False, read_only=True)
   process_type = ProcessTypeSerializer(many=False, read_only=True)
