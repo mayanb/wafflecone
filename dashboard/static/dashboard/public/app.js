@@ -57992,7 +57992,6 @@
 	      team: window.localStorage.getItem("team") || "1"
 	    };
 	    _jquery2.default.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
-	      print(data);
 	      var options = data.results.map(function (x) {
 	        return { value: x.id, label: x.display };
 	      });
