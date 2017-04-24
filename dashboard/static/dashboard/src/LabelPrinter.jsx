@@ -17,7 +17,7 @@ var getOptions = function(input, callback) {
       team: window.localStorage.getItem("team") || "1"
     }
       $.get(window.location.origin + "/ics/tasks/", params).done(function (data) {
-        var options = data.map(function (x) {
+        var options = data.results.map(function (x) {
           return { value: x.id, label: display(x), data: x}
         })
         callback(null, {options : options, complete: false})
