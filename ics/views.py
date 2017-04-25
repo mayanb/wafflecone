@@ -39,6 +39,8 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class TaskSearch(generics.ListAPIView):
   serializer_class = EditTaskSerializer
   pagination_class = SmallPagination
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
+  filter_class = TaskFilter
   ordering_fields = ('created_at', 'updated_at')
 
   def get_queryset(self):

@@ -143,7 +143,7 @@ class Task(models.Model):
             p4 = " ".join(TaskAttribute.objects.filter(task=self).values_list('value', flat=True))
 
         self.keywords = " ".join([p1, p2, p3, p4])[:200]
-        self.search = SearchVector('label', 'custom_display')
+        #self.search = SearchVector('label', 'custom_display')
 
     
     def descendents(self):
