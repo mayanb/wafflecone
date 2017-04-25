@@ -62,7 +62,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
     fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
 
 class BasicItemSerializer(serializers.ModelSerializer):
-  is_used = serializers.CharField()
+  is_used = serializers.CharField(read_only=True)
 
   class Meta:
     model = Item
