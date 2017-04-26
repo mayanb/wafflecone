@@ -74,15 +74,16 @@ class NestedItemSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used')
 
 class BasicInputSerializer(serializers.ModelSerializer):
   input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
   input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
+  input_qr = serializers.CharField(source='input_item.item_qr', read_only=True)
 
   class Meta:
     model = Input
-    fields = ('id', 'input_item', 'task', 'input_task', 'input_task_display')
+    fields = ('id', 'input_item', 'task', 'input_task', 'input_task_display', 'input_qr')
 
 class NestedInputSerializer(serializers.ModelSerializer):
   input_item = NestedItemSerializer(many=False, read_only=True)
