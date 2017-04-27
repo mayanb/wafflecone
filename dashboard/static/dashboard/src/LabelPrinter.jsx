@@ -162,11 +162,7 @@ export default class LabelPrinter extends React.Component {
       let component = this
       fetch(url, {})
         .done(function (data) {
-          component.setState(
-            {task: data, items: [], selectedItem: ""}, 
-            function() {
-              component.reloadItems(data)
-            })
+          component.reloadItems(data)
         })
       //component.reloadItems(v.data) 
     }

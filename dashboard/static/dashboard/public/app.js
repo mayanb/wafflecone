@@ -54639,9 +54639,7 @@
 	          var url = window.location.origin + "/ics/tasks/" + v.value;
 	          var component = _this3;
 	          (0, _APIManager.fetch)(url, {}).done(function (data) {
-	            component.setState({ task: data, items: [], selectedItem: "" }, function () {
-	              component.reloadItems(data);
-	            });
+	            component.reloadItems(data);
 	          });
 	          //component.reloadItems(v.data) 
 	        })();
