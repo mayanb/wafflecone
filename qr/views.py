@@ -22,12 +22,12 @@ def images(request):
   COLS = int(request.GET.get('cols'))
   
   # all sizes are in pixels
-  QR_SIZE = 100
-  STICKER_SIZE = 200     
-  X_OFFSET = 10
-  Y_OFFSET = 10
-  X_SPACING = 10
-  Y_SPACING = 10
+  QR_SIZE = 120
+  STICKER_SIZE = 150     
+  X_OFFSET = 188.1
+  Y_OFFSET = 9.3
+  X_SPACING = 111
+  Y_SPACING = 150
 
   count = ROWS * COLS
   width = (X_OFFSET * 2) + (STICKER_SIZE * ROWS) + (X_SPACING * (ROWS-1))
