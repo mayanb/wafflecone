@@ -54453,6 +54453,8 @@
 
 	var _Label = __webpack_require__(364);
 
+	var _APIManager = __webpack_require__(367);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -54620,6 +54622,8 @@
 	  }, {
 	    key: 'handleTaskChange',
 	    value: function handleTaskChange(value) {
+	      var _this3 = this;
+
 	      var v;
 	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
 
@@ -54628,7 +54632,20 @@
 	        items: [],
 	        selectedItem: "" });
 
-	      if (this.state.expanded) this.reloadItems(v.data);
+	      console.log(v);
+
+	      if (this.state.expanded) {
+	        (function () {
+	          var url = window.location.origin + "/ics/tasks/" + v.value;
+	          var component = _this3;
+	          (0, _APIManager.fetch)(url, {}).done(function (data) {
+	            component.setState({ task: data, items: [], selectedItem: "" }, function () {
+	              component.reloadItems(data);
+	            });
+	          });
+	          //component.reloadItems(v.data) 
+	        })();
+	      }
 	    }
 	  }, {
 	    key: 'handleItemChange',
@@ -54652,7 +54669,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this3 = this;
+	      var _this4 = this;
 
 	      return _react2.default.createElement(
 	        'div',
@@ -54681,7 +54698,7 @@
 	                style: { width: "100%" },
 	                value: this.state.numberLabels,
 	                onChange: function onChange(e) {
-	                  return _this3.handleChange("numberLabels", e.target.value);
+	                  return _this4.handleChange("numberLabels", e.target.value);
 	                }
 	              }),
 	              _react2.default.createElement(
@@ -54700,7 +54717,7 @@
 	                style: { width: "100%" },
 	                value: this.state.notes,
 	                onChange: function onChange(e) {
-	                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
+	                  return _this4.handleChange("notes", e.target.value.substr(0, 20));
 	                }
 	              }),
 	              _react2.default.createElement(

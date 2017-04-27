@@ -5,6 +5,7 @@ import {display} from './Task.jsx'
 import update from 'immutability-helper'
 import {mountQR, printQRs} from './qr.jsx'
 import {Label} from './Label.jsx'
+import {fetch} from './APIManager.jsx'
 
 var getOptions = function(input, callback) {
     if (input.length < 2) {
@@ -154,8 +155,21 @@ export default class LabelPrinter extends React.Component {
       items: [],
       selectedItem: ""})
 
-    if (this.state.expanded)
-      this.reloadItems(v.data) 
+    console.log(v)
+
+    if (this.state.expanded) {
+      let url = window.location.origin + "/ics/tasks/" + v.value
+      let component = this
+      fetch(url, {})
+        .done(function (data) {
+          component.setState(
+            {task: data, items: [], selectedItem: ""}, 
+            function() {
+              component.reloadItems(data)
+            })
+        })
+      //component.reloadItems(v.data) 
+    }
   }
 
   handleItemChange(value) {

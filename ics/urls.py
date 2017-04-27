@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^inputs/create/$', views.CreateInput.as_view()),
     url(r'^items/create/$', views.CreateItem.as_view()),
 
-    url(r'^tasks/create/$', views.TaskCreate.as_view()),
+    url(r'^tasks/create/$', views.TaskCreate.as_view(), name='create_task'),
     url(r'^tasks/$', views.TaskList.as_view()),
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view()),
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
