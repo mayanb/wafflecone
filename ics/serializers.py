@@ -58,9 +58,10 @@ class EditTaskSerializer(serializers.ModelSerializer):
 
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
+  display = serializers.CharField(source='*', read_only=True)
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed')
+    fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display')
 
 class BasicItemSerializer(serializers.ModelSerializer):
   is_used = serializers.CharField(read_only=True)
