@@ -24,8 +24,8 @@ def images(request):
   # all sizes are in pixels
   QR_SIZE = 120
   STICKER_SIZE = 150     
-  X_OFFSET = 188.1
-  Y_OFFSET = 9.3
+  X_OFFSET = 0
+  Y_OFFSET = 0
   X_SPACING = 111
   Y_SPACING = 150
 
