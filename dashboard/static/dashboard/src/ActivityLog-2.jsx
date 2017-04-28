@@ -9,6 +9,7 @@ import update from 'immutability-helper'
 import {display} from './Task.jsx'
 import moment from 'moment'
 import Datepicker from './Datepicker.jsx'
+import ReactImageFallback from "react-image-fallback";
 
 var process = {
   process_name: "Roasting",
@@ -236,7 +237,8 @@ function Origin(props) {
 function Row(props) {
   var symbol = false 
   if (props.img) {
-    symbol = <img src={`${window.location.origin}/static/dashboard/img/${props.img}@3x.png`} />
+    let errorImg = `${window.location.origin}/static/dashboard/img/default@3x.png`
+    symbol = <ReactImageFallback src={`${window.location.origin}/static/dashboard/img/${props.img}@3x.png`} fallbackImage={errorImg}/>
   } else if (props.icon) {
     symbol = <span><i className="material-icons arrow">{props.icon}</i></span>
   }

@@ -39,6 +39,10 @@ html, body, #root, .parent, .content-area {
 
 }
 
+img:before {
+  background-image: url(/dashboard/static/dashboard/img/default@3x.png);
+}
+
 .parent {
   .content {
 		margin: 0 auto;

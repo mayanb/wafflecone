@@ -4,8 +4,8 @@ import {Link, NavLink} from 'react-router-dom'
 import {Dropdown} from 'react-toolbox/lib/dropdown'
 
 var teams = [
-    { value: '1', label: 'Production'},
-    { value: '5', label: 'Valencia' },
+    { value: '1', label: 'Bama Production'},
+    { value: '5', label: 'Valencia Production' },
 ];
 
 class Navbar extends React.Component {
