@@ -34,7 +34,6 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'logistics.ics_staticfiles',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'logistics',
