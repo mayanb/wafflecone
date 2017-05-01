@@ -34,14 +34,17 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'logistics.ics_staticfiles',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'logistics',
+    'rest_framework_docs',
     'rest_framework',
     'ics',
     'qr',
     'dashboard',
     'django_filters',
-    'debug_toolbar'
+    'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -61,7 +64,7 @@ ROOT_URLCONF = 'logistics.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'debug': True,
