@@ -22,7 +22,7 @@ class ProcessType(models.Model):
         return self.name
 
     def getAllAttributes(self):
-        return self.attribute_set.all()
+        return self.attribute_set.filter(is_trashed=False)
 
     def getInventoryCount(self):
         return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self).count()
@@ -45,6 +45,7 @@ class Attribute(models.Model):
     process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     rank = models.PositiveSmallIntegerField(default=0)
+    is_trashed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -114,7 +115,7 @@ class Task(models.Model):
         return self.input_set.all()
 
     def getTaskAttributes(self):
-        return self.taskattribute_set.all()
+        return self.taskattribute_set.filter(attribute__is_trashed=False)
 
     def refreshKeywords(self):
         """

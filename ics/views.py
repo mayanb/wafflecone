@@ -28,6 +28,9 @@ class TaskFilter(django_filters.rest_framework.FilterSet):
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
+  """
+  Create a new task.
+  """
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = BasicTaskSerializer
 
