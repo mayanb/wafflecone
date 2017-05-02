@@ -178,7 +178,7 @@ class InventoryList(generics.ListAPIView):
   serializer_class = InventoryListSerializer
 
   def get_queryset(self):
-    queryset = Item.objects.filter(input__isnull=True)
+    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False)
 
     # filter by team
     team = self.request.query_params.get('team', None)
@@ -206,7 +206,7 @@ class InventoryDetail(generics.ListAPIView):
   pagination_class = SmallPagination
 
   def get_queryset(self):
-    queryset = Item.objects.filter(input__isnull=True)
+    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False)
 
     # filter by team
     team = self.request.query_params.get('team', None)
