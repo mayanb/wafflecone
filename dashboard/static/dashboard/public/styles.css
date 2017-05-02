@@ -185,10 +185,12 @@ div[data-react-toolbox="dropdown"] input {
   margin: 0px;
   padding: 0px;
   padding-top: 4px;
-  color: rgba(255, 255, 255, 0.56);
   font-size: 14px;
   outline: none;
   border: none; }
+
+.d-nav div[data-react-toolbox="dropdown"] input {
+  color: rgba(255, 255, 255, 0.56); }
 
 .filters {
   background-color: white;
@@ -767,7 +769,8 @@ a, a:hover, a:visited span {
   margin: 0 auto;
   margin-top: 200px;
   background-color: white;
-  max-width: 300px;
+  max-width: 400px;
+  min-width: 400px;
   padding: 16px;
   border-radius: 4px; }
   .dialog-box .dialog-title {
@@ -792,7 +795,7 @@ a, a:hover, a:visited span {
     background-color: white; }
   .dialog-box .dialog-actions {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
-    margin: 0 -16px;
+    margin: 16px -16px;
     margin-bottom: -16px;
     padding: 16px;
     display: flex;

@@ -21,7 +21,7 @@ module.exports = {
 }
         ],
     },
-    entry: './src/app.jsx',
+    entry: './src/components/app.jsx',
     output: {
         filename: './public/app.js'
     }

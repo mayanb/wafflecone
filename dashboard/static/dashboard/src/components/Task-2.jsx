@@ -8,6 +8,7 @@ import {display, icon} from './Task.jsx'
 import moment from 'moment'
 import update from 'immutability-helper'
 import {mountQR, printQRs} from './qr.jsx'
+import {Dialog} from './Dialog.jsx'
 
 let dialogs = {
   deleteTask: {
@@ -351,19 +352,4 @@ function pl(count, unit) {
   if (count == 1) 
     return count + " " + unit
   return count + " " + unit + "s"
-}
-
-function Dialog(props) {
-  return (
-    <div className="dialog-shim">
-      <div className="dialog-box">
-        <span className="dialog-title">{props.title}</span>
-        <span className="dialog-text">{props.text}</span>
-        <div className="dialog-actions">
-          <button className="dialog-button dialog-cancel" onClick={props.onCancel}>{props.cancelText || "Cancel"}</button>
-          <button className="dialog-button" onClick={props.onOK}>{props.okText}</button>
-        </div>
-      </div>
-    </div>
-  )
 }
