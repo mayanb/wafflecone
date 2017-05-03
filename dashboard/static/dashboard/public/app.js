@@ -50090,7 +50090,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var teams = [{ value: '1', label: 'Bama Production' }, { value: '5', label: 'Valencia Production' }];
+	var teams = [{ value: '1', label: 'Bama Production' }, { value: '5', label: 'Valencia Production' }, { value: '7', label: 'United Cold' }, { value: '3', label: 'Fulfillment' }];
 
 	var Navbar = function (_React$Component) {
 	  _inherits(Navbar, _React$Component);
@@ -58166,7 +58166,7 @@
 	    value: function render() {
 	      var _this4 = this;
 
-	      var teams = [{ value: 1, label: "Bama Pirates" }, { value: 5, label: "Valencia Wizards" }, { value: null, label: "Other" }];
+	      var teams = [{ value: 1, label: "Bama Pirates" }, { value: 5, label: "Valencia Wizards" }, { value: 7, label: "United Cold" }, { value: 3, label: "Fulfillment" }, { value: null, label: "Other" }];
 
 	      if (this.state.done) {
 	        return _react2.default.createElement(
