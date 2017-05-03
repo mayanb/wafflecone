@@ -58,10 +58,21 @@
       margin: 8px 0px;
       overflow: scroll;
 
+      .task-title {
+        font-weight: bold;
+        padding-bottom: 4px;
+      }
+
+      .inventory-task {
+        margin: 0px -16px;
+        padding: 16px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+
       .item {
         display: flex;
         flex-direction: row;
-        padding: 8px 0px;
+        padding: 2px 8px;
 
         .item-img {
           height: 12px;

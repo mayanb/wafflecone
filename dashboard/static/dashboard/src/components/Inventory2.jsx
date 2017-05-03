@@ -5,6 +5,7 @@ import InventoryDetail from './InventoryDetail.jsx'
 import { InventoryFilter, Filters } from './Inputs.jsx'
 import {fetch, requestID, ZeroState} from './APIManager.jsx'
 import Loading from './Loading.jsx'
+import update from 'immutability-helper'
 
 export default class Inventory extends React.Component {
   constructor(props) {
@@ -81,6 +82,27 @@ export default class Inventory extends React.Component {
     return a
   }
 
+  handleDelivery(selectedCount) {
+    var processIndex = 0
+    for (let [index, process] of this.state.processes.entries()) {
+      if (process.process_id == this.props.match.params.id) {
+        processIndex = index
+        break
+      }
+    }
+
+    let newProcesses = update(this.state.processes, {
+      [processIndex]: {
+        count: {
+          $apply: function (c) { return c - selectedCount }
+        }
+      }
+    })
+
+    this.setState({processes: newProcesses})
+
+  }
+
   render() {
     let props = this.props
 
@@ -105,6 +127,7 @@ export default class Inventory extends React.Component {
           filter={this.state.productFilter.length>0?this.state.productFilterStr:null} 
           match={props.match} 
           showDetail={props.match.params.id}
+          onDelivery={this.handleDelivery.bind(this)}
         />
       </div>
     )

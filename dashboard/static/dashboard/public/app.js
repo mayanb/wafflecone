@@ -57442,6 +57442,8 @@
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _react = __webpack_require__(1);
@@ -57465,6 +57467,10 @@
 	var _Loading = __webpack_require__(368);
 
 	var _Loading2 = _interopRequireDefault(_Loading);
+
+	var _immutabilityHelper = __webpack_require__(349);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -57559,6 +57565,50 @@
 	      return a;
 	    }
 	  }, {
+	    key: 'handleDelivery',
+	    value: function handleDelivery(selectedCount) {
+	      var processIndex = 0;
+	      var _iteratorNormalCompletion = true;
+	      var _didIteratorError = false;
+	      var _iteratorError = undefined;
+
+	      try {
+	        for (var _iterator = this.state.processes.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	          var _step$value = _slicedToArray(_step.value, 2),
+	              index = _step$value[0],
+	              process = _step$value[1];
+
+	          if (process.process_id == this.props.match.params.id) {
+	            processIndex = index;
+	            break;
+	          }
+	        }
+	      } catch (err) {
+	        _didIteratorError = true;
+	        _iteratorError = err;
+	      } finally {
+	        try {
+	          if (!_iteratorNormalCompletion && _iterator.return) {
+	            _iterator.return();
+	          }
+	        } finally {
+	          if (_didIteratorError) {
+	            throw _iteratorError;
+	          }
+	        }
+	      }
+
+	      var newProcesses = (0, _immutabilityHelper2.default)(this.state.processes, _defineProperty({}, processIndex, {
+	        count: {
+	          $apply: function $apply(c) {
+	            return c - selectedCount;
+	          }
+	        }
+	      }));
+
+	      this.setState({ processes: newProcesses });
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      var props = this.props;
@@ -57591,7 +57641,8 @@
 	        _react2.default.createElement(_InventoryDetail2.default, _extends({}, this.getSelectedProcess(), {
 	          filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null,
 	          match: props.match,
-	          showDetail: props.match.params.id
+	          showDetail: props.match.params.id,
+	          onDelivery: this.handleDelivery.bind(this)
 	        }))
 	      );
 	    }
@@ -57692,8 +57743,6 @@
 	  value: true
 	});
 
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57726,6 +57775,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -57743,8 +57794,7 @@
 	    _this.latestRequestID = -1;
 	    _this.handleLoadClick = _this.handleLoadClick.bind(_this);
 	    _this.state = {
-	      items: [],
-	      selected: [],
+	      tasks: [],
 	      next: null,
 	      loading: false,
 	      selectedCount: 0,
@@ -57775,15 +57825,14 @@
 
 	      var props = this.props;
 
-	      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, { items: this.state.items, onChange: this.handleItemSelect.bind(this), selected: this.state.selected }));
-	      if (!this.state.items || this.state.items.length == 0) {
-	        if (this.state.loading) {
-	          contentArea = _react2.default.createElement(_Loading2.default, null);
-	        }
+	      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, { tasks: this.state.tasks, onChange: this.handleItemSelect.bind(this) }));
+	      var loading = false;
+	      if (this.state.loading) {
+	        loading = _react2.default.createElement(_Loading2.default, null);
 	      }
 
 	      var loadMore = false;
-	      if (this.state.next) {
+	      if (this.state.next && !this.state.loading) {
 	        loadMore = _react2.default.createElement(
 	          'button',
 	          { onClick: this.handleLoadClick },
@@ -57851,12 +57900,13 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'i-detail-content' },
-	          contentArea
+	          contentArea,
+	          loading,
+	          loadMore
 	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'i-detail-footer' },
-	          loadMore,
 	          deliver
 	        )
 	      );
@@ -57868,53 +57918,68 @@
 	        return;
 	      }
 
-	      this.setState({ loading: true });
+	      var newState = { loading: true };
+	      if (!u) {
+	        newState.tasks = [];
+	        newState.selectedCount = 0;
+	      }
 
-	      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
-	      var g = { process: props.process_id };
+	      this.setState(newState);
+
+	      var url = u || window.location.origin + "/ics/inventory/detail-test/"; // + props.match.params.id
+	      var g = { process: props.match.params.id };
 	      if (this.props.filter) {
 	        g.products = this.props.filter;
 	      }
+
+	      if (props.count > 500) {
+	        g.page_size = 5;
+	      }
+
 	      var random = Math.floor(Math.random() * 1000);
 	      this.latestRequestID = random;
 
 	      var component = this;
 	      (0, _APIManager.fetch)(url, g).done(function (data, d, jqxhr) {
 	        if (component.latestRequestID == random) {
-	          var items = data.results;
-	          var selected = new Array(items.length).fill(false);
+	          var tasks = data.results;
 	          if (u) {
-	            items = (0, _immutabilityHelper2.default)(component.state.items, { $push: items });
-	            selected = (0, _immutabilityHelper2.default)(component.state.selected, { $push: selected });
+	            tasks = (0, _immutabilityHelper2.default)(component.state.tasks, { $push: tasks });
 	          }
-	          component.setState({ items: items, next: data.next, selected: selected });
+	          component.setState({ tasks: tasks, next: data.next, loading: false });
 	        }
-	      }).always(function () {
+	      }).fail(function () {
+	        alert("error!");
 	        component.setState({ loading: false });
 	      });
 	    }
 	  }, {
 	    key: 'handleItemSelect',
-	    value: function handleItemSelect(i) {
-	      var newVal = !this.state.selected[i];
+	    value: function handleItemSelect(taskIndex, itemIndex) {
+	      var newVal = this.state.tasks[taskIndex].items[itemIndex].selected;
+	      if (newVal) newVal = false;else newVal = true;
 
 	      var newCount = this.state.selectedCount;
 	      if (newVal) {
 	        newCount = this.state.selectedCount + 1;
 	      } else {
-	        newCountt = this.state.selectedCount - 1;
+	        newCount = this.state.selectedCount - 1;
 	      }
 
-	      console.log(newCount);
+	      var newArr = (0, _immutabilityHelper2.default)(this.state.tasks, _defineProperty({}, taskIndex, {
+	        items: _defineProperty({}, itemIndex, {
+	          $merge: { selected: newVal }
+	        })
+	      }));
 
-	      var newArr = (0, _immutabilityHelper2.default)(this.state.selected, { $splice: [[i, 1, newVal]] });
-	      this.setState({ selected: newArr, selectedCount: newCount });
+	      console.log(newArr);
+
+	      this.setState({ tasks: newArr, selectedCount: newCount });
 	    }
 	  }, {
 	    key: 'deliverItems',
 	    value: function deliverItems(destination, callback) {
-	      var items = this.state.items;
-	      var selected = this.state.selected;
+	      var tasks = this.state.tasks;
 
 	      var itemsToDeliver = [];
 	      var _iteratorNormalCompletion = true;
@@ -57922,13 +57987,33 @@
 	      var _iteratorError = undefined;
 
 	      try {
-	        for (var _iterator = items.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	          var _step$value = _slicedToArray(_step.value, 2),
-	              i = _step$value[0],
-	              val = _step$value[1];
+	        for (var _iterator = this.state.tasks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	          var task = _step.value;
+	          var _iteratorNormalCompletion2 = true;
+	          var _didIteratorError2 = false;
+	          var _iteratorError2 = undefined;
 
-	          if (selected[i]) {
-	            itemsToDeliver.push({ item: '' + val.id });
+	          try {
+	            for (var _iterator2 = task.items[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	              var item = _step2.value;
+
+	              if (item.selected) {
+	                itemsToDeliver.push({ item: '' + item.id });
+	              }
+	            }
+	          } catch (err) {
+	            _didIteratorError2 = true;
+	            _iteratorError2 = err;
+	          } finally {
+	            try {
+	              if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	                _iterator2.return();
+	              }
+	            } finally {
+	              if (_didIteratorError2) {
+	                throw _iteratorError2;
+	              }
+	            }
 	          }
 	        }
 	      } catch (err) {
@@ -57946,6 +58031,8 @@
 	        }
 	      }
 
+	      console.log(itemsToDeliver);
+
 	      var team = window.localStorage.getItem("team") || "1";
 	      var component = this;
 	      var url = '/ics/movements/create/';
@@ -57960,7 +58047,8 @@
 
 	      (0, _APIManager.post)(url, JSON.stringify(params)).done(function (data) {
 	        if (callback) callback();
-	        component.getInventoryItems(component.props, null);
+	        component.props.onDelivery(component.state.selectedCount);
+	        //component.getInventoryItems(component.props, null)
 	        component.setState({ selectedCount: 0 });
 	      }).fail(function (req, err) {
 	        alert('Couldn\'t deliver the items. :( \n ' + err);
@@ -57978,8 +58066,8 @@
 	  return _react2.default.createElement(
 	    'div',
 	    null,
-	    (props.items || []).map(function (item, i) {
-	      return _react2.default.createElement(Item, _extends({ key: i, i: i }, item, { onChange: props.onChange, selected: props.selected[i] }));
+	    (props.tasks || []).map(function (task, i) {
+	      return _react2.default.createElement(TaskDropdown, _extends({ key: i, index: i }, task, { onChange: props.onChange }));
 	    }, this)
 	  );
 	}
@@ -58004,25 +58092,47 @@
 	          'span',
 	          { className: 'item-qr' },
 	          props.item_qr.substring(42)
-	        ),
-	        _react2.default.createElement(
-	          'a',
-	          { href: window.location.origin + "/dashboard/task/" + props.creating_task.id, target: '_blank' },
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'item-task' },
-	            (0, _Task.display)(props.creating_task)
-	          )
 	        )
 	      )
 	    ),
 	    _react2.default.createElement(
 	      'div',
 	      { className: 'unflex' },
-	      _react2.default.createElement('input', { type: 'checkbox', value: props.selected, checked: props.selected, onChange: function onChange() {
-	          return props.onChange(props.i);
-	        } })
+	      _react2.default.createElement('input', {
+	        type: 'checkbox',
+	        value: props.selected,
+	        checked: props.selected,
+	        onChange: function onChange() {
+	          return props.onChange(props.taskIndex, props.itemIndex);
+	        }
+	      })
 	    )
+	  );
+	}
+
+	function TaskDropdown(props) {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'inventory-task' },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'task-title' },
+	      _react2.default.createElement(
+	        'a',
+	        {
+	          href: window.location.origin + "/dashboard/task/" + props.id,
+	          target: '_blank'
+	        },
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'item-task' },
+	          ' ' + props.display + ' (' + props.items.length + ')'
+	        )
+	      )
+	    ),
+	    props.items.map(function (item, i) {
+	      return _react2.default.createElement(Item, _extends({}, item, { key: i, itemIndex: i, taskIndex: props.index, onChange: props.onChange }));
+	    })
 	  );
 	}
 

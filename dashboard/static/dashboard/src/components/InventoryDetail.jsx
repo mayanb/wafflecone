@@ -15,8 +15,7 @@ export default class InventoryDetail extends React.Component {
     this.latestRequestID = -1
     this.handleLoadClick = this.handleLoadClick.bind(this)
     this.state = { 
-      items: [],
-      selected: [],
+      tasks: [],
       next: null,
       loading: false,
       selectedCount: 0,
@@ -40,15 +39,14 @@ export default class InventoryDetail extends React.Component {
   render() {
     let props = this.props
 
-    var contentArea = <ItemList {...props} items={this.state.items} onChange={this.handleItemSelect.bind(this)} selected={this.state.selected}/>
-    if (!this.state.items || this.state.items.length == 0) {
-      if (this.state.loading) {
-        contentArea = <Loading />
-      }
+    var contentArea = <ItemList {...props} tasks={this.state.tasks} onChange={this.handleItemSelect.bind(this)}/>
+    var loading = false
+    if (this.state.loading) {
+      loading = <Loading />
     }
 
     let loadMore = false
-    if (this.state.next) {
+    if (this.state.next && !this.state.loading) {
       loadMore = <button onClick={this.handleLoadClick}>Load More</button>
     }
 
@@ -78,9 +76,10 @@ export default class InventoryDetail extends React.Component {
         </div>
         <div className="i-detail-content">
           { contentArea }
+          { loading }
+          { loadMore }
         </div>
         <div className="i-detail-footer">
-          { loadMore }
           { deliver }
         </div>
       </div>
@@ -92,13 +91,24 @@ export default class InventoryDetail extends React.Component {
       return
     }
 
-    this.setState({loading: true})
+    let newState = {loading: true}
+    if (!u) {
+      newState.tasks = []
+      newState.selectedCount = 0
+    }
 
-    let url = u || window.location.origin + "/ics/inventory/detail/"// + props.match.params.id
-    let g = {process: props.process_id}
+    this.setState(newState)
+
+    let url = u || window.location.origin + "/ics/inventory/detail-test/"// + props.match.params.id
+    let g = {process: props.match.params.id}
     if(this.props.filter) {
       g.products = this.props.filter
     }
+
+    if (props.count > 500) {
+      g.page_size = 5
+    }
+    
     let random = Math.floor(Math.random() * 1000)
     this.latestRequestID = random
 
@@ -106,45 +116,60 @@ export default class InventoryDetail extends React.Component {
     fetch(url, g)
       .done(function (data, d, jqxhr) {
         if (component.latestRequestID == random) {
-          var items = data.results
-          var selected = new Array(items.length).fill(false)
+          var tasks = data.results
           if(u) {
-            items = update(component.state.items, {$push: items})
-            selected = update(component.state.selected, {$push: selected})
+            tasks = update(component.state.tasks, {$push: tasks})
           }
-          component.setState({items: items, next: data.next, selected: selected})
+          component.setState({tasks: tasks, next: data.next, loading: false})
+
         }
-      }).always(function () {
+      }).fail(function () {
+        alert("error!")
         component.setState({loading: false})
       })
   }
 
-  handleItemSelect(i) {
-    let newVal = !this.state.selected[i]
+  handleItemSelect(taskIndex, itemIndex) {
+    let newVal = this.state.tasks[taskIndex].items[itemIndex].selected
+    if (newVal)
+      newVal = false
+    else newVal = true
 
     let newCount = this.state.selectedCount
     if (newVal) {
       newCount =this.state.selectedCount + 1
     } else {
-      newCountt = this.state.selectedCount - 1
+      newCount = this.state.selectedCount - 1
     }
 
-    console.log(newCount)
+    let newArr = update(this.state.tasks, {
+      [taskIndex]: {
+        items: {
+          [itemIndex]: {
+            $merge: {selected: newVal}
+          }
+        }
+      }
+    })
 
-    let newArr = update(this.state.selected, {$splice: [[i, 1, newVal]]})
-    this.setState({selected: newArr, selectedCount: newCount})
+    console.log(newArr)
+
+    this.setState({tasks: newArr, selectedCount: newCount})
   }
 
   deliverItems(destination, callback) {
-    let items = this.state.items
-    let selected = this.state.selected
+    let tasks = this.state.tasks
 
     let itemsToDeliver = []
-    for(let [i, val] of items.entries()) {
-      if (selected[i]) {
-        itemsToDeliver.push({item: `${val.id}`})
+    for (let task of this.state.tasks) {
+      for (let item of task.items) {
+        if (item.selected) {
+          itemsToDeliver.push({item: `${item.id}`})
+        }
       }
     }
+
+    console.log(itemsToDeliver)
 
     let team = window.localStorage.getItem("team") || "1"
     let component = this
@@ -162,7 +187,8 @@ export default class InventoryDetail extends React.Component {
       .done(function (data) {
         if (callback) 
           callback()
-        component.getInventoryItems(component.props, null)
+        component.props.onDelivery(component.state.selectedCount)
+        //component.getInventoryItems(component.props, null)
         component.setState({selectedCount: 0})
       }).fail(function (req, err) {
         alert(`Couldn't deliver the items. :( \n ${err}`)
@@ -174,8 +200,8 @@ function ItemList(props) {
   return (
     <div>
     {
-      (props.items || []).map(function (item, i) {
-        return <Item key={i} i={i} {...item} onChange={props.onChange} selected={props.selected[i]}/>
+      (props.tasks || []).map(function (task, i) {
+        return <TaskDropdown key={i} index={i} {...task} onChange={props.onChange}/>
       }, this)
     }
     </div>
@@ -192,12 +218,36 @@ function Item(props) {
         </div>
         <div>
           <span className="item-qr">{props.item_qr.substring(42)}</span>
-          <a href={window.location.origin + "/dashboard/task/" + props.creating_task.id} target="_blank"><span className="item-task">{display(props.creating_task)}</span></a>
         </div>
       </div>
       <div className="unflex">
-        <input type="checkbox" value={props.selected} checked={props.selected} onChange={() => props.onChange(props.i)} />
+        <input 
+          type="checkbox" 
+          value={props.selected} 
+          checked={props.selected} 
+          onChange={() => props.onChange(props.taskIndex, props.itemIndex)}
+        />
       </div>
+    </div>
+  )
+}
+
+function TaskDropdown(props) {
+  return (
+    <div className="inventory-task">
+      <div className="task-title">
+        <a 
+          href={window.location.origin + "/dashboard/task/" + props.id}
+          target="_blank"
+        >
+          <span className="item-task">{` ${props.display} (${props.items.length})`}</span>
+        </a>
+      </div>
+    {
+      props.items.map(function (item, i) {
+        return <Item {...item} key={i} itemIndex={i} taskIndex={props.index} onChange={props.onChange} />
+      })
+    }
     </div>
   )
 }

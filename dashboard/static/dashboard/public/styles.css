@@ -56,7 +56,7 @@ html, body {
   padding: 0; }
 
 body div#root {
-  font-family: Nunito, Overpass, Proxima Nova, sans-serif;
+  font-family: "Camphor Pro", Nunito, Overpass, Proxima Nova, sans-serif;
   font-size: 14px;
   background-color: #ffffff; }
 
@@ -437,10 +437,17 @@ div#blocker, #canvastest {
       padding: 0 16px;
       margin: 8px 0px;
       overflow: scroll; }
+      .inventory .inventory-detail .i-detail-content .task-title {
+        font-weight: bold;
+        padding-bottom: 4px; }
+      .inventory .inventory-detail .i-detail-content .inventory-task {
+        margin: 0px -16px;
+        padding: 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
       .inventory .inventory-detail .i-detail-content .item {
         display: flex;
         flex-direction: row;
-        padding: 8px 0px; }
+        padding: 2px 8px; }
         .inventory .inventory-detail .i-detail-content .item .item-img {
           height: 12px;
           width: 12px;
@@ -464,7 +471,7 @@ div#blocker, #canvastest {
         height: 100%;
         width: 100%;
         font-size: 16px;
-        font-family: Nunito, Overpass, Proxima Nova, sans-serif;
+        font-family: "Camphor Pro", Nunito, Overpass, Proxima Nova, sans-serif;
         background-color: #43A6F6;
         color: white;
         border: none; }
