@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
-from django.db.models import F, Q, Count, Case, When, Min
+from django.db import models
+from django.db.models import F, Q, Count, Case, When, Min, Value
 from ics.models import *
 from django.contrib.auth.models import User
 from ics.serializers import *
@@ -199,6 +200,31 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__created_by').annotate(
         count=Count('creating_task__process_type'),
     )
+
+
+class InventoryDetailTest(generics.ListAPIView):
+  serializer_class = InventoryDetailSerializer
+  pagination_class = SmallPagination
+
+  def get_queryset(self):
+    queryset = Task.objects.filter(is_trashed=False, items__isnull=False, items__input__isnull=True)
+
+    # filter by team
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(items__inventory=team).distinct()
+
+    # filter by products
+    products = self.request.query_params.get('products', None)
+    if products is not None:
+      products = products.strip().split(',')
+      queryset = queryset.filter(product_type__code__in=products)
+
+    # filter by output type
+    process = self.request.query_params.get('process', '')
+    return queryset.filter(process_type=process).annotate(team=Value(team, output_field=models.CharField()))
+
+
 
 class InventoryDetail(generics.ListAPIView):
   queryset = Item.objects.filter(creating_task=533)

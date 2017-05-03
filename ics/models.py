@@ -109,7 +109,7 @@ class Task(models.Model):
         return self.item_set.all()
 
     def getInventoryItems(self):
-        return self.item_set.filter(input__isnull=True)
+        return self.items.filter(input__isnull=True)
 
     def getInputs(self):
         return self.input_set.all()

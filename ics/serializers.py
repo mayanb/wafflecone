@@ -200,6 +200,17 @@ class InventoryListSerializer(serializers.ModelSerializer):
     model = Item
     fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id')
 
+class InventoryDetailSerializer(serializers.ModelSerializer):
+  items = serializers.SerializerMethodField('getInventoryItems')
+  display = serializers.CharField(source='*', read_only=True)
+
+  def getInventoryItems(self, task):
+    return BasicItemSerializer(task.items.filter(input__isnull=True, inventory=task.team), many=True).data
+
+  class Meta:
+    model = Task
+    fields = ('id', 'items', 'display')
+
 class ActivityListSerializer(serializers.ModelSerializer):
   process_id=serializers.CharField(source='process_type', read_only=True)
   process_name=serializers.CharField(source='process_type__name', read_only=True)
