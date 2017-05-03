@@ -17,6 +17,7 @@ class ProcessType(models.Model):
     output_desc = models.CharField(max_length=20, default="product")
     x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
     y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    is_trashed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -37,6 +38,7 @@ class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
+    is_trashed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

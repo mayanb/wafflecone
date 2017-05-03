@@ -163,7 +163,7 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
   
 
 class ProcessList(generics.ListCreateAPIView):
-  queryset = ProcessType.objects.all()
+  queryset = ProcessType.objects.filter(is_trashed=False)
   serializer_class = ProcessTypeSerializer
   filter_fields = ('created_by',)
 
@@ -316,7 +316,7 @@ class ProductCodes(generics.ListAPIView):
 
 
 class ProductList(generics.ListCreateAPIView):
-  queryset = ProductType.objects.all()
+  queryset = ProductType.objects.filter(is_trashed=False)
   serializer_class = ProductTypeSerializer
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
