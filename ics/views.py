@@ -457,7 +457,9 @@ class MovementList(generics.ListAPIView):
   queryset = Movement.objects.all()
   serializer_class=MovementListSerializer
   pagination_class = SmallPagination
+  filter_backends = (OrderingFilter, )
   filter_fields=('group_qr', 'destination', 'origin')
+  ordering_fields = ('timestamp', )
 
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()

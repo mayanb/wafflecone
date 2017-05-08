@@ -244,7 +244,7 @@ export default class LabelPrinter extends React.Component {
           </div>
 
           <div className="playground" style={{position: "relative", margin: "20px"}}>
-            <Label taskLabelShort={short(this.state.task.label)} 
+            <Label taskLabel={short(this.state.task.label)} 
               taskLabelLong={this.state.task.label}
               originLabel={getCode(this.state.task.label || "")} 
               notesLabel={this.state.expanded?"":this.state.notes}

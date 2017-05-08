@@ -50147,12 +50147,17 @@
 	    key: 'getDeliveries',
 	    value: function getDeliveries() {
 	      this.setState({ loading: true });
-	      console.log("getting");
 
 	      var url = window.location.origin + "/ics/movements/";
 	      var team = window.localStorage.getItem("team") || "1";
 	      var component = this;
-	      (0, _APIManager.fetch)(url, { destination: team }).done(function (data) {
+
+	      var params = {
+	        destination: team,
+	        ordering: '-timestamp'
+	      };
+
+	      (0, _APIManager.fetch)(url, params).done(function (data) {
 	        var _iteratorNormalCompletion = true;
 	        var _didIteratorError = false;
 	        var _iteratorError = undefined;
@@ -63551,7 +63556,7 @@
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'playground', style: { position: "relative", margin: "20px" } },
-	            _react2.default.createElement(_Label.LabelV2, { taskLabelShort: short(this.state.task.label),
+	            _react2.default.createElement(_Label.Label, { taskLabel: short(this.state.task.label),
 	              taskLabelLong: this.state.task.label,
 	              originLabel: getCode(this.state.task.label || ""),
 	              notesLabel: this.state.expanded ? "" : this.state.notes
