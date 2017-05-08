@@ -4,6 +4,7 @@ import {getCookie, csrfSafeMethod} from './csrf.jsx'
 import {BrowserRouter as Router, Route} from 'react-router-dom'
 import $ from 'jquery'
 import moment from 'moment'
+import Deliveries from './Delivery.jsx'
 
 import {Navbar} from './Layout.jsx'
 import FactoryMap from './FactoryMap.jsx'
@@ -51,6 +52,7 @@ class Main extends React.Component {
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
+              <Route path={"/dashboard/deliveries/"} component={Deliveries} />
             </main>
 
             <Route path="/dashboard/:section?/:id?" component={Navbar} />

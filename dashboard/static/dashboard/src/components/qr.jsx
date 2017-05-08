@@ -82,6 +82,7 @@ function createBackingImage(ctx, svg, uuid) {
 
   // add backing image + qr text
   ctx.fillStyle = '#000'
+  ctx.font = "20px Overpass Mono";
   ctx.drawImage(svg, 0, 0);
   ctx.font = "20px Overpass Mono";
   ctx.fillText(uuid.substr(uuid.length-6), 71, 216)
@@ -131,10 +132,10 @@ function getXML() {
   var labelXml = `<?xml version="1.0" encoding="utf-8"?>
 <DieCutLabel Version="8.0" Units="twips">
   <PaperOrientation>Landscape</PaperOrientation>
-  <Id>LargeShipping</Id>
-  <PaperName>30256 Shipping</PaperName>
+  <Id>Shipping</Id>
+  <PaperName>30323 Shipping</PaperName>
   <DrawCommands>
-    <RoundRectangle X="0" Y="0" Width="3331" Height="5715" Rx="270" Ry="270"/>
+    <RoundRectangle X="0" Y="0" Width="3060" Height="5715" Rx="270" Ry="270"/>
   </DrawCommands>
   <ObjectInfo>
     <ImageObject>
@@ -146,13 +147,13 @@ function getXML() {
       <IsMirrored>False</IsMirrored>
       <IsVariable>False</IsVariable>
       <Image></Image>
-      <ScaleMode>Uniform</ScaleMode>
+      <ScaleMode>Fill</ScaleMode>
       <BorderWidth>0</BorderWidth>
       <BorderColor Alpha="255" Red="0" Green="0" Blue="0"/>
       <HorizontalAlignment>Center</HorizontalAlignment>
       <VerticalAlignment>Center</VerticalAlignment>
     </ImageObject>
-    <Bounds X="211.2" Y="57.6001" Width="5337.6" Height="3192"/>
+    <Bounds X="196" Y="0" Width="5323.2" Height="2918.4"/>
   </ObjectInfo>
   <ObjectInfo>
     <ImageObject>
@@ -170,7 +171,7 @@ function getXML() {
       <HorizontalAlignment>Center</HorizontalAlignment>
       <VerticalAlignment>Center</VerticalAlignment>
     </ImageObject>
-    <Bounds X="579.9039" Y="531" Width="1900" Height="1900"/>
+    <Bounds X="430.5774" Y="360.9652" Width="1640.358" Height="1488.177"/>
   </ObjectInfo>
 </DieCutLabel>
 `

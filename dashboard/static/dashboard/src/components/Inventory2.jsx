@@ -1,7 +1,7 @@
 import React from 'react'
 import $ from 'jquery'
 import {Link} from 'react-router-dom'
-import InventoryDetail from './InventoryDetail.jsx'
+import {InventoryDetail} from './InventoryDetail.jsx'
 import { InventoryFilter, Filters } from './Inputs.jsx'
 import {fetch, requestID, ZeroState} from './APIManager.jsx'
 import Loading from './Loading.jsx'

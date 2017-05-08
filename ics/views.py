@@ -456,7 +456,8 @@ class MovementCreate(generics.CreateAPIView):
 class MovementList(generics.ListAPIView):
   queryset = Movement.objects.all()
   serializer_class=MovementListSerializer
-  filter_fields=('group_qr',)
+  pagination_class = SmallPagination
+  filter_fields=('group_qr', 'destination', 'origin')
 
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()

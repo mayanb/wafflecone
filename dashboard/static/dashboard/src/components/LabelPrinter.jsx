@@ -4,7 +4,7 @@ import Select from 'react-select'
 import {display} from './Task.jsx'
 import update from 'immutability-helper'
 import {mountQR, printQRs} from './qr.jsx'
-import {Label} from './Label.jsx'
+import {Label, LabelV2} from './Label.jsx'
 import {fetch} from './APIManager.jsx'
 
 var getOptions = function(input, callback) {
@@ -244,7 +244,8 @@ export default class LabelPrinter extends React.Component {
           </div>
 
           <div className="playground" style={{position: "relative", margin: "20px"}}>
-            <Label taskLabel={this.state.task.label} 
+            <Label taskLabelShort={short(this.state.task.label)} 
+              taskLabelLong={this.state.task.label}
               originLabel={getCode(this.state.task.label || "")} 
               notesLabel={this.state.expanded?"":this.state.notes}
             />
@@ -273,6 +274,16 @@ export default class LabelPrinter extends React.Component {
       </div>
     )
   }
+}
+
+function short(str) {
+  if (!str)
+    return ""
+  var codes = str.split('-')
+  if (codes.length > 2) {
+    codes.splice(1, 1)
+  }
+  return codes.join('-')
 }
 
 function getCode(str) {

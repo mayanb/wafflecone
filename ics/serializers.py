@@ -161,9 +161,11 @@ class NestedMovementItemSerializer(serializers.ModelSerializer):
 
 class MovementListSerializer(serializers.ModelSerializer):
   items = NestedMovementItemSerializer(many=True, read_only=True)
+  origin = serializers.CharField(source='origin.username')
+  destination = serializers.CharField(source='destination.username')
   class Meta:
     model = Movement
-    fields = ('id', 'items', 'origin', 'status', 'destination')
+    fields = ('id', 'items', 'origin', 'status', 'destination', 'timestamp', 'notes')
 
 class MovementCreateSerializer(serializers.ModelSerializer):
   items = MovementItemSerializer(many=True, read_only=False)

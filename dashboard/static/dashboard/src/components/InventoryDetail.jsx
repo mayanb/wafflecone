@@ -8,7 +8,7 @@ import Loading from './Loading.jsx'
 import {Dropdown} from 'react-toolbox/lib/dropdown'
 import {Dialog} from './Dialog.jsx'
 
-export default class InventoryDetail extends React.Component {
+class InventoryDetail extends React.Component {
 
   constructor(props) {
     super(props)
@@ -305,3 +305,5 @@ class DeliveryDialog extends React.Component {
   }
 
 }
+
+export {InventoryDetail, DeliveryDialog}

@@ -128,13 +128,18 @@ div.labelPrinter {
 
 .labelSVG {
 	background-color: white;
+	font-family: 'Overpass', 'Overpass Mono';
 }
 
 div#blocker, #canvastest {
 	position: absolute;
-	height: 241px;
-	width: 431px;
+	height: 300px;
+	width: 500px;
 	background-color: $light-grey;
 	top: 0;
 	left: 0
+}
+
+div#blocker, #canvastest {
+	display: none;
 }

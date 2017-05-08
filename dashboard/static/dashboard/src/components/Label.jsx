@@ -28,4 +28,37 @@ function Label(props) {
   )
 }
 
-export {Label}
+function LabelV2(props) {
+  return (
+   <svg width="450px" height="247px" viewBox="0 0 5323 2918" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <style>
+      @import url('https://fonts.googleapis.com/css?family=Overpass+Mono|Overpass:400,700');
+      </style>
+    </defs>
+    <g id="Page-1" stroke="none" strokeWidth="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard">
+            <g id="Group" transform="translate(0.000000, 282.001992)">
+                <text textAnchor="middle" id="CV2" fontFamily="Overpass-Bold, Overpass" fontSize="742.250996" fontWeight="bold" fill="#000000">
+                    <tspan x="3724" y="782.885835">CV2</tspan>
+                </text>
+                <text textAnchor="middle" id="RCS-0221-1" fontFamily="Overpass-Bold, Overpass" fontSize="424.143426" fontWeight="bold" fill="#000000">
+                    <tspan x="3724" y="1541.43574">RCS-0221-1</tspan>
+                </text>
+                <rect id="Rectangle" fill="#E9E9E9" x="434.747012" y="265.089641" width="1272.43028" height="1272.43028"></rect>
+                <text id="3ba1ae" fontFamily="OverpassMono-Regular, Overpass Mono" fontSize="212.071713" fontWeight="normal" fill="#000000">
+                    <tspan x="679.053625" y="2286.30279">3ba1ae</tspan>
+                </text>
+                <path d="M5.30179283,1807.91135 L5317.86752,1807.91135" id="Line" stroke="#979797" strokeWidth="10.6035857" stroke-linecap="square"></path>
+                <path d="M3560.23854,997.604958 L3891.51594,997.604958" id="Line" stroke="#979797" strokeWidth="10.6035857" stroke-linecap="square"></path>
+                <text textAnchor="middle" id="RCS-CV2-0221-1" fontFamily="OverpassMono-Regular, Overpass Mono" fontSize="212.071713" fontWeight="normal" fill="#000000">
+                    <tspan x="3724" y="2286.30279">RCS-0221-1</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>
+  )
+}
+
+export {Label, LabelV2}
