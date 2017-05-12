@@ -47,14 +47,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 # serializes only post-editable fields of task
 class EditTaskSerializer(serializers.ModelSerializer):
-  id = serializers.IntegerField(read_only=True)
+  #id = serializers.IntegerField(read_only=True)
   created_at = serializers.DateTimeField(read_only=True)
   display = serializers.CharField(source='*', read_only=True)
   process_type = serializers.IntegerField(source='process_type.id', read_only=True)
-  display = serializers.CharField(source='*', read_only=True)
   class Meta:
     model = Task
-    fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'created_at', 'display')
+    fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'created_at')
 
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
@@ -111,9 +110,10 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 # serializes all fields of the task, with nested items, inputs, and attributes
 class NestedTaskSerializer(serializers.ModelSerializer):
-  items = serializers.SerializerMethodField('getItems')
+  items = BasicItemSerializer(many=True)
   inputs = BasicInputSerializer(many=True, read_only=True)
-  inputUnit = serializers.SerializerMethodField('getInputUnit')
+  input_unit = serializers.CharField(read_only=True)
+  #inputUnit = serializers.SerializerMethodField('getInputUnit')
   attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
   product_type = ProductTypeSerializer(many=False, read_only=True)
   process_type = ProcessTypeSerializer(many=False, read_only=True)
@@ -134,7 +134,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'inputUnit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attribute_values', 'display')
+    fields = ('id', 'process_type', 'product_type', 'label', 'input_unit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attribute_values', 'display')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):

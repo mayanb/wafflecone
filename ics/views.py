@@ -1,7 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
-from django.db.models import F, Q, Count, Case, When, Min, Value
+from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
 from ics.serializers import *
@@ -74,7 +75,6 @@ class TaskList(generics.ListAPIView):
 
   def get_queryset(self):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
-        #queryset = queryset.annotate(inputUnit=F('inputs__input_item__creating_task__process_type__unit'))
 
         team = self.request.query_params.get('team', None)
         if team is not None:
@@ -118,7 +118,10 @@ class TaskList(generics.ListAPIView):
           endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
           queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
-        return queryset
+
+        i = Input.objects.filter(task=OuterRef('id')).order_by('id')
+        queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
+        return queryset.select_related().prefetch_related('items', 'attribute_values')
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('inventory', None )

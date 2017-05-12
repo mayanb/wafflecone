@@ -37,7 +37,7 @@ def images(request):
   img = Image.new("RGB", (width, height), "white")
 
   for i in range(count):
-    code_text = "dande.li/ics/" + str(uuid4())
+    code_text = "dande/" + str(uuid4()).translate(None, '-')
     qr = qrcode.QRCode(
       version=None,
       error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -54,7 +54,7 @@ def images(request):
     y_pos = Y_OFFSET + y*STICKER_SIZE + y*Y_SPACING + diff
     img.paste(qr_img, (x_pos, y_pos, x_pos + QR_SIZE, y_pos + QR_SIZE))
 
-  brown = Image.new("RGB", (width, height), "#3c2415")
+  brown = Image.new("RGB", (width, height), "#9f8958")
   final = ImageChops.lighter(brown, img)
   response = HttpResponse(content_type="image/png")
   final.save(response, "PNG")
