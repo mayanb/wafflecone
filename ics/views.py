@@ -425,8 +425,8 @@ def activityCSV(request):
   tasks = Task.objects.filter(is_trashed=False, 
     process_type__created_by=team, process_type=process, 
     created_at__date__range=(startDate, endDate)).annotate(
-    inputcount=Count('inputs')).annotate(
-    outputcount=Count('items')).annotate(
+    inputcount=Count('inputs', distinct=True)).annotate(
+    outputcount=Count('items', distinct=True)).annotate(
     first_use_date=Min('items__input__task__created_at'))
 
   for t in tasks:
