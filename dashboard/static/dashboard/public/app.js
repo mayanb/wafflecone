@@ -60805,6 +60805,12 @@
 	  return str;
 	}
 
+	function calibrate() {
+	  BrowserPrint.getDefaultDevice("printer", function (device) {
+	    device.send('! U1 setvar "media.type" "label"\n! U1 setvar "media.sense_mode" "bar"\n~jc^xa^jus^xz', undefined, errorCallback);
+	  });
+	}
+
 	function printQRs_zebra(uuids, task, notes) {
 	  try {
 	    var zpl = "";
@@ -60939,6 +60945,7 @@
 	exports.mountQR = mountQR;
 	exports.printQRs_dymo = printQRs_dymo;
 	exports.printQRs_zebra = printQRs_zebra;
+	exports.calibrate = calibrate;
 
 /***/ },
 /* 401 */
@@ -65714,6 +65721,17 @@
 	                  'span',
 	                  null,
 	                  'I need to reprint a label'
+	                )
+	              ),
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: function onClick() {
+	                    return (0, _qr.calibrate)();
+	                  } },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'Calibrate this printer'
 	                )
 	              )
 	            ),

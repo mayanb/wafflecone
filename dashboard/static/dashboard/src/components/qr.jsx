@@ -47,6 +47,11 @@ function getCode(str) {
   return str
 }
 
+function calibrate() {
+  BrowserPrint.getDefaultDevice("printer", function (device) {
+    device.send('! U1 setvar "media.type" "label"\n! U1 setvar "media.sense_mode" "bar"\n~jc^xa^jus^xz', undefined, errorCallback)
+  })
+}
 
 function printQRs_zebra(uuids, task, notes) {
   try {
@@ -234,4 +239,4 @@ function getXML() {
   return labelXml;
 }
 
-export {mountQR, printQRs_dymo, printQRs_zebra}
+export {mountQR, printQRs_dymo, printQRs_zebra, calibrate}

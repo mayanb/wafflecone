@@ -3,7 +3,7 @@ import $ from 'jquery'
 import Select from 'react-select'
 import {display} from './Task.jsx'
 import update from 'immutability-helper'
-import {mountQR, printQRs_zebra} from './qr.jsx'
+import {mountQR, printQRs_zebra, calibrate} from './qr.jsx'
 import {Label, LabelV2} from './Label.jsx'
 import {fetch} from './APIManager.jsx'
 //import {setup} as zebra from './zebra.jsx'
@@ -201,6 +201,9 @@ export default class ZebraPrinter extends React.Component {
 
               <button className="expandReprint" onClick={this.handleExpandClick}>
                 <span>I need to reprint a label</span>
+              </button>
+              <button className="expandReprint" onClick={() => calibrate()}>
+                <span>Calibrate this printer</span>
               </button>
             </div>
 
