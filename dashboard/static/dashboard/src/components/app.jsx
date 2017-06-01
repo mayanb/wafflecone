@@ -49,7 +49,7 @@ class Main extends React.Component {
             <main className="d-content">
               <Route exact path={"/dashboard/"} component={Activity} />
               <Route path={"/dashboard/inventory/:id?"} component={Inventory} />
-              <Route path={"/dashboard/labels/"} component={LabelPrinter} />
+              <Route path={"/dashboard/labels/"} component={ZebraPrinter} />
               <Route path={"/dashboard/zebra/"} component={ZebraPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
