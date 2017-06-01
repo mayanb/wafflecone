@@ -72,6 +72,10 @@
 
 	var _Delivery2 = _interopRequireDefault(_Delivery);
 
+	var _ZebraPrinter = __webpack_require__(412);
+
+	var _ZebraPrinter2 = _interopRequireDefault(_ZebraPrinter);
+
 	var _Layout = __webpack_require__(401);
 
 	var _FactoryMap = __webpack_require__(402);
@@ -82,15 +86,15 @@
 
 	var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
 
-	var _Inventory = __webpack_require__(406);
+	var _Inventory = __webpack_require__(405);
 
 	var _Inventory2 = _interopRequireDefault(_Inventory);
 
-	var _Task = __webpack_require__(407);
+	var _Task = __webpack_require__(406);
 
 	var _Task2 = _interopRequireDefault(_Task);
 
-	var _ActivityLog = __webpack_require__(408);
+	var _ActivityLog = __webpack_require__(407);
 
 	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
@@ -157,6 +161,7 @@
 	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: _ActivityLog2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: _Inventory2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _LabelPrinter2.default }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/zebra/", component: _ZebraPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/deliveries/", component: _Delivery2.default })
@@ -60759,7 +60764,6 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
 	function mountQR() {
 	  if (dymo.label.framework.init) dymo.label.framework.init(init);else init();
 	}
@@ -60782,7 +60786,41 @@
 	  });
 	}
 
-	function printQRs(uuids, qrcode) {
+	var errorCallback = function errorCallback(errorMessage) {
+	  alert("Error: " + errorMessage);
+	};
+
+	function short(str) {
+	  if (!str) return "";
+	  var codes = str.split('-');
+	  if (codes.length > 2) {
+	    codes.splice(1, 1);
+	  }
+	  return codes.join('-');
+	}
+
+	function getCode(str) {
+	  var codes = str.split('-');
+	  if (codes[1]) return codes[1];
+	  return str;
+	}
+
+	function printQRs_zebra(uuids, task, notes) {
+	  try {
+	    var zpl = "";
+	    uuids.map(function (uuid) {
+	      zpl += "\n        ^XA\n        ^FO30,36\n          ^BQ,2,6^FDMA," + uuid + "\n        ^FS\n        ^FO70,260\n          ^AE,10\n          ^FD" + uuid.substring(uuid.length - 6) + "\n        ^FS\n        ^FO270,70\n          ^A0,180\n          ^FD" + getCode(task.data.display) + "\n        ^FS\n        ^FO30,300\n          ^GB" + (609 - 72) + ",1,3\n        ^FS\n        ^FO30,330\n          ^A0,60\n          ^FD" + task.data.display + "\n        ^FS\n        ^XZ";
+	    });
+
+	    BrowserPrint.getDefaultDevice("printer", function (device) {
+	      device.send(zpl, undefined, errorCallback);
+	    });
+	  } catch (e) {
+	    alert(e.message || e);
+	  }
+	}
+
+	function printQRs_dymo(uuids, task, notes, qrcode) {
 	  try {
 	    var label;
 	    var labelSetBuilder;
@@ -60899,7 +60937,8 @@
 	}
 
 	exports.mountQR = mountQR;
-	exports.printQRs = printQRs;
+	exports.printQRs_dymo = printQRs_dymo;
+	exports.printQRs_zebra = printQRs_zebra;
 
 /***/ },
 /* 401 */
@@ -63224,7 +63263,7 @@
 
 	var _qr = __webpack_require__(400);
 
-	var _Label = __webpack_require__(405);
+	var _Label = __webpack_require__(411);
 
 	var _APIManager = __webpack_require__(331);
 
@@ -63357,7 +63396,7 @@
 
 	      if (this.state.expanded) {
 	        var uuid = this.state.selectedItem.data.item_qr;
-	        (0, _qr.printQRs)([uuid], this.state.qrcode);
+	        (0, _qr.printQRs_dymo)([uuid], this.state.qrcode);
 	        this.setState({ disabled: false });
 	        return;
 	      }
@@ -63368,7 +63407,7 @@
 	        data: { count: numLabels }
 	      }).done(function (data) {
 	        var uuids = data.split(/\s+/);
-	        (0, _qr.printQRs)(data.split(/\s+/), thisObj.state.qrcode);
+	        (0, _qr.printQRs_dymo)(data.split(/\s+/), thisObj.state.qrcode);
 	      }).always(function () {
 	        thisObj.setState({ disabled: false });
 	      });
@@ -63457,7 +63496,7 @@
 	              _react2.default.createElement(
 	                'h2',
 	                null,
-	                ' Print me some labels '
+	                ' Print me some labels - Dymo'
 	              ),
 	              _react2.default.createElement(
 	                'span',
@@ -63674,149 +63713,6 @@
 
 /***/ },
 /* 405 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.LabelV2 = exports.Label = undefined;
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function Label(props) {
-	  console.log(props);
-	  return _react2.default.createElement(
-	    "svg",
-	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
-	    _react2.default.createElement("defs", null),
-	    _react2.default.createElement(
-	      "g",
-	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
-	      _react2.default.createElement(
-	        "g",
-	        { id: "Artboard" },
-	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "135.102905" },
-	            props.taskLabel || ""
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "91" },
-	            props.originLabel
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "206.385882", y: "179.205811" },
-	            props.notesLabel
-	          )
-	        ),
-	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
-	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
-	        _react2.default.createElement(
-	          "text",
-	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
-	          _react2.default.createElement(
-	            "tspan",
-	            { x: "70.885882", y: "216.037" },
-	            props.qrCode
-	          )
-	        )
-	      )
-	    )
-	  );
-	}
-
-	function LabelV2(props) {
-	  return _react2.default.createElement(
-	    "svg",
-	    { width: "450px", height: "247px", viewBox: "0 0 5323 2918", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
-	    _react2.default.createElement(
-	      "defs",
-	      null,
-	      _react2.default.createElement(
-	        "style",
-	        null,
-	        "@import url('https://fonts.googleapis.com/css?family=Overpass+Mono|Overpass:400,700');"
-	      )
-	    ),
-	    _react2.default.createElement(
-	      "g",
-	      { id: "Page-1", stroke: "none", strokeWidth: "1", fill: "none", "fill-rule": "evenodd" },
-	      _react2.default.createElement(
-	        "g",
-	        { id: "Artboard" },
-	        _react2.default.createElement(
-	          "g",
-	          { id: "Group", transform: "translate(0.000000, 282.001992)" },
-	          _react2.default.createElement(
-	            "text",
-	            { textAnchor: "middle", id: "CV2", fontFamily: "Overpass-Bold, Overpass", fontSize: "742.250996", fontWeight: "bold", fill: "#000000" },
-	            _react2.default.createElement(
-	              "tspan",
-	              { x: "3724", y: "782.885835" },
-	              "CV2"
-	            )
-	          ),
-	          _react2.default.createElement(
-	            "text",
-	            { textAnchor: "middle", id: "RCS-0221-1", fontFamily: "Overpass-Bold, Overpass", fontSize: "424.143426", fontWeight: "bold", fill: "#000000" },
-	            _react2.default.createElement(
-	              "tspan",
-	              { x: "3724", y: "1541.43574" },
-	              "RCS-0221-1"
-	            )
-	          ),
-	          _react2.default.createElement("rect", { id: "Rectangle", fill: "#E9E9E9", x: "434.747012", y: "265.089641", width: "1272.43028", height: "1272.43028" }),
-	          _react2.default.createElement(
-	            "text",
-	            { id: "3ba1ae", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "212.071713", fontWeight: "normal", fill: "#000000" },
-	            _react2.default.createElement(
-	              "tspan",
-	              { x: "679.053625", y: "2286.30279" },
-	              "3ba1ae"
-	            )
-	          ),
-	          _react2.default.createElement("path", { d: "M5.30179283,1807.91135 L5317.86752,1807.91135", id: "Line", stroke: "#979797", strokeWidth: "10.6035857", "stroke-linecap": "square" }),
-	          _react2.default.createElement("path", { d: "M3560.23854,997.604958 L3891.51594,997.604958", id: "Line", stroke: "#979797", strokeWidth: "10.6035857", "stroke-linecap": "square" }),
-	          _react2.default.createElement(
-	            "text",
-	            { textAnchor: "middle", id: "RCS-CV2-0221-1", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "212.071713", fontWeight: "normal", fill: "#000000" },
-	            _react2.default.createElement(
-	              "tspan",
-	              { x: "3724", y: "2286.30279" },
-	              "RCS-0221-1"
-	            )
-	          )
-	        )
-	      )
-	    )
-	  );
-	}
-
-	exports.Label = Label;
-	exports.LabelV2 = LabelV2;
-
-/***/ },
-/* 406 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64117,7 +64013,7 @@
 	};
 
 /***/ },
-/* 407 */
+/* 406 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64606,7 +64502,7 @@
 	}
 
 /***/ },
-/* 408 */
+/* 407 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64655,7 +64551,7 @@
 
 	var _Datepicker2 = _interopRequireDefault(_Datepicker);
 
-	var _reactImageFallback = __webpack_require__(409);
+	var _reactImageFallback = __webpack_require__(408);
 
 	var _reactImageFallback2 = _interopRequireDefault(_reactImageFallback);
 
@@ -65034,7 +64930,7 @@
 	}
 
 /***/ },
-/* 409 */
+/* 408 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -65051,7 +64947,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _filterInvalidDomProps = __webpack_require__(410);
+	var _filterInvalidDomProps = __webpack_require__(409);
 
 	var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
 
@@ -65159,7 +65055,7 @@
 	};
 
 /***/ },
-/* 410 */
+/* 409 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -65169,7 +65065,7 @@
 	});
 	exports.default = filterInvalidDOMProps;
 
-	var _htmlAttributes = __webpack_require__(411);
+	var _htmlAttributes = __webpack_require__(410);
 
 	var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
 
@@ -65238,7 +65134,7 @@
 	}
 
 /***/ },
-/* 411 */
+/* 410 */
 /***/ function(module, exports) {
 
 	/*!
@@ -65379,6 +65275,526 @@
 	  "wrap": "wrap"
 	};
 
+
+/***/ },
+/* 411 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.LabelV2 = exports.Label = undefined;
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function Label(props) {
+	  console.log(props);
+	  return _react2.default.createElement(
+	    "svg",
+	    { className: "labelSVG", width: "431px", height: "241px", viewBox: "0 0 431 241", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
+	    _react2.default.createElement("defs", null),
+	    _react2.default.createElement(
+	      "g",
+	      { id: "process-icons", stroke: "none", strokeWidth: "1", fill: "none", fillRule: "evenodd" },
+	      _react2.default.createElement(
+	        "g",
+	        { id: "Artboard" },
+	        _react2.default.createElement("image", { id: "hello", x: "33.7644766", y: "32.963", width: "148.242811", height: "148.242811" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "R-ZZC-1010-2", fontFamily: "Overpass", fontSize: "25", fontWeight: "bold", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "135.102905" },
+	            props.taskLabel || ""
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "ZZC", fontFamily: "Overpass", fontSize: "80", fontWeight: "bold", lineSpacing: "80", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "91" },
+	            props.originLabel
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "Here-are-some-notes", fontFamily: "Overpass-Regular, Overpass", fontSize: "19", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "206.385882", y: "179.205811" },
+	            props.notesLabel
+	          )
+	        ),
+	        _react2.default.createElement("path", { d: "M36.885882,209 L404.527541,209", id: "Line", stroke: "#000000", strokeLinecap: "square" }),
+	        _react2.default.createElement("rect", { id: "Rectangle-4", fill: "#FFFFFF", x: "61.385882", y: "193.037", width: "93", height: "32" }),
+	        _react2.default.createElement(
+	          "text",
+	          { id: "48CND9", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "20", fontWeight: "normal", fill: "#000000" },
+	          _react2.default.createElement(
+	            "tspan",
+	            { x: "70.885882", y: "216.037" },
+	            props.qrCode
+	          )
+	        )
+	      )
+	    )
+	  );
+	}
+
+	function LabelV2(props) {
+	  return _react2.default.createElement(
+	    "svg",
+	    { width: "450px", height: "247px", viewBox: "0 0 5323 2918", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
+	    _react2.default.createElement(
+	      "defs",
+	      null,
+	      _react2.default.createElement(
+	        "style",
+	        null,
+	        "@import url('https://fonts.googleapis.com/css?family=Overpass+Mono|Overpass:400,700');"
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "g",
+	      { id: "Page-1", stroke: "none", strokeWidth: "1", fill: "none", "fill-rule": "evenodd" },
+	      _react2.default.createElement(
+	        "g",
+	        { id: "Artboard" },
+	        _react2.default.createElement(
+	          "g",
+	          { id: "Group", transform: "translate(0.000000, 282.001992)" },
+	          _react2.default.createElement(
+	            "text",
+	            { textAnchor: "middle", id: "CV2", fontFamily: "Overpass-Bold, Overpass", fontSize: "742.250996", fontWeight: "bold", fill: "#000000" },
+	            _react2.default.createElement(
+	              "tspan",
+	              { x: "3724", y: "782.885835" },
+	              "CV2"
+	            )
+	          ),
+	          _react2.default.createElement(
+	            "text",
+	            { textAnchor: "middle", id: "RCS-0221-1", fontFamily: "Overpass-Bold, Overpass", fontSize: "424.143426", fontWeight: "bold", fill: "#000000" },
+	            _react2.default.createElement(
+	              "tspan",
+	              { x: "3724", y: "1541.43574" },
+	              "RCS-0221-1"
+	            )
+	          ),
+	          _react2.default.createElement("rect", { id: "Rectangle", fill: "#E9E9E9", x: "434.747012", y: "265.089641", width: "1272.43028", height: "1272.43028" }),
+	          _react2.default.createElement(
+	            "text",
+	            { id: "3ba1ae", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "212.071713", fontWeight: "normal", fill: "#000000" },
+	            _react2.default.createElement(
+	              "tspan",
+	              { x: "679.053625", y: "2286.30279" },
+	              "3ba1ae"
+	            )
+	          ),
+	          _react2.default.createElement("path", { d: "M5.30179283,1807.91135 L5317.86752,1807.91135", id: "Line", stroke: "#979797", strokeWidth: "10.6035857", "stroke-linecap": "square" }),
+	          _react2.default.createElement("path", { d: "M3560.23854,997.604958 L3891.51594,997.604958", id: "Line", stroke: "#979797", strokeWidth: "10.6035857", "stroke-linecap": "square" }),
+	          _react2.default.createElement(
+	            "text",
+	            { textAnchor: "middle", id: "RCS-CV2-0221-1", fontFamily: "OverpassMono-Regular, Overpass Mono", fontSize: "212.071713", fontWeight: "normal", fill: "#000000" },
+	            _react2.default.createElement(
+	              "tspan",
+	              { x: "3724", y: "2286.30279" },
+	              "RCS-0221-1"
+	            )
+	          )
+	        )
+	      )
+	    )
+	  );
+	}
+
+	exports.Label = Label;
+	exports.LabelV2 = LabelV2;
+
+/***/ },
+/* 412 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactSelect = __webpack_require__(354);
+
+	var _reactSelect2 = _interopRequireDefault(_reactSelect);
+
+	var _Task = __webpack_require__(330);
+
+	var _immutabilityHelper = __webpack_require__(332);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	var _qr = __webpack_require__(400);
+
+	var _Label = __webpack_require__(411);
+
+	var _APIManager = __webpack_require__(331);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	//import {setup} as zebra from './zebra.jsx'
+
+	var getOptions = function getOptions(input, callback) {
+	  if (input.length < 2) {
+	    callback(null, { optionss: [] });
+	  } else {
+	    var params = {
+	      limit: true,
+	      ordering: '-created_at',
+	      label: input,
+	      team: window.localStorage.getItem("team") || "1"
+	    };
+	    _jquery2.default.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
+	      console.log(data);
+	      var options = data.results.map(function (x) {
+	        return { value: x.id, label: x.display, data: x };
+	      });
+	      callback(null, { options: options, complete: false });
+	    });
+	  }
+	};
+
+	var TaskSelect = function (_React$Component) {
+	  _inherits(TaskSelect, _React$Component);
+
+	  function TaskSelect() {
+	    _classCallCheck(this, TaskSelect);
+
+	    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
+	  }
+
+	  _createClass(TaskSelect, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'multiselect' },
+	        _react2.default.createElement(_reactSelect2.default.Async, {
+	          name: 'form-field-name',
+	          value: this.props.value,
+	          optionRenderer: function optionRenderer(option, i) {
+	            return option.label;
+	          },
+	          loadOptions: getOptions,
+	          onChange: this.props.onChange,
+	          placeholder: this.props.placeholder
+	        })
+	      );
+	    }
+	  }]);
+
+	  return TaskSelect;
+	}(_react2.default.Component);
+
+	var ZebraPrinter = function (_React$Component2) {
+	  _inherits(ZebraPrinter, _React$Component2);
+
+	  function ZebraPrinter(props) {
+	    _classCallCheck(this, ZebraPrinter);
+
+	    var _this2 = _possibleConstructorReturn(this, (ZebraPrinter.__proto__ || Object.getPrototypeOf(ZebraPrinter)).call(this, props));
+
+	    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
+	    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
+	    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
+	    _this2.handleChange = _this2.handleChange.bind(_this2);
+	    _this2.handlePrint = _this2.handlePrint.bind(_this2);
+	    _this2.state = {
+	      expanded: false,
+	      numberLabels: "",
+	      notes: "",
+	      task: "",
+	      qrValue: "",
+	      items: [],
+	      selectedItem: ""
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(ZebraPrinter, [{
+	    key: 'handlePrint',
+	    value: function handlePrint() {
+	      var numLabels = parseInt(this.state.numberLabels) || -1;
+
+	      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
+	        alert("Please enter a valid number between 0 and 100!");
+	        return;
+	      }
+
+	      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
+	        alert("Please print labels for a valid task.");
+	        return;
+	      }
+
+	      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
+	        alert("Please choose a valid specific item to reprint.");
+	        return;
+	      }
+
+	      this.setState({ disabled: true });
+
+	      if (this.state.expanded) {
+	        var uuid = this.state.selectedItem.data.item_qr;
+	        (0, _qr.printQRs_zebra)([uuid], this.state.task, this.state.notes);
+	        this.setState({ disabled: false });
+	        return;
+	      }
+
+	      var thisObj = this;
+	      _jquery2.default.ajax({
+	        url: "../../../qr/codes/",
+	        data: { count: numLabels }
+	      }).done(function (data) {
+	        var uuids = data.split(/\s+/);
+	        (0, _qr.printQRs_zebra)(data.split(/\s+/), thisObj.state.task, thisObj.state.notes);
+	      }).always(function () {
+	        thisObj.setState({ disabled: false });
+	      });
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, payload) {
+	      this.setState(_defineProperty({}, which, payload));
+	    }
+	  }, {
+	    key: 'handleExpandClick',
+	    value: function handleExpandClick() {
+	      var ns = {
+	        expanded: !this.state.expanded,
+	        numberLabels: "",
+	        notes: "",
+	        task: "",
+	        qrValue: "",
+	        items: [],
+	        selectedItem: ""
+	      };
+	      this.setState(ns);
+	    }
+	  }, {
+	    key: 'handleTaskChange',
+	    value: function handleTaskChange(value) {
+	      var _this3 = this;
+
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({
+	        task: v,
+	        items: [],
+	        selectedItem: "" });
+
+	      if (this.state.expanded) {
+	        (function () {
+	          var url = window.location.origin + "/ics/tasks/" + v.value;
+	          var component = _this3;
+	          (0, _APIManager.fetch)(url, {}).done(function (data) {
+	            component.reloadItems(data);
+	          });
+	          //component.reloadItems(v.data) 
+	        })();
+	      }
+	    }
+	  }, {
+	    key: 'handleItemChange',
+	    value: function handleItemChange(value) {
+	      var v;
+	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      this.setState({ selectedItem: v });
+	    }
+	  }, {
+	    key: 'reloadItems',
+	    value: function reloadItems(task) {
+	      var options = {};
+	      if (task.items) {
+	        options = task.items.map(function (x) {
+	          return { id: x.id, label: getQR(x), data: x };
+	        });
+	      }
+	      this.setState({ items: options });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this4 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'labelPrinter', style: { "minHeight": "100vh" } },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'marginer' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'stuff' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                ' Print me some labels - Zebra version'
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Number of labels'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'eg. 20',
+	                style: { width: "100%" },
+	                value: this.state.numberLabels,
+	                onChange: function onChange(e) {
+	                  return _this4.handleChange("numberLabels", e.target.value);
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Extra notes'
+	              ),
+	              _react2.default.createElement('input', { type: 'text',
+	                placeholder: 'max 20 characters',
+	                style: { width: "100%" },
+	                value: this.state.notes,
+	                onChange: function onChange(e) {
+	                  return _this4.handleChange("notes", e.target.value.substr(0, 20));
+	                }
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                ' '
+	              ),
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'I need to reprint a label'
+	                )
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'expandReprint', onClick: this.handleExpandClick },
+	                _react2.default.createElement(
+	                  'i',
+	                  { className: 'material-icons' },
+	                  'arrow_back'
+	                ),
+	                _react2.default.createElement(
+	                  'span',
+	                  null,
+	                  'Back to regular printing'
+	                )
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Task'
+	              ),
+	              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+	              _react2.default.createElement(
+	                'span',
+	                { className: 'inputLabel' },
+	                'Item'
+	              ),
+	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
+	                name: 'item-select',
+	                placeholder: 'Choose one',
+	                options: this.state.items,
+	                valueKey: 'id',
+	                value: this.state.selectedItem,
+	                onChange: this.handleItemChange
+	              }),
+	              _react2.default.createElement(
+	                'button',
+	                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+	                ' ',
+	                this.state.disabled ? "Printing..." : "Print!",
+	                '  '
+	              )
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+
+	  return ZebraPrinter;
+	}(_react2.default.Component);
+
+	exports.default = ZebraPrinter;
+
+
+	function short(str) {
+	  if (!str) return "";
+	  var codes = str.split('-');
+	  if (codes.length > 2) {
+	    codes.splice(1, 1);
+	  }
+	  return codes.join('-');
+	}
+
+	function getCode(str) {
+	  var codes = str.split('-');
+	  if (codes[1]) return codes[1];
+	  return str;
+	}
+
+	function getQR(item) {
+	  if (item && item.item_qr) {
+	    var len = item.item_qr.length;
+	    return item.item_qr.substr(len - 6, len);
+	  }
+	  return "";
+	}
 
 /***/ }
 /******/ ]);

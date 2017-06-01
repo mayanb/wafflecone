@@ -1,4 +1,3 @@
-
 function mountQR() {
   if(dymo.label.framework.init)
     dymo.label.framework.init(init)
@@ -27,7 +26,64 @@ function print(numLabels, text, success, always) {
   })
 }
 
-function printQRs(uuids, qrcode) {
+var errorCallback = function(errorMessage) {
+  alert("Error: " + errorMessage);  
+}
+
+function short(str) {
+  if (!str)
+    return ""
+  var codes = str.split('-')
+  if (codes.length > 2) {
+    codes.splice(1, 1)
+  }
+  return codes.join('-')
+}
+
+function getCode(str) {
+  var codes = str.split('-')
+  if (codes[1])
+    return codes[1]
+  return str
+}
+
+
+function printQRs_zebra(uuids, task, notes) {
+  try {
+    var zpl = ""
+    uuids.map(function (uuid) {
+      zpl += `
+        ^XA
+        ^FO30,36
+          ^BQ,2,6^FDMA,${uuid}
+        ^FS
+        ^FO70,260
+          ^AE,10
+          ^FD${uuid.substring(uuid.length-6)}
+        ^FS
+        ^FO270,70
+          ^A0,180
+          ^FD${getCode(task.data.display)}
+        ^FS
+        ^FO30,300
+          ^GB${609-72},1,3
+        ^FS
+        ^FO30,330
+          ^A0,60
+          ^FD${task.data.display}
+        ^FS
+        ^XZ`
+    })
+
+    BrowserPrint.getDefaultDevice("printer", function(device) {
+      device.send(zpl, undefined, errorCallback);
+    })
+  } catch (e) {
+    alert(e.message || e)
+  }
+}
+
+function printQRs_dymo(uuids, task, notes, qrcode) {
   try {
 
     // get a printer 
@@ -178,4 +234,4 @@ function getXML() {
   return labelXml;
 }
 
-export {mountQR, printQRs}
+export {mountQR, printQRs_dymo, printQRs_zebra}

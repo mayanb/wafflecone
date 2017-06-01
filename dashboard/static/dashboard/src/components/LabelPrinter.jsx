@@ -3,7 +3,7 @@ import $ from 'jquery'
 import Select from 'react-select'
 import {display} from './Task.jsx'
 import update from 'immutability-helper'
-import {mountQR, printQRs} from './qr.jsx'
+import {mountQR, printQRs_dymo} from './qr.jsx'
 import {Label, LabelV2} from './Label.jsx'
 import {fetch} from './APIManager.jsx'
 
@@ -107,7 +107,7 @@ export default class LabelPrinter extends React.Component {
 
     if (this.state.expanded) {
       let uuid = this.state.selectedItem.data.item_qr
-      printQRs([uuid], this.state.qrcode)
+      printQRs_dymo([uuid], this.state.qrcode)
       this.setState({disabled: false})
       return
     }
@@ -119,7 +119,7 @@ export default class LabelPrinter extends React.Component {
     })
     .done(function (data) {
       let uuids = data.split(/\s+/)
-      printQRs(data.split(/\s+/), thisObj.state.qrcode)
+      printQRs_dymo(data.split(/\s+/), thisObj.state.qrcode)
     })
     .always(function () {
       thisObj.setState({disabled: false})
@@ -198,7 +198,7 @@ export default class LabelPrinter extends React.Component {
           <div className="stuff">          
 
             <div className={"regularPrint"} style={{display: (this.state.expanded?"none":"initial")}}>
-              <h2> Print me some labels </h2>
+              <h2> Print me some labels - Dymo</h2>
               <span className="inputLabel">Number of labels</span>
               <input type="text" 
                 placeholder="eg. 20" 

@@ -5,7 +5,7 @@ import {BrowserRouter as Router, Route} from 'react-router-dom'
 import $ from 'jquery'
 import moment from 'moment'
 import Deliveries from './Delivery.jsx'
-
+import ZebraPrinter from './ZebraPrinter.jsx'
 import {Navbar} from './Layout.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
@@ -50,6 +50,7 @@ class Main extends React.Component {
               <Route exact path={"/dashboard/"} component={Activity} />
               <Route path={"/dashboard/inventory/:id?"} component={Inventory} />
               <Route path={"/dashboard/labels/"} component={LabelPrinter} />
+              <Route path={"/dashboard/zebra/"} component={ZebraPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
               <Route path={"/dashboard/deliveries/"} component={Deliveries} />
