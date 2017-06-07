@@ -169,12 +169,19 @@ export default class LabelPrinter extends React.Component {
   }
 
   handleItemChange(value) {
+    qrcode.clear()
     var v;
     if (value != undefined && value != null && value.length != 0)
       v = value
     else 
       v = ""
 
+    console.log("hello")
+    console.log(v)
+
+    if (v) {
+      this.state.qrcode.makeCode(v)
+    }
     this.setState({selectedItem : v})
   }
 
@@ -232,7 +239,7 @@ export default class LabelPrinter extends React.Component {
               <span className="inputLabel">Item</span>
               <Select className="select" 
                 name="item-select" 
-                placeholder="Choose one" 
+                placeholder="Choose an item" 
                 options={this.state.items} 
                 valueKey="id"
                 value={this.state.selectedItem}

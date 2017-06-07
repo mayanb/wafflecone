@@ -68,6 +68,18 @@ export default class ZebraPrinter extends React.Component {
     }
   }
 
+  componentDidMount() {
+    let q = new QRCode(document.getElementById("qrtest"), {
+      text: "",
+      width: 128,
+      height: 128,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.Q
+    })
+    this.setState({qrcode : q})
+  }
+
   handlePrint() {
     let numLabels = parseInt(this.state.numberLabels) || -1
 
@@ -157,6 +169,10 @@ export default class ZebraPrinter extends React.Component {
     else 
       v = ""
 
+    if (v && v.data) {
+      this.state.qrcode.makeCode(v.data.item_qr)
+    }
+
     this.setState({selectedItem : v})
   }
 
@@ -227,6 +243,8 @@ export default class ZebraPrinter extends React.Component {
             </div>
 
           </div>
+
+          <div id="qrtest"></div>
         </div>
 
       </div>

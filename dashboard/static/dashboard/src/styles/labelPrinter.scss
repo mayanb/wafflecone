@@ -131,6 +131,15 @@ div.labelPrinter {
 	font-family: 'Overpass', 'Overpass Mono';
 }
 
+#qrtest {
+	width: 100%;
+
+	img {
+		margin: 40px auto;
+		height: 60px;
+	}
+}
+
 div#blocker, #canvastest {
 	position: absolute;
 	height: 300px;
