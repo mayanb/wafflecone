@@ -366,6 +366,12 @@ div.labelPrinter {
   background-color: white;
   font-family: 'Overpass', 'Overpass Mono'; }
 
+#qrtest {
+  width: 100%; }
+  #qrtest img {
+    margin: 40px auto;
+    height: 60px; }
+
 div#blocker, #canvastest {
   position: absolute;
   height: 300px;

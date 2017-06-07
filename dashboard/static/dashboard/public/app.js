@@ -61073,6 +61073,19 @@
 	  }
 
 	  _createClass(ZebraPrinter, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var q = new QRCode(document.getElementById("qrtest"), {
+	        text: "",
+	        width: 128,
+	        height: 128,
+	        colorDark: "#000000",
+	        colorLight: "#ffffff",
+	        correctLevel: QRCode.CorrectLevel.Q
+	      });
+	      this.setState({ qrcode: q });
+	    }
+	  }, {
 	    key: 'handlePrint',
 	    value: function handlePrint() {
 	      var numLabels = parseInt(this.state.numberLabels) || -1;
@@ -61160,6 +61173,10 @@
 	    value: function handleItemChange(value) {
 	      var v;
 	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+	      if (v && v.data) {
+	        this.state.qrcode.makeCode(v.data.item_qr);
+	      }
 
 	      this.setState({ selectedItem: v });
 	    }
@@ -61300,7 +61317,8 @@
 	                '  '
 	              )
 	            )
-	          )
+	          ),
+	          _react2.default.createElement('div', { id: 'qrtest' })
 	        )
 	      );
 	    }
@@ -63998,9 +64016,16 @@
 	  }, {
 	    key: 'handleItemChange',
 	    value: function handleItemChange(value) {
+	      qrcode.clear();
 	      var v;
 	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
 
+	      console.log("hello");
+	      console.log(v);
+
+	      if (v) {
+	        this.state.qrcode.makeCode(v);
+	      }
 	      this.setState({ selectedItem: v });
 	    }
 	  }, {
@@ -64115,7 +64140,7 @@
 	              ),
 	              _react2.default.createElement(_reactSelect2.default, { className: 'select',
 	                name: 'item-select',
-	                placeholder: 'Choose one',
+	                placeholder: 'Choose an item',
 	                options: this.state.items,
 	                valueKey: 'id',
 	                value: this.state.selectedItem,
