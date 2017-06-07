@@ -288,6 +288,7 @@ ul div.menuContentWrapper div.rdr-Days {
 
 div.labelPrinter {
   padding-top: 50px;
+  padding-bottom: 50px;
   background-color: #eee; }
   div.labelPrinter .stuff {
     max-width: 300px;
