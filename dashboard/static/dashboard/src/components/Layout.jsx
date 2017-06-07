@@ -10,15 +10,37 @@ var teams = [
     {value: '3', label: 'Fulfillment'},
 ];
 
+function getTeam() {
+  return window.localStorage.getItem("team") || "1"
+}
+
+class Topbar extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { team: getTeam() }
+  }
+
+  render () {
+    return (
+      <div className="d-top">
+        <div className="nav-brand">SCOOP</div>
+          <div className="nav-team">
+          <Dropdown
+            source={teams}
+            onChange={(val) => this.handleTeamChange(val)}
+            value={this.state.team}
+          />
+          </div>
+      </div>
+    )
+  }
+}
+
 class Navbar extends React.Component {
 
   constructor(props) {
     super(props)
-    this.state = { team: this.getTeam() }
-  }
-
-  getTeam() {
-    return window.localStorage.getItem("team") || "1"
+    this.state = { team: getTeam() }
   }
 
   handleTeamChange(nt) {
@@ -43,14 +65,6 @@ class Navbar extends React.Component {
           </div>
         </Link>
         <div className="bar">
-          <div className="nav-brand">SCOOP</div>
-          <div className="nav-team">
-          <Dropdown
-            source={teams}
-            onChange={(val) => this.handleTeamChange(val)}
-            value={this.state.team}
-          />
-          </div>
           <div>
           <ul>
             { 
@@ -82,4 +96,4 @@ const ContentDescriptor = (props) => (
 	</div>
 )
 
-export {Navbar, ContentDescriptor}
+export {Navbar, ContentDescriptor, Topbar}

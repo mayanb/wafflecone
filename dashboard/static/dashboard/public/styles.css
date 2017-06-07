@@ -58,8 +58,8 @@ html, body {
 
 body div#root {
   font-family: "Camphor Pro", Nunito, Overpass, Proxima Nova, sans-serif;
-  font-size: 14px;
-  background-color: #ffffff; }
+  font-size: 13px;
+  background-color: #FBFCFC; }
 
 html, body, #root, .parent, .content-area {
   width: 100%;
@@ -69,6 +69,7 @@ img:before {
   background-image: url(/dashboard/static/dashboard/img/default@3x.png); }
 
 .parent {
+  padding-top: 54px;
   display: flex;
   flex: 1; }
   .parent .content {
@@ -78,12 +79,13 @@ img:before {
 .d-content {
   flex: 1;
   max-height: 100vh;
-  overflow: scroll; }
+  overflow: scroll;
+  margin-top: 40px; }
 
 .d-nav {
   flex: 0 0 13em;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
-  transition: flex 0.3s; }
+  transition: flex 0.3s;
+  border-right: 1px solid #EAEAEA; }
 
 .pushout {
   width: 32px;
@@ -101,31 +103,15 @@ img:before {
     display: none; }
 
 .d-ads {
-  display: none; }
+  flex: 0 0 20em; }
 
 .d-nav {
   /* put the nav on the left */
   order: -1;
-  background-color: #505256;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  color: rgba(255, 255, 255, 0.56); }
-  .d-nav .nav-team {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 16px;
-    padding-bottom: 16px;
-    vertical-align: middle;
-    padding-left: 16px; }
-    .d-nav .nav-team i {
-      line-height: 24px;
-      vertical-align: middle;
-      color: rgba(255, 255, 255, 0.56); }
-  .d-nav .nav-brand {
-    padding-top: 16px;
-    color: white;
-    font-size: 1.5em;
-    padding-left: 16px; }
+  color: rgba(98, 98, 98, 0.56); }
   .d-nav ul {
     margin: 0 auto; }
   .d-nav li {
@@ -134,7 +120,7 @@ img:before {
       display: block;
       line-height: 50px;
       text-decoration: none;
-      color: rgba(255, 255, 255, 0.56);
+      color: rgba(98, 98, 98, 0.56);
       margin-left: 16px; }
       .d-nav li a.active, .d-nav li a:hover.active, .d-nav li a:visited.active {
         background-color: #49A8F3;
@@ -145,26 +131,10 @@ img:before {
         .d-nav li a.active, .d-nav li a.active:hover, .d-nav li a.active:visited, .d-nav li a:hover.active, .d-nav li a:hover.active:hover, .d-nav li a:hover.active:visited, .d-nav li a:visited.active, .d-nav li a:visited.active:hover, .d-nav li a:visited.active:visited {
           color: white; }
 
-.content-descriptor {
-  display: flex;
-  flex-direction: row; }
-
 i.material-icons {
   color: rgba(0, 0, 0, 0.5); }
   i.material-icons:hover {
     color: blue; }
-
-.card {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
-  margin: 24px;
-  border-radius: 2px;
-  width: 100%;
-  background-color: white; }
-
-.card-container {
-  padding-bottom: 56px;
-  position: relative;
-  overflow-x: auto; }
 
 .loading {
   display: none; }
@@ -192,6 +162,33 @@ div[data-react-toolbox="dropdown"] input {
 
 .d-nav div[data-react-toolbox="dropdown"] input {
   color: rgba(255, 255, 255, 0.56); }
+
+.d-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 54px;
+  min-height: 54px;
+  background-color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06);
+  line-height: 54px;
+  display: flex;
+  flex-direction: row;
+  padding: 0px 16px; }
+  .d-top .nav-brand {
+    flex: 1; }
+  .d-top .nav-team {
+    text-align: right;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+    padding-left: 16px; }
+    .d-top .nav-team i {
+      line-height: 24px;
+      vertical-align: middle;
+      color: rgba(255, 255, 255, 0.56); }
 
 .filters {
   background-color: white;
@@ -538,12 +535,10 @@ div.zero-state {
   display: flex;
   flex-direction: row;
   vertical-align: middle;
-  margin-top: 20px;
-  margin-bottom: 40px;
-  padding-top: 36px; }
+  margin-bottom: 20px; }
   .page .page-header h2 {
     flex: 1;
-    font-size: 20px; }
+    font-size: 16px; }
   .page .page-header .filters {
     flex: 0;
     flex-basis: 300px; }
@@ -673,9 +668,15 @@ a, a:hover, a:visited span {
 
 .activity {
   display: flex;
-  width: 900px;
+  max-width: 900px;
+  width: 95%;
   margin: 0 auto;
   flex-direction: column; }
+  .activity.mini {
+    background-color: white;
+    padding: 20px 16px;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06); }
   .activity .activity-process {
     width: 100%;
     background-color: white; }
@@ -703,7 +704,7 @@ a, a:hover, a:visited span {
     .activity .activity-process .activity-process-row {
       display: flex;
       flex-direction: row;
-      padding: 12px 16px;
+      vertical-align: middle;
       color: rgba(0, 0, 0, 0.62);
       cursor: pointer; }
       .activity .activity-process .activity-process-row .no {
@@ -725,9 +726,9 @@ a, a:hover, a:visited span {
         text-align: center; }
       .activity .activity-process .activity-process-row div.process-name {
         font-weight: bold;
-        color: rgba(0, 0, 0, 0.6);
+        color: rgba(0, 0, 0, 0.7);
         text-align: left;
-        flex: 1; }
+        flex: 2; }
       .activity .activity-process .activity-process-row img {
         width: 16px; }
       .activity .activity-process .activity-process-row .tiny {

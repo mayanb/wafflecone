@@ -38,6 +38,7 @@ export default class Activity extends React.Component {
 
       loading: true,
       taskLoading: false,
+      mini: true
      }
   }
 
@@ -66,7 +67,7 @@ export default class Activity extends React.Component {
     }
 
     return (
-      <div className="activity page">
+      <div className={`activity page ${this.state.mini?"mini":""}`}>
         <div className="activity-header page-header">
           <h2>Activity Log</h2>
           <div><Datepicker initialDates={this.state.dates} onChange={this.handleDateRangeChange.bind(this)} /></div>

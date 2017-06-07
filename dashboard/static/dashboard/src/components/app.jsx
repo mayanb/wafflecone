@@ -6,7 +6,7 @@ import $ from 'jquery'
 import moment from 'moment'
 import Deliveries from './Delivery.jsx'
 import ZebraPrinter from './ZebraPrinter.jsx'
-import {Navbar} from './Layout.jsx'
+import {Navbar, Topbar} from './Layout.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
 import Inventory from './Inventory2.jsx'
@@ -44,7 +44,7 @@ class Main extends React.Component {
   render () {
     return (
       <Router>
-          <div>
+        <div>
           <div className="parent">
             <main className="d-content">
               <Route exact path={"/dashboard/"} component={Activity} />
@@ -59,7 +59,8 @@ class Main extends React.Component {
             <Route path="/dashboard/:section?/:id?" component={Navbar} />
             <aside className="d-ads"></aside>
           </div>
-          </div>
+          <Route path="/dashboard/:section?/:id?" component={Topbar} />
+        </div>
       </Router>
     )
   }

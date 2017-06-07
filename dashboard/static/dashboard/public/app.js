@@ -168,7 +168,8 @@
 	            ),
 	            _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
 	            _react2.default.createElement('aside', { className: 'd-ads' })
-	          )
+	          ),
+	          _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Topbar })
 	        )
 	      );
 	    }
@@ -61505,7 +61506,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.ContentDescriptor = exports.Navbar = undefined;
+	exports.Topbar = exports.ContentDescriptor = exports.Navbar = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -61531,24 +61532,66 @@
 
 	var teams = [{ value: '1', label: 'Bama Production' }, { value: '5', label: 'Valencia Production' }, { value: '7', label: 'United Cold' }, { value: '3', label: 'Fulfillment' }];
 
-	var Navbar = function (_React$Component) {
-	  _inherits(Navbar, _React$Component);
+	function getTeam() {
+	  return window.localStorage.getItem("team") || "1";
+	}
+
+	var Topbar = function (_React$Component) {
+	  _inherits(Topbar, _React$Component);
+
+	  function Topbar(props) {
+	    _classCallCheck(this, Topbar);
+
+	    var _this = _possibleConstructorReturn(this, (Topbar.__proto__ || Object.getPrototypeOf(Topbar)).call(this, props));
+
+	    _this.state = { team: getTeam() };
+	    return _this;
+	  }
+
+	  _createClass(Topbar, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'd-top' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'nav-brand' },
+	          'SCOOP'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'nav-team' },
+	          _react2.default.createElement(_dropdown.Dropdown, {
+	            source: teams,
+	            onChange: function onChange(val) {
+	              return _this2.handleTeamChange(val);
+	            },
+	            value: this.state.team
+	          })
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Topbar;
+	}(_react2.default.Component);
+
+	var Navbar = function (_React$Component2) {
+	  _inherits(Navbar, _React$Component2);
 
 	  function Navbar(props) {
 	    _classCallCheck(this, Navbar);
 
-	    var _this = _possibleConstructorReturn(this, (Navbar.__proto__ || Object.getPrototypeOf(Navbar)).call(this, props));
+	    var _this3 = _possibleConstructorReturn(this, (Navbar.__proto__ || Object.getPrototypeOf(Navbar)).call(this, props));
 
-	    _this.state = { team: _this.getTeam() };
-	    return _this;
+	    _this3.state = { team: getTeam() };
+	    return _this3;
 	  }
 
 	  _createClass(Navbar, [{
-	    key: 'getTeam',
-	    value: function getTeam() {
-	      return window.localStorage.getItem("team") || "1";
-	    }
-	  }, {
 	    key: 'handleTeamChange',
 	    value: function handleTeamChange(nt) {
 	      this.setState({ team: nt });
@@ -61558,8 +61601,6 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this2 = this;
-
 	      var options = ["Activity Log", "Inventory", "Labels", "Settings", "Task View", "Deliveries"];
 	      var links = ["", "inventory", "labels", "settings", "task", "deliveries"];
 
@@ -61579,22 +61620,6 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'bar' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'nav-brand' },
-	            'SCOOP'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'nav-team' },
-	            _react2.default.createElement(_dropdown.Dropdown, {
-	              source: teams,
-	              onChange: function onChange(val) {
-	                return _this2.handleTeamChange(val);
-	              },
-	              value: this.state.team
-	            })
-	          ),
 	          _react2.default.createElement(
 	            'div',
 	            null,
@@ -61669,6 +61694,7 @@
 
 	exports.Navbar = Navbar;
 	exports.ContentDescriptor = ContentDescriptor;
+	exports.Topbar = Topbar;
 
 /***/ },
 /* 404 */
@@ -65154,7 +65180,8 @@
 	      expandedTasks: [],
 
 	      loading: true,
-	      taskLoading: false
+	      taskLoading: false,
+	      mini: true
 	    };
 	    return _this;
 	  }
@@ -65187,7 +65214,7 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'activity page' },
+	        { className: 'activity page ' + (this.state.mini ? "mini" : "") },
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'activity-header page-header' },
