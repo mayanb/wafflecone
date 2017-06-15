@@ -17,13 +17,61 @@ from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
 
+
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
+
+######################
+# GOAL-RELATED VIEWS #
+######################
+
+class GoalListCreate(generics.ListCreateAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = BasicGoalSerializer
+
+  # def get_queryset(self):
+  #   queryset = Goal.objects.all()
+
+  #   team = self.request.query_params.get('team', None)
+  #   if team is not None:
+  #     queryset = queryset.filter(process_type__created_by=team)
+
+  #   # ok so for each goal
+  #   # get all the outputs of that product & process type from this week (just say last 5 days for now)
+  #   # sum up all of their amount values
+
+  #   i = Input.objects.filter(task=OuterRef('id')).order_by('id')
+  #   queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
+  #   return queryset.select_related().prefetch_related('items', 'attribute_values')
+
+
+  #   today = datetime.today()
+  #   i = Item.objects.filter(
+  #     creating_task__created_at__date__range=(today, today - 5), 
+  #     creating_task__is_trashed=False,
+  #     creating_task__process_type=OuterRef('process_type'),
+  #     creating_task__product_type=OuterRef('product_type')
+  #   ).
+
+  #   queryset.annotate(actual=SubQuery(i.values()))
+
+  #   return queryset
+
+
+######################
+# USER-RELATED VIEWS #
+######################
 
 class UserList(generics.ListAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
 
-# ----------------------------------
+
+
+
+######################
+# TASK-RELATED VIEWS #
+######################
+
 class TaskFilter(django_filters.rest_framework.FilterSet):
   created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
   class Meta:
@@ -78,6 +126,7 @@ class TaskList(generics.ListAPIView):
   def get_queryset(self):
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
 
+        # filter according to various parameters
         team = self.request.query_params.get('team', None)
         if team is not None:
           queryset = queryset.filter(process_type__created_by=team)
@@ -111,6 +160,7 @@ class TaskList(generics.ListAPIView):
           products = products.strip().split(',')
           queryset = queryset.filter(product_type__in=products)
 
+        # filter according to date creation, based on parameters
         start = self.request.query_params.get('start', None)
         end = self.request.query_params.get('end', None)
         if start is not None and end is not None:
@@ -123,6 +173,7 @@ class TaskList(generics.ListAPIView):
           queryset = queryset.filter(created_at__range=(startDate, endDate))
 
 
+        # make sure that we get at least one input unit and return it along with the task
         i = Input.objects.filter(task=OuterRef('id')).order_by('id')
         queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
         return queryset.select_related().prefetch_related('items', 'attribute_values')
@@ -136,6 +187,13 @@ class TaskDetail(generics.RetrieveAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = NestedTaskSerializer
 
+
+
+
+
+######################
+# ITEM-RELATED VIEWS #
+######################
 
 class CreateItem(generics.ListCreateAPIView):
   queryset = Item.objects.all()
@@ -154,6 +212,10 @@ class ItemDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 
+#######################
+# INPUT-RELATED VIEWS #
+#######################
+
 class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializer
@@ -169,6 +231,12 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
   filter_fields = ('task',)
   
 
+
+
+#########################
+# PROCESS-RELATED VIEWS #
+#########################
+
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.filter(is_trashed=False)
   serializer_class = ProcessTypeSerializer
@@ -181,6 +249,13 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
+
+
+
+
+###################
+# INVENTORY VIEWS #
+###################
 
 class InventoryList(generics.ListAPIView):
   serializer_class = InventoryListSerializer
@@ -257,6 +332,11 @@ class InventoryDetail(generics.ListAPIView):
     return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
 
 
+
+##################
+# ACTIVITY VIEWS #
+##################
+
 class ActivityList(generics.ListAPIView):
   serializer_class = ActivityListSerializer
 
@@ -270,6 +350,7 @@ class ActivityList(generics.ListAPIView):
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
+
       # start = start.strip().split('-')
       # end = end.strip().split('-')
       # startDate = date(int(start[0]), int(start[1]), int(start[2]))
@@ -321,6 +402,11 @@ class ActivityListDetail(generics.ListAPIView):
     return queryset.annotate(outputs=Count('items'))
 
 
+
+#########################
+# PRODUCT-RELATED VIEWS #
+#########################
+
 class ProductCodes(generics.ListAPIView):
   queryset = ProductType.objects.all().distinct('code')
   serializer_class = ProductCodeSerializer
@@ -333,6 +419,13 @@ class ProductList(generics.ListCreateAPIView):
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.all()
   serializer_class = ProductTypeSerializer
+
+
+
+
+###########################
+# ATTRIBUTE-RELATED VIEWS #
+###########################
 
 class AttributeList(generics.ListCreateAPIView):
   queryset = Attribute.objects.all()

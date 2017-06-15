@@ -196,6 +196,15 @@ div.zero-state {
   }
 }
 
+.page {
+    &.mini {
+    background-color: white;
+    padding: 20px 16px;
+    border-radius: 4px;
+    box-shadow: $shadow-0;
+  }
+}
+
 .page .page-header {
     display: flex;
     flex-direction: row;

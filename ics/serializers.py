@@ -235,4 +235,7 @@ class ActivityListDetailSerializer(serializers.ModelSerializer):
     fields = ('id', 'label', 'label_index', 'custom_display', 'outputs')
 
 
-
+class BasicGoalSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Goal
+    fields = ('id', 'process_type', 'product_type', 'goal', 'goal_unit')

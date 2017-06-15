@@ -107,7 +107,7 @@ export default class Activity extends React.Component {
       start: toUTCString(range.start), 
       end: toUTCString(range.end, true)
     }
-    
+
     let url = window.location.origin + "/ics/activity/detail/"
     let component = this
 
@@ -128,7 +128,6 @@ export default class Activity extends React.Component {
   }
 
   getActivity(range) {
-    console.log(range)
     this.setState({loading: true})
     let url = window.location.origin + "/ics/activity/"
     let params = {start: toUTCString(range.start), end: toUTCString(range.end, true)}
@@ -310,3 +309,4 @@ function toUTCString(dateString, addOne) {
 
   return m.utc().format('YYYY-MM-DD-HH-mm-ss-SSSSSS')
 }
+

@@ -51,6 +51,8 @@ urlpatterns = [
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
 
     url(r'^potatoes/$', views.activityCSV, name='residence time'),
+
+    url(r'^goals/$', views.GoalListCreate.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

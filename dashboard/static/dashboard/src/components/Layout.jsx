@@ -20,6 +20,12 @@ class Topbar extends React.Component {
     this.state = { team: getTeam() }
   }
 
+  handleTeamChange(nt) {
+    this.setState({team : nt})
+    window.localStorage.setItem("team", nt)
+    window.location.reload()
+  }
+
   render () {
     return (
       <div className="d-top">
@@ -41,12 +47,6 @@ class Navbar extends React.Component {
   constructor(props) {
     super(props)
     this.state = { team: getTeam() }
-  }
-
-  handleTeamChange(nt) {
-    this.setState({team : nt})
-    window.localStorage.setItem("team", nt)
-    window.location.reload()
   }
 
   render () {

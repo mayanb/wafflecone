@@ -2,15 +2,8 @@
   display: flex;
   max-width: 900px;
   width: 95%;
-  margin: 0 auto;
+  margin: 94px auto;
   flex-direction: column;
-
-  &.mini {
-    background-color: white;
-    padding: 20px 16px;
-    border-radius: 4px;
-    box-shadow: $shadow-0;
-  }
 
   .activity-process {
     width: 100%;
