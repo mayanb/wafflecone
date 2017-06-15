@@ -45,7 +45,6 @@ img:before {
 }
 
 .parent {
-  padding-top: 54px;
   .content {
 		margin: 0 auto;
 		max-width:900px;
@@ -60,7 +59,6 @@ img:before {
   flex: 1;
   max-height: 100vh;
   overflow: scroll;
-  margin-top: 40px;
 }
 
 .d-nav{
@@ -99,6 +97,11 @@ img:before {
  	display: flex;
  	flex-direction: column;
  	color: rgba(98,98,98,0.56);
+
+  .bar {
+    position: fixed;
+    top: 0;
+  }
 
 	ul { margin: 0 auto; }
 
@@ -154,6 +157,17 @@ i.material-icons {
 }
 
 div[data-react-toolbox="dropdown"] {
+
+  &>div {
+    padding: 0;
+  }
+
+  input {
+    font-size: 14px;
+  }
+}
+
+.d-nav div[data-react-toolbox="dropdown"] {
 	&>div {
 		padding: 0px;
 		margin: 0px;
@@ -167,11 +181,9 @@ div[data-react-toolbox="dropdown"] {
 		margin: 0px;
 		padding: 0px;
 		padding-top: 4px;
-		font-size: 14px;
 		outline: none;
 		border: none;
 	}
-
 }
 
 .d-nav div[data-react-toolbox="dropdown"] input {

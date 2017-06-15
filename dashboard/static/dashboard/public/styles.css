@@ -69,7 +69,6 @@ img:before {
   background-image: url(/dashboard/static/dashboard/img/default@3x.png); }
 
 .parent {
-  padding-top: 54px;
   display: flex;
   flex: 1; }
   .parent .content {
@@ -79,8 +78,7 @@ img:before {
 .d-content {
   flex: 1;
   max-height: 100vh;
-  overflow: scroll;
-  margin-top: 40px; }
+  overflow: scroll; }
 
 .d-nav {
   flex: 0 0 13em;
@@ -112,6 +110,9 @@ img:before {
   display: flex;
   flex-direction: column;
   color: rgba(98, 98, 98, 0.56); }
+  .d-nav .bar {
+    position: fixed;
+    top: 0; }
   .d-nav ul {
     margin: 0 auto; }
   .d-nav li {
@@ -148,15 +149,19 @@ i.material-icons {
     text-align: middle; }
 
 div[data-react-toolbox="dropdown"] > div {
+  padding: 0; }
+div[data-react-toolbox="dropdown"] input {
+  font-size: 14px; }
+
+.d-nav div[data-react-toolbox="dropdown"] > div {
   padding: 0px;
   margin: 0px; }
-div[data-react-toolbox="dropdown"] ul {
+.d-nav div[data-react-toolbox="dropdown"] ul {
   color: rgba(0, 0, 0, 0.6); }
-div[data-react-toolbox="dropdown"] input {
+.d-nav div[data-react-toolbox="dropdown"] input {
   margin: 0px;
   padding: 0px;
   padding-top: 4px;
-  font-size: 14px;
   outline: none;
   border: none; }
 
@@ -530,6 +535,12 @@ div.zero-state {
   div.zero-state.zero-state-clean {
     background-color: white; }
 
+.page.mini {
+  background-color: white;
+  padding: 20px 16px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06); }
+
 .page .page-header {
   display: flex;
   flex-direction: row;
@@ -669,13 +680,8 @@ a, a:hover, a:visited span {
   display: flex;
   max-width: 900px;
   width: 95%;
-  margin: 0 auto;
+  margin: 94px auto;
   flex-direction: column; }
-  .activity.mini {
-    background-color: white;
-    padding: 20px 16px;
-    border-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06); }
   .activity .activity-process {
     width: 100%;
     background-color: white; }
@@ -857,5 +863,63 @@ a, a:hover, a:visited span {
   height: 40px;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 100px; }
+
+.dialog-box .dialog-text .row {
+  display: flex;
+  flex-direction: row; }
+
+.addgoal-field {
+  min-width: 100px;
+  flex: 1;
+  margin: 10px; }
+  .addgoal-field:last-child {
+    margin-left: 20px; }
+  .addgoal-field div[data-react-toolbox="dropdown"] input {
+    font-size: 12px; }
+
+.addgoal-field input[type="text"] {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  outline: none;
+  padding: 10px;
+  font-size: 12px; }
+
+.goals {
+  display: flex;
+  max-width: 900px;
+  width: 95%;
+  margin: 94px auto;
+  flex-direction: column; }
+
+.goal span {
+  line-height: 24px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5); }
+  .goal span.product {
+    color: rgba(0, 0, 0, 0.89);
+    margin-right: 4px;
+    font-weight: bold; }
+.goal .goal-whole-bar {
+  display: flex;
+  flex-direction: row;
+  height: 24px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden; }
+  .goal .goal-whole-bar .goal-filled-bar {
+    height: 100%;
+    flex: 80;
+    background-color: #49A8F3;
+    color: rgba(255, 255, 255, 0.8);
+    -webkit-font-smoothing: antialiased; }
+  .goal .goal-whole-bar div {
+    text-align: right;
+    flex: 20;
+    padding-right: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.3);
+    line-height: 24px; }
 
 /*# sourceMappingURL=styles.css.map */

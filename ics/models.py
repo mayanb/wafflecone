@@ -239,7 +239,7 @@ class Item(models.Model):
     creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
     created_at = models.DateTimeField(auto_now_add=True)
     inventory = models.ForeignKey(User, on_delete=models.CASCADE, related_name="items", null=True)
-    #amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    amount = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
@@ -296,3 +296,9 @@ class MovementItem(models.Model):
             self.item.inventory = self.movement.destination
             self.item.save()
         super(MovementItem, self).save(*args, **kwargs)
+
+class Goal(models.Model):
+    process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
+    product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
+    goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    goal_unit = models.CharField(max_length=20)

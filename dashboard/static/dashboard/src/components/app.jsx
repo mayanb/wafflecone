@@ -12,6 +12,7 @@ import LabelPrinter from './LabelPrinter.jsx'
 import Inventory from './Inventory2.jsx'
 import Task from './Task-2.jsx'
 import Activity from './ActivityLog-2.jsx'
+import Dash from './Dash.jsx'
 
 class Main extends React.Component {
   constructor() {
@@ -54,6 +55,7 @@ class Main extends React.Component {
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
               <Route path={"/dashboard/deliveries/"} component={Deliveries} />
+              <Route path={"/dashboard/dash/"} component={Dash} />
             </main>
 
             <Route path="/dashboard/:section?/:id?" component={Navbar} />
