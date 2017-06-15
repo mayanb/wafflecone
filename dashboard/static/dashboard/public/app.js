@@ -64772,7 +64772,7 @@
 	    value: function organizeAttributes(taskData) {
 	      var attributes = taskData.process_type.attributes;
 	      var values = taskData.attribute_values;
-	      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.created_at).format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.updated_at).format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
+	      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: _moment2.default.utc(taskData.created_at).local().format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: _moment2.default.utc(taskData.updated_at).local().format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
 
 	      attributes.map(function (attr, i) {
 	        var val = values.find(function (e) {
@@ -64825,7 +64825,7 @@
 	          _react2.default.createElement(
 	            'span',
 	            null,
-	            (0, _moment2.default)(this.state.task.created_at).format('dddd, MMMM Do YYYY, h:mm a')
+	            _moment2.default.utc(this.state.task.created_at).local().format('dddd, MMMM Do YYYY, h:mm a')
 	          )
 	        ),
 	        _react2.default.createElement(
@@ -65233,7 +65233,13 @@
 	      var productID = origin.product_id;
 
 	      console.log(processID + " " + productID);
-	      var params = { process_type: processID, product_type: productID, start: range.start, end: range.end };
+	      var params = {
+	        process_type: processID,
+	        product_type: productID,
+	        start: toUTCString(range.start),
+	        end: toUTCString(range.end, true)
+	      };
+
 	      var url = window.location.origin + "/ics/activity/detail/";
 	      var component = this;
 
@@ -65255,7 +65261,7 @@
 	      console.log(range);
 	      this.setState({ loading: true });
 	      var url = window.location.origin + "/ics/activity/";
-	      var params = { start: range.start, end: range.end };
+	      var params = { start: toUTCString(range.start), end: toUTCString(range.end, true) };
 	      var component = this;
 
 	      var rID = (0, _APIManager.requestID)();
@@ -65490,6 +65496,16 @@
 	  if (count) {}
 	  if (count == 1) return count + " " + unit;
 	  return count + " " + unit + "s";
+	}
+
+	function toUTCString(dateString, addOne) {
+	  var m = (0, _moment2.default)(dateString + " 00:00:00");
+
+	  if (addOne) {
+	    m.add(24, "hours");
+	  }
+
+	  return m.utc().format('YYYY-MM-DD-HH-mm-ss-SSSSSS');
 	}
 
 /***/ },
