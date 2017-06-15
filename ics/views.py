@@ -514,7 +514,6 @@ def activityCSV(request):
   # end = end.strip().split('-')
   # startDate = date(int(start[0]), int(start[1]), int(start[2]))
   # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-
   startDate = datetime.strptime(start, dateformat)
   endDate = datetime.strptime(end, dateformat)
 

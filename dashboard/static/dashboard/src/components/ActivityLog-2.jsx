@@ -107,7 +107,10 @@ export default class Activity extends React.Component {
       start: toUTCString(range.start), 
       end: toUTCString(range.end, true)
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5cb619b7b1f7d7fbfb346977653322551a8f1ee8
     let url = window.location.origin + "/ics/activity/detail/"
     let component = this
 
@@ -309,4 +312,3 @@ function toUTCString(dateString, addOne) {
 
   return m.utc().format('YYYY-MM-DD-HH-mm-ss-SSSSSS')
 }
-
