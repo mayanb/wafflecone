@@ -48,14 +48,14 @@ class Main extends React.Component {
         <div>
           <div className="parent">
             <main className="d-content">
+              <Route exact path={"/dashboard/dash/"} component={Dash} />
               <Route exact path={"/dashboard/"} component={Activity} />
               <Route path={"/dashboard/inventory/:id?"} component={Inventory} />
               <Route path={"/dashboard/labels/"} component={ZebraPrinter} />
               <Route path={"/dashboard/zebra/"} component={ZebraPrinter} />
+              <Route path={"/dashboard/dymo/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
-              <Route path={"/dashboard/deliveries/"} component={Deliveries} />
-              <Route path={"/dashboard/dash/"} component={Dash} />
             </main>
 
             <Route path="/dashboard/:section?/:id?" component={Navbar} />

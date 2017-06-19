@@ -76,12 +76,16 @@ img:before {
     max-width: 900px; }
 
 .d-content {
+  padding-top: 54px;
   flex: 1;
   max-height: 100vh;
   overflow: scroll; }
+  .d-content > div {
+    max-width: 80%; }
 
 .d-nav {
   flex: 0 0 13em;
+  padding-top: 54px;
   transition: flex 0.3s;
   border-right: 1px solid #EAEAEA; }
 
@@ -100,9 +104,6 @@ img:before {
   .d-nav.littleNav > div.bar {
     display: none; }
 
-.d-ads {
-  flex: 0 0 20em; }
-
 .d-nav {
   /* put the nav on the left */
   order: -1;
@@ -111,7 +112,7 @@ img:before {
   flex-direction: column;
   color: rgba(98, 98, 98, 0.56); }
   .d-nav .bar {
-    position: fixed;
+    position: relative;
     top: 0; }
   .d-nav ul {
     margin: 0 auto; }
@@ -290,8 +291,7 @@ ul div.menuContentWrapper div.rdr-Days {
 
 div.labelPrinter {
   padding-top: 50px;
-  padding-bottom: 50px;
-  background-color: #eee; }
+  padding-bottom: 50px; }
   div.labelPrinter .stuff {
     max-width: 300px;
     margin: 0 auto;
@@ -540,7 +540,8 @@ div.zero-state {
   background-color: white;
   padding: 20px 16px;
   border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06); }
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin: 50px auto; }
 
 .page .page-header {
   display: flex;
@@ -681,7 +682,6 @@ a, a:hover, a:visited span {
   display: flex;
   max-width: 900px;
   width: 95%;
-  margin: 94px auto;
   flex-direction: column; }
   .activity .activity-process {
     width: 100%;
@@ -889,7 +889,6 @@ a, a:hover, a:visited span {
   display: flex;
   max-width: 900px;
   width: 95%;
-  margin: 94px auto;
   flex-direction: column; }
 
 .goal span {
@@ -914,6 +913,10 @@ a, a:hover, a:visited span {
     background-color: #49A8F3;
     color: rgba(255, 255, 255, 0.8);
     -webkit-font-smoothing: antialiased; }
+  .goal .goal-whole-bar.goal-achieved {
+    background-color: #76C866; }
+    .goal .goal-whole-bar.goal-achieved .goal-filled-bar {
+      background-color: #98D58C; }
   .goal .goal-whole-bar div {
     text-align: right;
     flex: 20;

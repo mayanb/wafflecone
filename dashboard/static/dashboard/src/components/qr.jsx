@@ -88,7 +88,7 @@ function printQRs_zebra(uuids, task, notes) {
   }
 }
 
-function printQRs_dymo(uuids, task, notes, qrcode) {
+function printQRs_dymo(uuids, qrcode) {
   try {
 
     // get a printer 

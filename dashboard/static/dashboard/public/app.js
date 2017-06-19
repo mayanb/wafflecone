@@ -98,7 +98,7 @@
 
 	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
-	var _Dash = __webpack_require__(413);
+	var _Dash = __webpack_require__(410);
 
 	var _Dash2 = _interopRequireDefault(_Dash);
 
@@ -162,14 +162,14 @@
 	            _react2.default.createElement(
 	              'main',
 	              { className: 'd-content' },
+	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/dash/", component: _Dash2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: _ActivityLog2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: _Inventory2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _ZebraPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/zebra/", component: _ZebraPrinter2.default }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/dymo/", component: _LabelPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/deliveries/", component: _Delivery2.default }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/dash/", component: _Dash2.default })
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default })
 	            ),
 	            _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
 	            _react2.default.createElement('aside', { className: 'd-ads' })
@@ -60832,7 +60832,7 @@
 	  }
 	}
 
-	function printQRs_dymo(uuids, task, notes, qrcode) {
+	function printQRs_dymo(uuids, qrcode) {
 	  try {
 	    var label;
 	    var labelSetBuilder;
@@ -61606,8 +61606,8 @@
 	  _createClass(Navbar, [{
 	    key: 'render',
 	    value: function render() {
-	      var options = ["Activity Log", "Inventory", "Labels", "Settings", "Task View", "Deliveries"];
-	      var links = ["", "inventory", "labels", "settings", "task", "deliveries"];
+	      var options = ["Activity Log", "Inventory", "Zebra labels", "Dymo labels", "Settings", "Task View"];
+	      var links = ["", "inventory", "labels", "dymo", "settings", "task"];
 
 	      var navbarSizeClass = "bigNav";
 	      if (this.props.match.params.id && this.props.match.params.section == "inventory") {
@@ -64047,7 +64047,7 @@
 	  }, {
 	    key: 'handleItemChange',
 	    value: function handleItemChange(value) {
-	      qrcode.clear();
+	      this.state.qrcode.clear();
 	      var v;
 	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
 
@@ -64803,7 +64803,7 @@
 	    value: function organizeAttributes(taskData) {
 	      var attributes = taskData.process_type.attributes;
 	      var values = taskData.attribute_values;
-	      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.created_at).format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.updated_at).format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
+	      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: _moment2.default.utc(taskData.created_at).local().format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: _moment2.default.utc(taskData.updated_at).local().format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
 
 	      attributes.map(function (attr, i) {
 	        var val = values.find(function (e) {
@@ -64856,7 +64856,7 @@
 	          _react2.default.createElement(
 	            'span',
 	            null,
-	            (0, _moment2.default)(this.state.task.created_at).format('dddd, MMMM Do YYYY, h:mm a')
+	            _moment2.default.utc(this.state.task.created_at).local().format('dddd, MMMM Do YYYY, h:mm a')
 	          )
 	        ),
 	        _react2.default.createElement(
@@ -65145,7 +65145,7 @@
 
 	var _Datepicker2 = _interopRequireDefault(_Datepicker);
 
-	var _reactImageFallback = __webpack_require__(410);
+	var _reactImageFallback = __webpack_require__(411);
 
 	var _reactImageFallback2 = _interopRequireDefault(_reactImageFallback);
 
@@ -65271,6 +65271,7 @@
 	        start: toUTCString(range.start),
 	        end: toUTCString(range.end, true)
 	      };
+
 	      var url = window.location.origin + "/ics/activity/detail/";
 	      var component = this;
 
@@ -65542,353 +65543,6 @@
 /* 410 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _filterInvalidDomProps = __webpack_require__(411);
-
-	var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var ReactImageFallback = function (_Component) {
-		_inherits(ReactImageFallback, _Component);
-
-		function ReactImageFallback(props) {
-			_classCallCheck(this, ReactImageFallback);
-
-			var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ReactImageFallback).call(this, props));
-
-			_this.state = {
-				imageSource: props.initialImage
-			};
-			_this.setDisplayImage = _this.setDisplayImage.bind(_this);
-			return _this;
-		}
-
-		_createClass(ReactImageFallback, [{
-			key: "componentDidMount",
-			value: function componentDidMount() {
-				this.displayImage = new window.Image();
-				this.setDisplayImage({ image: this.props.src, fallbacks: this.props.fallbackImage });
-			}
-		}, {
-			key: "componentWillReceiveProps",
-			value: function componentWillReceiveProps(nextProps) {
-				if (nextProps.src !== this.props.src) {
-					this.setDisplayImage({ image: nextProps.src, fallbacks: nextProps.fallbackImage });
-				}
-			}
-		}, {
-			key: "componentWillUnmount",
-			value: function componentWillUnmount() {
-				this.displayImage.onerror = null;
-				this.displayImage.onload = null;
-				this.displayImage = null;
-			}
-		}, {
-			key: "setDisplayImage",
-			value: function setDisplayImage(_ref) {
-				var _this2 = this;
-
-				var image = _ref.image;
-				var fallbacks = _ref.fallbacks;
-
-				var imagesArray = [image].concat(fallbacks);
-				this.displayImage.onerror = function () {
-					if (imagesArray.length > 2 && typeof imagesArray[1] === "string") {
-						var updatedFallbacks = imagesArray.slice(2);
-						_this2.setDisplayImage({ image: imagesArray[1], fallbacks: updatedFallbacks });
-						return;
-					}
-					_this2.setState({
-						imageSource: imagesArray[1]
-					}, function () {
-						if (_this2.props.onError) {
-							_this2.props.onError(_this2.props.src);
-						}
-					});
-				};
-				this.displayImage.onload = function () {
-					_this2.setState({
-						imageSource: imagesArray[0]
-					}, function () {
-						if (_this2.props.onLoad) {
-							_this2.props.onLoad(imagesArray[0]);
-						}
-					});
-				};
-				this.displayImage.src = imagesArray[0];
-			}
-		}, {
-			key: "render",
-			value: function render() {
-				return typeof this.state.imageSource === "string" ? _react2.default.createElement("img", _extends({}, (0, _filterInvalidDomProps2.default)(this.props), { src: this.state.imageSource })) : this.state.imageSource;
-			}
-		}]);
-
-		return ReactImageFallback;
-	}(_react.Component);
-
-	exports.default = ReactImageFallback;
-
-	ReactImageFallback.displayName = "ReactImageFallback";
-
-	ReactImageFallback.propTypes = {
-		src: _react.PropTypes.string.isRequired,
-		fallbackImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element, _react.PropTypes.array]).isRequired,
-		initialImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element]),
-		onLoad: _react.PropTypes.func,
-		onError: _react.PropTypes.func
-	};
-
-	ReactImageFallback.defaultProps = {
-		initialImage: null
-	};
-
-/***/ },
-/* 411 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.default = filterInvalidDOMProps;
-
-	var _htmlAttributes = __webpack_require__(412);
-
-	var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var eventProps = {
-		onCopy: true,
-		onCut: true,
-		onPaste: true,
-		onLoad: true,
-		onError: true,
-		onWheel: true,
-		onScroll: true,
-		onCompositionEnd: true,
-		onCompositionStart: true,
-		onCompositionUpdate: true,
-		onKeyDown: true,
-		onKeyPress: true,
-		onKeyUp: true,
-		onFocus: true,
-		onBlur: true,
-		onChange: true,
-		onInput: true,
-		onSubmit: true,
-		onClick: true,
-		onContextMenu: true,
-		onDoubleClick: true,
-		onDrag: true,
-		onDragEnd: true,
-		onDragEnter: true,
-		onDragExit: true,
-		onDragLeave: true,
-		onDragOver: true,
-		onDragStart: true,
-		onDrop: true,
-		onMouseDown: true,
-		onMouseEnter: true,
-		onMouseLeave: true,
-		onMouseMove: true,
-		onMouseOut: true,
-		onMouseOver: true,
-		onMouseUp: true,
-		onSelect: true,
-		onTouchCancel: true,
-		onTouchEnd: true,
-		onTouchMove: true,
-		onTouchStart: true,
-		onAnimationStart: true,
-		onAnimationEnd: true,
-		onAnimationIteration: true,
-		onTransitionEnd: true
-	};
-
-	function isValidDOMProp(prop) {
-		return eventProps[prop] || _htmlAttributes2.default[prop];
-	}
-
-	function filterInvalidDOMProps(props) {
-		var domProps = {};
-		for (var prop in props) {
-			if (props.hasOwnProperty(prop) && isValidDOMProp(prop)) {
-				domProps[prop] = props[prop];
-			}
-		}
-		return domProps;
-	}
-
-/***/ },
-/* 412 */
-/***/ function(module, exports) {
-
-	/*!
-	 * html-attributes
-	 * https://github.com/alexmingoia/html-attributes
-	 */
-
-	'use strict';
-
-	/**
-	 * @module html-attributes
-	 */
-
-	module.exports = {
-	  "abbr": "abbr",
-	  "accept": "accept",
-	  "acceptCharset": "accept-charset",
-	  "accessKey": "accesskey",
-	  "action": "action",
-	  "allowFullScreen": "allowfullscreen",
-	  "allowTransparency": "allowtransparency",
-	  "alt": "alt",
-	  "async": "async",
-	  "autoComplete": "autocomplete",
-	  "autoFocus": "autofocus",
-	  "autoPlay": "autoplay",
-	  "cellPadding": "cellpadding",
-	  "cellSpacing": "cellspacing",
-	  "challenge": "challenge",
-	  "charset": "charset",
-	  "checked": "checked",
-	  "cite": "cite",
-	  "class": "class",
-	  "className": "class",
-	  "cols": "cols",
-	  "colSpan": "colspan",
-	  "command": "command",
-	  "content": "content",
-	  "contentEditable": "contenteditable",
-	  "contextMenu": "contextmenu",
-	  "controls": "controls",
-	  "coords": "coords",
-	  "crossOrigin": "crossorigin",
-	  "data": "data",
-	  "dateTime": "datetime",
-	  "default": "default",
-	  "defer": "defer",
-	  "dir": "dir",
-	  "disabled": "disabled",
-	  "download": "download",
-	  "draggable": "draggable",
-	  "dropzone": "dropzone",
-	  "encType": "enctype",
-	  "for": "for",
-	  "form": "form",
-	  "formAction": "formaction",
-	  "formEncType": "formenctype",
-	  "formMethod": "formmethod",
-	  "formNoValidate": "formnovalidate",
-	  "formTarget": "formtarget",
-	  "frameBorder": "frameBorder",
-	  "headers": "headers",
-	  "height": "height",
-	  "hidden": "hidden",
-	  "high": "high",
-	  "href": "href",
-	  "hrefLang": "hreflang",
-	  "htmlFor": "for",
-	  "httpEquiv": "http-equiv",
-	  "icon": "icon",
-	  "id": "id",
-	  "inputMode": "inputmode",
-	  "isMap": "ismap",
-	  "itemId": "itemid",
-	  "itemProp": "itemprop",
-	  "itemRef": "itemref",
-	  "itemScope": "itemscope",
-	  "itemType": "itemtype",
-	  "kind": "kind",
-	  "label": "label",
-	  "lang": "lang",
-	  "list": "list",
-	  "loop": "loop",
-	  "manifest": "manifest",
-	  "max": "max",
-	  "maxLength": "maxlength",
-	  "media": "media",
-	  "mediaGroup": "mediagroup",
-	  "method": "method",
-	  "min": "min",
-	  "minLength": "minlength",
-	  "multiple": "multiple",
-	  "muted": "muted",
-	  "name": "name",
-	  "noValidate": "novalidate",
-	  "open": "open",
-	  "optimum": "optimum",
-	  "pattern": "pattern",
-	  "ping": "ping",
-	  "placeholder": "placeholder",
-	  "poster": "poster",
-	  "preload": "preload",
-	  "radioGroup": "radiogroup",
-	  "readOnly": "readonly",
-	  "rel": "rel",
-	  "required": "required",
-	  "role": "role",
-	  "rows": "rows",
-	  "rowSpan": "rowspan",
-	  "sandbox": "sandbox",
-	  "scope": "scope",
-	  "scoped": "scoped",
-	  "scrolling": "scrolling",
-	  "seamless": "seamless",
-	  "selected": "selected",
-	  "shape": "shape",
-	  "size": "size",
-	  "sizes": "sizes",
-	  "sortable": "sortable",
-	  "span": "span",
-	  "spellCheck": "spellcheck",
-	  "src": "src",
-	  "srcDoc": "srcdoc",
-	  "srcSet": "srcset",
-	  "start": "start",
-	  "step": "step",
-	  "style": "style",
-	  "tabIndex": "tabindex",
-	  "target": "target",
-	  "title": "title",
-	  "translate": "translate",
-	  "type": "type",
-	  "typeMustMatch": "typemustmatch",
-	  "useMap": "usemap",
-	  "value": "value",
-	  "width": "width",
-	  "wmode": "wmode",
-	  "wrap": "wrap"
-	};
-
-
-/***/ },
-/* 413 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
@@ -66053,32 +65707,59 @@
 	  return Goals;
 	}(_react2.default.Component);
 
+	/* getDisplayProportions
+	 * ---------------------
+	 * Takes a @goal object and extracts display requirements. 
+	 * Returns an object with the following fields:
+	 * @achieved: whether the goal has been met or not
+	 * @proportion: a ratio between actual and goal, order depends 
+	 *              on which is smaller, since we have to mark out
+	 *              the smaller one on a scale of the larger one
+	 */
+
+	function getDisplayProportions(g) {
+	  var actual = parseFloat(g.actual);
+	  var goal = parseFloat(g.goal);
+
+	  if (actual < goal) {
+	    return { achieved: false, proportion: goal ? actual / goal : 0 };
+	  } else {
+	    return { achieved: true, proportion: goal ? goal / actual : 0 };
+	  }
+	}
+
 	function Goal(props) {
+	  var _getDisplayProportion = getDisplayProportions(props.goal),
+	      achieved = _getDisplayProportion.achieved,
+	      proportion = _getDisplayProportion.proportion;
+
 	  return _react2.default.createElement(
 	    'div',
 	    { className: 'goal' },
 	    _react2.default.createElement(
 	      'span',
-	      { className: 'product' },
-	      'KAM'
+	      null,
+	      props.goal.process_name
 	    ),
+	    ' ',
 	    _react2.default.createElement(
 	      'span',
-	      null,
-	      'Rotary Conche Pull'
+	      { className: 'product' },
+	      props.goal.product_code
 	    ),
 	    _react2.default.createElement(
 	      'div',
-	      { className: 'goal-whole-bar' },
+	      { className: "goal-whole-bar " + (achieved ? "goal-achieved" : "") },
 	      _react2.default.createElement(
 	        'div',
-	        { className: 'goal-filled-bar' },
-	        '44.000 kg'
+	        { className: 'goal-filled-bar', style: { flex: proportion } },
+	        ((achieved ? props.goal.goal : props.goal.actual) || 0) + ' ' + (props.goal.process_unit || 'units')
 	      ),
 	      _react2.default.createElement(
 	        'div',
 	        null,
-	        props.goal.goal + ' ' + props.goal.goal_unit
+	        ' ',
+	        ((achieved ? props.goal.actual : props.goal.goal) || 0) + ' ' + (props.goal.process_unit || 'units')
 	      )
 	    )
 	  );
@@ -66287,11 +65968,9 @@
 	                  } })
 	              ),
 	              _react2.default.createElement(
-	                'div',
-	                { className: 'addgoal-field' },
-	                _react2.default.createElement('input', { type: 'text', placeholder: 'kg', value: this.state.goal_unit, onChange: function onChange(e) {
-	                    return _this5.handleChange("goal_unit", e.target.value);
-	                  } })
+	                'span',
+	                null,
+	                this.state.processType ? this.state.processType.value.unit : "unit(s)"
 	              )
 	            )
 	          ),
@@ -66317,6 +65996,353 @@
 
 	  return AddGoalDialog;
 	}(_react2.default.Component);
+
+/***/ },
+/* 411 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _filterInvalidDomProps = __webpack_require__(412);
+
+	var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var ReactImageFallback = function (_Component) {
+		_inherits(ReactImageFallback, _Component);
+
+		function ReactImageFallback(props) {
+			_classCallCheck(this, ReactImageFallback);
+
+			var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ReactImageFallback).call(this, props));
+
+			_this.state = {
+				imageSource: props.initialImage
+			};
+			_this.setDisplayImage = _this.setDisplayImage.bind(_this);
+			return _this;
+		}
+
+		_createClass(ReactImageFallback, [{
+			key: "componentDidMount",
+			value: function componentDidMount() {
+				this.displayImage = new window.Image();
+				this.setDisplayImage({ image: this.props.src, fallbacks: this.props.fallbackImage });
+			}
+		}, {
+			key: "componentWillReceiveProps",
+			value: function componentWillReceiveProps(nextProps) {
+				if (nextProps.src !== this.props.src) {
+					this.setDisplayImage({ image: nextProps.src, fallbacks: nextProps.fallbackImage });
+				}
+			}
+		}, {
+			key: "componentWillUnmount",
+			value: function componentWillUnmount() {
+				this.displayImage.onerror = null;
+				this.displayImage.onload = null;
+				this.displayImage = null;
+			}
+		}, {
+			key: "setDisplayImage",
+			value: function setDisplayImage(_ref) {
+				var _this2 = this;
+
+				var image = _ref.image;
+				var fallbacks = _ref.fallbacks;
+
+				var imagesArray = [image].concat(fallbacks);
+				this.displayImage.onerror = function () {
+					if (imagesArray.length > 2 && typeof imagesArray[1] === "string") {
+						var updatedFallbacks = imagesArray.slice(2);
+						_this2.setDisplayImage({ image: imagesArray[1], fallbacks: updatedFallbacks });
+						return;
+					}
+					_this2.setState({
+						imageSource: imagesArray[1]
+					}, function () {
+						if (_this2.props.onError) {
+							_this2.props.onError(_this2.props.src);
+						}
+					});
+				};
+				this.displayImage.onload = function () {
+					_this2.setState({
+						imageSource: imagesArray[0]
+					}, function () {
+						if (_this2.props.onLoad) {
+							_this2.props.onLoad(imagesArray[0]);
+						}
+					});
+				};
+				this.displayImage.src = imagesArray[0];
+			}
+		}, {
+			key: "render",
+			value: function render() {
+				return typeof this.state.imageSource === "string" ? _react2.default.createElement("img", _extends({}, (0, _filterInvalidDomProps2.default)(this.props), { src: this.state.imageSource })) : this.state.imageSource;
+			}
+		}]);
+
+		return ReactImageFallback;
+	}(_react.Component);
+
+	exports.default = ReactImageFallback;
+
+	ReactImageFallback.displayName = "ReactImageFallback";
+
+	ReactImageFallback.propTypes = {
+		src: _react.PropTypes.string.isRequired,
+		fallbackImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element, _react.PropTypes.array]).isRequired,
+		initialImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element]),
+		onLoad: _react.PropTypes.func,
+		onError: _react.PropTypes.func
+	};
+
+	ReactImageFallback.defaultProps = {
+		initialImage: null
+	};
+
+/***/ },
+/* 412 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.default = filterInvalidDOMProps;
+
+	var _htmlAttributes = __webpack_require__(413);
+
+	var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var eventProps = {
+		onCopy: true,
+		onCut: true,
+		onPaste: true,
+		onLoad: true,
+		onError: true,
+		onWheel: true,
+		onScroll: true,
+		onCompositionEnd: true,
+		onCompositionStart: true,
+		onCompositionUpdate: true,
+		onKeyDown: true,
+		onKeyPress: true,
+		onKeyUp: true,
+		onFocus: true,
+		onBlur: true,
+		onChange: true,
+		onInput: true,
+		onSubmit: true,
+		onClick: true,
+		onContextMenu: true,
+		onDoubleClick: true,
+		onDrag: true,
+		onDragEnd: true,
+		onDragEnter: true,
+		onDragExit: true,
+		onDragLeave: true,
+		onDragOver: true,
+		onDragStart: true,
+		onDrop: true,
+		onMouseDown: true,
+		onMouseEnter: true,
+		onMouseLeave: true,
+		onMouseMove: true,
+		onMouseOut: true,
+		onMouseOver: true,
+		onMouseUp: true,
+		onSelect: true,
+		onTouchCancel: true,
+		onTouchEnd: true,
+		onTouchMove: true,
+		onTouchStart: true,
+		onAnimationStart: true,
+		onAnimationEnd: true,
+		onAnimationIteration: true,
+		onTransitionEnd: true
+	};
+
+	function isValidDOMProp(prop) {
+		return eventProps[prop] || _htmlAttributes2.default[prop];
+	}
+
+	function filterInvalidDOMProps(props) {
+		var domProps = {};
+		for (var prop in props) {
+			if (props.hasOwnProperty(prop) && isValidDOMProp(prop)) {
+				domProps[prop] = props[prop];
+			}
+		}
+		return domProps;
+	}
+
+/***/ },
+/* 413 */
+/***/ function(module, exports) {
+
+	/*!
+	 * html-attributes
+	 * https://github.com/alexmingoia/html-attributes
+	 */
+
+	'use strict';
+
+	/**
+	 * @module html-attributes
+	 */
+
+	module.exports = {
+	  "abbr": "abbr",
+	  "accept": "accept",
+	  "acceptCharset": "accept-charset",
+	  "accessKey": "accesskey",
+	  "action": "action",
+	  "allowFullScreen": "allowfullscreen",
+	  "allowTransparency": "allowtransparency",
+	  "alt": "alt",
+	  "async": "async",
+	  "autoComplete": "autocomplete",
+	  "autoFocus": "autofocus",
+	  "autoPlay": "autoplay",
+	  "cellPadding": "cellpadding",
+	  "cellSpacing": "cellspacing",
+	  "challenge": "challenge",
+	  "charset": "charset",
+	  "checked": "checked",
+	  "cite": "cite",
+	  "class": "class",
+	  "className": "class",
+	  "cols": "cols",
+	  "colSpan": "colspan",
+	  "command": "command",
+	  "content": "content",
+	  "contentEditable": "contenteditable",
+	  "contextMenu": "contextmenu",
+	  "controls": "controls",
+	  "coords": "coords",
+	  "crossOrigin": "crossorigin",
+	  "data": "data",
+	  "dateTime": "datetime",
+	  "default": "default",
+	  "defer": "defer",
+	  "dir": "dir",
+	  "disabled": "disabled",
+	  "download": "download",
+	  "draggable": "draggable",
+	  "dropzone": "dropzone",
+	  "encType": "enctype",
+	  "for": "for",
+	  "form": "form",
+	  "formAction": "formaction",
+	  "formEncType": "formenctype",
+	  "formMethod": "formmethod",
+	  "formNoValidate": "formnovalidate",
+	  "formTarget": "formtarget",
+	  "frameBorder": "frameBorder",
+	  "headers": "headers",
+	  "height": "height",
+	  "hidden": "hidden",
+	  "high": "high",
+	  "href": "href",
+	  "hrefLang": "hreflang",
+	  "htmlFor": "for",
+	  "httpEquiv": "http-equiv",
+	  "icon": "icon",
+	  "id": "id",
+	  "inputMode": "inputmode",
+	  "isMap": "ismap",
+	  "itemId": "itemid",
+	  "itemProp": "itemprop",
+	  "itemRef": "itemref",
+	  "itemScope": "itemscope",
+	  "itemType": "itemtype",
+	  "kind": "kind",
+	  "label": "label",
+	  "lang": "lang",
+	  "list": "list",
+	  "loop": "loop",
+	  "manifest": "manifest",
+	  "max": "max",
+	  "maxLength": "maxlength",
+	  "media": "media",
+	  "mediaGroup": "mediagroup",
+	  "method": "method",
+	  "min": "min",
+	  "minLength": "minlength",
+	  "multiple": "multiple",
+	  "muted": "muted",
+	  "name": "name",
+	  "noValidate": "novalidate",
+	  "open": "open",
+	  "optimum": "optimum",
+	  "pattern": "pattern",
+	  "ping": "ping",
+	  "placeholder": "placeholder",
+	  "poster": "poster",
+	  "preload": "preload",
+	  "radioGroup": "radiogroup",
+	  "readOnly": "readonly",
+	  "rel": "rel",
+	  "required": "required",
+	  "role": "role",
+	  "rows": "rows",
+	  "rowSpan": "rowspan",
+	  "sandbox": "sandbox",
+	  "scope": "scope",
+	  "scoped": "scoped",
+	  "scrolling": "scrolling",
+	  "seamless": "seamless",
+	  "selected": "selected",
+	  "shape": "shape",
+	  "size": "size",
+	  "sizes": "sizes",
+	  "sortable": "sortable",
+	  "span": "span",
+	  "spellCheck": "spellcheck",
+	  "src": "src",
+	  "srcDoc": "srcdoc",
+	  "srcSet": "srcset",
+	  "start": "start",
+	  "step": "step",
+	  "style": "style",
+	  "tabIndex": "tabindex",
+	  "target": "target",
+	  "title": "title",
+	  "translate": "translate",
+	  "type": "type",
+	  "typeMustMatch": "typemustmatch",
+	  "useMap": "usemap",
+	  "value": "value",
+	  "width": "width",
+	  "wmode": "wmode",
+	  "wrap": "wrap"
+	};
+
 
 /***/ }
 /******/ ]);
