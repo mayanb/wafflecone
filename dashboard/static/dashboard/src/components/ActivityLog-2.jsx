@@ -100,13 +100,7 @@ export default class Activity extends React.Component {
     let productID = origin.product_id
 
     console.log(processID + " " + productID)
-    let params = {
-      process_type: processID, 
-      product_type: productID, 
-      start: toUTCString(range.start), 
-      end: toUTCString(range.end, true)
-    }
-    
+    let params = {process_type: processID, product_type: productID, start: range.start, end: range.end}
     let url = window.location.origin + "/ics/activity/detail/"
     let component = this
 
@@ -130,7 +124,7 @@ export default class Activity extends React.Component {
     console.log(range)
     this.setState({loading: true})
     let url = window.location.origin + "/ics/activity/"
-    let params = {start: toUTCString(range.start), end: toUTCString(range.end, true)}
+    let params = {start: range.start, end: range.end}
     let component = this
 
     let rID = requestID()
@@ -297,15 +291,4 @@ function pl(count, unit) {
   if (count == 1) 
     return count + " " + unit
   return count + " " + unit + "s"
-}
-
-
-function toUTCString(dateString, addOne) {
-  var m = moment(dateString + " 00:00:00")
-
-  if (addOne) {
-    m.add(24, "hours")
-  }
-
-  return m.utc().format('YYYY-MM-DD-HH-mm-ss-SSSSSS')
 }

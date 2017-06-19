@@ -150,8 +150,8 @@ export default class Task extends React.Component {
       {attribute: -1, value: taskData.process_type.name, name: "Process", editable: false},
       {attribute: -1, value: taskData.product_type.name, name: "Product", editable: false},
       {attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false},
-      {attribute: -1, value: moment.utc(taskData.created_at).local().format('MM/DD/YY h:mm a'), name: "Created at", editable: false},
-      {attribute: -1, value: moment.utc(taskData.updated_at).local().format('MM/DD/YY h:mm a'), name: "Updated at", editable: false},
+      {attribute: -1, value: moment(taskData.created_at).format('MM/DD/YY h:mm a'), name: "Created at", editable: false},
+      {attribute: -1, value: moment(taskData.updated_at).format('MM/DD/YY h:mm a'), name: "Updated at", editable: false},
     ]
 
     attributes.map(function (attr, i) {
@@ -190,7 +190,7 @@ export default class Task extends React.Component {
             <img src={icon(this.state.task.process_type.icon)} />
             <span>{this.state.task.display}</span>
           </div>
-          <span>{moment.utc(this.state.task.created_at).local().format('dddd, MMMM Do YYYY, h:mm a')}</span>
+          <span>{moment(this.state.task.created_at).format('dddd, MMMM Do YYYY, h:mm a')}</span>
         </div>
         <div className="task-content">
           <div>

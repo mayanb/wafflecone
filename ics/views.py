@@ -17,8 +17,6 @@ from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
 
-dateformat = "%Y-%m-%d-%H-%M-%S-%f"
-
 class UserList(generics.ListAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
@@ -114,13 +112,11 @@ class TaskList(generics.ListAPIView):
         start = self.request.query_params.get('start', None)
         end = self.request.query_params.get('end', None)
         if start is not None and end is not None:
-          # start = start.strip().split('-')
-          # end = end.strip().split('-')
-          # startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
-          # endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
-          startDate = datetime.strptime(start, dateformat)
-          endDate = datetime.strptime(end, dateformat)
-          queryset = queryset.filter(created_at__range=(startDate, endDate))
+          start = start.strip().split('-')
+          end = end.strip().split('-')
+          startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
+          endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
+          queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
 
         i = Input.objects.filter(task=OuterRef('id')).order_by('id')
@@ -270,13 +266,11 @@ class ActivityList(generics.ListAPIView):
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
-      # start = start.strip().split('-')
-      # end = end.strip().split('-')
-      # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-      # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = datetime.strptime(start, dateformat)
-      endDate = datetime.strptime(end, dateformat)
-      queryset = queryset.filter(created_at__range=(startDate, endDate))
+      start = start.strip().split('-')
+      end = end.strip().split('-')
+      startDate = date(int(start[0]), int(start[1]), int(start[2]))
+      endDate = date(int(end[0]), int(end[1]), int(end[2]))
+      queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
     # separate by process type
     return queryset.values(
@@ -310,13 +304,11 @@ class ActivityListDetail(generics.ListAPIView):
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
-      # start = start.strip().split('-')
-      # end = end.strip().split('-')
-      # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-      # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = datetime.strptime(start, dateformat)
-      endDate = datetime.strptime(end, dateformat)
-      queryset = queryset.filter(created_at__range=(startDate, endDate))
+      start = start.strip().split('-')
+      end = end.strip().split('-')
+      startDate = date(int(start[0]), int(start[1]), int(start[2]))
+      endDate = date(int(end[0]), int(end[1]), int(end[2]))
+      queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
     return queryset.annotate(outputs=Count('items'))
 
@@ -417,13 +409,10 @@ def activityCSV(request):
   if not process or not start or not end or not team:
     return response
 
-  # start = start.strip().split('-')
-  # end = end.strip().split('-')
-  # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-  # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-
-  startDate = datetime.strptime(start, dateformat)
-  endDate = datetime.strptime(end, dateformat)
+  start = start.strip().split('-')
+  end = end.strip().split('-')
+  startDate = date(int(start[0]), int(start[1]), int(start[2]))
+  endDate = date(int(end[0]), int(end[1]), int(end[2]))
 
   fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
   attrs = Attribute.objects.filter(process_type=process).order_by('rank')
@@ -435,7 +424,7 @@ def activityCSV(request):
 
   tasks = Task.objects.filter(is_trashed=False, 
     process_type__created_by=team, process_type=process, 
-    created_at__range=(startDate, endDate)).annotate(
+    created_at__date__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     outputcount=Count('items', distinct=True)).annotate(
     first_use_date=Min('items__input__task__created_at'))
