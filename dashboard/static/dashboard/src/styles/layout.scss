@@ -1,6 +1,7 @@
 $primary: #49A8F3;
-$background-color: #ffffff;
+$background-color: #FBFCFC;
 $light-grey: #eee;
+$shadow-0: 0 1px 4px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.06);
 $shadow-1: 0 1px 4px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
 $shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
 $font-stack: "Camphor Pro", Nunito, Overpass, Proxima Nova, sans-serif;
@@ -29,14 +30,13 @@ html, body {
 
 body div#root {
 	font-family: $font-stack;
-	font-size: 14px;
+	font-size: 13px;
 	background-color: $background-color;
 }
 
 html, body, #root, .parent, .content-area {
 	width: 100%;
   height: 100%;
-
 }
 
 img:before {
@@ -55,15 +55,21 @@ img:before {
 }
 
 .d-content {
+  padding-top: 54px;
   flex: 1;
   max-height: 100vh;
   overflow: scroll;
+
+  & > div {
+    max-width: 80%;
+  }
 }
 
 .d-nav{
   flex: 0 0 13em;
-  box-shadow: $shadow-1;
-  transition: flex 0.3s
+  padding-top: 54px;
+  transition: flex 0.3s;
+  border-right: 1px solid #EAEAEA;
 }
 
 .pushout {
@@ -85,38 +91,22 @@ img:before {
 }
 
 .d-ads {
-	display: none;
+	//flex: 0 0 20em;
 }
 
 .d-nav {
   /* put the nav on the left */
   order: -1;
-  background-color: #505256;
+  //background-color: #505256;
   height: 100vh;
  	display: flex;
  	flex-direction: column;
- 	color: rgba(255,255,255,0.56);
+ 	color: rgba(98,98,98,0.56);
 
- 	.nav-team {
- 		border-bottom: 1px solid rgba(255,255,255,0.1);
- 		padding-top: 16px;
- 		padding-bottom: 16px;
- 	  vertical-align: middle;
- 	  padding-left: 16px;
-
- 		i {
- 			line-height: 24px;
- 			vertical-align: middle;
- 			color: rgba(255,255,255,0.56)
- 		}
- 	}
-
- 	.nav-brand {
- 		padding-top: 16px;
- 		color: rgba(255,255,255,1);
- 		font-size: 1.5em;
- 		padding-left: 16px;
- 	}
+  .bar {
+    position: relative;
+    top: 0;
+  }
 
 	ul { margin: 0 auto; }
 
@@ -127,7 +117,7 @@ img:before {
 			display: block;
 			line-height: $navbar-height;
 			text-decoration: none;
-			color: rgba(255,255,255,0.56);
+			color: rgba(98,98,98,0.56);
 			margin-left: 16px;
 
 			&.active {
@@ -146,16 +136,6 @@ img:before {
 
 }
 
-.content-descriptor {
-	display: flex;
-	flex-direction: row
-}
-
-
-//----
-
-
-
 i.material-icons {
 	color: rgba(0,0,0,0.5);
 
@@ -166,23 +146,8 @@ i.material-icons {
 
 }
 
-.card {
-	box-shadow: $shadow-1;
-	margin: 24px;
-	border-radius: 2px;
-	width: 100%;
-	background-color: white;
-}
-
-.card-container {
-	padding-bottom: 56px;
-	position: relative;
-	overflow-x: auto;
-}
-
 .loading {
 	display: none;
-	//background-color: $background-color;
 }
 
 .noresults {
@@ -197,6 +162,17 @@ i.material-icons {
 }
 
 div[data-react-toolbox="dropdown"] {
+
+  &>div {
+    padding: 0;
+  }
+
+  input {
+    font-size: 14px;
+  }
+}
+
+.d-nav div[data-react-toolbox="dropdown"] {
 	&>div {
 		padding: 0px;
 		margin: 0px;
@@ -210,13 +186,45 @@ div[data-react-toolbox="dropdown"] {
 		margin: 0px;
 		padding: 0px;
 		padding-top: 4px;
-		font-size: 14px;
 		outline: none;
 		border: none;
 	}
-
 }
 
 .d-nav div[data-react-toolbox="dropdown"] input {
   color: rgba(255,255,255,0.56)
+}
+
+.d-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 54px;
+  min-height: 54px;
+  background-color: white;
+  box-shadow: $shadow-0;
+  line-height: 54px;
+  display: flex;
+  flex-direction: row;
+  padding: 0px 16px;
+
+  .nav-brand {
+    flex: 1;
+  }
+
+  .nav-team {
+    text-align: right;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+    padding-left: 16px;
+
+    i {
+      line-height: 24px;
+      vertical-align: middle;
+      color: rgba(255,255,255,0.56)
+    }
+  }
 }

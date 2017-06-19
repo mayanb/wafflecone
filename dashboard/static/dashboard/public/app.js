@@ -98,6 +98,10 @@
 
 	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
+	var _Dash = __webpack_require__(410);
+
+	var _Dash2 = _interopRequireDefault(_Dash);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -158,17 +162,19 @@
 	            _react2.default.createElement(
 	              'main',
 	              { className: 'd-content' },
+	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/dash/", component: _Dash2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: "/dashboard/", component: _ActivityLog2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/inventory/:id?", component: _Inventory2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/labels/", component: _ZebraPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/zebra/", component: _ZebraPrinter2.default }),
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/dymo/", component: _LabelPrinter2.default }),
 	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default }),
-	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/deliveries/", component: _Delivery2.default })
+	              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default })
 	            ),
 	            _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
 	            _react2.default.createElement('aside', { className: 'd-ads' })
-	          )
+	          ),
+	          _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Topbar })
 	        )
 	      );
 	    }
@@ -60826,7 +60832,7 @@
 	  }
 	}
 
-	function printQRs_dymo(uuids, task, notes, qrcode) {
+	function printQRs_dymo(uuids, qrcode) {
 	  try {
 	    var label;
 	    var labelSetBuilder;
@@ -61505,7 +61511,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.ContentDescriptor = exports.Navbar = undefined;
+	exports.Topbar = exports.ContentDescriptor = exports.Navbar = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -61531,24 +61537,23 @@
 
 	var teams = [{ value: '1', label: 'Bama Production' }, { value: '5', label: 'Valencia Production' }, { value: '7', label: 'United Cold' }, { value: '3', label: 'Fulfillment' }];
 
-	var Navbar = function (_React$Component) {
-	  _inherits(Navbar, _React$Component);
+	function getTeam() {
+	  return window.localStorage.getItem("team") || "1";
+	}
 
-	  function Navbar(props) {
-	    _classCallCheck(this, Navbar);
+	var Topbar = function (_React$Component) {
+	  _inherits(Topbar, _React$Component);
 
-	    var _this = _possibleConstructorReturn(this, (Navbar.__proto__ || Object.getPrototypeOf(Navbar)).call(this, props));
+	  function Topbar(props) {
+	    _classCallCheck(this, Topbar);
 
-	    _this.state = { team: _this.getTeam() };
+	    var _this = _possibleConstructorReturn(this, (Topbar.__proto__ || Object.getPrototypeOf(Topbar)).call(this, props));
+
+	    _this.state = { team: getTeam() };
 	    return _this;
 	  }
 
-	  _createClass(Navbar, [{
-	    key: 'getTeam',
-	    value: function getTeam() {
-	      return window.localStorage.getItem("team") || "1";
-	    }
-	  }, {
+	  _createClass(Topbar, [{
 	    key: 'handleTeamChange',
 	    value: function handleTeamChange(nt) {
 	      this.setState({ team: nt });
@@ -61560,8 +61565,49 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var options = ["Activity Log", "Inventory", "Labels", "Settings", "Task View", "Deliveries"];
-	      var links = ["", "inventory", "labels", "settings", "task", "deliveries"];
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'd-top' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'nav-brand' },
+	          'SCOOP'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'nav-team' },
+	          _react2.default.createElement(_dropdown.Dropdown, {
+	            source: teams,
+	            onChange: function onChange(val) {
+	              return _this2.handleTeamChange(val);
+	            },
+	            value: this.state.team
+	          })
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Topbar;
+	}(_react2.default.Component);
+
+	var Navbar = function (_React$Component2) {
+	  _inherits(Navbar, _React$Component2);
+
+	  function Navbar(props) {
+	    _classCallCheck(this, Navbar);
+
+	    var _this3 = _possibleConstructorReturn(this, (Navbar.__proto__ || Object.getPrototypeOf(Navbar)).call(this, props));
+
+	    _this3.state = { team: getTeam() };
+	    return _this3;
+	  }
+
+	  _createClass(Navbar, [{
+	    key: 'render',
+	    value: function render() {
+	      var options = ["Activity Log", "Inventory", "Zebra labels", "Dymo labels", "Settings", "Task View"];
+	      var links = ["", "inventory", "labels", "dymo", "settings", "task"];
 
 	      var navbarSizeClass = "bigNav";
 	      if (this.props.match.params.id && this.props.match.params.section == "inventory") {
@@ -61579,22 +61625,6 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'bar' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'nav-brand' },
-	            'SCOOP'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'nav-team' },
-	            _react2.default.createElement(_dropdown.Dropdown, {
-	              source: teams,
-	              onChange: function onChange(val) {
-	                return _this2.handleTeamChange(val);
-	              },
-	              value: this.state.team
-	            })
-	          ),
 	          _react2.default.createElement(
 	            'div',
 	            null,
@@ -61669,6 +61699,7 @@
 
 	exports.Navbar = Navbar;
 	exports.ContentDescriptor = ContentDescriptor;
+	exports.Topbar = Topbar;
 
 /***/ },
 /* 404 */
@@ -64016,7 +64047,7 @@
 	  }, {
 	    key: 'handleItemChange',
 	    value: function handleItemChange(value) {
-	      qrcode.clear();
+	      this.state.qrcode.clear();
 	      var v;
 	      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
 
@@ -65114,7 +65145,7 @@
 
 	var _Datepicker2 = _interopRequireDefault(_Datepicker);
 
-	var _reactImageFallback = __webpack_require__(410);
+	var _reactImageFallback = __webpack_require__(411);
 
 	var _reactImageFallback2 = _interopRequireDefault(_reactImageFallback);
 
@@ -65154,7 +65185,8 @@
 	      expandedTasks: [],
 
 	      loading: true,
-	      taskLoading: false
+	      taskLoading: false,
+	      mini: true
 	    };
 	    return _this;
 	  }
@@ -65187,7 +65219,7 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'activity page' },
+	        { className: 'activity page ' + (this.state.mini ? "mini" : "") },
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'activity-header page-header' },
@@ -65233,7 +65265,13 @@
 	      var productID = origin.product_id;
 
 	      console.log(processID + " " + productID);
-	      var params = { process_type: processID, product_type: productID, start: range.start, end: range.end };
+	      var params = {
+	        process_type: processID,
+	        product_type: productID,
+	        start: toUTCString(range.start),
+	        end: toUTCString(range.end, true)
+	      };
+
 	      var url = window.location.origin + "/ics/activity/detail/";
 	      var component = this;
 
@@ -65252,7 +65290,6 @@
 	  }, {
 	    key: 'getActivity',
 	    value: function getActivity(range) {
-	      console.log(range);
 	      this.setState({ loading: true });
 	      var url = window.location.origin + "/ics/activity/";
 	      var params = { start: range.start, end: range.end };
@@ -65492,8 +65529,476 @@
 	  return count + " " + unit + "s";
 	}
 
+	function toUTCString(dateString, addOne) {
+	  var m = (0, _moment2.default)(dateString + " 00:00:00");
+
+	  if (addOne) {
+	    m.add(24, "hours");
+	  }
+
+	  return m.utc().format('YYYY-MM-DD-HH-mm-ss-SSSSSS');
+	}
+
 /***/ },
 /* 410 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _APIManager = __webpack_require__(331);
+
+	var _ActivityLog = __webpack_require__(409);
+
+	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
+
+	var _Dialog = __webpack_require__(352);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _dropdown = __webpack_require__(334);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Dash = function (_React$Component) {
+	  _inherits(Dash, _React$Component);
+
+	  function Dash() {
+	    _classCallCheck(this, Dash);
+
+	    return _possibleConstructorReturn(this, (Dash.__proto__ || Object.getPrototypeOf(Dash)).apply(this, arguments));
+	  }
+
+	  _createClass(Dash, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(Goals, null),
+	        _react2.default.createElement(_ActivityLog2.default, null)
+	      );
+	    }
+	  }]);
+
+	  return Dash;
+	}(_react2.default.Component);
+
+	exports.default = Dash;
+
+	var Goals = function (_React$Component2) {
+	  _inherits(Goals, _React$Component2);
+
+	  function Goals(props) {
+	    _classCallCheck(this, Goals);
+
+	    var _this2 = _possibleConstructorReturn(this, (Goals.__proto__ || Object.getPrototypeOf(Goals)).call(this, props));
+
+	    _this2.state = {
+	      dialog: false,
+	      loading: false,
+	      lastRequestID: -1,
+	      goals: []
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(Goals, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getGoals();
+	    }
+	  }, {
+	    key: 'getGoals',
+	    value: function getGoals() {
+	      this.setState({ loading: true });
+	      var url = window.location.origin + "/ics/goals/";
+	      var component = this;
+
+	      var rID = (0, _APIManager.requestID)();
+	      this.lastRequestID = rID;
+
+	      (0, _APIManager.fetch)(url, {}).done(function (data) {
+	        if (component.lastRequestID != rID) return;
+
+	        component.setState({ goals: data });
+	      }).always(function () {
+	        if (component.lastRequestID != rID) return;
+	        component.setState({ loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'handleAddGoal',
+	    value: function handleAddGoal(newGoal, success, failure) {
+	      var url = window.location.origin + "ics/goals/";
+	      var component = this;
+	      var params = {
+	        process_type: newGoal.processType.value.id,
+	        product_type: newGoal.productType.value.id,
+	        goal: newGoal.goal_unit,
+	        goal_unit: newGoal.goal_unit
+	      };
+
+	      (0, _APIManager.post)(url, params).done(function (data) {
+	        var ns = update(component.state.goals, { $push: data });
+	        component.setState({ goals: ns }, success);
+	      }).fail(function (data) {
+	        failure();
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this3 = this;
+
+	      var dialog = false;
+	      if (this.state.dialog) {
+	        dialog = _react2.default.createElement(AddGoalDialog, { onCancel: function onCancel() {
+	            return _this3.setState({ dialog: false });
+	          }, onAddGoal: this.handleAddGoal.bind(this) });
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'goals page mini' },
+	        dialog,
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'page-header' },
+	          _react2.default.createElement(
+	            'h2',
+	            null,
+	            'Production Goals'
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { onClick: function onClick() {
+	                return _this3.setState({ dialog: true });
+	              } },
+	            'Add a new goal'
+	          )
+	        ),
+	        this.state.goals.map(function (goal, i) {
+	          return _react2.default.createElement(Goal, { goal: goal, key: i });
+	        })
+	      );
+	    }
+	  }]);
+
+	  return Goals;
+	}(_react2.default.Component);
+
+	/* getDisplayProportions
+	 * ---------------------
+	 * Takes a @goal object and extracts display requirements. 
+	 * Returns an object with the following fields:
+	 * @achieved: whether the goal has been met or not
+	 * @proportion: a ratio between actual and goal, order depends 
+	 *              on which is smaller, since we have to mark out
+	 *              the smaller one on a scale of the larger one
+	 */
+
+	function getDisplayProportions(g) {
+	  var actual = parseFloat(g.actual);
+	  var goal = parseFloat(g.goal);
+
+	  if (actual < goal) {
+	    return { achieved: false, proportion: goal ? actual / goal : 0 };
+	  } else {
+	    return { achieved: true, proportion: goal ? goal / actual : 0 };
+	  }
+	}
+
+	function Goal(props) {
+	  var _getDisplayProportion = getDisplayProportions(props.goal),
+	      achieved = _getDisplayProportion.achieved,
+	      proportion = _getDisplayProportion.proportion;
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'goal' },
+	    _react2.default.createElement(
+	      'span',
+	      null,
+	      props.goal.process_name
+	    ),
+	    ' ',
+	    _react2.default.createElement(
+	      'span',
+	      { className: 'product' },
+	      props.goal.product_code
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: "goal-whole-bar " + (achieved ? "goal-achieved" : "") },
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'goal-filled-bar', style: { flex: proportion } },
+	        ((achieved ? props.goal.goal : props.goal.actual) || 0) + ' ' + (props.goal.process_unit || 'units')
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        null,
+	        ' ',
+	        ((achieved ? props.goal.actual : props.goal.goal) || 0) + ' ' + (props.goal.process_unit || 'units')
+	      )
+	    )
+	  );
+	}
+
+	var AddGoalDialog = function (_React$Component3) {
+	  _inherits(AddGoalDialog, _React$Component3);
+
+	  function AddGoalDialog(props) {
+	    _classCallCheck(this, AddGoalDialog);
+
+	    var _this4 = _possibleConstructorReturn(this, (AddGoalDialog.__proto__ || Object.getPrototypeOf(AddGoalDialog)).call(this, props));
+
+	    _this4.state = {
+	      loading: false,
+	      done: false,
+	      processType: null,
+	      productType: null,
+	      goal: "",
+	      goal_unit: "",
+	      setup: false,
+	      processes: [],
+	      products: []
+	    };
+	    return _this4;
+	  }
+
+	  _createClass(AddGoalDialog, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getProductsAndProcesses();
+	    }
+	  }, {
+	    key: 'getProductsAndProcesses',
+	    value: function getProductsAndProcesses() {
+	      var thisObj = this;
+	      var container = {};
+	      var defs = [this.getDeferred("processes", container), this.getDeferred("products", container)];
+
+	      _jquery2.default.when.apply(null, defs).done(function () {
+	        container.setup = true;
+	        container.processType = container.processes[0].value;
+	        container.productType = container.products[0].value;
+	        thisObj.setState(container);
+	      });
+	    }
+	  }, {
+	    key: 'getDeferred',
+	    value: function getDeferred(keyword, container) {
+	      var deferred = _jquery2.default.Deferred();
+	      var req = { created_by: window.localStorage.getItem("team") || "1" };
+	      if (!req.created_by) {
+	        alert("No teams loaded:(((");
+	      }
+
+	      _jquery2.default.get(window.location.origin + "/ics/" + keyword, req).done(function (data) {
+	        container[keyword] = data.map(function (x) {
+	          return { value: x, label: x.name };
+	        });
+	        deferred.resolve();
+	      });
+	      return deferred.promise();
+	    }
+	  }, {
+	    key: 'handleAddGoal',
+	    value: function handleAddGoal() {
+	      this.setState({ loading: true });
+	      var component = this;
+
+	      this.props.onAddGoal(this.state, function () {
+	        component.setState({ done: true, error: false });
+	      }, function () {
+	        component.setState({ error: true });
+	      });
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, val) {
+	      console.log(val);
+	      this.setState(_defineProperty({}, which, val));
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this5 = this;
+
+	      if (this.state.error) {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            'Add a new goal'
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-text' },
+	            'Oops, something went wrong.'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+	              'OK'
+	            )
+	          )
+	        );
+	      }
+	      if (!this.state.setup) {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            'Add a new goal'
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-text' },
+	            'Hang on a sec...'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+	              'OK'
+	            )
+	          )
+	        );
+	      } else if (this.state.done) {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            'Add a new goal'
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-text' },
+	            'Yay! You added a new goal!'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+	              'OK'
+	            )
+	          )
+	        );
+	      } else {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            'Add a new goal'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-text' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'row' },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'addgoal-field' },
+	                _react2.default.createElement(_dropdown.Dropdown, {
+	                  source: this.state.processes,
+	                  onChange: function onChange(val) {
+	                    return _this5.handleChange("processType", val);
+	                  },
+	                  value: this.state.processType
+	                })
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'addgoal-field' },
+	                _react2.default.createElement(_dropdown.Dropdown, {
+	                  source: this.state.products,
+	                  onChange: function onChange(val) {
+	                    return _this5.handleChange("productType", val);
+	                  },
+	                  value: this.state.productType
+	                })
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'row' },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'addgoal-field' },
+	                _react2.default.createElement('input', { type: 'text', placeholder: '0', value: this.state.goal, onChange: function onChange(e) {
+	                    return _this5.handleChange("goal", e.target.value);
+	                  } })
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                this.state.processType ? this.state.processType.value.unit : "unit(s)"
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', style: { display: this.state.loading ? "none" : "" }, onClick: this.props.onCancel },
+	              'Cancel'
+	            ),
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button', onClick: this.handleAddGoal.bind(this) },
+	              this.state.loading ? "Adding goal..." : "Confirm"
+	            )
+	          )
+	        );
+	      }
+	      return false;
+	    }
+	  }]);
+
+	  return AddGoalDialog;
+	}(_react2.default.Component);
+
+/***/ },
+/* 411 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -65510,7 +66015,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _filterInvalidDomProps = __webpack_require__(411);
+	var _filterInvalidDomProps = __webpack_require__(412);
 
 	var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
 
@@ -65618,7 +66123,7 @@
 	};
 
 /***/ },
-/* 411 */
+/* 412 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -65628,7 +66133,7 @@
 	});
 	exports.default = filterInvalidDOMProps;
 
-	var _htmlAttributes = __webpack_require__(412);
+	var _htmlAttributes = __webpack_require__(413);
 
 	var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
 
@@ -65697,7 +66202,7 @@
 	}
 
 /***/ },
-/* 412 */
+/* 413 */
 /***/ function(module, exports) {
 
 	/*!

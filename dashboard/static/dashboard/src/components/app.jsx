@@ -6,12 +6,13 @@ import $ from 'jquery'
 import moment from 'moment'
 import Deliveries from './Delivery.jsx'
 import ZebraPrinter from './ZebraPrinter.jsx'
-import {Navbar} from './Layout.jsx'
+import {Navbar, Topbar} from './Layout.jsx'
 import FactoryMap from './FactoryMap.jsx'
 import LabelPrinter from './LabelPrinter.jsx'
 import Inventory from './Inventory2.jsx'
 import Task from './Task-2.jsx'
 import Activity from './ActivityLog-2.jsx'
+import Dash from './Dash.jsx'
 
 class Main extends React.Component {
   constructor() {
@@ -44,22 +45,24 @@ class Main extends React.Component {
   render () {
     return (
       <Router>
-          <div>
+        <div>
           <div className="parent">
             <main className="d-content">
+              <Route exact path={"/dashboard/dash/"} component={Dash} />
               <Route exact path={"/dashboard/"} component={Activity} />
               <Route path={"/dashboard/inventory/:id?"} component={Inventory} />
               <Route path={"/dashboard/labels/"} component={ZebraPrinter} />
               <Route path={"/dashboard/zebra/"} component={ZebraPrinter} />
+              <Route path={"/dashboard/dymo/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
-              <Route path={"/dashboard/deliveries/"} component={Deliveries} />
             </main>
 
             <Route path="/dashboard/:section?/:id?" component={Navbar} />
             <aside className="d-ads"></aside>
           </div>
-          </div>
+          <Route path="/dashboard/:section?/:id?" component={Topbar} />
+        </div>
       </Router>
     )
   }

@@ -58,8 +58,8 @@ html, body {
 
 body div#root {
   font-family: "Camphor Pro", Nunito, Overpass, Proxima Nova, sans-serif;
-  font-size: 14px;
-  background-color: #ffffff; }
+  font-size: 13px;
+  background-color: #FBFCFC; }
 
 html, body, #root, .parent, .content-area {
   width: 100%;
@@ -76,14 +76,18 @@ img:before {
     max-width: 900px; }
 
 .d-content {
+  padding-top: 54px;
   flex: 1;
   max-height: 100vh;
   overflow: scroll; }
+  .d-content > div {
+    max-width: 80%; }
 
 .d-nav {
   flex: 0 0 13em;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
-  transition: flex 0.3s; }
+  padding-top: 54px;
+  transition: flex 0.3s;
+  border-right: 1px solid #EAEAEA; }
 
 .pushout {
   width: 32px;
@@ -100,32 +104,16 @@ img:before {
   .d-nav.littleNav > div.bar {
     display: none; }
 
-.d-ads {
-  display: none; }
-
 .d-nav {
   /* put the nav on the left */
   order: -1;
-  background-color: #505256;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  color: rgba(255, 255, 255, 0.56); }
-  .d-nav .nav-team {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 16px;
-    padding-bottom: 16px;
-    vertical-align: middle;
-    padding-left: 16px; }
-    .d-nav .nav-team i {
-      line-height: 24px;
-      vertical-align: middle;
-      color: rgba(255, 255, 255, 0.56); }
-  .d-nav .nav-brand {
-    padding-top: 16px;
-    color: white;
-    font-size: 1.5em;
-    padding-left: 16px; }
+  color: rgba(98, 98, 98, 0.56); }
+  .d-nav .bar {
+    position: relative;
+    top: 0; }
   .d-nav ul {
     margin: 0 auto; }
   .d-nav li {
@@ -134,7 +122,7 @@ img:before {
       display: block;
       line-height: 50px;
       text-decoration: none;
-      color: rgba(255, 255, 255, 0.56);
+      color: rgba(98, 98, 98, 0.56);
       margin-left: 16px; }
       .d-nav li a.active, .d-nav li a:hover.active, .d-nav li a:visited.active {
         background-color: #49A8F3;
@@ -145,26 +133,10 @@ img:before {
         .d-nav li a.active, .d-nav li a.active:hover, .d-nav li a.active:visited, .d-nav li a:hover.active, .d-nav li a:hover.active:hover, .d-nav li a:hover.active:visited, .d-nav li a:visited.active, .d-nav li a:visited.active:hover, .d-nav li a:visited.active:visited {
           color: white; }
 
-.content-descriptor {
-  display: flex;
-  flex-direction: row; }
-
 i.material-icons {
   color: rgba(0, 0, 0, 0.5); }
   i.material-icons:hover {
     color: blue; }
-
-.card {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
-  margin: 24px;
-  border-radius: 2px;
-  width: 100%;
-  background-color: white; }
-
-.card-container {
-  padding-bottom: 56px;
-  position: relative;
-  overflow-x: auto; }
 
 .loading {
   display: none; }
@@ -178,20 +150,51 @@ i.material-icons {
     text-align: middle; }
 
 div[data-react-toolbox="dropdown"] > div {
+  padding: 0; }
+div[data-react-toolbox="dropdown"] input {
+  font-size: 14px; }
+
+.d-nav div[data-react-toolbox="dropdown"] > div {
   padding: 0px;
   margin: 0px; }
-div[data-react-toolbox="dropdown"] ul {
+.d-nav div[data-react-toolbox="dropdown"] ul {
   color: rgba(0, 0, 0, 0.6); }
-div[data-react-toolbox="dropdown"] input {
+.d-nav div[data-react-toolbox="dropdown"] input {
   margin: 0px;
   padding: 0px;
   padding-top: 4px;
-  font-size: 14px;
   outline: none;
   border: none; }
 
 .d-nav div[data-react-toolbox="dropdown"] input {
   color: rgba(255, 255, 255, 0.56); }
+
+.d-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 54px;
+  min-height: 54px;
+  background-color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06);
+  line-height: 54px;
+  display: flex;
+  flex-direction: row;
+  padding: 0px 16px; }
+  .d-top .nav-brand {
+    flex: 1; }
+  .d-top .nav-team {
+    text-align: right;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+    padding-left: 16px; }
+    .d-top .nav-team i {
+      line-height: 24px;
+      vertical-align: middle;
+      color: rgba(255, 255, 255, 0.56); }
 
 .filters {
   background-color: white;
@@ -288,8 +291,7 @@ ul div.menuContentWrapper div.rdr-Days {
 
 div.labelPrinter {
   padding-top: 50px;
-  padding-bottom: 50px;
-  background-color: #eee; }
+  padding-bottom: 50px; }
   div.labelPrinter .stuff {
     max-width: 300px;
     margin: 0 auto;
@@ -534,16 +536,21 @@ div.zero-state {
   div.zero-state.zero-state-clean {
     background-color: white; }
 
+.page.mini {
+  background-color: white;
+  padding: 20px 16px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin: 50px auto; }
+
 .page .page-header {
   display: flex;
   flex-direction: row;
   vertical-align: middle;
-  margin-top: 20px;
-  margin-bottom: 40px;
-  padding-top: 36px; }
+  margin-bottom: 20px; }
   .page .page-header h2 {
     flex: 1;
-    font-size: 20px; }
+    font-size: 16px; }
   .page .page-header .filters {
     flex: 0;
     flex-basis: 300px; }
@@ -673,8 +680,8 @@ a, a:hover, a:visited span {
 
 .activity {
   display: flex;
-  width: 900px;
-  margin: 0 auto;
+  max-width: 900px;
+  width: 95%;
   flex-direction: column; }
   .activity .activity-process {
     width: 100%;
@@ -703,7 +710,7 @@ a, a:hover, a:visited span {
     .activity .activity-process .activity-process-row {
       display: flex;
       flex-direction: row;
-      padding: 12px 16px;
+      vertical-align: middle;
       color: rgba(0, 0, 0, 0.62);
       cursor: pointer; }
       .activity .activity-process .activity-process-row .no {
@@ -725,9 +732,9 @@ a, a:hover, a:visited span {
         text-align: center; }
       .activity .activity-process .activity-process-row div.process-name {
         font-weight: bold;
-        color: rgba(0, 0, 0, 0.6);
+        color: rgba(0, 0, 0, 0.7);
         text-align: left;
-        flex: 1; }
+        flex: 2; }
       .activity .activity-process .activity-process-row img {
         width: 16px; }
       .activity .activity-process .activity-process-row .tiny {
@@ -857,5 +864,66 @@ a, a:hover, a:visited span {
   height: 40px;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 100px; }
+
+.dialog-box .dialog-text .row {
+  display: flex;
+  flex-direction: row; }
+
+.addgoal-field {
+  min-width: 100px;
+  flex: 1;
+  margin: 10px; }
+  .addgoal-field:last-child {
+    margin-left: 20px; }
+  .addgoal-field div[data-react-toolbox="dropdown"] input {
+    font-size: 12px; }
+
+.addgoal-field input[type="text"] {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  outline: none;
+  padding: 10px;
+  font-size: 12px; }
+
+.goals {
+  display: flex;
+  max-width: 900px;
+  width: 95%;
+  flex-direction: column; }
+
+.goal span {
+  line-height: 24px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5); }
+  .goal span.product {
+    color: rgba(0, 0, 0, 0.89);
+    margin-right: 4px;
+    font-weight: bold; }
+.goal .goal-whole-bar {
+  display: flex;
+  flex-direction: row;
+  height: 24px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden; }
+  .goal .goal-whole-bar .goal-filled-bar {
+    height: 100%;
+    flex: 80;
+    background-color: #49A8F3;
+    color: rgba(255, 255, 255, 0.8);
+    -webkit-font-smoothing: antialiased; }
+  .goal .goal-whole-bar.goal-achieved {
+    background-color: #76C866; }
+    .goal .goal-whole-bar.goal-achieved .goal-filled-bar {
+      background-color: #98D58C; }
+  .goal .goal-whole-bar div {
+    text-align: right;
+    flex: 20;
+    padding-right: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.3);
+    line-height: 24px; }
 
 /*# sourceMappingURL=styles.css.map */

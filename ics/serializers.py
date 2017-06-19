@@ -2,7 +2,8 @@ from rest_framework import serializers
 from ics.models import *
 from django.contrib.auth.models import User
 from uuid import uuid4
-from django.db.models import F
+from django.db.models import F, Sum, Max
+from datetime import date, datetime, timedelta
 
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -235,4 +236,24 @@ class ActivityListDetailSerializer(serializers.ModelSerializer):
     fields = ('id', 'label', 'label_index', 'custom_display', 'outputs')
 
 
+class BasicGoalSerializer(serializers.ModelSerializer):
+  actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
+  process_name = serializers.CharField(source='process_type.name', read_only=True)
+  process_unit = serializers.CharField(source='process_type.unit', read_only=True)
+  product_code = serializers.CharField(source='product_type.code', read_only=True)
 
+  def get_actual(self, goal):
+    base = date(2017, 5, 11)
+    start = datetime.combine(base - timedelta(days=base.weekday()), datetime.min.time())
+    end = datetime.combine(base + timedelta(days=1), datetime.min.time())
+
+    return Item.objects.filter(
+      creating_task__process_type=goal.process_type, 
+      creating_task__product_type=goal.product_type,
+      creating_task__is_trashed=False,
+      creating_task__created_at__range=(start, end)
+    ).aggregate(actual=Max('amount')).values()[0]
+
+  class Meta:
+    model = Goal
+    fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code')

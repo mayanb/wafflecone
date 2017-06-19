@@ -169,7 +169,7 @@ export default class LabelPrinter extends React.Component {
   }
 
   handleItemChange(value) {
-    qrcode.clear()
+    this.state.qrcode.clear()
     var v;
     if (value != undefined && value != null && value.length != 0)
       v = value

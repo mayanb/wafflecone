@@ -38,6 +38,7 @@ export default class Activity extends React.Component {
 
       loading: true,
       taskLoading: false,
+      mini: true
      }
   }
 
@@ -66,7 +67,7 @@ export default class Activity extends React.Component {
     }
 
     return (
-      <div className="activity page">
+      <div className={`activity page ${this.state.mini?"mini":""}`}>
         <div className="activity-header page-header">
           <h2>Activity Log</h2>
           <div><Datepicker initialDates={this.state.dates} onChange={this.handleDateRangeChange.bind(this)} /></div>
@@ -100,7 +101,13 @@ export default class Activity extends React.Component {
     let productID = origin.product_id
 
     console.log(processID + " " + productID)
-    let params = {process_type: processID, product_type: productID, start: range.start, end: range.end}
+    let params = {
+      process_type: processID, 
+      product_type: productID, 
+      start: toUTCString(range.start), 
+      end: toUTCString(range.end, true)
+    }
+
     let url = window.location.origin + "/ics/activity/detail/"
     let component = this
 
@@ -121,7 +128,6 @@ export default class Activity extends React.Component {
   }
 
   getActivity(range) {
-    console.log(range)
     this.setState({loading: true})
     let url = window.location.origin + "/ics/activity/"
     let params = {start: range.start, end: range.end}
@@ -291,4 +297,15 @@ function pl(count, unit) {
   if (count == 1) 
     return count + " " + unit
   return count + " " + unit + "s"
+}
+
+
+function toUTCString(dateString, addOne) {
+  var m = moment(dateString + " 00:00:00")
+
+  if (addOne) {
+    m.add(24, "hours")
+  }
+
+  return m.utc().format('YYYY-MM-DD-HH-mm-ss-SSSSSS')
 }
