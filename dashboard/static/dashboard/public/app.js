@@ -65292,7 +65292,7 @@
 	    value: function getActivity(range) {
 	      this.setState({ loading: true });
 	      var url = window.location.origin + "/ics/activity/";
-	      var params = { start: range.start, end: range.end };
+	      var params = { start: toUTCString(range.start), end: toUTCString(range.end, true) };
 	      var component = this;
 
 	      var rID = (0, _APIManager.requestID)();

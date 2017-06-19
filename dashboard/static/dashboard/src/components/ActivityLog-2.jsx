@@ -130,7 +130,7 @@ export default class Activity extends React.Component {
   getActivity(range) {
     this.setState({loading: true})
     let url = window.location.origin + "/ics/activity/"
-    let params = {start: range.start, end: range.end}
+    let params = {start: toUTCString(range.start), end: toUTCString(range.end, true)}
     let component = this
 
     let rID = requestID()

@@ -393,7 +393,7 @@ class ActivityListDetail(generics.ListAPIView):
       end = end.strip().split('-')
       startDate = date(int(start[0]), int(start[1]), int(start[2]))
       endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      queryset = queryset.filter(created_at__date__range=(startDate, endDate))
+      queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     return queryset.annotate(outputs=Count('items'))
 
@@ -523,7 +523,7 @@ def activityCSV(request):
 
   tasks = Task.objects.filter(is_trashed=False, 
     process_type__created_by=team, process_type=process, 
-    created_at__date__range=(startDate, endDate)).annotate(
+    created_at__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     outputcount=Count('items', distinct=True)).annotate(
     first_use_date=Min('items__input__task__created_at'))
