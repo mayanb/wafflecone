@@ -249,6 +249,7 @@ class Item(models.Model):
             self.inventory = self.creating_task.process_type.created_by
         super(Item, self).save(*args, **kwargs)
 
+
 class Input(models.Model):
     input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
@@ -301,4 +302,3 @@ class Goal(models.Model):
     process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
     product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
     goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-    goal_unit = models.CharField(max_length=20)
