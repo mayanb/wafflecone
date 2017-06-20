@@ -98,7 +98,7 @@
 
 	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
-	var _Dash = __webpack_require__(410);
+	var _Dash = __webpack_require__(413);
 
 	var _Dash2 = _interopRequireDefault(_Dash);
 
@@ -51076,7 +51076,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.post = exports.ZeroState = exports.requestID = exports.fetch = undefined;
+	exports.del = exports.put = exports.post = exports.ZeroState = exports.requestID = exports.fetch = undefined;
 
 	var _react = __webpack_require__(1);
 
@@ -51098,9 +51098,22 @@
 	  return _jquery2.default.ajax({
 	    method: "POST",
 	    url: url,
-	    data: params,
-	    contentType: 'application/json',
-	    processData: false
+	    data: params
+	  });
+	}
+
+	function put(url, params) {
+	  return _jquery2.default.ajax({
+	    method: "PUT",
+	    url: url,
+	    data: params
+	  });
+	}
+
+	function del(url) {
+	  return _jquery2.default.ajax({
+	    method: "DELETE",
+	    url: url
 	  });
 	}
 
@@ -51128,6 +51141,8 @@
 	exports.requestID = requestID;
 	exports.ZeroState = ZeroState;
 	exports.post = post;
+	exports.put = put;
+	exports.del = del;
 
 /***/ },
 /* 332 */
@@ -65145,7 +65160,7 @@
 
 	var _Datepicker2 = _interopRequireDefault(_Datepicker);
 
-	var _reactImageFallback = __webpack_require__(411);
+	var _reactImageFallback = __webpack_require__(410);
 
 	var _reactImageFallback2 = _interopRequireDefault(_reactImageFallback);
 
@@ -65543,464 +65558,6 @@
 /* 410 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _APIManager = __webpack_require__(331);
-
-	var _ActivityLog = __webpack_require__(409);
-
-	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
-
-	var _Dialog = __webpack_require__(352);
-
-	var _jquery = __webpack_require__(179);
-
-	var _jquery2 = _interopRequireDefault(_jquery);
-
-	var _dropdown = __webpack_require__(334);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Dash = function (_React$Component) {
-	  _inherits(Dash, _React$Component);
-
-	  function Dash() {
-	    _classCallCheck(this, Dash);
-
-	    return _possibleConstructorReturn(this, (Dash.__proto__ || Object.getPrototypeOf(Dash)).apply(this, arguments));
-	  }
-
-	  _createClass(Dash, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        null,
-	        _react2.default.createElement(Goals, null),
-	        _react2.default.createElement(_ActivityLog2.default, null)
-	      );
-	    }
-	  }]);
-
-	  return Dash;
-	}(_react2.default.Component);
-
-	exports.default = Dash;
-
-	var Goals = function (_React$Component2) {
-	  _inherits(Goals, _React$Component2);
-
-	  function Goals(props) {
-	    _classCallCheck(this, Goals);
-
-	    var _this2 = _possibleConstructorReturn(this, (Goals.__proto__ || Object.getPrototypeOf(Goals)).call(this, props));
-
-	    _this2.state = {
-	      dialog: false,
-	      loading: false,
-	      lastRequestID: -1,
-	      goals: []
-	    };
-	    return _this2;
-	  }
-
-	  _createClass(Goals, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.getGoals();
-	    }
-	  }, {
-	    key: 'getGoals',
-	    value: function getGoals() {
-	      this.setState({ loading: true });
-	      var url = window.location.origin + "/ics/goals/";
-	      var component = this;
-
-	      var rID = (0, _APIManager.requestID)();
-	      this.lastRequestID = rID;
-
-	      (0, _APIManager.fetch)(url, {}).done(function (data) {
-	        if (component.lastRequestID != rID) return;
-
-	        component.setState({ goals: data });
-	      }).always(function () {
-	        if (component.lastRequestID != rID) return;
-	        component.setState({ loading: false });
-	      });
-	    }
-	  }, {
-	    key: 'handleAddGoal',
-	    value: function handleAddGoal(newGoal, success, failure) {
-	      var url = window.location.origin + "ics/goals/";
-	      var component = this;
-	      var params = {
-	        process_type: newGoal.processType.value.id,
-	        product_type: newGoal.productType.value.id,
-	        goal: newGoal.goal_unit,
-	        goal_unit: newGoal.goal_unit
-	      };
-
-	      (0, _APIManager.post)(url, params).done(function (data) {
-	        var ns = update(component.state.goals, { $push: data });
-	        component.setState({ goals: ns }, success);
-	      }).fail(function (data) {
-	        failure();
-	      });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this3 = this;
-
-	      var dialog = false;
-	      if (this.state.dialog) {
-	        dialog = _react2.default.createElement(AddGoalDialog, { onCancel: function onCancel() {
-	            return _this3.setState({ dialog: false });
-	          }, onAddGoal: this.handleAddGoal.bind(this) });
-	      }
-
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'goals page mini' },
-	        dialog,
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'page-header' },
-	          _react2.default.createElement(
-	            'h2',
-	            null,
-	            'Production Goals'
-	          ),
-	          _react2.default.createElement(
-	            'button',
-	            { onClick: function onClick() {
-	                return _this3.setState({ dialog: true });
-	              } },
-	            'Add a new goal'
-	          )
-	        ),
-	        this.state.goals.map(function (goal, i) {
-	          return _react2.default.createElement(Goal, { goal: goal, key: i });
-	        })
-	      );
-	    }
-	  }]);
-
-	  return Goals;
-	}(_react2.default.Component);
-
-	/* getDisplayProportions
-	 * ---------------------
-	 * Takes a @goal object and extracts display requirements. 
-	 * Returns an object with the following fields:
-	 * @achieved: whether the goal has been met or not
-	 * @proportion: a ratio between actual and goal, order depends 
-	 *              on which is smaller, since we have to mark out
-	 *              the smaller one on a scale of the larger one
-	 */
-
-	function getDisplayProportions(g) {
-	  var actual = parseFloat(g.actual);
-	  var goal = parseFloat(g.goal);
-
-	  if (actual < goal) {
-	    return { achieved: false, proportion: goal ? actual / goal : 0 };
-	  } else {
-	    return { achieved: true, proportion: goal ? goal / actual : 0 };
-	  }
-	}
-
-	function Goal(props) {
-	  var _getDisplayProportion = getDisplayProportions(props.goal),
-	      achieved = _getDisplayProportion.achieved,
-	      proportion = _getDisplayProportion.proportion;
-
-	  return _react2.default.createElement(
-	    'div',
-	    { className: 'goal' },
-	    _react2.default.createElement(
-	      'span',
-	      null,
-	      props.goal.process_name
-	    ),
-	    ' ',
-	    _react2.default.createElement(
-	      'span',
-	      { className: 'product' },
-	      props.goal.product_code
-	    ),
-	    _react2.default.createElement(
-	      'div',
-	      { className: "goal-whole-bar " + (achieved ? "goal-achieved" : "") },
-	      _react2.default.createElement(
-	        'div',
-	        { className: 'goal-filled-bar', style: { flex: proportion } },
-	        ((achieved ? props.goal.goal : props.goal.actual) || 0) + ' ' + (props.goal.process_unit || 'units')
-	      ),
-	      _react2.default.createElement(
-	        'div',
-	        null,
-	        ' ',
-	        ((achieved ? props.goal.actual : props.goal.goal) || 0) + ' ' + (props.goal.process_unit || 'units')
-	      )
-	    )
-	  );
-	}
-
-	var AddGoalDialog = function (_React$Component3) {
-	  _inherits(AddGoalDialog, _React$Component3);
-
-	  function AddGoalDialog(props) {
-	    _classCallCheck(this, AddGoalDialog);
-
-	    var _this4 = _possibleConstructorReturn(this, (AddGoalDialog.__proto__ || Object.getPrototypeOf(AddGoalDialog)).call(this, props));
-
-	    _this4.state = {
-	      loading: false,
-	      done: false,
-	      processType: null,
-	      productType: null,
-	      goal: "",
-	      goal_unit: "",
-	      setup: false,
-	      processes: [],
-	      products: []
-	    };
-	    return _this4;
-	  }
-
-	  _createClass(AddGoalDialog, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.getProductsAndProcesses();
-	    }
-	  }, {
-	    key: 'getProductsAndProcesses',
-	    value: function getProductsAndProcesses() {
-	      var thisObj = this;
-	      var container = {};
-	      var defs = [this.getDeferred("processes", container), this.getDeferred("products", container)];
-
-	      _jquery2.default.when.apply(null, defs).done(function () {
-	        container.setup = true;
-	        container.processType = container.processes[0].value;
-	        container.productType = container.products[0].value;
-	        thisObj.setState(container);
-	      });
-	    }
-	  }, {
-	    key: 'getDeferred',
-	    value: function getDeferred(keyword, container) {
-	      var deferred = _jquery2.default.Deferred();
-	      var req = { created_by: window.localStorage.getItem("team") || "1" };
-	      if (!req.created_by) {
-	        alert("No teams loaded:(((");
-	      }
-
-	      _jquery2.default.get(window.location.origin + "/ics/" + keyword, req).done(function (data) {
-	        container[keyword] = data.map(function (x) {
-	          return { value: x, label: x.name };
-	        });
-	        deferred.resolve();
-	      });
-	      return deferred.promise();
-	    }
-	  }, {
-	    key: 'handleAddGoal',
-	    value: function handleAddGoal() {
-	      this.setState({ loading: true });
-	      var component = this;
-
-	      this.props.onAddGoal(this.state, function () {
-	        component.setState({ done: true, error: false });
-	      }, function () {
-	        component.setState({ error: true });
-	      });
-	    }
-	  }, {
-	    key: 'handleChange',
-	    value: function handleChange(which, val) {
-	      console.log(val);
-	      this.setState(_defineProperty({}, which, val));
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this5 = this;
-
-	      if (this.state.error) {
-	        return _react2.default.createElement(
-	          _Dialog.Dialog,
-	          null,
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-title' },
-	            'Add a new goal'
-	          ),
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-text' },
-	            'Oops, something went wrong.'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'dialog-actions' },
-	            _react2.default.createElement(
-	              'button',
-	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
-	              'OK'
-	            )
-	          )
-	        );
-	      }
-	      if (!this.state.setup) {
-	        return _react2.default.createElement(
-	          _Dialog.Dialog,
-	          null,
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-title' },
-	            'Add a new goal'
-	          ),
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-text' },
-	            'Hang on a sec...'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'dialog-actions' },
-	            _react2.default.createElement(
-	              'button',
-	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
-	              'OK'
-	            )
-	          )
-	        );
-	      } else if (this.state.done) {
-	        return _react2.default.createElement(
-	          _Dialog.Dialog,
-	          null,
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-title' },
-	            'Add a new goal'
-	          ),
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-text' },
-	            'Yay! You added a new goal!'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'dialog-actions' },
-	            _react2.default.createElement(
-	              'button',
-	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
-	              'OK'
-	            )
-	          )
-	        );
-	      } else {
-	        return _react2.default.createElement(
-	          _Dialog.Dialog,
-	          null,
-	          _react2.default.createElement(
-	            'span',
-	            { className: 'dialog-title' },
-	            'Add a new goal'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'dialog-text' },
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'row' },
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'addgoal-field' },
-	                _react2.default.createElement(_dropdown.Dropdown, {
-	                  source: this.state.processes,
-	                  onChange: function onChange(val) {
-	                    return _this5.handleChange("processType", val);
-	                  },
-	                  value: this.state.processType
-	                })
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'addgoal-field' },
-	                _react2.default.createElement(_dropdown.Dropdown, {
-	                  source: this.state.products,
-	                  onChange: function onChange(val) {
-	                    return _this5.handleChange("productType", val);
-	                  },
-	                  value: this.state.productType
-	                })
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'row' },
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'addgoal-field' },
-	                _react2.default.createElement('input', { type: 'text', placeholder: '0', value: this.state.goal, onChange: function onChange(e) {
-	                    return _this5.handleChange("goal", e.target.value);
-	                  } })
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                this.state.processType ? this.state.processType.value.unit : "unit(s)"
-	              )
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'dialog-actions' },
-	            _react2.default.createElement(
-	              'button',
-	              { className: 'dialog-button dialog-cancel', style: { display: this.state.loading ? "none" : "" }, onClick: this.props.onCancel },
-	              'Cancel'
-	            ),
-	            _react2.default.createElement(
-	              'button',
-	              { className: 'dialog-button', onClick: this.handleAddGoal.bind(this) },
-	              this.state.loading ? "Adding goal..." : "Confirm"
-	            )
-	          )
-	        );
-	      }
-	      return false;
-	    }
-	  }]);
-
-	  return AddGoalDialog;
-	}(_react2.default.Component);
-
-/***/ },
-/* 411 */
-/***/ function(module, exports, __webpack_require__) {
-
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
@@ -66015,7 +65572,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _filterInvalidDomProps = __webpack_require__(412);
+	var _filterInvalidDomProps = __webpack_require__(411);
 
 	var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
 
@@ -66123,7 +65680,7 @@
 	};
 
 /***/ },
-/* 412 */
+/* 411 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -66133,7 +65690,7 @@
 	});
 	exports.default = filterInvalidDOMProps;
 
-	var _htmlAttributes = __webpack_require__(413);
+	var _htmlAttributes = __webpack_require__(412);
 
 	var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
 
@@ -66202,7 +65759,7 @@
 	}
 
 /***/ },
-/* 413 */
+/* 412 */
 /***/ function(module, exports) {
 
 	/*!
@@ -66343,6 +65900,577 @@
 	  "wrap": "wrap"
 	};
 
+
+/***/ },
+/* 413 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _APIManager = __webpack_require__(331);
+
+	var _ActivityLog = __webpack_require__(409);
+
+	var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
+
+	var _Dialog = __webpack_require__(352);
+
+	var _jquery = __webpack_require__(179);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _dropdown = __webpack_require__(334);
+
+	var _immutabilityHelper = __webpack_require__(332);
+
+	var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Dash = function (_React$Component) {
+	  _inherits(Dash, _React$Component);
+
+	  function Dash() {
+	    _classCallCheck(this, Dash);
+
+	    return _possibleConstructorReturn(this, (Dash.__proto__ || Object.getPrototypeOf(Dash)).apply(this, arguments));
+	  }
+
+	  _createClass(Dash, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(Goals, null),
+	        _react2.default.createElement(_ActivityLog2.default, null)
+	      );
+	    }
+	  }]);
+
+	  return Dash;
+	}(_react2.default.Component);
+
+	exports.default = Dash;
+
+	var Goals = function (_React$Component2) {
+	  _inherits(Goals, _React$Component2);
+
+	  function Goals(props) {
+	    _classCallCheck(this, Goals);
+
+	    var _this2 = _possibleConstructorReturn(this, (Goals.__proto__ || Object.getPrototypeOf(Goals)).call(this, props));
+
+	    _this2.state = {
+	      addGoalDialog: false,
+	      editGoalDialog: -1,
+	      loading: false,
+	      lastRequestID: -1,
+	      goals: []
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(Goals, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getGoals();
+	    }
+	  }, {
+	    key: 'getGoals',
+	    value: function getGoals() {
+	      this.setState({ loading: true });
+	      var url = window.location.origin + "/ics/goals/";
+	      var component = this;
+
+	      var rID = (0, _APIManager.requestID)();
+	      this.lastRequestID = rID;
+
+	      (0, _APIManager.fetch)(url, {}).done(function (data) {
+	        if (component.lastRequestID != rID) return;
+
+	        component.setState({ goals: data });
+	      }).always(function () {
+	        if (component.lastRequestID != rID) return;
+	        component.setState({ loading: false });
+	      });
+	    }
+	  }, {
+	    key: 'handleAddGoal',
+	    value: function handleAddGoal(index, newGoal, success, failure) {
+	      var url = window.location.origin + "/ics/goals/";
+	      var component = this;
+	      var params = {
+	        "process_type": newGoal.processType.id,
+	        "product_type": newGoal.productType.id,
+	        "goal": newGoal.goal || 0
+	      };
+
+	      (0, _APIManager.post)(url, params).done(function (data) {
+	        var ns = (0, _immutabilityHelper2.default)(component.state.goals, { $push: [data] });
+	        component.setState({ goals: ns }, success);
+	      }).fail(function (jqxhr, text, error) {
+	        failure();
+	      });
+	    }
+	  }, {
+	    key: 'handleEditGoal',
+	    value: function handleEditGoal(index, newGoal, success, failure) {
+	      var url = window.location.origin + "/ics/goals/edit/" + this.state.goals[index].id + "/";
+	      var component = this;
+	      var params = {
+	        process_type: newGoal.processType.id,
+	        product_type: newGoal.productType.id,
+	        goal: newGoal.goal
+	      };
+
+	      (0, _APIManager.put)(url, params).done(function (data) {
+	        var ns = (0, _immutabilityHelper2.default)(component.state.goals, _defineProperty({}, index, { $set: data }));
+	        component.setState({ goals: ns }, success);
+	      }).fail(function (error) {
+	        failure();
+	      });
+	    }
+	  }, {
+	    key: 'handleDeleteGoal',
+	    value: function handleDeleteGoal(index) {
+	      var url = window.location.origin + "/ics/goals/edit/" + this.state.goals[index].id + "/";
+	      var component = this;
+
+	      (0, _APIManager.del)(url).done(function (data) {
+	        var ns = (0, _immutabilityHelper2.default)(component.state.goals, { $splice: [[index, 1]] });
+	        component.setState({ goals: ns });
+	      }).fail(function (error) {
+	        alert("Oops, something went wrong");
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this3 = this;
+
+	      var addGoalDialog = false;
+	      if (this.state.addGoalDialog) {
+	        addGoalDialog = _react2.default.createElement(AddGoalDialog, {
+	          onCancel: function onCancel() {
+	            return _this3.setState({ addGoalDialog: false });
+	          },
+	          onSubmit: this.handleAddGoal.bind(this),
+	          goalIndex: -1
+	        });
+	      }
+
+	      var editGoalDialog = false;
+	      if (this.state.editGoalDialog >= 0) {
+	        editGoalDialog = _react2.default.createElement(AddGoalDialog, {
+	          onCancel: function onCancel() {
+	            return _this3.setState({ editGoalDialog: -1 });
+	          },
+	          onSubmit: this.handleEditGoal.bind(this),
+	          goalIndex: this.state.editGoalDialog,
+	          goal: this.state.goals[this.state.editGoalDialog]
+	        });
+	      }
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'goals page mini' },
+	        addGoalDialog,
+	        editGoalDialog,
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'page-header' },
+	          _react2.default.createElement(
+	            'h2',
+	            null,
+	            'Production Goals'
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { className: 'add-goal-button', onClick: function onClick() {
+	                return _this3.setState({ addGoalDialog: true });
+	              } },
+	            'Add a new goal'
+	          )
+	        ),
+	        this.state.goals.map(function (goal, i) {
+	          var _this4 = this;
+
+	          return _react2.default.createElement(Goal, {
+	            goal: goal,
+	            key: i,
+	            onEditGoal: function onEditGoal() {
+	              return _this4.setState({ editGoalDialog: i });
+	            },
+	            onDeleteGoal: function onDeleteGoal() {
+	              return _this4.handleDeleteGoal(i);
+	            }
+	          });
+	        }, this)
+	      );
+	    }
+	  }]);
+
+	  return Goals;
+	}(_react2.default.Component);
+
+	/* getDisplayProportions
+	 * ---------------------
+	 * Takes a @goal object and extracts display requirements. 
+	 * Returns an object with the following fields:
+	 * @achieved: whether the goal has been met or not
+	 * @proportion: a ratio between actual and goal, order depends 
+	 *              on which is smaller, since we have to mark out
+	 *              the smaller one on a scale of the larger one
+	 */
+
+	function getDisplayProportions(g) {
+	  var actual = parseFloat(g.actual || 0);
+	  var goal = parseFloat(g.goal);
+
+	  if (actual < goal) {
+	    return {
+	      achieved: false,
+	      proportion: goal ? Math.max(actual / goal * 100, 3) : 100
+	    };
+	  } else {
+	    return {
+	      achieved: true,
+	      proportion: actual ? Math.max(goal / actual * 100, 3) : 100
+	    };
+	  }
+	}
+
+	function Goal(props) {
+	  var _getDisplayProportion = getDisplayProportions(props.goal),
+	      achieved = _getDisplayProportion.achieved,
+	      proportion = _getDisplayProportion.proportion;
+
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'goal' },
+	    _react2.default.createElement(
+	      'div',
+	      { className: 'goal-details' },
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'goal-details-left' },
+	        _react2.default.createElement(
+	          'span',
+	          { className: 'product' },
+	          props.goal.process_name + " " + props.goal.product_code
+	        ),
+	        _react2.default.createElement(
+	          'span',
+	          null,
+	          parseInt(props.goal.actual) + '/' + parseInt(props.goal.goal) + ' ' + props.goal.process_unit.toUpperCase() + '(S)'
+	        )
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'goal-details-right goal-buttons' },
+	        _react2.default.createElement(
+	          'button',
+	          { onClick: props.onEditGoal },
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons' },
+	            'mode_edit'
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { onClick: props.onDeleteGoal },
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons' },
+	            'delete_forever'
+	          )
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      'div',
+	      { className: "goal-whole-bar " + (achieved ? "goal-achieved" : "") },
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'goal-filled-bar', style: { flex: proportion + '%' } },
+	        parseInt(achieved ? props.goal.goal : props.goal.actual) || 0
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        { style: { flex: 100 - proportion + '%' } },
+	        parseInt(achieved ? props.goal.actual : props.goal.goal) || 0
+	      )
+	    ),
+	    _react2.default.createElement('div', { className: 'goal-buttons' })
+	  );
+	}
+
+	var AddGoalDialog = function (_React$Component3) {
+	  _inherits(AddGoalDialog, _React$Component3);
+
+	  function AddGoalDialog(props) {
+	    _classCallCheck(this, AddGoalDialog);
+
+	    var _this5 = _possibleConstructorReturn(this, (AddGoalDialog.__proto__ || Object.getPrototypeOf(AddGoalDialog)).call(this, props));
+
+	    _this5.state = {
+	      loading: false,
+	      done: false,
+	      processType: null,
+	      productType: null,
+	      goal: "",
+	      goal_unit: "",
+	      setup: false,
+	      processes: [],
+	      products: []
+	    };
+	    return _this5;
+	  }
+
+	  _createClass(AddGoalDialog, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getProductsAndProcesses();
+	    }
+	  }, {
+	    key: 'getProductsAndProcesses',
+	    value: function getProductsAndProcesses() {
+	      var thisObj = this;
+	      var goal = this.props.goal;
+	      var container = {};
+	      var defs = [this.getDeferred("processes", container), this.getDeferred("products", container)];
+
+	      _jquery2.default.when.apply(null, defs).done(function () {
+	        container.setup = true;
+	        container.processType = container.processes[0].value;
+	        container.productType = container.products[0].value;
+
+	        // if there was an existing goal that we are editing, 
+	        // set the form values to the existing goal
+	        if (goal) {
+	          container.processType = container.processes.find(function (e) {
+	            return e.value.id == goal.process_type;
+	          }).value;
+	          container.productType = container.products.find(function (e) {
+	            return e.value.id == goal.product_type;
+	          }).value;
+	          container.goal = parseInt(goal.goal);
+	        }
+
+	        thisObj.setState(container);
+	      });
+	    }
+	  }, {
+	    key: 'getDeferred',
+	    value: function getDeferred(keyword, container) {
+	      var deferred = _jquery2.default.Deferred();
+	      var req = { created_by: window.localStorage.getItem("team") || "1" };
+	      if (!req.created_by) {
+	        alert("No teams loaded:(((");
+	      }
+
+	      _jquery2.default.get(window.location.origin + "/ics/" + keyword, req).done(function (data) {
+	        container[keyword] = data.map(function (x) {
+	          return { value: x, label: x.name };
+	        });
+	        deferred.resolve();
+	      });
+	      return deferred.promise();
+	    }
+	  }, {
+	    key: 'handleAddGoal',
+	    value: function handleAddGoal() {
+	      this.setState({ loading: true });
+	      var component = this;
+
+	      this.props.onSubmit(this.props.goalIndex, this.state, function () {
+	        component.setState({ done: true, error: false });
+	      }, function () {
+	        component.setState({ error: true });
+	      });
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(which, val) {
+	      this.setState(_defineProperty({}, which, val));
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this6 = this;
+
+	      var title = this.props.goal ? "Edit goal" : "Add a new goal";
+
+	      if (this.state.error) {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            title
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-text' },
+	            'Oops, something went wrong.'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+	              'OK'
+	            )
+	          )
+	        );
+	      }
+	      if (!this.state.setup) {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            title
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-text' },
+	            'Hang on a sec...'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+	              'OK'
+	            )
+	          )
+	        );
+	      } else if (this.state.done) {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            title
+	          ),
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-text' },
+	            this.props.goal ? "Yay! Your goal has been updated." : "Yay! You added a new goal!"
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+	              'OK'
+	            )
+	          )
+	        );
+	      } else {
+	        return _react2.default.createElement(
+	          _Dialog.Dialog,
+	          null,
+	          _react2.default.createElement(
+	            'span',
+	            { className: 'dialog-title' },
+	            title
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-text' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'row' },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'addgoal-field' },
+	                _react2.default.createElement(_dropdown.Dropdown, {
+	                  source: this.state.processes,
+	                  onChange: function onChange(val) {
+	                    return _this6.handleChange("processType", val);
+	                  },
+	                  value: this.state.processType
+	                })
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'addgoal-field' },
+	                _react2.default.createElement(_dropdown.Dropdown, {
+	                  source: this.state.products,
+	                  onChange: function onChange(val) {
+	                    return _this6.handleChange("productType", val);
+	                  },
+	                  value: this.state.productType
+	                })
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'row' },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'addgoal-field' },
+	                _react2.default.createElement('input', { type: 'text', placeholder: '0', value: this.state.goal, onChange: function onChange(e) {
+	                    return _this6.handleChange("goal", e.target.value);
+	                  } })
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                this.state.processType ? this.state.processType.unit : "unit(s)"
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'dialog-actions' },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button dialog-cancel', style: { display: this.state.loading ? "none" : "" }, onClick: this.props.onCancel },
+	              'Cancel'
+	            ),
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'dialog-button', onClick: this.handleAddGoal.bind(this) },
+	              this.state.loading ? "Adding goal..." : "Confirm"
+	            )
+	          )
+	        );
+	      }
+	      return false;
+	    }
+	  }]);
+
+	  return AddGoalDialog;
+	}(_react2.default.Component);
 
 /***/ }
 /******/ ]);

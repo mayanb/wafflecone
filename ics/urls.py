@@ -53,6 +53,8 @@ urlpatterns = [
     url(r'^potatoes/$', views.activityCSV, name='residence time'),
 
     url(r'^goals/$', views.GoalListCreate.as_view()),
+    url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view()),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

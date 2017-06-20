@@ -12,8 +12,23 @@ function post(url, params) {
     method: "POST",
     url: url,
     data: params,
-    contentType: 'application/json',
-    processData: false,
+    // contentType: 'application/json',
+    // processData: false,
+  })
+}
+
+function put(url, params) {
+  return $.ajax({
+    method: "PUT",
+    url: url,
+    data: params, 
+  })
+}
+
+function del(url) {
+  return $.ajax({
+    method: "DELETE",
+    url: url
   })
 }
 
@@ -34,4 +49,4 @@ function ZeroState(props) {
 }
 
 
-export { fetch, requestID, ZeroState, post }
+export { fetch, requestID, ZeroState, post, put, del }

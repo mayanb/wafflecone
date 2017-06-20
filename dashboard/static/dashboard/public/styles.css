@@ -891,39 +891,76 @@ a, a:hover, a:visited span {
   width: 95%;
   flex-direction: column; }
 
-.goal span {
-  line-height: 24px;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.5); }
-  .goal span.product {
-    color: rgba(0, 0, 0, 0.89);
-    margin-right: 4px;
-    font-weight: bold; }
-.goal .goal-whole-bar {
+.add-goal-button {
+  border: none;
+  background-color: white;
+  color: #49A8F3;
+  font-family: "Camphor Pro", Nunito, Overpass, Proxima Nova, sans-serif;
+  font-size: 13px;
+  cursor: pointer; }
+
+.goal {
+  padding: 10px 0;
   display: flex;
-  flex-direction: row;
-  height: 24px;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  overflow: hidden; }
-  .goal .goal-whole-bar .goal-filled-bar {
-    height: 100%;
-    flex: 80;
-    background-color: #49A8F3;
-    color: rgba(255, 255, 255, 0.8);
-    -webkit-font-smoothing: antialiased; }
-  .goal .goal-whole-bar.goal-achieved {
-    background-color: #76C866; }
-    .goal .goal-whole-bar.goal-achieved .goal-filled-bar {
-      background-color: #98D58C; }
-  .goal .goal-whole-bar div {
+  flex-direction: column; }
+  .goal .goal-details {
+    display: flex;
+    flex-direction: row; }
+    .goal .goal-details > div {
+      flex-grow: 1; }
+    .goal .goal-details div.goal-details-right {
+      flex-grow: 0;
+      align-items: flex-end; }
+  .goal span {
+    line-height: 24px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5); }
+    .goal span.product {
+      color: rgba(0, 0, 0, 0.89);
+      margin-right: 4px;
+      font-weight: bold; }
+  .goal .goal-buttons {
+    visibility: hidden; }
+    .goal .goal-buttons button {
+      border: 0;
+      background-color: white; }
+      .goal .goal-buttons button i.material-icons {
+        color: rgba(0, 0, 0, 0.2);
+        font-size: 20px;
+        line-height: 24px; }
+        .goal .goal-buttons button i.material-icons:hover {
+          color: #49A8F3;
+          cursor: pointer; }
+  .goal:hover .goal-buttons {
+    visibility: visible; }
+  .goal .goal-whole-bar {
+    display: flex;
+    flex-direction: row;
+    height: 24px;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
     text-align: right;
-    flex: 20;
-    padding-right: 8px;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: rgba(0, 0, 0, 0.3);
     line-height: 24px; }
+    .goal .goal-whole-bar .goal-filled-bar {
+      height: 100%;
+      background-color: #49A8F3;
+      color: rgba(255, 255, 255, 0.8);
+      -webkit-font-smoothing: antialiased; }
+    .goal .goal-whole-bar.goal-achieved {
+      background-color: #76C866; }
+      .goal .goal-whole-bar.goal-achieved .goal-filled-bar {
+        background-color: #98D58C; }
+    .goal .goal-whole-bar div {
+      text-align: right;
+      padding-right: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.3);
+      line-height: 24px; }
+
+button {
+  outline: none; }
 
 /*# sourceMappingURL=styles.css.map */

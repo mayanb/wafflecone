@@ -28,34 +28,9 @@ class GoalListCreate(generics.ListCreateAPIView):
   queryset = Goal.objects.all()
   serializer_class = BasicGoalSerializer
 
-  # def get_queryset(self):
-  #   queryset = Goal.objects.all()
-
-  #   team = self.request.query_params.get('team', None)
-  #   if team is not None:
-  #     queryset = queryset.filter(process_type__created_by=team)
-
-  #   # ok so for each goal
-  #   # get all the outputs of that product & process type from this week (just say last 5 days for now)
-  #   # sum up all of their amount values
-
-  #   i = Input.objects.filter(task=OuterRef('id')).order_by('id')
-  #   queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
-  #   return queryset.select_related().prefetch_related('items', 'attribute_values')
-
-
-  #   today = datetime.today()
-  #   i = Item.objects.filter(
-  #     creating_task__created_at__date__range=(today, today - 5), 
-  #     creating_task__is_trashed=False,
-  #     creating_task__process_type=OuterRef('process_type'),
-  #     creating_task__product_type=OuterRef('product_type')
-  #   ).
-
-  #   queryset.annotate(actual=SubQuery(i.values()))
-
-  #   return queryset
-
+class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = BasicGoalSerializer
 
 ######################
 # USER-RELATED VIEWS #
@@ -411,6 +386,7 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)
   serializer_class = ProductTypeSerializer
+  filter_fields = ('created_by',)
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.all()

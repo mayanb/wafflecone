@@ -243,7 +243,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
   product_code = serializers.CharField(source='product_type.code', read_only=True)
 
   def get_actual(self, goal):
-    base = date(2017, 5, 11)
+    base = date.today()
     start = datetime.combine(base - timedelta(days=base.weekday()), datetime.min.time())
     end = datetime.combine(base + timedelta(days=1), datetime.min.time())
 
@@ -252,7 +252,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
       creating_task__product_type=goal.product_type,
       creating_task__is_trashed=False,
       creating_task__created_at__range=(start, end)
-    ).aggregate(actual=Max('amount')).values()[0]
+    ).count()
 
   class Meta:
     model = Goal
