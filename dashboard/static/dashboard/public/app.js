@@ -66004,7 +66004,7 @@
 	      var rID = (0, _APIManager.requestID)();
 	      this.lastRequestID = rID;
 
-	      (0, _APIManager.fetch)(url, {}).done(function (data) {
+	      (0, _APIManager.fetch)(url, { team: window.localStorage.getItem("team") || "1" }).done(function (data) {
 	        if (component.lastRequestID != rID) return;
 
 	        component.setState({ goals: data });

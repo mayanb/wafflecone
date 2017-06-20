@@ -28,6 +28,13 @@ class GoalListCreate(generics.ListCreateAPIView):
   queryset = Goal.objects.all()
   serializer_class = BasicGoalSerializer
 
+  def get_queryset(self):
+    queryset = Goal.objects.all()
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(process_type__created_by=team)
+    return queryset
+
 class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Goal.objects.all()
   serializer_class = BasicGoalSerializer
