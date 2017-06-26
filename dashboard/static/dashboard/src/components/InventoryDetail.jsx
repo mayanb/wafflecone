@@ -183,7 +183,12 @@ class InventoryDetail extends React.Component {
       items: itemsToDeliver
     }
 
-    post(url, JSON.stringify(params))
+    let headers = {
+      contentType: 'application/json',
+      processData: false,
+    }
+
+    post(url, JSON.stringify(params), headers)
       .done(function (data) {
         if (callback) 
           callback()

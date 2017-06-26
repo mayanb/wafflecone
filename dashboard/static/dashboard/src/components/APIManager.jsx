@@ -1,5 +1,6 @@
 import React from 'react'
 import $ from 'jquery'
+import update from 'immutability-helper'
 
 function fetch(url, params) {
   let team = window.localStorage.getItem("team") || "1"
@@ -7,14 +8,19 @@ function fetch(url, params) {
   return $.get(url, params)
 }
 
-function post(url, params) {
-  return $.ajax({
+function post(url, params, headers) {
+
+  let req = {
     method: "POST",
     url: url,
     data: params,
-    // contentType: 'application/json',
-    // processData: false,
-  })
+  }
+
+  if (headers) {
+    req = update(req, {$merge: headers})
+  }
+
+  return $.ajax(req)
 }
 
 function put(url, params) {

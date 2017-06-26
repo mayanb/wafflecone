@@ -5,15 +5,28 @@ module.exports = {
         loaders: [
             {
                 test: /\.jsx?$/,
-                loader: 'babel',
+                loader: 'babel-loader',
                 exclude: /node_modules/,
                 query: {
-                    presets: ['react', 'es2015']
+                    presets: ['react', 'env'],
+                    plugins: ["transform-object-rest-spread"]
                 }
             },
             {
                 test: /(\.scss|\.css)$/,
-                loaders: ["style", "css?modules", "sass"]
+                loaders: [
+                "style-loader", 
+                {
+                    loader: "css-loader",
+                    options: {
+                      modules: true,
+                      sourceMap: true,
+                      importLoaders: 1,
+                      localIdentName: "[name]--[local]--[hash:base64:8]"
+                    }
+                },
+                "sass-loader"
+                ]
             },
 {
     test: /\.json$/,

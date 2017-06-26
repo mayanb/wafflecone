@@ -55,8 +55,8 @@ export default class FactoryMap extends React.Component {
       {
         Object.keys(this.state.connections).map(function (cid) {
           let connection = this.state.connections[cid]
-          if (connection == undefined) return 
-            {false}
+          if (connection == undefined) 
+            return false
 
           let p1 = this.state.processes[connection.process_type]
           let p2 = this.state.processes[connection.recommended_input]
@@ -73,7 +73,8 @@ export default class FactoryMap extends React.Component {
       {
         Object.keys(this.state.processes).map(function (pid) {
           let p = thisObj.state.processes[pid]
-          if (p == undefined) return {false}
+          if (p == undefined) 
+            return false
           let coords = this.unscale(p)
           //let newp = update(p, {$merge: coords})
           return <ProcessTile 
