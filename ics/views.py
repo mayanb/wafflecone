@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef
+from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
@@ -106,7 +106,9 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
-        queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x')
+        queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
+            total_amount=Sum('items__amount') 
+          )
 
         # filter according to various parameters
         team = self.request.query_params.get('team', None)
@@ -164,7 +166,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/xxx/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.filter(is_trashed=False)
+  queryset = Task.objects.filter(is_trashed=False).annotate(total_amount=Sum('items__amount'))
   serializer_class = NestedTaskSerializer
 
 

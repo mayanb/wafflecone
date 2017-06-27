@@ -15,7 +15,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   created_by_name = serializers.CharField(source='created_by.username', read_only=True)
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount')
 
 class ProcessInventoryListSerializer(serializers.ModelSerializer):
   count = serializers.IntegerField(source='getInventoryCount')
@@ -68,7 +68,7 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount')
 
 class NestedItemSerializer(serializers.ModelSerializer):
   creating_task = BasicTaskSerializer(many=False, read_only=True)
@@ -76,7 +76,7 @@ class NestedItemSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount')
 
 class BasicInputSerializer(serializers.ModelSerializer):
   input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
@@ -119,6 +119,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
   product_type = ProductTypeSerializer(many=False, read_only=True)
   process_type = ProcessTypeSerializer(many=False, read_only=True)
   display = serializers.CharField(source='*')
+  total_amount = serializers.CharField(read_only=True)
 
   def getInputUnit(self, task):
     input = task.inputs.first()
@@ -135,7 +136,24 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'input_unit', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'items', 'inputs', 'attribute_values', 'display')
+    fields = (
+      'id', 
+      'total_amount', 
+      'process_type', 
+      'product_type', 
+      'label', 
+      'input_unit', 
+      'is_open', 
+      'is_flagged', 
+      'created_at', 
+      'updated_at', 
+      'label_index', 
+      'custom_display', 
+      'items', 
+      'inputs', 
+      'attribute_values', 
+      'display'
+    )
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
