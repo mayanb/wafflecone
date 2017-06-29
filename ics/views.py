@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
 from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum
+from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
@@ -262,7 +263,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__unit', 
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by').annotate(
-        count=Count('creating_task__process_type'),
+        count=Sum('amount'),
     )
 
 
@@ -349,7 +350,7 @@ class ActivityList(generics.ListAPIView):
       'product_type__code',
       'process_type__unit').annotate(
       runs=Count('id', distinct=True)
-    ).annotate(outputs=Count('items', distinct=True))
+    ).annotate(outputs=Coalesce(Sum('items__amount'), 0))
 
 class ActivityListDetail(generics.ListAPIView):
   serializer_class = ActivityListDetailSerializer
@@ -379,7 +380,7 @@ class ActivityListDetail(generics.ListAPIView):
       endDate = date(int(end[0]), int(end[1]), int(end[2]))
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
-    return queryset.annotate(outputs=Count('items'))
+    return queryset.annotate(outputs=Coalesce(Sum('items__amount'), 0))
 
 
 

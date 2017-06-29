@@ -28,7 +28,6 @@ export default class Datepicker extends React.Component {
                   endDate : moment.tz(new Date(this.props.initialDates.end), 'UTC')}
 
     this.setState({predefined: newPL})
-
     this.props.onChange(this.props.initialDates)
   }
 

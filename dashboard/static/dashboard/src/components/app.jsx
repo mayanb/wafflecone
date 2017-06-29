@@ -13,6 +13,7 @@ import Inventory from './Inventory2.jsx'
 import Task from './Task-2.jsx'
 import Activity from './ActivityLog-2.jsx'
 import Dash from './Dash.jsx'
+//import NewAccount from './NewAccount.jsx'
 
 class Main extends React.Component {
   constructor() {
@@ -100,7 +101,19 @@ function getFilters() {
   return filters
 }
 
-ReactDOM.render(
-  <Main />,
-  document.getElementById('root')
-);
+// console.log(window.location.pathname)
+// if (window.location.pathname == "/dashboard/newaccount/") {
+//   ReactDOM.render(
+//     <NewAccount />, document.getElementById('root')
+//   )
+// } else {
+//   ReactDOM.render(
+//     <Main />,
+//     document.getElementById('root')
+//   );
+// }
+
+  ReactDOM.render(
+    <Main />,
+    document.getElementById('root')
+  );

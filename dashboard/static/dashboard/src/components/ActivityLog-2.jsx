@@ -205,7 +205,7 @@ function Process(props) {
           img={props.process_name.toLowerCase().replace(/\s/g, '')}
           first={props.process_name}
           second={pl(props.runs, "run")}
-          third={pl(props.outputs, props.process_unit)}
+          third={pl(parseInt(props.outputs), props.process_unit)}
           fourth={"0 flagged"}
           fifth={"0 experimental"}
           sixth={button}
@@ -230,7 +230,7 @@ function Origin(props) {
           icon={props.expanded?"expand_more":"chevron_right"} 
           first={props.product_code}
           second={pl(props.runs, "run")}
-          third={pl(props.outputs, props.process_unit)}
+          third={pl(parseInt(props.outputs), props.process_unit)}
           fourth={!props.flagged?"--":props.flagged + " flagged"}
           fifth={!props.experimental?"--":props.experimental + " experimental"}
         />
@@ -282,7 +282,7 @@ function TaskList(props) {
     <Row className="process-origin-task"
       first={" "}
       second={<a href={window.location.origin + "/dashboard/task/" + props.id} target="_blank">{display(props)}</a>}
-      third={pl(props.outputs, props.process_unit)}
+      third={pl(parseInt(props.outputs), props.process_unit)}
       fourth={"--"}
       fifth={"--"}
     />

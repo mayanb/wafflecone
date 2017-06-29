@@ -2,13 +2,23 @@ import React from 'react'
 import $ from 'jquery'
 import update from 'immutability-helper'
 
+var refreshing = false
+
 function fetch(url, params) {
   let team = window.localStorage.getItem("team") || "1"
   params.team = team
   return $.get(url, params)
 }
 
+function refreshToken() {
+
+}
+
 function post(url, params, headers) {
+
+  while (refreshing) {
+    
+  }
 
   let req = {
     method: "POST",

@@ -163,7 +163,7 @@ function InventoryItem(props) {
         <span style={teamStyle}>{props.team}</span>
       </div>
       <div className="i-count">
-        <span>{props.count}</span>
+        <span>{count(props.count)}</span>
       </div>
       <div className="i-unit">
         <span>{props.unit.sentenceCase() + "s"}</span>
@@ -173,6 +173,13 @@ function InventoryItem(props) {
       </div>
     </div>
   )
+}
+
+function count(c) {
+  let p = parseInt(c)
+  if (p - c != 0) 
+    return c
+  return p
 }
 
 function isHeader(props) {

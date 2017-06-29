@@ -5065,7 +5065,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 var _prodInvariant = __webpack_require__(5);
 
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var ReactDOMComponentFlags = __webpack_require__(91);
 
 var invariant = __webpack_require__(3);
@@ -5478,9 +5478,9 @@ module.exports = emptyFunction;
 
 
 
-var _prodInvariant = __webpack_require__(24);
+var _prodInvariant = __webpack_require__(26);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 
 var invariant = __webpack_require__(3);
 var warning = __webpack_require__(4);
@@ -5802,36 +5802,6 @@ module.exports = ReactComponentTreeHook;
 
 /***/ }),
 /* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright 2016-present, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
- * 
- */
-
-
-
-// Trust the developer to only use ReactInstrumentation with a __DEV__ check
-
-var debugTool = null;
-
-if (process.env.NODE_ENV !== 'production') {
-  var ReactDebugTool = __webpack_require__(271);
-  debugTool = ReactDebugTool;
-}
-
-module.exports = { debugTool: debugTool };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -16091,6 +16061,36 @@ return jQuery;
 
 
 /***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {/**
+ * Copyright 2016-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * 
+ */
+
+
+
+// Trust the developer to only use ReactInstrumentation with a __DEV__ check
+
+var debugTool = null;
+
+if (process.env.NODE_ENV !== 'production') {
+  var ReactDebugTool = __webpack_require__(271);
+  debugTool = ReactDebugTool;
+}
+
+module.exports = { debugTool: debugTool };
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
 /* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -16136,6 +16136,209 @@ return jQuery;
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var invariant = __webpack_require__(36);
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+var splice = Array.prototype.splice;
+
+var assign = Object.assign || /* istanbul ignore next */ function assign(target, source) {
+  getAllKeys(source).forEach(function(key) {
+    if (hasOwnProperty.call(source, key)) {
+      target[key] = source[key];
+    }
+  });
+  return target;
+};
+
+var getAllKeys = typeof Object.getOwnPropertySymbols === 'function' ?
+  function(obj) { return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj)) } :
+  /* istanbul ignore next */ function(obj) { return Object.keys(obj) };
+
+function copy(object) {
+  if (object instanceof Array) {
+    return object.slice();
+  } else if (object && typeof object === 'object') {
+    return assign(new object.constructor(), object);
+  } else {
+    return object;
+  }
+}
+
+function newContext() {
+  var commands = assign({}, defaultCommands);
+  update.extend = function(directive, fn) {
+    commands[directive] = fn;
+  };
+
+  return update;
+
+  function update(object, spec) {
+    if (!(Array.isArray(object) && Array.isArray(spec))) {
+      invariant(
+        !Array.isArray(spec),
+        'update(): You provided an invalid spec to update(). The spec may ' +
+        'not contain an array except as the value of $set, $push, $unshift, ' +
+        '$splice or any custom command allowing an array value.'
+      );
+    }
+
+    invariant(
+      typeof spec === 'object' && spec !== null,
+      'update(): You provided an invalid spec to update(). The spec and ' +
+      'every included key path must be plain objects containing one of the ' +
+      'following commands: %s.',
+      Object.keys(commands).join(', ')
+    );
+
+    var nextObject = object;
+    var specKeys = getAllKeys(spec);
+    var index, key;
+    getAllKeys(spec).forEach(function(key) {
+      if (hasOwnProperty.call(commands, key)) {
+        nextObject = commands[key](spec[key], nextObject, spec, object);
+      } else {
+        var nextValueForKey = update(object[key], spec[key]);
+        if (nextValueForKey !== nextObject[key]) {
+          if (nextObject === object) {
+            nextObject = copy(object);
+          }
+          nextObject[key] = nextValueForKey;
+        }
+      }
+    })
+    return nextObject;
+  }
+
+}
+
+var defaultCommands = {
+  $push: function(value, original, spec) {
+    invariantPushAndUnshift(original, spec, '$push');
+    return original.concat(value);
+  },
+  $unshift: function(value, original, spec) {
+    invariantPushAndUnshift(original, spec, '$unshift');
+    return value.concat(original);
+  },
+  $splice: function(value, nextObject, spec, object) {
+    var originalValue = nextObject === object ? copy(object) : nextObject;
+    invariantSplices(originalValue, spec);
+    value.forEach(function(args) {
+      invariantSplice(args);
+      splice.apply(originalValue, args);
+    });
+    return originalValue;
+  },
+  $set: function(value, original, spec) {
+    invariantSet(spec);
+    return value;
+  },
+  $unset: function(value, nextObject, spec, object) {
+    invariant(
+      Array.isArray(value),
+      'update(): expected spec of $unset to be an array; got %s. ' +
+      'Did you forget to wrap the key(s) in an array?',
+      value
+    );
+    var originalValue = nextObject;
+    value.forEach(function(key) {
+      if (Object.hasOwnProperty.call(originalValue, key)) {
+        if (nextObject === object) nextObject = copy(object);
+        delete nextObject[key];
+      }
+    });
+    return nextObject;
+  },
+  $merge: function(value, nextObject, spec, object) {
+    var nextObject = nextObject;
+    invariantMerge(nextObject, value);
+    getAllKeys(value).forEach(function(key) {
+      if (value[key] !== nextObject[key]) {
+        if (nextObject === object) nextObject = copy(object);
+        nextObject[key] = value[key];
+      }
+    });
+    return nextObject;
+  },
+  $apply: function(value, original) {
+    invariantApply(value);
+    return value(original);
+  }
+};
+
+module.exports = newContext();
+module.exports.newContext = newContext;
+
+// invariants
+
+function invariantPushAndUnshift(value, spec, command) {
+  invariant(
+    Array.isArray(value),
+    'update(): expected target of %s to be an array; got %s.',
+    command,
+    value
+  );
+  var specValue = spec[command];
+  invariant(
+    Array.isArray(specValue),
+    'update(): expected spec of %s to be an array; got %s. ' +
+    'Did you forget to wrap your parameter in an array?',
+    command,
+    specValue
+  );
+}
+
+function invariantSplices(value, spec) {
+  invariant(
+    Array.isArray(value),
+    'Expected $splice target to be an array; got %s',
+    value
+  );
+  invariantSplice(spec['$splice']);
+}
+
+function invariantSplice(value) {
+  invariant(
+    Array.isArray(value),
+    'update(): expected spec of $splice to be an array of arrays; got %s. ' +
+    'Did you forget to wrap your parameters in an array?',
+    value
+  );
+}
+
+function invariantApply(fn) {
+  invariant(
+    typeof fn === 'function',
+    'update(): expected spec of $apply to be a function; got %s.',
+    fn
+  );
+}
+
+function invariantSet(spec) {
+  invariant(
+    Object.keys(spec).length === 1,
+    'Cannot have more than one key in an object with $set'
+  );
+}
+
+function invariantMerge(target, specValue) {
+  invariant(
+    specValue && typeof specValue === 'object',
+    'update(): $merge expects a spec of type \'object\'; got %s',
+    specValue
+  );
+  invariant(
+    target && typeof target === 'object',
+    'update(): $merge expects a target of type \'object\'; got %s',
+    target
+  );
+}
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 /**
  * Copyright 2013-present, Facebook, Inc.
@@ -16169,7 +16372,7 @@ var ReactCurrentOwner = {
 module.exports = ReactCurrentOwner;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16189,7 +16392,7 @@ var _prodInvariant = __webpack_require__(5),
     _assign = __webpack_require__(6);
 
 var CallbackQueue = __webpack_require__(95);
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 var ReactFeatureFlags = __webpack_require__(96);
 var ReactReconciler = __webpack_require__(34);
 var Transaction = __webpack_require__(48);
@@ -16426,7 +16629,7 @@ module.exports = ReactUpdates;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16444,7 +16647,7 @@ module.exports = ReactUpdates;
 
 var _assign = __webpack_require__(6);
 
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 
 var emptyFunction = __webpack_require__(13);
 var warning = __webpack_require__(4);
@@ -16700,210 +16903,17 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var invariant = __webpack_require__(36);
+"use strict";
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var splice = Array.prototype.splice;
 
-var assign = Object.assign || /* istanbul ignore next */ function assign(target, source) {
-  getAllKeys(source).forEach(function(key) {
-    if (hasOwnProperty.call(source, key)) {
-      target[key] = source[key];
-    }
-  });
-  return target;
-};
-
-var getAllKeys = typeof Object.getOwnPropertySymbols === 'function' ?
-  function(obj) { return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj)) } :
-  /* istanbul ignore next */ function(obj) { return Object.keys(obj) };
-
-function copy(object) {
-  if (object instanceof Array) {
-    return object.slice();
-  } else if (object && typeof object === 'object') {
-    return assign(new object.constructor(), object);
-  } else {
-    return object;
-  }
-}
-
-function newContext() {
-  var commands = assign({}, defaultCommands);
-  update.extend = function(directive, fn) {
-    commands[directive] = fn;
-  };
-
-  return update;
-
-  function update(object, spec) {
-    if (!(Array.isArray(object) && Array.isArray(spec))) {
-      invariant(
-        !Array.isArray(spec),
-        'update(): You provided an invalid spec to update(). The spec may ' +
-        'not contain an array except as the value of $set, $push, $unshift, ' +
-        '$splice or any custom command allowing an array value.'
-      );
-    }
-
-    invariant(
-      typeof spec === 'object' && spec !== null,
-      'update(): You provided an invalid spec to update(). The spec and ' +
-      'every included key path must be plain objects containing one of the ' +
-      'following commands: %s.',
-      Object.keys(commands).join(', ')
-    );
-
-    var nextObject = object;
-    var specKeys = getAllKeys(spec);
-    var index, key;
-    getAllKeys(spec).forEach(function(key) {
-      if (hasOwnProperty.call(commands, key)) {
-        nextObject = commands[key](spec[key], nextObject, spec, object);
-      } else {
-        var nextValueForKey = update(object[key], spec[key]);
-        if (nextValueForKey !== nextObject[key]) {
-          if (nextObject === object) {
-            nextObject = copy(object);
-          }
-          nextObject[key] = nextValueForKey;
-        }
-      }
-    })
-    return nextObject;
-  }
-
-}
-
-var defaultCommands = {
-  $push: function(value, original, spec) {
-    invariantPushAndUnshift(original, spec, '$push');
-    return original.concat(value);
-  },
-  $unshift: function(value, original, spec) {
-    invariantPushAndUnshift(original, spec, '$unshift');
-    return value.concat(original);
-  },
-  $splice: function(value, nextObject, spec, object) {
-    var originalValue = nextObject === object ? copy(object) : nextObject;
-    invariantSplices(originalValue, spec);
-    value.forEach(function(args) {
-      invariantSplice(args);
-      splice.apply(originalValue, args);
-    });
-    return originalValue;
-  },
-  $set: function(value, original, spec) {
-    invariantSet(spec);
-    return value;
-  },
-  $unset: function(value, nextObject, spec, object) {
-    invariant(
-      Array.isArray(value),
-      'update(): expected spec of $unset to be an array; got %s. ' +
-      'Did you forget to wrap the key(s) in an array?',
-      value
-    );
-    var originalValue = nextObject;
-    value.forEach(function(key) {
-      if (Object.hasOwnProperty.call(originalValue, key)) {
-        if (nextObject === object) nextObject = copy(object);
-        delete nextObject[key];
-      }
-    });
-    return nextObject;
-  },
-  $merge: function(value, nextObject, spec, object) {
-    var nextObject = nextObject;
-    invariantMerge(nextObject, value);
-    getAllKeys(value).forEach(function(key) {
-      if (value[key] !== nextObject[key]) {
-        if (nextObject === object) nextObject = copy(object);
-        nextObject[key] = value[key];
-      }
-    });
-    return nextObject;
-  },
-  $apply: function(value, original) {
-    invariantApply(value);
-    return value(original);
-  }
-};
-
-module.exports = newContext();
-module.exports.newContext = newContext;
-
-// invariants
-
-function invariantPushAndUnshift(value, spec, command) {
-  invariant(
-    Array.isArray(value),
-    'update(): expected target of %s to be an array; got %s.',
-    command,
-    value
-  );
-  var specValue = spec[command];
-  invariant(
-    Array.isArray(specValue),
-    'update(): expected spec of %s to be an array; got %s. ' +
-    'Did you forget to wrap your parameter in an array?',
-    command,
-    specValue
-  );
-}
-
-function invariantSplices(value, spec) {
-  invariant(
-    Array.isArray(value),
-    'Expected $splice target to be an array; got %s',
-    value
-  );
-  invariantSplice(spec['$splice']);
-}
-
-function invariantSplice(value) {
-  invariant(
-    Array.isArray(value),
-    'update(): expected spec of $splice to be an array of arrays; got %s. ' +
-    'Did you forget to wrap your parameters in an array?',
-    value
-  );
-}
-
-function invariantApply(fn) {
-  invariant(
-    typeof fn === 'function',
-    'update(): expected spec of $apply to be a function; got %s.',
-    fn
-  );
-}
-
-function invariantSet(spec) {
-  invariant(
-    Object.keys(spec).length === 1,
-    'Cannot have more than one key in an object with $set'
-  );
-}
-
-function invariantMerge(target, specValue) {
-  invariant(
-    specValue && typeof specValue === 'object',
-    'update(): $merge expects a spec of type \'object\'; got %s',
-    specValue
-  );
-  invariant(
-    target && typeof target === 'object',
-    'update(): $merge expects a target of type \'object\'; got %s',
-    target
-  );
-}
+module.exports = __webpack_require__(261);
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17119,7 +17129,208 @@ module.exports = DOMProperty;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 23 */
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.icon = exports.toCSV = exports.getAttributesToColumnNumbers = exports.getOperator = exports.getNotes = exports.display = undefined;
+
+var _moment = __webpack_require__(0);
+
+var _moment2 = _interopRequireDefault(_moment);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function display(task) {
+  return words(task).toUpperCase();
+}
+
+function getNotes(task) {
+  var notesID = 0;
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = task.process_type.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var attribute = _step.value;
+
+      if (attribute.name.toLowerCase().trim() === "notes") {
+        notesID = attribute.id;
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = task.attribute_values[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var attributeVal = _step2.value;
+
+      if (attributeVal.attribute == notesID) return attributeVal.value;
+    }
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
+      }
+    }
+  }
+
+  return "";
+}
+
+function getOperator(task) {
+  var notesID = 0;
+  var _iteratorNormalCompletion3 = true;
+  var _didIteratorError3 = false;
+  var _iteratorError3 = undefined;
+
+  try {
+    for (var _iterator3 = task.process_type.attributes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+      var attribute = _step3.value;
+
+      if (attribute.name.toLowerCase().trim() === "operator") {
+        notesID = attribute.id;
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError3 = true;
+    _iteratorError3 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion3 && _iterator3.return) {
+        _iterator3.return();
+      }
+    } finally {
+      if (_didIteratorError3) {
+        throw _iteratorError3;
+      }
+    }
+  }
+
+  var _iteratorNormalCompletion4 = true;
+  var _didIteratorError4 = false;
+  var _iteratorError4 = undefined;
+
+  try {
+    for (var _iterator4 = task.attribute_values[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+      var attributeVal = _step4.value;
+
+      if (attributeVal.attribute == notesID) return attributeVal.value;
+    }
+  } catch (err) {
+    _didIteratorError4 = true;
+    _iteratorError4 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion4 && _iterator4.return) {
+        _iterator4.return();
+      }
+    } finally {
+      if (_didIteratorError4) {
+        throw _iteratorError4;
+      }
+    }
+  }
+
+  return "";
+}
+
+function words(task) {
+  if (!task || task == undefined || task.label == undefined) {
+    return "";
+  }
+
+  if (task.custom_display && task.custom_display != "") return task.custom_display;else if (task.label_index > 0) return task.label + "-" + task.label_index;else return task.label;
+}
+
+function getAttributesToColumnNumbers(attributes) {
+  var cols = {};
+  attributes.map(function (a, i) {
+    cols[a.id] = i;
+  });
+  return cols;
+}
+
+function taskAsRow(process, task, cols) {
+  var arr = [display(task), '' + task.inputs.length, '' + task.items.length, '' + (0, _moment2.default)(task.created_at).format("MM/DD/YYYY")];
+
+  var attrArray = Array(process.attributes.length).fill('');
+
+  task.attribute_values.map(function (av) {
+    var col = cols[av.attribute];
+    attrArray[col] = av.value.replace(/"/g, '""');
+  });
+
+  arr = arr.concat(attrArray);
+
+  return '"' + arr.join('","') + '"';
+}
+
+function toCSV(process, tasks) {
+
+  var attributeColumns = getAttributesToColumnNumbers(process.attributes);
+
+  var arr = ['Task', 'Inputs', 'Outputs', 'Date Created'];
+  var attrArr = process.attributes.map(function (a) {
+    return a.name.replace(/"/g, '""');
+  });
+
+  var firstRow = ['"' + arr.concat(attrArr).join('","') + '"'];
+
+  var tasksAsRows = tasks.map(function (task) {
+    return taskAsRow(process, task, attributeColumns);
+  });
+
+  var csv = tasksAsRows.join('\n');
+
+  return firstRow + '\n' + csv;
+}
+
+function icon(k) {
+  var i = k.substr(0, k.length - 4);
+  return window.location.origin + "/static/dashboard/img/" + i + "@3x.png";
+}
+
+exports.display = display;
+exports.getNotes = getNotes;
+exports.getOperator = getOperator;
+exports.getAttributesToColumnNumbers = getAttributesToColumnNumbers;
+exports.toCSV = toCSV;
+exports.icon = icon;
+
+/***/ }),
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17134,15 +17345,17 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var refreshing = false;
 
 function fetch(url, params) {
   var team = window.localStorage.getItem("team") || "1";
@@ -17150,7 +17363,11 @@ function fetch(url, params) {
   return _jquery2.default.get(url, params);
 }
 
+function refreshToken() {}
+
 function post(url, params, headers) {
+
+  while (refreshing) {}
 
   var req = {
     method: "POST",
@@ -17208,7 +17425,7 @@ exports.put = put;
 exports.del = del;
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17252,7 +17469,7 @@ function reactProdInvariant(code) {
 module.exports = reactProdInvariant;
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17270,7 +17487,7 @@ module.exports = reactProdInvariant;
 
 var _assign = __webpack_require__(6);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 
 var warning = __webpack_require__(4);
 var canDefineProperty = __webpack_require__(59);
@@ -17599,17 +17816,7 @@ module.exports = ReactElement;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = __webpack_require__(261);
-
-
-/***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17727,7 +17934,7 @@ module.exports = PooledClass;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -17786,7 +17993,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17852,207 +18059,6 @@ if (process.env.NODE_ENV !== 'production') {
 module.exports = warning;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.icon = exports.toCSV = exports.getAttributesToColumnNumbers = exports.getOperator = exports.getNotes = exports.display = undefined;
-
-var _moment = __webpack_require__(0);
-
-var _moment2 = _interopRequireDefault(_moment);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function display(task) {
-  return words(task).toUpperCase();
-}
-
-function getNotes(task) {
-  var notesID = 0;
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
-
-  try {
-    for (var _iterator = task.process_type.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var attribute = _step.value;
-
-      if (attribute.name.toLowerCase().trim() === "notes") {
-        notesID = attribute.id;
-        break;
-      }
-    }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator.return) {
-        _iterator.return();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
-  }
-
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = task.attribute_values[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var attributeVal = _step2.value;
-
-      if (attributeVal.attribute == notesID) return attributeVal.value;
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2.return) {
-        _iterator2.return();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
-
-  return "";
-}
-
-function getOperator(task) {
-  var notesID = 0;
-  var _iteratorNormalCompletion3 = true;
-  var _didIteratorError3 = false;
-  var _iteratorError3 = undefined;
-
-  try {
-    for (var _iterator3 = task.process_type.attributes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-      var attribute = _step3.value;
-
-      if (attribute.name.toLowerCase().trim() === "operator") {
-        notesID = attribute.id;
-        break;
-      }
-    }
-  } catch (err) {
-    _didIteratorError3 = true;
-    _iteratorError3 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion3 && _iterator3.return) {
-        _iterator3.return();
-      }
-    } finally {
-      if (_didIteratorError3) {
-        throw _iteratorError3;
-      }
-    }
-  }
-
-  var _iteratorNormalCompletion4 = true;
-  var _didIteratorError4 = false;
-  var _iteratorError4 = undefined;
-
-  try {
-    for (var _iterator4 = task.attribute_values[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-      var attributeVal = _step4.value;
-
-      if (attributeVal.attribute == notesID) return attributeVal.value;
-    }
-  } catch (err) {
-    _didIteratorError4 = true;
-    _iteratorError4 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion4 && _iterator4.return) {
-        _iterator4.return();
-      }
-    } finally {
-      if (_didIteratorError4) {
-        throw _iteratorError4;
-      }
-    }
-  }
-
-  return "";
-}
-
-function words(task) {
-  if (!task || task == undefined || task.label == undefined) {
-    return "";
-  }
-
-  if (task.custom_display && task.custom_display != "") return task.custom_display;else if (task.label_index > 0) return task.label + "-" + task.label_index;else return task.label;
-}
-
-function getAttributesToColumnNumbers(attributes) {
-  var cols = {};
-  attributes.map(function (a, i) {
-    cols[a.id] = i;
-  });
-  return cols;
-}
-
-function taskAsRow(process, task, cols) {
-  var arr = [display(task), '' + task.inputs.length, '' + task.items.length, '' + (0, _moment2.default)(task.created_at).format("MM/DD/YYYY")];
-
-  var attrArray = Array(process.attributes.length).fill('');
-
-  task.attribute_values.map(function (av) {
-    var col = cols[av.attribute];
-    attrArray[col] = av.value.replace(/"/g, '""');
-  });
-
-  arr = arr.concat(attrArray);
-
-  return '"' + arr.join('","') + '"';
-}
-
-function toCSV(process, tasks) {
-
-  var attributeColumns = getAttributesToColumnNumbers(process.attributes);
-
-  var arr = ['Task', 'Inputs', 'Outputs', 'Date Created'];
-  var attrArr = process.attributes.map(function (a) {
-    return a.name.replace(/"/g, '""');
-  });
-
-  var firstRow = ['"' + arr.concat(attrArr).join('","') + '"'];
-
-  var tasksAsRows = tasks.map(function (task) {
-    return taskAsRow(process, task, attributeColumns);
-  });
-
-  var csv = tasksAsRows.join('\n');
-
-  return firstRow + '\n' + csv;
-}
-
-function icon(k) {
-  var i = k.substr(0, k.length - 4);
-  return window.location.origin + "/static/dashboard/img/" + i + "@3x.png";
-}
-
-exports.display = display;
-exports.getNotes = getNotes;
-exports.getOperator = getOperator;
-exports.getAttributesToColumnNumbers = getAttributesToColumnNumbers;
-exports.toCSV = toCSV;
-exports.icon = icon;
 
 /***/ }),
 /* 31 */
@@ -18134,7 +18140,7 @@ var ReactComponent = __webpack_require__(61);
 var ReactPureComponent = __webpack_require__(254);
 var ReactClass = __webpack_require__(255);
 var ReactDOMFactories = __webpack_require__(256);
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 var ReactPropTypes = __webpack_require__(258);
 var ReactVersion = __webpack_require__(259);
 
@@ -18249,7 +18255,7 @@ module.exports = emptyObject;
 
 
 var ReactRef = __webpack_require__(269);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 
 var warning = __webpack_require__(4);
 
@@ -18624,7 +18630,7 @@ var _propTypes = __webpack_require__(7);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -20313,7 +20319,7 @@ module.exports = EventPluginHub;
 
 
 
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 var getEventTarget = __webpack_require__(66);
 
@@ -20940,7 +20946,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -20948,7 +20954,7 @@ var _classnames2 = __webpack_require__(10);
 
 var _classnames3 = _interopRequireDefault(_classnames2);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
@@ -22467,19 +22473,19 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _Task = __webpack_require__(30);
+var _Task = __webpack_require__(24);
 
-var _APIManager = __webpack_require__(23);
+var _APIManager = __webpack_require__(25);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-var _reactRouterDom = __webpack_require__(28);
+var _reactRouterDom = __webpack_require__(29);
 
 var _Loading = __webpack_require__(54);
 
@@ -23039,7 +23045,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -23055,11 +23061,11 @@ var _WrapMenu = __webpack_require__(419);
 
 var _WrapMenu2 = _interopRequireDefault(_WrapMenu);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _Task = __webpack_require__(30);
+var _Task = __webpack_require__(24);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23850,7 +23856,7 @@ module.exports = getIteratorFn;
 
 
 
-var _prodInvariant = __webpack_require__(24);
+var _prodInvariant = __webpack_require__(26);
 
 var ReactNoopUpdateQueue = __webpack_require__(62);
 
@@ -24578,7 +24584,7 @@ module.exports = getEventModifierState;
 var DOMLazyTree = __webpack_require__(35);
 var Danger = __webpack_require__(280);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 
 var createMicrosoftUnsafeLocalFunction = __webpack_require__(71);
 var setInnerHTML = __webpack_require__(50);
@@ -25247,10 +25253,10 @@ module.exports = KeyEscapeUtils;
 
 var _prodInvariant = __webpack_require__(5);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var ReactInstanceMap = __webpack_require__(42);
-var ReactInstrumentation = __webpack_require__(15);
-var ReactUpdates = __webpack_require__(19);
+var ReactInstrumentation = __webpack_require__(16);
+var ReactUpdates = __webpack_require__(20);
 
 var invariant = __webpack_require__(3);
 var warning = __webpack_require__(4);
@@ -26017,7 +26023,7 @@ var locationsAreEqual = exports.locationsAreEqual = function locationsAreEqual(a
 
 exports.__esModule = true;
 
-var _warning = __webpack_require__(29);
+var _warning = __webpack_require__(30);
 
 var _warning2 = _interopRequireDefault(_warning);
 
@@ -26104,7 +26110,7 @@ exports.default = createTransitionManager;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_warning__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_warning__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_warning___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_warning__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_invariant__);
@@ -26485,9 +26491,9 @@ module.exports = REACT_ELEMENT_TYPE;
 
 
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var ReactComponentTreeHook = __webpack_require__(14);
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 
 var checkReactTypeSpec = __webpack_require__(257);
 
@@ -26906,7 +26912,7 @@ var _prodInvariant = __webpack_require__(5);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 
 var invariant = __webpack_require__(3);
 
@@ -27383,9 +27389,9 @@ module.exports = CSSProperty;
 
 
 
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 
 var quoteAttributeValueForBrowser = __webpack_require__(294);
 var warning = __webpack_require__(4);
@@ -27652,7 +27658,7 @@ var _assign = __webpack_require__(6);
 
 var LinkedValueUtils = __webpack_require__(72);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 
 var warning = __webpack_require__(4);
 
@@ -28145,7 +28151,7 @@ module.exports = ReactHostComponent;
 
 var _prodInvariant = __webpack_require__(5);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var REACT_ELEMENT_TYPE = __webpack_require__(306);
 
 var getIteratorFn = __webpack_require__(307);
@@ -28591,20 +28597,20 @@ module.exports = getActiveElement;
 var _prodInvariant = __webpack_require__(5);
 
 var DOMLazyTree = __webpack_require__(35);
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var React = __webpack_require__(32);
 var ReactBrowserEventEmitter = __webpack_require__(52);
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var ReactDOMComponentTree = __webpack_require__(8);
 var ReactDOMContainerInfo = __webpack_require__(336);
 var ReactDOMFeatureFlags = __webpack_require__(337);
 var ReactFeatureFlags = __webpack_require__(96);
 var ReactInstanceMap = __webpack_require__(42);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 var ReactMarkupChecksum = __webpack_require__(338);
 var ReactReconciler = __webpack_require__(34);
 var ReactUpdateQueue = __webpack_require__(77);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 
 var emptyObject = __webpack_require__(33);
 var instantiateReactComponent = __webpack_require__(105);
@@ -29216,7 +29222,7 @@ var isExtraneousPopstateEvent = exports.isExtraneousPopstateEvent = function isE
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_warning__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_warning__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_warning___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_warning__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
@@ -41038,7 +41044,6 @@ var Datepicker = function (_React$Component) {
         endDate: _momentTimezone2.default.tz(new Date(this.props.initialDates.end), 'UTC') };
 
       this.setState({ predefined: newPL });
-
       this.props.onChange(this.props.initialDates);
     }
   }, {
@@ -42104,7 +42109,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -42579,11 +42584,11 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _reactRouterDom = __webpack_require__(28);
+var _reactRouterDom = __webpack_require__(29);
 
 var _InventoryDetail = __webpack_require__(53);
 
@@ -42591,17 +42596,17 @@ var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
 
 var _Inputs = __webpack_require__(56);
 
-var _APIManager = __webpack_require__(23);
+var _APIManager = __webpack_require__(25);
 
 var _Loading = __webpack_require__(54);
 
 var _Loading2 = _interopRequireDefault(_Loading);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-var _Task = __webpack_require__(30);
+var _Task = __webpack_require__(24);
 
 var _moment = __webpack_require__(0);
 
@@ -42611,7 +42616,7 @@ var _Datepicker = __webpack_require__(237);
 
 var _Datepicker2 = _interopRequireDefault(_Datepicker);
 
-var _reactImageFallback = __webpack_require__(426);
+var _reactImageFallback = __webpack_require__(427);
 
 var _reactImageFallback2 = _interopRequireDefault(_reactImageFallback);
 
@@ -42853,7 +42858,7 @@ function Process(props) {
         img: props.process_name.toLowerCase().replace(/\s/g, ''),
         first: props.process_name,
         second: pl(props.runs, "run"),
-        third: pl(props.outputs, props.process_unit),
+        third: pl(parseInt(props.outputs), props.process_unit),
         fourth: "0 flagged",
         fifth: "0 experimental",
         sixth: button
@@ -42880,7 +42885,7 @@ function Origin(props) {
         icon: props.expanded ? "expand_more" : "chevron_right",
         first: props.product_code,
         second: pl(props.runs, "run"),
-        third: pl(props.outputs, props.process_unit),
+        third: pl(parseInt(props.outputs), props.process_unit),
         fourth: !props.flagged ? "--" : props.flagged + " flagged",
         fifth: !props.experimental ? "--" : props.experimental + " experimental"
       })
@@ -42982,7 +42987,7 @@ function TaskList(props) {
         { href: window.location.origin + "/dashboard/task/" + props.id, target: '_blank' },
         (0, _Task.display)(props)
       ),
-      third: pl(props.outputs, props.process_unit),
+      third: pl(parseInt(props.outputs), props.process_unit),
       fourth: "--",
       fifth: "--"
     })
@@ -43018,15 +43023,15 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
 var _csrf = __webpack_require__(346);
 
-var _reactRouterDom = __webpack_require__(28);
+var _reactRouterDom = __webpack_require__(29);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
@@ -43048,15 +43053,15 @@ var _FactoryMap = __webpack_require__(422);
 
 var _FactoryMap2 = _interopRequireDefault(_FactoryMap);
 
-var _LabelPrinter = __webpack_require__(423);
+var _LabelPrinter = __webpack_require__(424);
 
 var _LabelPrinter2 = _interopRequireDefault(_LabelPrinter);
 
-var _Inventory = __webpack_require__(424);
+var _Inventory = __webpack_require__(425);
 
 var _Inventory2 = _interopRequireDefault(_Inventory);
 
-var _Task = __webpack_require__(425);
+var _Task = __webpack_require__(426);
 
 var _Task2 = _interopRequireDefault(_Task);
 
@@ -43064,7 +43069,7 @@ var _ActivityLog = __webpack_require__(248);
 
 var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
 
-var _Dash = __webpack_require__(429);
+var _Dash = __webpack_require__(430);
 
 var _Dash2 = _interopRequireDefault(_Dash);
 
@@ -43075,6 +43080,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+//import NewAccount from './NewAccount.jsx'
 
 var Main = function (_React$Component) {
   _inherits(Main, _React$Component);
@@ -43178,6 +43185,18 @@ function getFilters() {
   return filters;
 }
 
+// console.log(window.location.pathname)
+// if (window.location.pathname == "/dashboard/newaccount/") {
+//   ReactDOM.render(
+//     <NewAccount />, document.getElementById('root')
+//   )
+// } else {
+//   ReactDOM.render(
+//     <Main />,
+//     document.getElementById('root')
+//   );
+// }
+
 _reactDom2.default.render(_react2.default.createElement(Main, null), document.getElementById('root'));
 
 /***/ }),
@@ -43198,7 +43217,7 @@ _reactDom2.default.render(_react2.default.createElement(Main, null), document.ge
 
 
 var PooledClass = __webpack_require__(251);
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 
 var emptyFunction = __webpack_require__(13);
 var traverseAllChildren = __webpack_require__(252);
@@ -43394,7 +43413,7 @@ module.exports = ReactChildren;
 
 
 
-var _prodInvariant = __webpack_require__(24);
+var _prodInvariant = __webpack_require__(26);
 
 var invariant = __webpack_require__(3);
 
@@ -43511,9 +43530,9 @@ module.exports = PooledClass;
 
 
 
-var _prodInvariant = __webpack_require__(24);
+var _prodInvariant = __webpack_require__(26);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var REACT_ELEMENT_TYPE = __webpack_require__(88);
 
 var getIteratorFn = __webpack_require__(60);
@@ -43804,11 +43823,11 @@ module.exports = ReactPureComponent;
 
 
 
-var _prodInvariant = __webpack_require__(24),
+var _prodInvariant = __webpack_require__(26),
     _assign = __webpack_require__(6);
 
 var ReactComponent = __webpack_require__(61);
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 var ReactPropTypeLocationNames = __webpack_require__(63);
 var ReactNoopUpdateQueue = __webpack_require__(62);
 
@@ -44527,7 +44546,7 @@ module.exports = ReactClass;
 
 
 
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 
 /**
  * Create a factory that creates HTML tag elements.
@@ -44703,7 +44722,7 @@ module.exports = ReactDOMFactories;
 
 
 
-var _prodInvariant = __webpack_require__(24);
+var _prodInvariant = __webpack_require__(26);
 
 var ReactPropTypeLocationNames = __webpack_require__(63);
 var ReactPropTypesSecret = __webpack_require__(90);
@@ -44796,7 +44815,7 @@ module.exports = checkReactTypeSpec;
 
 
 
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 var ReactPropTypeLocationNames = __webpack_require__(63);
 var ReactPropTypesSecret = __webpack_require__(90);
 
@@ -45254,9 +45273,9 @@ module.exports = '15.4.2';
  */
 
 
-var _prodInvariant = __webpack_require__(24);
+var _prodInvariant = __webpack_require__(26);
 
-var ReactElement = __webpack_require__(25);
+var ReactElement = __webpack_require__(27);
 
 var invariant = __webpack_require__(3);
 
@@ -45305,7 +45324,7 @@ var ReactDOMComponentTree = __webpack_require__(8);
 var ReactDefaultInjection = __webpack_require__(262);
 var ReactMount = __webpack_require__(113);
 var ReactReconciler = __webpack_require__(34);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 var ReactVersion = __webpack_require__(340);
 
 var findDOMNode = __webpack_require__(341);
@@ -45386,7 +45405,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 if (process.env.NODE_ENV !== 'production') {
-  var ReactInstrumentation = __webpack_require__(15);
+  var ReactInstrumentation = __webpack_require__(16);
   var ReactDOMUnknownPropertyHook = __webpack_require__(343);
   var ReactDOMNullInputValuePropHook = __webpack_require__(344);
   var ReactDOMInvalidARIAHook = __webpack_require__(345);
@@ -45978,7 +45997,7 @@ module.exports = BeforeInputEventPlugin;
 
 var _assign = __webpack_require__(6);
 
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 
 var getTextContentAccessor = __webpack_require__(94);
 
@@ -46076,7 +46095,7 @@ module.exports = FallbackCompositionState;
 
 
 
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 /**
  * @interface Event
@@ -46117,7 +46136,7 @@ module.exports = SyntheticCompositionEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 /**
  * @interface Event
@@ -46163,8 +46182,8 @@ var EventPluginHub = __webpack_require__(40);
 var EventPropagators = __webpack_require__(39);
 var ExecutionEnvironment = __webpack_require__(9);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactUpdates = __webpack_require__(19);
-var SyntheticEvent = __webpack_require__(20);
+var ReactUpdates = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 var getEventTarget = __webpack_require__(66);
 var isEventSupported = __webpack_require__(67);
@@ -47331,7 +47350,7 @@ module.exports = EnterLeaveEventPlugin;
 
 
 
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
@@ -48009,7 +48028,7 @@ var AutoFocusUtils = __webpack_require__(286);
 var CSSPropertyOperations = __webpack_require__(287);
 var DOMLazyTree = __webpack_require__(35);
 var DOMNamespaces = __webpack_require__(70);
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var DOMPropertyOperations = __webpack_require__(102);
 var EventPluginHub = __webpack_require__(40);
 var EventPluginRegistry = __webpack_require__(47);
@@ -48020,7 +48039,7 @@ var ReactDOMInput = __webpack_require__(297);
 var ReactDOMOption = __webpack_require__(298);
 var ReactDOMSelect = __webpack_require__(104);
 var ReactDOMTextarea = __webpack_require__(299);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 var ReactMultiChild = __webpack_require__(300);
 var ReactServerRenderingTransaction = __webpack_require__(309);
 
@@ -49038,7 +49057,7 @@ module.exports = AutoFocusUtils;
 
 var CSSProperty = __webpack_require__(101);
 var ExecutionEnvironment = __webpack_require__(9);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 
 var camelizeStyleName = __webpack_require__(288);
 var dangerousStyleValue = __webpack_require__(290);
@@ -49716,7 +49735,7 @@ var _prodInvariant = __webpack_require__(5),
 var DOMPropertyOperations = __webpack_require__(102);
 var LinkedValueUtils = __webpack_require__(72);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 
 var invariant = __webpack_require__(3);
 var warning = __webpack_require__(4);
@@ -50128,7 +50147,7 @@ var _prodInvariant = __webpack_require__(5),
 
 var LinkedValueUtils = __webpack_require__(72);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 
 var invariant = __webpack_require__(3);
 var warning = __webpack_require__(4);
@@ -50293,9 +50312,9 @@ var _prodInvariant = __webpack_require__(5);
 
 var ReactComponentEnvironment = __webpack_require__(73);
 var ReactInstanceMap = __webpack_require__(42);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var ReactReconciler = __webpack_require__(34);
 var ReactChildReconciler = __webpack_require__(301);
 
@@ -50910,10 +50929,10 @@ var _prodInvariant = __webpack_require__(5),
 
 var React = __webpack_require__(32);
 var ReactComponentEnvironment = __webpack_require__(73);
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var ReactErrorUtils = __webpack_require__(65);
 var ReactInstanceMap = __webpack_require__(42);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 var ReactNodeTypes = __webpack_require__(106);
 var ReactReconciler = __webpack_require__(34);
 
@@ -52118,9 +52137,9 @@ module.exports = flattenChildren;
 
 var _assign = __webpack_require__(6);
 
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 var Transaction = __webpack_require__(48);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 var ReactServerUpdateQueue = __webpack_require__(310);
 
 /**
@@ -52736,7 +52755,7 @@ module.exports = ReactDOMTextComponent;
 
 var _assign = __webpack_require__(6);
 
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 var Transaction = __webpack_require__(48);
 
 var emptyFunction = __webpack_require__(13);
@@ -52811,9 +52830,9 @@ var _assign = __webpack_require__(6);
 
 var EventListener = __webpack_require__(110);
 var ExecutionEnvironment = __webpack_require__(9);
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 var ReactDOMComponentTree = __webpack_require__(8);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 
 var getEventTarget = __webpack_require__(66);
 var getUnboundedScrollPosition = __webpack_require__(316);
@@ -53011,14 +53030,14 @@ module.exports = getUnboundedScrollPosition;
 
 
 
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var EventPluginHub = __webpack_require__(40);
 var EventPluginUtils = __webpack_require__(64);
 var ReactComponentEnvironment = __webpack_require__(73);
 var ReactEmptyComponent = __webpack_require__(107);
 var ReactBrowserEventEmitter = __webpack_require__(52);
 var ReactHostComponent = __webpack_require__(108);
-var ReactUpdates = __webpack_require__(19);
+var ReactUpdates = __webpack_require__(20);
 
 var ReactInjection = {
   Component: ReactComponentEnvironment.injection,
@@ -53053,10 +53072,10 @@ module.exports = ReactInjection;
 var _assign = __webpack_require__(6);
 
 var CallbackQueue = __webpack_require__(95);
-var PooledClass = __webpack_require__(27);
+var PooledClass = __webpack_require__(28);
 var ReactBrowserEventEmitter = __webpack_require__(52);
 var ReactInputSelection = __webpack_require__(111);
-var ReactInstrumentation = __webpack_require__(15);
+var ReactInstrumentation = __webpack_require__(16);
 var Transaction = __webpack_require__(48);
 var ReactUpdateQueue = __webpack_require__(77);
 
@@ -53946,7 +53965,7 @@ var EventPropagators = __webpack_require__(39);
 var ExecutionEnvironment = __webpack_require__(9);
 var ReactDOMComponentTree = __webpack_require__(8);
 var ReactInputSelection = __webpack_require__(111);
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 var getActiveElement = __webpack_require__(112);
 var isTextInputElement = __webpack_require__(97);
@@ -54146,7 +54165,7 @@ var EventPropagators = __webpack_require__(39);
 var ReactDOMComponentTree = __webpack_require__(8);
 var SyntheticAnimationEvent = __webpack_require__(327);
 var SyntheticClipboardEvent = __webpack_require__(328);
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 var SyntheticFocusEvent = __webpack_require__(329);
 var SyntheticKeyboardEvent = __webpack_require__(330);
 var SyntheticMouseEvent = __webpack_require__(49);
@@ -54372,7 +54391,7 @@ module.exports = SimpleEventPlugin;
 
 
 
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 /**
  * @interface Event
@@ -54416,7 +54435,7 @@ module.exports = SyntheticAnimationEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 /**
  * @interface Event
@@ -54787,7 +54806,7 @@ module.exports = SyntheticTouchEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(20);
+var SyntheticEvent = __webpack_require__(21);
 
 /**
  * @interface Event
@@ -55078,7 +55097,7 @@ module.exports = '15.4.2';
 
 var _prodInvariant = __webpack_require__(5);
 
-var ReactCurrentOwner = __webpack_require__(18);
+var ReactCurrentOwner = __webpack_require__(19);
 var ReactDOMComponentTree = __webpack_require__(8);
 var ReactInstanceMap = __webpack_require__(42);
 
@@ -55163,7 +55182,7 @@ module.exports = ReactMount.renderSubtreeIntoContainer;
 
 
 
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var EventPluginRegistry = __webpack_require__(47);
 var ReactComponentTreeHook = __webpack_require__(14);
 
@@ -55330,7 +55349,7 @@ module.exports = ReactDOMNullInputValuePropHook;
 
 
 
-var DOMProperty = __webpack_require__(22);
+var DOMProperty = __webpack_require__(23);
 var ReactComponentTreeHook = __webpack_require__(14);
 
 var warning = __webpack_require__(4);
@@ -55424,7 +55443,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.csrfSafeMethod = exports.getCookie = undefined;
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
@@ -56188,7 +56207,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _warning = __webpack_require__(29);
+var _warning = __webpack_require__(30);
 
 var _warning2 = _interopRequireDefault(_warning);
 
@@ -56683,7 +56702,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _warning = __webpack_require__(29);
+var _warning = __webpack_require__(30);
 
 var _warning2 = _interopRequireDefault(_warning);
 
@@ -57644,7 +57663,7 @@ StaticRouter.childContextTypes = {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_prop_types__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_warning__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_warning__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_warning___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_warning__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__matchPath__ = __webpack_require__(84);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -57893,7 +57912,7 @@ exports.__esModule = true;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _warning = __webpack_require__(29);
+var _warning = __webpack_require__(30);
 
 var _warning2 = _interopRequireDefault(_warning);
 
@@ -58669,11 +58688,11 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _reactRouterDom = __webpack_require__(28);
+var _reactRouterDom = __webpack_require__(29);
 
 var _InventoryDetail = __webpack_require__(53);
 
@@ -58681,15 +58700,15 @@ var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
 
 var _Inputs = __webpack_require__(56);
 
-var _APIManager = __webpack_require__(23);
+var _APIManager = __webpack_require__(25);
 
-var _Task = __webpack_require__(30);
+var _Task = __webpack_require__(24);
 
 var _moment = __webpack_require__(0);
 
 var _moment2 = _interopRequireDefault(_moment);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
@@ -59296,7 +59315,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -65088,7 +65107,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
@@ -65096,9 +65115,9 @@ var _reactSelect = __webpack_require__(37);
 
 var _reactSelect2 = _interopRequireDefault(_reactSelect);
 
-var _Task = __webpack_require__(30);
+var _Task = __webpack_require__(24);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
@@ -65106,7 +65125,7 @@ var _qr = __webpack_require__(58);
 
 var _Label = __webpack_require__(247);
 
-var _APIManager = __webpack_require__(23);
+var _APIManager = __webpack_require__(25);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -65492,11 +65511,11 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(26);
+var _reactDom = __webpack_require__(22);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _reactRouterDom = __webpack_require__(28);
+var _reactRouterDom = __webpack_require__(29);
 
 var _dropdown = __webpack_require__(85);
 
@@ -65693,7 +65712,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jquery = __webpack_require__(16);
+var _jquery = __webpack_require__(15);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
@@ -65701,15 +65720,15 @@ var _moment = __webpack_require__(0);
 
 var _moment2 = _interopRequireDefault(_moment);
 
-var _reactDraggable = __webpack_require__(430);
+var _reactDraggable = __webpack_require__(423);
 
 var _reactDraggable2 = _interopRequireDefault(_reactDraggable);
 
-var _immutabilityHelper = __webpack_require__(21);
+var _immutabilityHelper = __webpack_require__(18);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-var _Task = __webpack_require__(30);
+var _Task = __webpack_require__(24);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66181,2210 +66200,9 @@ function width(p) {
 /* 423 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _jquery = __webpack_require__(16);
-
-var _jquery2 = _interopRequireDefault(_jquery);
-
-var _reactSelect = __webpack_require__(37);
-
-var _reactSelect2 = _interopRequireDefault(_reactSelect);
-
-var _Task = __webpack_require__(30);
-
-var _immutabilityHelper = __webpack_require__(21);
-
-var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-var _qr = __webpack_require__(58);
-
-var _Label = __webpack_require__(247);
-
-var _APIManager = __webpack_require__(23);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var getOptions = function getOptions(input, callback) {
-  if (input.length < 2) {
-    callback(null, { optionss: [] });
-  } else {
-    var params = {
-      limit: true,
-      ordering: '-created_at',
-      label: input,
-      team: window.localStorage.getItem("team") || "1"
-    };
-    _jquery2.default.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
-      console.log(data);
-      var options = data.results.map(function (x) {
-        return { value: x.id, label: x.display, data: x };
-      });
-      callback(null, { options: options, complete: false });
-    });
-  }
-};
-
-var TaskSelect = function (_React$Component) {
-  _inherits(TaskSelect, _React$Component);
-
-  function TaskSelect() {
-    _classCallCheck(this, TaskSelect);
-
-    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
-  }
-
-  _createClass(TaskSelect, [{
-    key: 'render',
-    value: function render() {
-      return _react2.default.createElement(
-        'div',
-        { className: 'multiselect' },
-        _react2.default.createElement(_reactSelect2.default.Async, {
-          name: 'form-field-name',
-          value: this.props.value,
-          optionRenderer: function optionRenderer(option, i) {
-            return option.label;
-          },
-          loadOptions: getOptions,
-          onChange: this.props.onChange,
-          placeholder: this.props.placeholder
-        })
-      );
-    }
-  }]);
-
-  return TaskSelect;
-}(_react2.default.Component);
-
-var LabelPrinter = function (_React$Component2) {
-  _inherits(LabelPrinter, _React$Component2);
-
-  function LabelPrinter(props) {
-    _classCallCheck(this, LabelPrinter);
-
-    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
-
-    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
-    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
-    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
-    _this2.handleChange = _this2.handleChange.bind(_this2);
-    _this2.handlePrint = _this2.handlePrint.bind(_this2);
-    _this2.state = {
-      expanded: false,
-      numberLabels: "",
-      notes: "",
-      task: "",
-      qrValue: "",
-      items: [],
-      selectedItem: ""
-    };
-    return _this2;
-  }
-
-  _createClass(LabelPrinter, [{
-    key: 'componentWillMount',
-    value: function componentWillMount() {
-      (0, _qr.mountQR)();
-    }
-  }, {
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      var q = new QRCode(document.getElementById("qrtest"), {
-        text: "",
-        width: 128,
-        height: 128,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.Q
-      });
-      this.setState({ qrcode: q });
-    }
-  }, {
-    key: 'handlePrint',
-    value: function handlePrint() {
-      var numLabels = parseInt(this.state.numberLabels) || -1;
-
-      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
-        alert("Please enter a valid number between 0 and 100!");
-        return;
-      }
-
-      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
-        alert("Please print labels for a valid task.");
-        return;
-      }
-
-      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
-        alert("Please choose a valid specific item to reprint.");
-        return;
-      }
-
-      this.setState({ disabled: true });
-
-      if (this.state.expanded) {
-        var uuid = this.state.selectedItem.data.item_qr;
-        (0, _qr.printQRs_dymo)([uuid], this.state.qrcode);
-        this.setState({ disabled: false });
-        return;
-      }
-
-      var thisObj = this;
-      _jquery2.default.ajax({
-        url: "../../../qr/codes/",
-        data: { count: numLabels }
-      }).done(function (data) {
-        var uuids = data.split(/\s+/);
-        (0, _qr.printQRs_dymo)(data.split(/\s+/), thisObj.state.qrcode);
-      }).always(function () {
-        thisObj.setState({ disabled: false });
-      });
-    }
-  }, {
-    key: 'handleChange',
-    value: function handleChange(which, payload) {
-      this.setState(_defineProperty({}, which, payload));
-    }
-  }, {
-    key: 'handleExpandClick',
-    value: function handleExpandClick() {
-      var ns = {
-        expanded: !this.state.expanded,
-        numberLabels: "",
-        notes: "",
-        task: "",
-        qrValue: "",
-        items: [],
-        selectedItem: ""
-      };
-      this.setState(ns);
-    }
-  }, {
-    key: 'handleTaskChange',
-    value: function handleTaskChange(value) {
-      var v;
-      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
-
-      this.setState({
-        task: v,
-        items: [],
-        selectedItem: "" });
-
-      console.log(v);
-
-      if (this.state.expanded) {
-        var url = window.location.origin + "/ics/tasks/" + v.value;
-        var component = this;
-        (0, _APIManager.fetch)(url, {}).done(function (data) {
-          component.reloadItems(data);
-        });
-        //component.reloadItems(v.data) 
-      }
-    }
-  }, {
-    key: 'handleItemChange',
-    value: function handleItemChange(value) {
-      this.state.qrcode.clear();
-      var v;
-      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
-
-      console.log("hello");
-      console.log(v);
-
-      if (v) {
-        this.state.qrcode.makeCode(v);
-      }
-      this.setState({ selectedItem: v });
-    }
-  }, {
-    key: 'reloadItems',
-    value: function reloadItems(task) {
-      var options = {};
-      if (task.items) {
-        options = task.items.map(function (x) {
-          return { id: x.id, label: getQR(x), data: x };
-        });
-      }
-      this.setState({ items: options });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this3 = this;
-
-      return _react2.default.createElement(
-        'div',
-        { className: 'labelPrinter' },
-        _react2.default.createElement(
-          'div',
-          { className: 'marginer' },
-          _react2.default.createElement(
-            'div',
-            { className: 'stuff' },
-            _react2.default.createElement(
-              'div',
-              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
-              _react2.default.createElement(
-                'h2',
-                null,
-                ' Print me some labels - Dymo'
-              ),
-              _react2.default.createElement(
-                'span',
-                { className: 'inputLabel' },
-                'Number of labels'
-              ),
-              _react2.default.createElement('input', { type: 'text',
-                placeholder: 'eg. 20',
-                style: { width: "100%" },
-                value: this.state.numberLabels,
-                onChange: function onChange(e) {
-                  return _this3.handleChange("numberLabels", e.target.value);
-                }
-              }),
-              _react2.default.createElement(
-                'span',
-                { className: 'inputLabel' },
-                'Task'
-              ),
-              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
-              _react2.default.createElement(
-                'span',
-                { className: 'inputLabel' },
-                'Extra notes'
-              ),
-              _react2.default.createElement('input', { type: 'text',
-                placeholder: 'max 20 characters',
-                style: { width: "100%" },
-                value: this.state.notes,
-                onChange: function onChange(e) {
-                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
-                }
-              }),
-              _react2.default.createElement(
-                'button',
-                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
-                ' ',
-                this.state.disabled ? "Printing..." : "Print!",
-                ' '
-              ),
-              _react2.default.createElement(
-                'button',
-                { className: 'expandReprint', onClick: this.handleExpandClick },
-                _react2.default.createElement(
-                  'span',
-                  null,
-                  'I need to reprint a label'
-                )
-              )
-            ),
-            _react2.default.createElement(
-              'div',
-              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
-              _react2.default.createElement(
-                'button',
-                { className: 'expandReprint', onClick: this.handleExpandClick },
-                _react2.default.createElement(
-                  'i',
-                  { className: 'material-icons' },
-                  'arrow_back'
-                ),
-                _react2.default.createElement(
-                  'span',
-                  null,
-                  'Back to regular printing'
-                )
-              ),
-              _react2.default.createElement(
-                'span',
-                { className: 'inputLabel' },
-                'Task'
-              ),
-              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
-              _react2.default.createElement(
-                'span',
-                { className: 'inputLabel' },
-                'Item'
-              ),
-              _react2.default.createElement(_reactSelect2.default, { className: 'select',
-                name: 'item-select',
-                placeholder: 'Choose an item',
-                options: this.state.items,
-                valueKey: 'id',
-                value: this.state.selectedItem,
-                onChange: this.handleItemChange
-              }),
-              _react2.default.createElement(
-                'button',
-                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
-                ' ',
-                this.state.disabled ? "Printing..." : "Print!",
-                '  '
-              )
-            )
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'playground', style: { position: "relative", margin: "20px" } },
-            _react2.default.createElement(_Label.Label, { taskLabel: short(this.state.task.label),
-              taskLabelLong: this.state.task.label,
-              originLabel: getCode(this.state.task.label || ""),
-              notesLabel: this.state.expanded ? "" : this.state.notes
-            }),
-            _react2.default.createElement(
-              'div',
-              { id: 'canvastest' },
-              _react2.default.createElement('canvas', { height: '241', width: '431' })
-            ),
-            _react2.default.createElement('div', { id: 'qrtest' }),
-            _react2.default.createElement('div', { id: 'blocker' })
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'trouble' },
-            _react2.default.createElement('hr', null),
-            _react2.default.createElement(
-              'h6',
-              null,
-              ' Troubleshooting '
-            ),
-            _react2.default.createElement(
-              'p',
-              null,
-              ' You need to run the Dymo toolbar app to make this work.'
-            ),
-            _react2.default.createElement(
-              'ul',
-              null,
-              _react2.default.createElement(
-                'li',
-                null,
-                'Find the little ',
-                _react2.default.createElement(
-                  'b',
-                  null,
-                  'Dymo icon on the top toolbar'
-                ),
-                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
-              ),
-              _react2.default.createElement(
-                'li',
-                null,
-                'If you can\'t find the Dymo Service icon, open ',
-                _react2.default.createElement(
-                  'b',
-                  null,
-                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
-                ),
-                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
-              ),
-              _react2.default.createElement(
-                'li',
-                null,
-                'If that folder doesn\'t exist, make sure you have the latest version of the ',
-                _react2.default.createElement(
-                  'a',
-                  { href: '' },
-                  'dymo software installed.'
-                ),
-                ' Once you do, you should have that folder. '
-              ),
-              _react2.default.createElement(
-                'li',
-                null,
-                'If you\'re still having problems, tell whoever is running the site!'
-              ),
-              _react2.default.createElement('hr', null),
-              _react2.default.createElement(
-                'li',
-                null,
-                ' (If you are the person running the site, check the ',
-                _react2.default.createElement(
-                  'a',
-                  { href: '' },
-                  ' Dymo developers blog'
-                ),
-                ' because that\'s the only place they document...)'
-              )
-            )
-          )
-        )
-      );
-    }
-  }]);
-
-  return LabelPrinter;
-}(_react2.default.Component);
-
-exports.default = LabelPrinter;
-
-
-function short(str) {
-  if (!str) return "";
-  var codes = str.split('-');
-  if (codes.length > 2) {
-    codes.splice(1, 1);
-  }
-  return codes.join('-');
-}
-
-function getCode(str) {
-  var codes = str.split('-');
-  if (codes[1]) return codes[1];
-  return str;
-}
-
-function getQR(item) {
-  if (item && item.item_qr) {
-    var len = item.item_qr.length;
-    return item.item_qr.substr(len - 6, len);
-  }
-  return "";
-}
-
-/***/ }),
-/* 424 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _jquery = __webpack_require__(16);
-
-var _jquery2 = _interopRequireDefault(_jquery);
-
-var _reactRouterDom = __webpack_require__(28);
-
-var _InventoryDetail = __webpack_require__(53);
-
-var _Inputs = __webpack_require__(56);
-
-var _APIManager = __webpack_require__(23);
-
-var _Loading = __webpack_require__(54);
-
-var _Loading2 = _interopRequireDefault(_Loading);
-
-var _immutabilityHelper = __webpack_require__(21);
-
-var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Inventory = function (_React$Component) {
-  _inherits(Inventory, _React$Component);
-
-  function Inventory(props) {
-    _classCallCheck(this, Inventory);
-
-    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
-
-    _this.handleProductFilter = _this.handleProductFilter.bind(_this);
-    _this.latestRequestID = -1;
-    _this.state = {
-      processes: [],
-      products: [],
-      loading: false,
-      selected: -1,
-      productFilter: [],
-      productFilterStr: ""
-    };
-    return _this;
-  }
-
-  _createClass(Inventory, [{
-    key: 'getProcessesForInventory',
-    value: function getProcessesForInventory() {
-      this.setState({ loading: true });
-
-      var url = window.location.origin + "/ics/inventory/";
-
-      var params = {};
-      if (this.state.productFilter.length > 0) params = { products: this.state.productFilterStr };
-
-      console.log(params);
-
-      var component = this;
-      var rid = (0, _APIManager.requestID)();
-      this.latestRequestID = rid;
-
-      (0, _APIManager.fetch)(url, params).done(function (data) {
-        if (component.latestRequestID == rid) component.setState({ processes: data });
-      }).always(function () {
-        if (component.latestRequestID == rid) component.setState({ loading: false });
-      });
-    }
-  }, {
-    key: 'getProductsForInventory',
-    value: function getProductsForInventory() {
-      var component = this;
-      var url = window.location.origin + "/ics/products/codes/";
-      _jquery2.default.get(url).done(function (data) {
-        var mappedProducts = data.map(function (product, i) {
-          return { value: product.id, label: product.name };
-        });
-        component.setState({ products: data });
-      });
-    }
-  }, {
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      this.getProcessesForInventory();
-      this.getProductsForInventory();
-    }
-  }, {
-    key: 'handleProductFilter',
-    value: function handleProductFilter(which, val) {
-      var _setState;
-
-      var component = this;
-      var valStr = val.map(function (v, i) {
-        return v.code;
-      }).join();
-      this.setState((_setState = {}, _defineProperty(_setState, which, val), _defineProperty(_setState, 'productFilterStr', valStr), _setState), function () {
-        component.getProcessesForInventory();
-      });
-    }
-  }, {
-    key: 'getSelectedProcess',
-    value: function getSelectedProcess() {
-      var a = this.state.processes.find(function (x) {
-        return x.process_id == this.props.match.params.id;
-      }, this);
-      return a;
-    }
-  }, {
-    key: 'handleDelivery',
-    value: function handleDelivery(selectedCount) {
-      var processIndex = 0;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.state.processes.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _ref = _step.value;
-
-          var _ref2 = _slicedToArray(_ref, 2);
-
-          var index = _ref2[0];
-          var process = _ref2[1];
-
-          if (process.process_id == this.props.match.params.id) {
-            processIndex = index;
-            break;
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      var newProcesses = (0, _immutabilityHelper2.default)(this.state.processes, _defineProperty({}, processIndex, {
-        count: {
-          $apply: function $apply(c) {
-            return c - selectedCount;
-          }
-        }
-      }));
-
-      this.setState({ processes: newProcesses });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var props = this.props;
-
-      var contentArea = _react2.default.createElement(InventoryList, { processes: this.state.processes, selected: props.match.params.id });
-      if (this.state.loading) {
-        contentArea = _react2.default.createElement(_Loading2.default, null);
-      } else if (!this.state.processes || this.state.processes.length == 0) {
-        contentArea = _react2.default.createElement(_APIManager.ZeroState, { filtered: this.state.productFilter && this.state.productFilter.length });
-      }
-
-      return _react2.default.createElement(
-        'div',
-        { className: 'inventory' },
-        _react2.default.createElement(
-          'div',
-          { className: "page inventory-list " + (props.match.params.id ? "smallDetail" : "") },
-          _react2.default.createElement(
-            'div',
-            { className: 'inventory-header page-header' },
-            _react2.default.createElement(
-              'h2',
-              null,
-              'Inventory'
-            ),
-            _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter })
-          ),
-          contentArea
-        ),
-        _react2.default.createElement(_InventoryDetail.InventoryDetail, _extends({}, this.getSelectedProcess(), {
-          filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null,
-          match: props.match,
-          showDetail: props.match.params.id,
-          onDelivery: this.handleDelivery.bind(this)
-        }))
-      );
-    }
-  }]);
-
-  return Inventory;
-}(_react2.default.Component);
-
-exports.default = Inventory;
-
-
-function InventoryList(props) {
-  return _react2.default.createElement(
-    'div',
-    null,
-    _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
-    props.processes.map(function (process, i) {
-      return _react2.default.createElement(
-        _reactRouterDom.Link,
-        { key: i, to: "/dashboard/inventory/" + process.process_id },
-        _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.selected }, process))
-      );
-    }, this)
-  );
-}
-
-function InventoryItem(props) {
-  var teamStyle = { color: "rgba(0,0,0,0.3", paddingLeft: "4px", fontSize: "10px" };
-  var currTeam = window.localStorage.getItem("team") || "1";
-  teamStyle["display"] = currTeam == props.team_id ? "none" : "";
-  return _react2.default.createElement(
-    'div',
-    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
-    _react2.default.createElement(
-      'div',
-      { className: 'i-outputdesc' },
-      _react2.default.createElement(
-        'span',
-        null,
-        props.output_desc.sentenceCase()
-      ),
-      _react2.default.createElement(
-        'span',
-        { style: teamStyle },
-        props.team
-      )
-    ),
-    _react2.default.createElement(
-      'div',
-      { className: 'i-count' },
-      _react2.default.createElement(
-        'span',
-        null,
-        props.count
-      )
-    ),
-    _react2.default.createElement(
-      'div',
-      { className: 'i-unit' },
-      _react2.default.createElement(
-        'span',
-        null,
-        props.unit.sentenceCase() + "s"
-      )
-    ),
-    _react2.default.createElement(
-      'div',
-      { className: 'i-date' },
-      _react2.default.createElement(
-        'span',
-        null,
-        props.date
-      )
-    )
-  );
-}
-
-function isHeader(props) {
-  return props.header == true ? "inventoryClass-header" : "";
-}
-
-function isSelected(props) {
-  if (isHeader(props)) return false;
-  return props.process_id == props.selected ? "selected" : "";
-}
-
-String.prototype.sentenceCase = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1);
-};
-
-/***/ }),
-/* 425 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _jquery = __webpack_require__(16);
-
-var _jquery2 = _interopRequireDefault(_jquery);
-
-var _reactRouterDom = __webpack_require__(28);
-
-var _InventoryDetail = __webpack_require__(53);
-
-var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
-
-var _Inputs = __webpack_require__(56);
-
-var _APIManager = __webpack_require__(23);
-
-var _Task = __webpack_require__(30);
-
-var _moment = __webpack_require__(0);
-
-var _moment2 = _interopRequireDefault(_moment);
-
-var _immutabilityHelper = __webpack_require__(21);
-
-var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-var _qr = __webpack_require__(58);
-
-var _Dialog = __webpack_require__(55);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var dialogs = {
-  deleteTask: {
-    title: "Are you sure you want to delete this task?",
-    text: "You can't undo this action.",
-    okText: "Yes, I'm sure"
-  }
-};
-
-var Task = function (_React$Component) {
-  _inherits(Task, _React$Component);
-
-  function Task(props) {
-    _classCallCheck(this, Task);
-
-    var _this = _possibleConstructorReturn(this, (Task.__proto__ || Object.getPrototypeOf(Task)).call(this, props));
-
-    _this.state = {
-      task: {},
-      ancestors: [],
-      descendents: [],
-      attributes: [],
-      loading: true,
-      ancestorsLoading: true,
-      descendentsLoading: true,
-      activeDialog: dialogs.deleteTask,
-      showDialog: false,
-      qrcode: null
-    };
-    return _this;
-  }
-
-  _createClass(Task, [{
-    key: 'componentWillMount',
-    value: function componentWillMount() {
-      //mountQR()
-    }
-  }, {
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      // let q = new QRCode(document.getElementById("qrtest"), {
-      //   text: "",
-      //   width: 128,
-      //   height: 128,
-      //   colorDark : "#000000",
-      //   colorLight : "#ffffff",
-      //   correctLevel : QRCode.CorrectLevel.Q
-      // })
-      // this.setState({qrcode: q})
-      this.getTask();
-      this.getAncestors();
-      this.getDescendents();
-    }
-  }, {
-    key: 'getTask',
-    value: function getTask() {
-      if (!this.props.match.params.id) {
-        return;
-      }
-      this.setState({ loading: true });
-      var id = this.props.match.params.id;
-      var url = window.location.origin + "/ics/tasks/" + id + "/";
-      var component = this;
-      (0, _APIManager.fetch)(url, {}).done(function (data) {
-        var attrs = component.organizeAttributes(data);
-        component.setState({ task: data, attributes: attrs });
-      }).always(function () {
-        component.setState({ loading: false });
-      });
-    }
-  }, {
-    key: 'getAncestors',
-    value: function getAncestors() {
-      this.setState({ ancestorsLoading: true });
-      var id = this.props.match.params.id || 0;
-      var url = window.location.origin + "/ics/tasks/";
-      var params = { child: this.props.match.params.id };
-      var component = this;
-      (0, _APIManager.fetch)(url, params).done(function (data) {
-        component.setState({ ancestors: data });
-      }).always(function (data) {
-        component.setState({ ancestorsLoading: false });
-      });
-    }
-  }, {
-    key: 'getDescendents',
-    value: function getDescendents() {
-      this.setState({ descendentsLoading: true });
-      var id = this.props.match.params.id || 0;
-      var url = window.location.origin + "/ics/tasks/";
-      var params = { parent: this.props.match.params.id };
-      var component = this;
-      (0, _APIManager.fetch)(url, params).done(function (data) {
-        component.setState({ descendents: data });
-      }).always(function (data) {
-        component.setState({ descendentsLoading: false });
-      });
-    }
-  }, {
-    key: 'markAsUsed',
-    value: function markAsUsed(index, id) {
-      var component = this;
-      var url = '/ics/movements/create/';
-      var team = window.localStorage.getItem("team") || "1";
-
-      var params = {
-        status: "RC",
-        origin: team,
-        destination: null,
-        notes: "MARK AS USED",
-        items: [{ item: '' + id }]
-      };
-
-      (0, _APIManager.post)(url, JSON.stringify(params)).done(function (data) {
-        var newObj = (0, _immutabilityHelper2.default)(component.state.task, {
-          items: _defineProperty({}, index, {
-            $merge: { is_used: true }
-          })
-        });
-        component.setState({ task: newObj });
-      }).fail(function (req, err) {
-        alert('Couldn\'t mark the item with QR ' + qr.substring(qr.length - 6) + ' as used. :( \n ' + err);
-      });
-    }
-  }, {
-    key: 'printQR',
-    value: function printQR(index, id) {
-      var qr = this.state.task.items[index].item_qr;
-      (0, _qr.printQRs)([qr], this.state.qr);
-    }
-  }, {
-    key: 'handleSearch',
-    value: function handleSearch(val) {
-      console.log(val);
-      if (val.value && val.value != parseInt(this.props.match.params.id)) {
-        console.log("yay");
-        window.location.href = window.location.origin + "/dashboard/task/" + val.value;
-      }
-    }
-  }, {
-    key: 'organizeAttributes',
-    value: function organizeAttributes(taskData) {
-      var attributes = taskData.process_type.attributes;
-      var values = taskData.attribute_values;
-      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.created_at).format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.updated_at).format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
-
-      attributes.map(function (attr, i) {
-        var val = values.find(function (e) {
-          return e.attribute == attr.id;
-        });
-        organized.push({ attribute: attr.id, value: val ? val.value : "", name: attr.name, editable: true });
-      });
-
-      organized.push({ attribute: -1, value: pl(taskData.inputs.length, taskData.inputUnit), name: "# INPUTS", editable: false });
-      organized.push({ attribute: -1, value: pl(taskData.items.length, taskData.process_type.unit), name: "# OUTPUTS", editable: false });
-
-      return organized;
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this2 = this;
-
-      if (!this.state.task || !Object.values(this.state.task).length) {
-        return _react2.default.createElement(
-          'div',
-          { className: 'task-detail' },
-          _react2.default.createElement(_Inputs.TaskSelect, { placeholder: 'Search for a task', onChange: this.handleSearch.bind(this) })
-        );
-      }
-
-      var dialog = false;
-      if (this.state.showDialog) {
-        dialog = _react2.default.createElement(_Dialog.Dialog, this.state.activeDialog);
-      }
-
-      return _react2.default.createElement(
-        'div',
-        { className: 'task-detail' },
-        dialog,
-        _react2.default.createElement(_Inputs.TaskSelect, { placeholder: 'Search for a task', onChange: this.handleSearch.bind(this) }),
-        _react2.default.createElement(
-          'div',
-          { className: 'task-header' },
-          _react2.default.createElement(
-            'div',
-            { className: 'header-left' },
-            _react2.default.createElement('img', { src: (0, _Task.icon)(this.state.task.process_type.icon) }),
-            _react2.default.createElement(
-              'span',
-              null,
-              this.state.task.display
-            )
-          ),
-          _react2.default.createElement(
-            'span',
-            null,
-            (0, _moment2.default)(this.state.task.created_at).format('dddd, MMMM Do YYYY, h:mm a')
-          )
-        ),
-        _react2.default.createElement(
-          'div',
-          { className: 'task-content' },
-          _react2.default.createElement(
-            'div',
-            null,
-            _react2.default.createElement(InformationTable, { attributes: this.state.attributes }),
-            _react2.default.createElement(
-              'button',
-              { className: 'task_button', onClick: function onClick() {
-                  return _this2.showDialog(dialogs.deleteTask, _this2.closeTask);
-                } },
-              'Close Task'
-            ),
-            _react2.default.createElement(
-              'button',
-              { className: 'task_button' },
-              'Toggle flag'
-            ),
-            _react2.default.createElement(
-              'button',
-              { className: 'task_button' },
-              'Delete Task'
-            )
-          ),
-          _react2.default.createElement(
-            'div',
-            null,
-            _react2.default.createElement(InputTable, { inputs: this.state.task.inputs }),
-            _react2.default.createElement(OutputTable, { outputs: this.state.task.items, onMark: this.markAsUsed.bind(this) }),
-            _react2.default.createElement(TaskTable, { title: 'Ancestors', tasks: this.state.ancestors, loading: this.state.ancestorsLoading }),
-            _react2.default.createElement(TaskTable, { title: 'Descendents', tasks: this.state.descendents, loading: this.state.descendentsLoading })
-          )
-        )
-      );
-    }
-  }]);
-
-  return Task;
-}(_react2.default.Component);
-
-exports.default = Task;
-
-
-function TaskTable(props) {
-  return _react2.default.createElement(
-    Table,
-    { title: props.title },
-    props.tasks.map(function (task, i) {
-      return _react2.default.createElement(
-        'a',
-        {
-          href: window.location.origin + "/dashboard/task/" + task.id,
-          target: '_blank', key: i,
-          className: 'task-attribute-table-row input-table-row'
-        },
-        _react2.default.createElement(
-          'span',
-          { className: 'task-row-header' },
-          _react2.default.createElement('img', { src: (0, _Task.icon)(task.process_type.icon) }),
-          task.display,
-          _react2.default.createElement(
-            'i',
-            { className: 'material-icons expand-i' },
-            'open_in_new'
-          )
-        ),
-        _react2.default.createElement('span', { className: '' })
-      );
-    })
-  );
-}
-
-function InformationTable(props) {
-  return _react2.default.createElement(
-    Table,
-    null,
-    props.attributes.map(function (attr, i) {
-      var isEmpty = attr.value == "";
-      return _react2.default.createElement(
-        'div',
-        { key: i, className: 'task-attribute-table-row' },
-        _react2.default.createElement(
-          'span',
-          { className: 'information-table-title' },
-          attr.name
-        ),
-        _react2.default.createElement(
-          'span',
-          { className: "information-table-answer " + (isEmpty ? "empty-answer" : "") },
-          isEmpty ? "n/a" : attr.value
-        )
-      );
-    })
-  );
-}
-
-function OutputTable(props) {
-  var team = window.localStorage.getItem("team") || "1";
-  return _react2.default.createElement(
-    Table,
-    { title: 'Outputs (' + (props.outputs || []).length + ')' },
-    (props.outputs || []).map(function (item, i) {
-      var isInInventory = !item.is_used && item.inventory && item.inventory.toString() == team;
-      var inventory = false;
-      var markAsUsed = false;
-      if (isInInventory) {
-        inventory = _react2.default.createElement(
-          'span',
-          { className: 'items-inventory' },
-          _react2.default.createElement('div', { className: 'inv-circle' }),
-          'Inventory'
-        );
-        markAsUsed = _react2.default.createElement(
-          'button',
-          { className: 'small-mark-button', onClick: function onClick() {
-              return props.onMark(i, item.id);
-            } },
-          'MARK AS USED'
-        );
-      }
-      return _react2.default.createElement(
-        'div',
-        { key: item.id, className: 'task-attribute-table-row output-table-row' },
-        _react2.default.createElement(
-          'span',
-          { className: 'items-qr' },
-          _react2.default.createElement(
-            'i',
-            { className: 'material-icons' },
-            'select_all'
-          ),
-          subs(item.item_qr),
-          _react2.default.createElement(
-            'button',
-            { style: { display: "none" }, className: 'small-print-button' },
-            'PRINT'
-          ),
-          markAsUsed
-        ),
-        _react2.default.createElement(
-          'span',
-          { className: 'items-inventory' },
-          inventory
-        )
-      );
-    })
-  );
-}
-
-function InputTable(props) {
-  var grouped = {};
-  (props.inputs || []).map(function (input, i) {
-    if (grouped[input.input_task]) {
-      grouped[input.input_task].push(input);
-    } else {
-      grouped[input.input_task] = [input];
-    }
-  });
-  return _react2.default.createElement(
-    Table,
-    { title: 'Inputs (' + (props.inputs || []).length + ')' },
-    Object.values(grouped).map(function (group, i) {
-      return _react2.default.createElement(
-        'a',
-        { href: window.location.origin + "/dashboard/task/" + group[0].input_task,
-          target: '_blank', key: i,
-          className: 'task-attribute-table-row input-table-row'
-        },
-        _react2.default.createElement(
-          'span',
-          null,
-          group[0].input_task_display,
-          _react2.default.createElement(
-            'i',
-            { className: 'material-icons expand-i' },
-            'open_in_new'
-          )
-        ),
-        _react2.default.createElement(
-          'span',
-          { className: 'input-count' },
-          pl(group.length, "item")
-        )
-      );
-    })
-  );
-}
-
-function subs(qr) {
-  return qr.substring(qr.length - 6);
-}
-
-function Table(props) {
-  var inside = _react2.default.createElement(
-    'div',
-    { className: 'task-attribute-table-row zero-state zero-state-clean' },
-    ' ',
-    _react2.default.createElement(
-      'span',
-      null,
-      ' Nothing to show here \xAF \\_(\u30C4)_/\xAF '
-    )
-  );
-  if (props.children) {
-    inside = props.children;
-  }
-
-  var header = false;
-  if (props.title) {
-    header = _react2.default.createElement(
-      'div',
-      { className: 'task-attribute-table-row task-attribute-table-row-header' },
-      _react2.default.createElement(
-        'span',
-        null,
-        props.title
-      ),
-      _react2.default.createElement('span', null)
-    );
-  }
-
-  return _react2.default.createElement(
-    'div',
-    { className: 'task-attribute-table' },
-    header,
-    inside
-  );
-}
-
-function pl(count, unit) {
-  if (count) {}
-  if (count == 1) return count + " " + unit;
-  return count + " " + unit + "s";
-}
-
-/***/ }),
-/* 426 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _filterInvalidDomProps = __webpack_require__(427);
-
-var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var ReactImageFallback = function (_Component) {
-	_inherits(ReactImageFallback, _Component);
-
-	function ReactImageFallback(props) {
-		_classCallCheck(this, ReactImageFallback);
-
-		var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ReactImageFallback).call(this, props));
-
-		_this.state = {
-			imageSource: props.initialImage
-		};
-		_this.setDisplayImage = _this.setDisplayImage.bind(_this);
-		return _this;
-	}
-
-	_createClass(ReactImageFallback, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.displayImage = new window.Image();
-			this.setDisplayImage({ image: this.props.src, fallbacks: this.props.fallbackImage });
-		}
-	}, {
-		key: "componentWillReceiveProps",
-		value: function componentWillReceiveProps(nextProps) {
-			if (nextProps.src !== this.props.src) {
-				this.setDisplayImage({ image: nextProps.src, fallbacks: nextProps.fallbackImage });
-			}
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.displayImage.onerror = null;
-			this.displayImage.onload = null;
-			this.displayImage = null;
-		}
-	}, {
-		key: "setDisplayImage",
-		value: function setDisplayImage(_ref) {
-			var _this2 = this;
-
-			var image = _ref.image;
-			var fallbacks = _ref.fallbacks;
-
-			var imagesArray = [image].concat(fallbacks);
-			this.displayImage.onerror = function () {
-				if (imagesArray.length > 2 && typeof imagesArray[1] === "string") {
-					var updatedFallbacks = imagesArray.slice(2);
-					_this2.setDisplayImage({ image: imagesArray[1], fallbacks: updatedFallbacks });
-					return;
-				}
-				_this2.setState({
-					imageSource: imagesArray[1]
-				}, function () {
-					if (_this2.props.onError) {
-						_this2.props.onError(_this2.props.src);
-					}
-				});
-			};
-			this.displayImage.onload = function () {
-				_this2.setState({
-					imageSource: imagesArray[0]
-				}, function () {
-					if (_this2.props.onLoad) {
-						_this2.props.onLoad(imagesArray[0]);
-					}
-				});
-			};
-			this.displayImage.src = imagesArray[0];
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			return typeof this.state.imageSource === "string" ? _react2.default.createElement("img", _extends({}, (0, _filterInvalidDomProps2.default)(this.props), { src: this.state.imageSource })) : this.state.imageSource;
-		}
-	}]);
-
-	return ReactImageFallback;
-}(_react.Component);
-
-exports.default = ReactImageFallback;
-
-ReactImageFallback.displayName = "ReactImageFallback";
-
-ReactImageFallback.propTypes = {
-	src: _react.PropTypes.string.isRequired,
-	fallbackImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element, _react.PropTypes.array]).isRequired,
-	initialImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element]),
-	onLoad: _react.PropTypes.func,
-	onError: _react.PropTypes.func
-};
-
-ReactImageFallback.defaultProps = {
-	initialImage: null
-};
-
-/***/ }),
-/* 427 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.default = filterInvalidDOMProps;
-
-var _htmlAttributes = __webpack_require__(428);
-
-var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var eventProps = {
-	onCopy: true,
-	onCut: true,
-	onPaste: true,
-	onLoad: true,
-	onError: true,
-	onWheel: true,
-	onScroll: true,
-	onCompositionEnd: true,
-	onCompositionStart: true,
-	onCompositionUpdate: true,
-	onKeyDown: true,
-	onKeyPress: true,
-	onKeyUp: true,
-	onFocus: true,
-	onBlur: true,
-	onChange: true,
-	onInput: true,
-	onSubmit: true,
-	onClick: true,
-	onContextMenu: true,
-	onDoubleClick: true,
-	onDrag: true,
-	onDragEnd: true,
-	onDragEnter: true,
-	onDragExit: true,
-	onDragLeave: true,
-	onDragOver: true,
-	onDragStart: true,
-	onDrop: true,
-	onMouseDown: true,
-	onMouseEnter: true,
-	onMouseLeave: true,
-	onMouseMove: true,
-	onMouseOut: true,
-	onMouseOver: true,
-	onMouseUp: true,
-	onSelect: true,
-	onTouchCancel: true,
-	onTouchEnd: true,
-	onTouchMove: true,
-	onTouchStart: true,
-	onAnimationStart: true,
-	onAnimationEnd: true,
-	onAnimationIteration: true,
-	onTransitionEnd: true
-};
-
-function isValidDOMProp(prop) {
-	return eventProps[prop] || _htmlAttributes2.default[prop];
-}
-
-function filterInvalidDOMProps(props) {
-	var domProps = {};
-	for (var prop in props) {
-		if (props.hasOwnProperty(prop) && isValidDOMProp(prop)) {
-			domProps[prop] = props[prop];
-		}
-	}
-	return domProps;
-}
-
-/***/ }),
-/* 428 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*!
- * html-attributes
- * https://github.com/alexmingoia/html-attributes
- */
-
-
-
-/**
- * @module html-attributes
- */
-
-module.exports = {
-  "abbr": "abbr",
-  "accept": "accept",
-  "acceptCharset": "accept-charset",
-  "accessKey": "accesskey",
-  "action": "action",
-  "allowFullScreen": "allowfullscreen",
-  "allowTransparency": "allowtransparency",
-  "alt": "alt",
-  "async": "async",
-  "autoComplete": "autocomplete",
-  "autoFocus": "autofocus",
-  "autoPlay": "autoplay",
-  "cellPadding": "cellpadding",
-  "cellSpacing": "cellspacing",
-  "challenge": "challenge",
-  "charset": "charset",
-  "checked": "checked",
-  "cite": "cite",
-  "class": "class",
-  "className": "class",
-  "cols": "cols",
-  "colSpan": "colspan",
-  "command": "command",
-  "content": "content",
-  "contentEditable": "contenteditable",
-  "contextMenu": "contextmenu",
-  "controls": "controls",
-  "coords": "coords",
-  "crossOrigin": "crossorigin",
-  "data": "data",
-  "dateTime": "datetime",
-  "default": "default",
-  "defer": "defer",
-  "dir": "dir",
-  "disabled": "disabled",
-  "download": "download",
-  "draggable": "draggable",
-  "dropzone": "dropzone",
-  "encType": "enctype",
-  "for": "for",
-  "form": "form",
-  "formAction": "formaction",
-  "formEncType": "formenctype",
-  "formMethod": "formmethod",
-  "formNoValidate": "formnovalidate",
-  "formTarget": "formtarget",
-  "frameBorder": "frameBorder",
-  "headers": "headers",
-  "height": "height",
-  "hidden": "hidden",
-  "high": "high",
-  "href": "href",
-  "hrefLang": "hreflang",
-  "htmlFor": "for",
-  "httpEquiv": "http-equiv",
-  "icon": "icon",
-  "id": "id",
-  "inputMode": "inputmode",
-  "isMap": "ismap",
-  "itemId": "itemid",
-  "itemProp": "itemprop",
-  "itemRef": "itemref",
-  "itemScope": "itemscope",
-  "itemType": "itemtype",
-  "kind": "kind",
-  "label": "label",
-  "lang": "lang",
-  "list": "list",
-  "loop": "loop",
-  "manifest": "manifest",
-  "max": "max",
-  "maxLength": "maxlength",
-  "media": "media",
-  "mediaGroup": "mediagroup",
-  "method": "method",
-  "min": "min",
-  "minLength": "minlength",
-  "multiple": "multiple",
-  "muted": "muted",
-  "name": "name",
-  "noValidate": "novalidate",
-  "open": "open",
-  "optimum": "optimum",
-  "pattern": "pattern",
-  "ping": "ping",
-  "placeholder": "placeholder",
-  "poster": "poster",
-  "preload": "preload",
-  "radioGroup": "radiogroup",
-  "readOnly": "readonly",
-  "rel": "rel",
-  "required": "required",
-  "role": "role",
-  "rows": "rows",
-  "rowSpan": "rowspan",
-  "sandbox": "sandbox",
-  "scope": "scope",
-  "scoped": "scoped",
-  "scrolling": "scrolling",
-  "seamless": "seamless",
-  "selected": "selected",
-  "shape": "shape",
-  "size": "size",
-  "sizes": "sizes",
-  "sortable": "sortable",
-  "span": "span",
-  "spellCheck": "spellcheck",
-  "src": "src",
-  "srcDoc": "srcdoc",
-  "srcSet": "srcset",
-  "start": "start",
-  "step": "step",
-  "style": "style",
-  "tabIndex": "tabindex",
-  "target": "target",
-  "title": "title",
-  "translate": "translate",
-  "type": "type",
-  "typeMustMatch": "typemustmatch",
-  "useMap": "usemap",
-  "value": "value",
-  "width": "width",
-  "wmode": "wmode",
-  "wrap": "wrap"
-};
-
-
-/***/ }),
-/* 429 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _APIManager = __webpack_require__(23);
-
-var _ActivityLog = __webpack_require__(248);
-
-var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
-
-var _Dialog = __webpack_require__(55);
-
-var _jquery = __webpack_require__(16);
-
-var _jquery2 = _interopRequireDefault(_jquery);
-
-var _dropdown = __webpack_require__(85);
-
-var _immutabilityHelper = __webpack_require__(21);
-
-var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Dash = function (_React$Component) {
-  _inherits(Dash, _React$Component);
-
-  function Dash() {
-    _classCallCheck(this, Dash);
-
-    return _possibleConstructorReturn(this, (Dash.__proto__ || Object.getPrototypeOf(Dash)).apply(this, arguments));
-  }
-
-  _createClass(Dash, [{
-    key: 'render',
-    value: function render() {
-      return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(Goals, null),
-        _react2.default.createElement(_ActivityLog2.default, null)
-      );
-    }
-  }]);
-
-  return Dash;
-}(_react2.default.Component);
-
-exports.default = Dash;
-
-var Goals = function (_React$Component2) {
-  _inherits(Goals, _React$Component2);
-
-  function Goals(props) {
-    _classCallCheck(this, Goals);
-
-    var _this2 = _possibleConstructorReturn(this, (Goals.__proto__ || Object.getPrototypeOf(Goals)).call(this, props));
-
-    _this2.state = {
-      addGoalDialog: false,
-      editGoalDialog: -1,
-      loading: false,
-      lastRequestID: -1,
-      goals: []
-    };
-    return _this2;
-  }
-
-  _createClass(Goals, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      this.getGoals();
-    }
-  }, {
-    key: 'getGoals',
-    value: function getGoals() {
-      this.setState({ loading: true });
-      var url = window.location.origin + "/ics/goals/";
-      var component = this;
-
-      var rID = (0, _APIManager.requestID)();
-      this.lastRequestID = rID;
-
-      (0, _APIManager.fetch)(url, { team: window.localStorage.getItem("team") || "1" }).done(function (data) {
-        if (component.lastRequestID != rID) return;
-
-        component.setState({ goals: data });
-      }).always(function () {
-        if (component.lastRequestID != rID) return;
-        component.setState({ loading: false });
-      });
-    }
-  }, {
-    key: 'handleAddGoal',
-    value: function handleAddGoal(index, newGoal, success, failure) {
-      var url = window.location.origin + "/ics/goals/";
-      var component = this;
-      var params = {
-        "process_type": newGoal.processType.id,
-        "product_type": newGoal.productType.id,
-        "goal": newGoal.goal || 0
-      };
-
-      (0, _APIManager.post)(url, params).done(function (data) {
-        var ns = (0, _immutabilityHelper2.default)(component.state.goals, { $push: [data] });
-        component.setState({ goals: ns }, success);
-      }).fail(function (jqxhr, text, error) {
-        failure();
-      });
-    }
-  }, {
-    key: 'handleEditGoal',
-    value: function handleEditGoal(index, newGoal, success, failure) {
-      var url = window.location.origin + "/ics/goals/edit/" + this.state.goals[index].id + "/";
-      var component = this;
-      var params = {
-        process_type: newGoal.processType.id,
-        product_type: newGoal.productType.id,
-        goal: newGoal.goal
-      };
-
-      (0, _APIManager.put)(url, params).done(function (data) {
-        var ns = (0, _immutabilityHelper2.default)(component.state.goals, _defineProperty({}, index, { $set: data }));
-        component.setState({ goals: ns }, success);
-      }).fail(function (error) {
-        failure();
-      });
-    }
-  }, {
-    key: 'handleDeleteGoal',
-    value: function handleDeleteGoal(index) {
-      var url = window.location.origin + "/ics/goals/edit/" + this.state.goals[index].id + "/";
-      var component = this;
-
-      (0, _APIManager.del)(url).done(function (data) {
-        var ns = (0, _immutabilityHelper2.default)(component.state.goals, { $splice: [[index, 1]] });
-        component.setState({ goals: ns });
-      }).fail(function (error) {
-        alert("Oops, something went wrong");
-      });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this3 = this;
-
-      var addGoalDialog = false;
-      if (this.state.addGoalDialog) {
-        addGoalDialog = _react2.default.createElement(AddGoalDialog, {
-          onCancel: function onCancel() {
-            return _this3.setState({ addGoalDialog: false });
-          },
-          onSubmit: this.handleAddGoal.bind(this),
-          goalIndex: -1
-        });
-      }
-
-      var editGoalDialog = false;
-      if (this.state.editGoalDialog >= 0) {
-        editGoalDialog = _react2.default.createElement(AddGoalDialog, {
-          onCancel: function onCancel() {
-            return _this3.setState({ editGoalDialog: -1 });
-          },
-          onSubmit: this.handleEditGoal.bind(this),
-          goalIndex: this.state.editGoalDialog,
-          goal: this.state.goals[this.state.editGoalDialog]
-        });
-      }
-
-      return _react2.default.createElement(
-        'div',
-        { className: 'goals page mini' },
-        addGoalDialog,
-        editGoalDialog,
-        _react2.default.createElement(
-          'div',
-          { className: 'page-header' },
-          _react2.default.createElement(
-            'h2',
-            null,
-            'Production Goals'
-          ),
-          _react2.default.createElement(
-            'button',
-            { className: 'add-goal-button', onClick: function onClick() {
-                return _this3.setState({ addGoalDialog: true });
-              } },
-            'Add a new goal'
-          )
-        ),
-        this.state.goals.map(function (goal, i) {
-          var _this4 = this;
-
-          return _react2.default.createElement(Goal, {
-            goal: goal,
-            key: i,
-            onEditGoal: function onEditGoal() {
-              return _this4.setState({ editGoalDialog: i });
-            },
-            onDeleteGoal: function onDeleteGoal() {
-              return _this4.handleDeleteGoal(i);
-            }
-          });
-        }, this)
-      );
-    }
-  }]);
-
-  return Goals;
-}(_react2.default.Component);
-
-/* getDisplayProportions
- * ---------------------
- * Takes a @goal object and extracts display requirements. 
- * Returns an object with the following fields:
- * @achieved: whether the goal has been met or not
- * @proportion: a ratio between actual and goal, order depends 
- *              on which is smaller, since we have to mark out
- *              the smaller one on a scale of the larger one
- */
-
-function getDisplayProportions(g) {
-  var actual = parseFloat(g.actual || 0);
-  var goal = parseFloat(g.goal);
-
-  if (actual < goal) {
-    return {
-      achieved: false,
-      proportion: goal ? Math.max(actual / goal * 100, 3) : 100
-    };
-  } else {
-    return {
-      achieved: true,
-      proportion: actual ? Math.max(goal / actual * 100, 3) : 100
-    };
-  }
-}
-
-function Goal(props) {
-  var _getDisplayProportion = getDisplayProportions(props.goal),
-      achieved = _getDisplayProportion.achieved,
-      proportion = _getDisplayProportion.proportion;
-
-  return _react2.default.createElement(
-    'div',
-    { className: 'goal' },
-    _react2.default.createElement(
-      'div',
-      { className: 'goal-details' },
-      _react2.default.createElement(
-        'div',
-        { className: 'goal-details-left' },
-        _react2.default.createElement(
-          'span',
-          { className: 'product' },
-          props.goal.process_name + " " + props.goal.product_code
-        ),
-        _react2.default.createElement(
-          'span',
-          null,
-          parseInt(props.goal.actual) + '/' + parseInt(props.goal.goal) + ' ' + props.goal.process_unit.toUpperCase() + '(S)'
-        )
-      ),
-      _react2.default.createElement(
-        'div',
-        { className: 'goal-details-right goal-buttons' },
-        _react2.default.createElement(
-          'button',
-          { onClick: props.onEditGoal },
-          _react2.default.createElement(
-            'i',
-            { className: 'material-icons' },
-            'mode_edit'
-          )
-        ),
-        _react2.default.createElement(
-          'button',
-          { onClick: props.onDeleteGoal },
-          _react2.default.createElement(
-            'i',
-            { className: 'material-icons' },
-            'delete_forever'
-          )
-        )
-      )
-    ),
-    _react2.default.createElement(
-      'div',
-      { className: "goal-whole-bar " + (achieved ? "goal-achieved" : "") },
-      _react2.default.createElement(
-        'div',
-        { className: 'goal-filled-bar', style: { flex: proportion + '%' } },
-        parseInt(achieved ? props.goal.goal : props.goal.actual) || 0
-      ),
-      _react2.default.createElement(
-        'div',
-        { style: { flex: 100 - proportion + '%' } },
-        parseInt(achieved ? props.goal.actual : props.goal.goal) || 0
-      )
-    ),
-    _react2.default.createElement('div', { className: 'goal-buttons' })
-  );
-}
-
-var AddGoalDialog = function (_React$Component3) {
-  _inherits(AddGoalDialog, _React$Component3);
-
-  function AddGoalDialog(props) {
-    _classCallCheck(this, AddGoalDialog);
-
-    var _this5 = _possibleConstructorReturn(this, (AddGoalDialog.__proto__ || Object.getPrototypeOf(AddGoalDialog)).call(this, props));
-
-    _this5.state = {
-      loading: false,
-      done: false,
-      processType: null,
-      productType: null,
-      goal: "",
-      goal_unit: "",
-      setup: false,
-      processes: [],
-      products: []
-    };
-    return _this5;
-  }
-
-  _createClass(AddGoalDialog, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      this.getProductsAndProcesses();
-    }
-  }, {
-    key: 'getProductsAndProcesses',
-    value: function getProductsAndProcesses() {
-      var thisObj = this;
-      var goal = this.props.goal;
-      var container = {};
-      var defs = [this.getDeferred("processes", container), this.getDeferred("products", container)];
-
-      _jquery2.default.when.apply(null, defs).done(function () {
-        container.setup = true;
-        container.processType = container.processes[0].value;
-        container.productType = container.products[0].value;
-
-        // if there was an existing goal that we are editing, 
-        // set the form values to the existing goal
-        if (goal) {
-          container.processType = container.processes.find(function (e) {
-            return e.value.id == goal.process_type;
-          }).value;
-          container.productType = container.products.find(function (e) {
-            return e.value.id == goal.product_type;
-          }).value;
-          container.goal = parseInt(goal.goal);
-        }
-
-        thisObj.setState(container);
-      });
-    }
-  }, {
-    key: 'getDeferred',
-    value: function getDeferred(keyword, container) {
-      var deferred = _jquery2.default.Deferred();
-      var req = { created_by: window.localStorage.getItem("team") || "1" };
-      if (!req.created_by) {
-        alert("No teams loaded:(((");
-      }
-
-      _jquery2.default.get(window.location.origin + "/ics/" + keyword, req).done(function (data) {
-        container[keyword] = data.map(function (x) {
-          return { value: x, label: x.name };
-        });
-        deferred.resolve();
-      });
-      return deferred.promise();
-    }
-  }, {
-    key: 'handleAddGoal',
-    value: function handleAddGoal() {
-      this.setState({ loading: true });
-      var component = this;
-
-      this.props.onSubmit(this.props.goalIndex, this.state, function () {
-        component.setState({ done: true, error: false });
-      }, function () {
-        component.setState({ error: true });
-      });
-    }
-  }, {
-    key: 'handleChange',
-    value: function handleChange(which, val) {
-      this.setState(_defineProperty({}, which, val));
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this6 = this;
-
-      var title = this.props.goal ? "Edit goal" : "Add a new goal";
-
-      if (this.state.error) {
-        return _react2.default.createElement(
-          _Dialog.Dialog,
-          null,
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-title' },
-            title
-          ),
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-text' },
-            'Oops, something went wrong.'
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'dialog-actions' },
-            _react2.default.createElement(
-              'button',
-              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
-              'OK'
-            )
-          )
-        );
-      }
-      if (!this.state.setup) {
-        return _react2.default.createElement(
-          _Dialog.Dialog,
-          null,
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-title' },
-            title
-          ),
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-text' },
-            'Hang on a sec...'
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'dialog-actions' },
-            _react2.default.createElement(
-              'button',
-              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
-              'OK'
-            )
-          )
-        );
-      } else if (this.state.done) {
-        return _react2.default.createElement(
-          _Dialog.Dialog,
-          null,
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-title' },
-            title
-          ),
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-text' },
-            this.props.goal ? "Yay! Your goal has been updated." : "Yay! You added a new goal!"
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'dialog-actions' },
-            _react2.default.createElement(
-              'button',
-              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
-              'OK'
-            )
-          )
-        );
-      } else {
-        return _react2.default.createElement(
-          _Dialog.Dialog,
-          null,
-          _react2.default.createElement(
-            'span',
-            { className: 'dialog-title' },
-            title
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'dialog-text' },
-            _react2.default.createElement(
-              'div',
-              { className: 'row' },
-              _react2.default.createElement(
-                'div',
-                { className: 'addgoal-field' },
-                _react2.default.createElement(_dropdown.Dropdown, {
-                  source: this.state.processes,
-                  onChange: function onChange(val) {
-                    return _this6.handleChange("processType", val);
-                  },
-                  value: this.state.processType
-                })
-              ),
-              _react2.default.createElement(
-                'div',
-                { className: 'addgoal-field' },
-                _react2.default.createElement(_dropdown.Dropdown, {
-                  source: this.state.products,
-                  onChange: function onChange(val) {
-                    return _this6.handleChange("productType", val);
-                  },
-                  value: this.state.productType
-                })
-              )
-            ),
-            _react2.default.createElement(
-              'div',
-              { className: 'row' },
-              _react2.default.createElement(
-                'div',
-                { className: 'addgoal-field' },
-                _react2.default.createElement('input', { type: 'text', placeholder: '0', value: this.state.goal, onChange: function onChange(e) {
-                    return _this6.handleChange("goal", e.target.value);
-                  } })
-              ),
-              _react2.default.createElement(
-                'span',
-                null,
-                this.state.processType ? this.state.processType.unit : "unit(s)"
-              )
-            )
-          ),
-          _react2.default.createElement(
-            'div',
-            { className: 'dialog-actions' },
-            _react2.default.createElement(
-              'button',
-              { className: 'dialog-button dialog-cancel', style: { display: this.state.loading ? "none" : "" }, onClick: this.props.onCancel },
-              'Cancel'
-            ),
-            _react2.default.createElement(
-              'button',
-              { className: 'dialog-button', onClick: this.handleAddGoal.bind(this) },
-              this.state.loading ? "Adding goal..." : "Confirm"
-            )
-          )
-        );
-      }
-      return false;
-    }
-  }]);
-
-  return AddGoalDialog;
-}(_react2.default.Component);
-
-/***/ }),
-/* 430 */
-/***/ (function(module, exports, __webpack_require__) {
-
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(true)
-		module.exports = factory(__webpack_require__(2), __webpack_require__(26));
+		module.exports = factory(__webpack_require__(2), __webpack_require__(22));
 	else if(typeof define === 'function' && define.amd)
 		define(["react", "react-dom"], factory);
 	else if(typeof exports === 'object')
@@ -70837,6 +68655,2213 @@ return /******/ (function(modules) { // webpackBootstrap
 });
 ;
 //# sourceMappingURL=react-draggable.js.map
+
+/***/ }),
+/* 424 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _jquery = __webpack_require__(15);
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _reactSelect = __webpack_require__(37);
+
+var _reactSelect2 = _interopRequireDefault(_reactSelect);
+
+var _Task = __webpack_require__(24);
+
+var _immutabilityHelper = __webpack_require__(18);
+
+var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+var _qr = __webpack_require__(58);
+
+var _Label = __webpack_require__(247);
+
+var _APIManager = __webpack_require__(25);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var getOptions = function getOptions(input, callback) {
+  if (input.length < 2) {
+    callback(null, { optionss: [] });
+  } else {
+    var params = {
+      limit: true,
+      ordering: '-created_at',
+      label: input,
+      team: window.localStorage.getItem("team") || "1"
+    };
+    _jquery2.default.get(window.location.origin + "/ics/tasks/search/", params).done(function (data) {
+      console.log(data);
+      var options = data.results.map(function (x) {
+        return { value: x.id, label: x.display, data: x };
+      });
+      callback(null, { options: options, complete: false });
+    });
+  }
+};
+
+var TaskSelect = function (_React$Component) {
+  _inherits(TaskSelect, _React$Component);
+
+  function TaskSelect() {
+    _classCallCheck(this, TaskSelect);
+
+    return _possibleConstructorReturn(this, (TaskSelect.__proto__ || Object.getPrototypeOf(TaskSelect)).call(this));
+  }
+
+  _createClass(TaskSelect, [{
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        { className: 'multiselect' },
+        _react2.default.createElement(_reactSelect2.default.Async, {
+          name: 'form-field-name',
+          value: this.props.value,
+          optionRenderer: function optionRenderer(option, i) {
+            return option.label;
+          },
+          loadOptions: getOptions,
+          onChange: this.props.onChange,
+          placeholder: this.props.placeholder
+        })
+      );
+    }
+  }]);
+
+  return TaskSelect;
+}(_react2.default.Component);
+
+var LabelPrinter = function (_React$Component2) {
+  _inherits(LabelPrinter, _React$Component2);
+
+  function LabelPrinter(props) {
+    _classCallCheck(this, LabelPrinter);
+
+    var _this2 = _possibleConstructorReturn(this, (LabelPrinter.__proto__ || Object.getPrototypeOf(LabelPrinter)).call(this, props));
+
+    _this2.handleExpandClick = _this2.handleExpandClick.bind(_this2);
+    _this2.handleTaskChange = _this2.handleTaskChange.bind(_this2);
+    _this2.handleItemChange = _this2.handleItemChange.bind(_this2);
+    _this2.handleChange = _this2.handleChange.bind(_this2);
+    _this2.handlePrint = _this2.handlePrint.bind(_this2);
+    _this2.state = {
+      expanded: false,
+      numberLabels: "",
+      notes: "",
+      task: "",
+      qrValue: "",
+      items: [],
+      selectedItem: ""
+    };
+    return _this2;
+  }
+
+  _createClass(LabelPrinter, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      (0, _qr.mountQR)();
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var q = new QRCode(document.getElementById("qrtest"), {
+        text: "",
+        width: 128,
+        height: 128,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.Q
+      });
+      this.setState({ qrcode: q });
+    }
+  }, {
+    key: 'handlePrint',
+    value: function handlePrint() {
+      var numLabels = parseInt(this.state.numberLabels) || -1;
+
+      if (!this.state.expanded && !(numLabels > 0 && numLabels < 101)) {
+        alert("Please enter a valid number between 0 and 100!");
+        return;
+      }
+
+      if (this.state.task == "" || this.state.task.data == undefined || this.state.task.data.id == undefined) {
+        alert("Please print labels for a valid task.");
+        return;
+      }
+
+      if (this.state.expanded && (this.state.selectedItem == "" || this.state.selectedItem.data == undefined || this.state.selectedItem.data.id == undefined)) {
+        alert("Please choose a valid specific item to reprint.");
+        return;
+      }
+
+      this.setState({ disabled: true });
+
+      if (this.state.expanded) {
+        var uuid = this.state.selectedItem.data.item_qr;
+        (0, _qr.printQRs_dymo)([uuid], this.state.qrcode);
+        this.setState({ disabled: false });
+        return;
+      }
+
+      var thisObj = this;
+      _jquery2.default.ajax({
+        url: "../../../qr/codes/",
+        data: { count: numLabels }
+      }).done(function (data) {
+        var uuids = data.split(/\s+/);
+        (0, _qr.printQRs_dymo)(data.split(/\s+/), thisObj.state.qrcode);
+      }).always(function () {
+        thisObj.setState({ disabled: false });
+      });
+    }
+  }, {
+    key: 'handleChange',
+    value: function handleChange(which, payload) {
+      this.setState(_defineProperty({}, which, payload));
+    }
+  }, {
+    key: 'handleExpandClick',
+    value: function handleExpandClick() {
+      var ns = {
+        expanded: !this.state.expanded,
+        numberLabels: "",
+        notes: "",
+        task: "",
+        qrValue: "",
+        items: [],
+        selectedItem: ""
+      };
+      this.setState(ns);
+    }
+  }, {
+    key: 'handleTaskChange',
+    value: function handleTaskChange(value) {
+      var v;
+      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+      this.setState({
+        task: v,
+        items: [],
+        selectedItem: "" });
+
+      console.log(v);
+
+      if (this.state.expanded) {
+        var url = window.location.origin + "/ics/tasks/" + v.value;
+        var component = this;
+        (0, _APIManager.fetch)(url, {}).done(function (data) {
+          component.reloadItems(data);
+        });
+        //component.reloadItems(v.data) 
+      }
+    }
+  }, {
+    key: 'handleItemChange',
+    value: function handleItemChange(value) {
+      this.state.qrcode.clear();
+      var v;
+      if (value != undefined && value != null && value.length != 0) v = value;else v = "";
+
+      console.log("hello");
+      console.log(v);
+
+      if (v) {
+        this.state.qrcode.makeCode(v);
+      }
+      this.setState({ selectedItem: v });
+    }
+  }, {
+    key: 'reloadItems',
+    value: function reloadItems(task) {
+      var options = {};
+      if (task.items) {
+        options = task.items.map(function (x) {
+          return { id: x.id, label: getQR(x), data: x };
+        });
+      }
+      this.setState({ items: options });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this3 = this;
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'labelPrinter' },
+        _react2.default.createElement(
+          'div',
+          { className: 'marginer' },
+          _react2.default.createElement(
+            'div',
+            { className: 'stuff' },
+            _react2.default.createElement(
+              'div',
+              { className: "regularPrint", style: { display: this.state.expanded ? "none" : "initial" } },
+              _react2.default.createElement(
+                'h2',
+                null,
+                ' Print me some labels - Dymo'
+              ),
+              _react2.default.createElement(
+                'span',
+                { className: 'inputLabel' },
+                'Number of labels'
+              ),
+              _react2.default.createElement('input', { type: 'text',
+                placeholder: 'eg. 20',
+                style: { width: "100%" },
+                value: this.state.numberLabels,
+                onChange: function onChange(e) {
+                  return _this3.handleChange("numberLabels", e.target.value);
+                }
+              }),
+              _react2.default.createElement(
+                'span',
+                { className: 'inputLabel' },
+                'Task'
+              ),
+              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+              _react2.default.createElement(
+                'span',
+                { className: 'inputLabel' },
+                'Extra notes'
+              ),
+              _react2.default.createElement('input', { type: 'text',
+                placeholder: 'max 20 characters',
+                style: { width: "100%" },
+                value: this.state.notes,
+                onChange: function onChange(e) {
+                  return _this3.handleChange("notes", e.target.value.substr(0, 20));
+                }
+              }),
+              _react2.default.createElement(
+                'button',
+                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+                ' ',
+                this.state.disabled ? "Printing..." : "Print!",
+                ' '
+              ),
+              _react2.default.createElement(
+                'button',
+                { className: 'expandReprint', onClick: this.handleExpandClick },
+                _react2.default.createElement(
+                  'span',
+                  null,
+                  'I need to reprint a label'
+                )
+              )
+            ),
+            _react2.default.createElement(
+              'div',
+              { className: "reprint " + (this.state.expanded ? "expanded" : ""), style: { display: !this.state.expanded ? "none" : "initial" } },
+              _react2.default.createElement(
+                'button',
+                { className: 'expandReprint', onClick: this.handleExpandClick },
+                _react2.default.createElement(
+                  'i',
+                  { className: 'material-icons' },
+                  'arrow_back'
+                ),
+                _react2.default.createElement(
+                  'span',
+                  null,
+                  'Back to regular printing'
+                )
+              ),
+              _react2.default.createElement(
+                'span',
+                { className: 'inputLabel' },
+                'Task'
+              ),
+              _react2.default.createElement(TaskSelect, { placeholder: 'Task (eg. R-CVB-1010)', onChange: this.handleTaskChange, value: this.state.task }),
+              _react2.default.createElement(
+                'span',
+                { className: 'inputLabel' },
+                'Item'
+              ),
+              _react2.default.createElement(_reactSelect2.default, { className: 'select',
+                name: 'item-select',
+                placeholder: 'Choose an item',
+                options: this.state.items,
+                valueKey: 'id',
+                value: this.state.selectedItem,
+                onChange: this.handleItemChange
+              }),
+              _react2.default.createElement(
+                'button',
+                { type: 'submit', id: 'printButton', onClick: this.handlePrint },
+                ' ',
+                this.state.disabled ? "Printing..." : "Print!",
+                '  '
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'playground', style: { position: "relative", margin: "20px" } },
+            _react2.default.createElement(_Label.Label, { taskLabel: short(this.state.task.label),
+              taskLabelLong: this.state.task.label,
+              originLabel: getCode(this.state.task.label || ""),
+              notesLabel: this.state.expanded ? "" : this.state.notes
+            }),
+            _react2.default.createElement(
+              'div',
+              { id: 'canvastest' },
+              _react2.default.createElement('canvas', { height: '241', width: '431' })
+            ),
+            _react2.default.createElement('div', { id: 'qrtest' }),
+            _react2.default.createElement('div', { id: 'blocker' })
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'trouble' },
+            _react2.default.createElement('hr', null),
+            _react2.default.createElement(
+              'h6',
+              null,
+              ' Troubleshooting '
+            ),
+            _react2.default.createElement(
+              'p',
+              null,
+              ' You need to run the Dymo toolbar app to make this work.'
+            ),
+            _react2.default.createElement(
+              'ul',
+              null,
+              _react2.default.createElement(
+                'li',
+                null,
+                'Find the little ',
+                _react2.default.createElement(
+                  'b',
+                  null,
+                  'Dymo icon on the top toolbar'
+                ),
+                ' of your Mac. Click on it and make sure it\'s been "Started on port XXX", otherwise start it.'
+              ),
+              _react2.default.createElement(
+                'li',
+                null,
+                'If you can\'t find the Dymo Service icon, open ',
+                _react2.default.createElement(
+                  'b',
+                  null,
+                  '/Library/Frameworks/DYMO/SDK/Dymo.DLS.Printing.Host'
+                ),
+                ' from Finder. That should give you the dymo toolbar app. Make sure it\'s been "started," too.'
+              ),
+              _react2.default.createElement(
+                'li',
+                null,
+                'If that folder doesn\'t exist, make sure you have the latest version of the ',
+                _react2.default.createElement(
+                  'a',
+                  { href: '' },
+                  'dymo software installed.'
+                ),
+                ' Once you do, you should have that folder. '
+              ),
+              _react2.default.createElement(
+                'li',
+                null,
+                'If you\'re still having problems, tell whoever is running the site!'
+              ),
+              _react2.default.createElement('hr', null),
+              _react2.default.createElement(
+                'li',
+                null,
+                ' (If you are the person running the site, check the ',
+                _react2.default.createElement(
+                  'a',
+                  { href: '' },
+                  ' Dymo developers blog'
+                ),
+                ' because that\'s the only place they document...)'
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return LabelPrinter;
+}(_react2.default.Component);
+
+exports.default = LabelPrinter;
+
+
+function short(str) {
+  if (!str) return "";
+  var codes = str.split('-');
+  if (codes.length > 2) {
+    codes.splice(1, 1);
+  }
+  return codes.join('-');
+}
+
+function getCode(str) {
+  var codes = str.split('-');
+  if (codes[1]) return codes[1];
+  return str;
+}
+
+function getQR(item) {
+  if (item && item.item_qr) {
+    var len = item.item_qr.length;
+    return item.item_qr.substr(len - 6, len);
+  }
+  return "";
+}
+
+/***/ }),
+/* 425 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _jquery = __webpack_require__(15);
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _reactRouterDom = __webpack_require__(29);
+
+var _InventoryDetail = __webpack_require__(53);
+
+var _Inputs = __webpack_require__(56);
+
+var _APIManager = __webpack_require__(25);
+
+var _Loading = __webpack_require__(54);
+
+var _Loading2 = _interopRequireDefault(_Loading);
+
+var _immutabilityHelper = __webpack_require__(18);
+
+var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Inventory = function (_React$Component) {
+  _inherits(Inventory, _React$Component);
+
+  function Inventory(props) {
+    _classCallCheck(this, Inventory);
+
+    var _this = _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).call(this, props));
+
+    _this.handleProductFilter = _this.handleProductFilter.bind(_this);
+    _this.latestRequestID = -1;
+    _this.state = {
+      processes: [],
+      products: [],
+      loading: false,
+      selected: -1,
+      productFilter: [],
+      productFilterStr: ""
+    };
+    return _this;
+  }
+
+  _createClass(Inventory, [{
+    key: 'getProcessesForInventory',
+    value: function getProcessesForInventory() {
+      this.setState({ loading: true });
+
+      var url = window.location.origin + "/ics/inventory/";
+
+      var params = {};
+      if (this.state.productFilter.length > 0) params = { products: this.state.productFilterStr };
+
+      console.log(params);
+
+      var component = this;
+      var rid = (0, _APIManager.requestID)();
+      this.latestRequestID = rid;
+
+      (0, _APIManager.fetch)(url, params).done(function (data) {
+        if (component.latestRequestID == rid) component.setState({ processes: data });
+      }).always(function () {
+        if (component.latestRequestID == rid) component.setState({ loading: false });
+      });
+    }
+  }, {
+    key: 'getProductsForInventory',
+    value: function getProductsForInventory() {
+      var component = this;
+      var url = window.location.origin + "/ics/products/codes/";
+      _jquery2.default.get(url).done(function (data) {
+        var mappedProducts = data.map(function (product, i) {
+          return { value: product.id, label: product.name };
+        });
+        component.setState({ products: data });
+      });
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      this.getProcessesForInventory();
+      this.getProductsForInventory();
+    }
+  }, {
+    key: 'handleProductFilter',
+    value: function handleProductFilter(which, val) {
+      var _setState;
+
+      var component = this;
+      var valStr = val.map(function (v, i) {
+        return v.code;
+      }).join();
+      this.setState((_setState = {}, _defineProperty(_setState, which, val), _defineProperty(_setState, 'productFilterStr', valStr), _setState), function () {
+        component.getProcessesForInventory();
+      });
+    }
+  }, {
+    key: 'getSelectedProcess',
+    value: function getSelectedProcess() {
+      var a = this.state.processes.find(function (x) {
+        return x.process_id == this.props.match.params.id;
+      }, this);
+      return a;
+    }
+  }, {
+    key: 'handleDelivery',
+    value: function handleDelivery(selectedCount) {
+      var processIndex = 0;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.state.processes.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _ref = _step.value;
+
+          var _ref2 = _slicedToArray(_ref, 2);
+
+          var index = _ref2[0];
+          var process = _ref2[1];
+
+          if (process.process_id == this.props.match.params.id) {
+            processIndex = index;
+            break;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      var newProcesses = (0, _immutabilityHelper2.default)(this.state.processes, _defineProperty({}, processIndex, {
+        count: {
+          $apply: function $apply(c) {
+            return c - selectedCount;
+          }
+        }
+      }));
+
+      this.setState({ processes: newProcesses });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var props = this.props;
+
+      var contentArea = _react2.default.createElement(InventoryList, { processes: this.state.processes, selected: props.match.params.id });
+      if (this.state.loading) {
+        contentArea = _react2.default.createElement(_Loading2.default, null);
+      } else if (!this.state.processes || this.state.processes.length == 0) {
+        contentArea = _react2.default.createElement(_APIManager.ZeroState, { filtered: this.state.productFilter && this.state.productFilter.length });
+      }
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'inventory' },
+        _react2.default.createElement(
+          'div',
+          { className: "page inventory-list " + (props.match.params.id ? "smallDetail" : "") },
+          _react2.default.createElement(
+            'div',
+            { className: 'inventory-header page-header' },
+            _react2.default.createElement(
+              'h2',
+              null,
+              'Inventory'
+            ),
+            _react2.default.createElement(_Inputs.InventoryFilter, { options: this.state.products, onFilter: this.handleProductFilter, selected: this.state.productFilter })
+          ),
+          contentArea
+        ),
+        _react2.default.createElement(_InventoryDetail.InventoryDetail, _extends({}, this.getSelectedProcess(), {
+          filter: this.state.productFilter.length > 0 ? this.state.productFilterStr : null,
+          match: props.match,
+          showDetail: props.match.params.id,
+          onDelivery: this.handleDelivery.bind(this)
+        }))
+      );
+    }
+  }]);
+
+  return Inventory;
+}(_react2.default.Component);
+
+exports.default = Inventory;
+
+
+function InventoryList(props) {
+  return _react2.default.createElement(
+    'div',
+    null,
+    _react2.default.createElement(InventoryItem, { i: "no", header: true, output_desc: "PRODUCT TYPE", count: "COUNT", unit: "UNIT", oldest: "OLDEST" }),
+    props.processes.map(function (process, i) {
+      return _react2.default.createElement(
+        _reactRouterDom.Link,
+        { key: i, to: "/dashboard/inventory/" + process.process_id },
+        _react2.default.createElement(InventoryItem, _extends({ i: i, selected: props.selected }, process))
+      );
+    }, this)
+  );
+}
+
+function InventoryItem(props) {
+  var teamStyle = { color: "rgba(0,0,0,0.3", paddingLeft: "4px", fontSize: "10px" };
+  var currTeam = window.localStorage.getItem("team") || "1";
+  teamStyle["display"] = currTeam == props.team_id ? "none" : "";
+  return _react2.default.createElement(
+    'div',
+    { className: "inventoryClass " + isSelected(props) + " " + isHeader(props), onClick: props.onClick },
+    _react2.default.createElement(
+      'div',
+      { className: 'i-outputdesc' },
+      _react2.default.createElement(
+        'span',
+        null,
+        props.output_desc.sentenceCase()
+      ),
+      _react2.default.createElement(
+        'span',
+        { style: teamStyle },
+        props.team
+      )
+    ),
+    _react2.default.createElement(
+      'div',
+      { className: 'i-count' },
+      _react2.default.createElement(
+        'span',
+        null,
+        count(props.count)
+      )
+    ),
+    _react2.default.createElement(
+      'div',
+      { className: 'i-unit' },
+      _react2.default.createElement(
+        'span',
+        null,
+        props.unit.sentenceCase() + "s"
+      )
+    ),
+    _react2.default.createElement(
+      'div',
+      { className: 'i-date' },
+      _react2.default.createElement(
+        'span',
+        null,
+        props.date
+      )
+    )
+  );
+}
+
+function count(c) {
+  var p = parseInt(c);
+  if (p - c != 0) return c;
+  return p;
+}
+
+function isHeader(props) {
+  return props.header == true ? "inventoryClass-header" : "";
+}
+
+function isSelected(props) {
+  if (isHeader(props)) return false;
+  return props.process_id == props.selected ? "selected" : "";
+}
+
+String.prototype.sentenceCase = function () {
+  return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+/***/ }),
+/* 426 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _jquery = __webpack_require__(15);
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _reactRouterDom = __webpack_require__(29);
+
+var _InventoryDetail = __webpack_require__(53);
+
+var _InventoryDetail2 = _interopRequireDefault(_InventoryDetail);
+
+var _Inputs = __webpack_require__(56);
+
+var _APIManager = __webpack_require__(25);
+
+var _Task = __webpack_require__(24);
+
+var _moment = __webpack_require__(0);
+
+var _moment2 = _interopRequireDefault(_moment);
+
+var _immutabilityHelper = __webpack_require__(18);
+
+var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+var _qr = __webpack_require__(58);
+
+var _Dialog = __webpack_require__(55);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var dialogs = {
+  deleteTask: {
+    title: "Are you sure you want to delete this task?",
+    text: "You can't undo this action.",
+    okText: "Yes, I'm sure"
+  }
+};
+
+var Task = function (_React$Component) {
+  _inherits(Task, _React$Component);
+
+  function Task(props) {
+    _classCallCheck(this, Task);
+
+    var _this = _possibleConstructorReturn(this, (Task.__proto__ || Object.getPrototypeOf(Task)).call(this, props));
+
+    _this.state = {
+      task: {},
+      ancestors: [],
+      descendents: [],
+      attributes: [],
+      loading: true,
+      ancestorsLoading: true,
+      descendentsLoading: true,
+      activeDialog: dialogs.deleteTask,
+      showDialog: false,
+      qrcode: null
+    };
+    return _this;
+  }
+
+  _createClass(Task, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      //mountQR()
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      // let q = new QRCode(document.getElementById("qrtest"), {
+      //   text: "",
+      //   width: 128,
+      //   height: 128,
+      //   colorDark : "#000000",
+      //   colorLight : "#ffffff",
+      //   correctLevel : QRCode.CorrectLevel.Q
+      // })
+      // this.setState({qrcode: q})
+      this.getTask();
+      this.getAncestors();
+      this.getDescendents();
+    }
+  }, {
+    key: 'getTask',
+    value: function getTask() {
+      if (!this.props.match.params.id) {
+        return;
+      }
+      this.setState({ loading: true });
+      var id = this.props.match.params.id;
+      var url = window.location.origin + "/ics/tasks/" + id + "/";
+      var component = this;
+      (0, _APIManager.fetch)(url, {}).done(function (data) {
+        var attrs = component.organizeAttributes(data);
+        component.setState({ task: data, attributes: attrs });
+      }).always(function () {
+        component.setState({ loading: false });
+      });
+    }
+  }, {
+    key: 'getAncestors',
+    value: function getAncestors() {
+      this.setState({ ancestorsLoading: true });
+      var id = this.props.match.params.id || 0;
+      var url = window.location.origin + "/ics/tasks/";
+      var params = { child: this.props.match.params.id };
+      var component = this;
+      (0, _APIManager.fetch)(url, params).done(function (data) {
+        component.setState({ ancestors: data });
+      }).always(function (data) {
+        component.setState({ ancestorsLoading: false });
+      });
+    }
+  }, {
+    key: 'getDescendents',
+    value: function getDescendents() {
+      this.setState({ descendentsLoading: true });
+      var id = this.props.match.params.id || 0;
+      var url = window.location.origin + "/ics/tasks/";
+      var params = { parent: this.props.match.params.id };
+      var component = this;
+      (0, _APIManager.fetch)(url, params).done(function (data) {
+        component.setState({ descendents: data });
+      }).always(function (data) {
+        component.setState({ descendentsLoading: false });
+      });
+    }
+  }, {
+    key: 'markAsUsed',
+    value: function markAsUsed(index, id) {
+      var component = this;
+      var url = '/ics/movements/create/';
+      var team = window.localStorage.getItem("team") || "1";
+
+      var params = {
+        status: "RC",
+        origin: team,
+        destination: null,
+        notes: "MARK AS USED",
+        items: [{ item: '' + id }]
+      };
+
+      (0, _APIManager.post)(url, JSON.stringify(params)).done(function (data) {
+        var newObj = (0, _immutabilityHelper2.default)(component.state.task, {
+          items: _defineProperty({}, index, {
+            $merge: { is_used: true }
+          })
+        });
+        component.setState({ task: newObj });
+      }).fail(function (req, err) {
+        alert('Couldn\'t mark the item with QR ' + qr.substring(qr.length - 6) + ' as used. :( \n ' + err);
+      });
+    }
+  }, {
+    key: 'printQR',
+    value: function printQR(index, id) {
+      var qr = this.state.task.items[index].item_qr;
+      (0, _qr.printQRs)([qr], this.state.qr);
+    }
+  }, {
+    key: 'handleSearch',
+    value: function handleSearch(val) {
+      console.log(val);
+      if (val.value && val.value != parseInt(this.props.match.params.id)) {
+        console.log("yay");
+        window.location.href = window.location.origin + "/dashboard/task/" + val.value;
+      }
+    }
+  }, {
+    key: 'organizeAttributes',
+    value: function organizeAttributes(taskData) {
+      var attributes = taskData.process_type.attributes;
+      var values = taskData.attribute_values;
+      var organized = [{ attribute: -1, value: taskData.process_type.name, name: "Process", editable: false }, { attribute: -1, value: taskData.product_type.name, name: "Product", editable: false }, { attribute: -1, value: taskData.process_type.created_by_name, name: "Production Team", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.created_at).format('MM/DD/YY h:mm a'), name: "Created at", editable: false }, { attribute: -1, value: (0, _moment2.default)(taskData.updated_at).format('MM/DD/YY h:mm a'), name: "Updated at", editable: false }];
+
+      attributes.map(function (attr, i) {
+        var val = values.find(function (e) {
+          return e.attribute == attr.id;
+        });
+        organized.push({ attribute: attr.id, value: val ? val.value : "", name: attr.name, editable: true });
+      });
+
+      organized.push({ attribute: -1, value: pl(taskData.inputs.length, taskData.inputUnit), name: "# INPUTS", editable: false });
+      organized.push({ attribute: -1, value: pl(taskData.items.length, taskData.process_type.unit), name: "# OUTPUTS", editable: false });
+
+      return organized;
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      if (!this.state.task || !Object.values(this.state.task).length) {
+        return _react2.default.createElement(
+          'div',
+          { className: 'task-detail' },
+          _react2.default.createElement(_Inputs.TaskSelect, { placeholder: 'Search for a task', onChange: this.handleSearch.bind(this) })
+        );
+      }
+
+      var dialog = false;
+      if (this.state.showDialog) {
+        dialog = _react2.default.createElement(_Dialog.Dialog, this.state.activeDialog);
+      }
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'task-detail' },
+        dialog,
+        _react2.default.createElement(_Inputs.TaskSelect, { placeholder: 'Search for a task', onChange: this.handleSearch.bind(this) }),
+        _react2.default.createElement(
+          'div',
+          { className: 'task-header' },
+          _react2.default.createElement(
+            'div',
+            { className: 'header-left' },
+            _react2.default.createElement('img', { src: (0, _Task.icon)(this.state.task.process_type.icon) }),
+            _react2.default.createElement(
+              'span',
+              null,
+              this.state.task.display
+            )
+          ),
+          _react2.default.createElement(
+            'span',
+            null,
+            (0, _moment2.default)(this.state.task.created_at).format('dddd, MMMM Do YYYY, h:mm a')
+          )
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'task-content' },
+          _react2.default.createElement(
+            'div',
+            null,
+            _react2.default.createElement(InformationTable, { attributes: this.state.attributes }),
+            _react2.default.createElement(
+              'button',
+              { className: 'task_button', onClick: function onClick() {
+                  return _this2.showDialog(dialogs.deleteTask, _this2.closeTask);
+                } },
+              'Close Task'
+            ),
+            _react2.default.createElement(
+              'button',
+              { className: 'task_button' },
+              'Toggle flag'
+            ),
+            _react2.default.createElement(
+              'button',
+              { className: 'task_button' },
+              'Delete Task'
+            )
+          ),
+          _react2.default.createElement(
+            'div',
+            null,
+            _react2.default.createElement(InputTable, { inputs: this.state.task.inputs }),
+            _react2.default.createElement(OutputTable, { outputs: this.state.task.items, onMark: this.markAsUsed.bind(this) }),
+            _react2.default.createElement(TaskTable, { title: 'Ancestors', tasks: this.state.ancestors, loading: this.state.ancestorsLoading }),
+            _react2.default.createElement(TaskTable, { title: 'Descendents', tasks: this.state.descendents, loading: this.state.descendentsLoading })
+          )
+        )
+      );
+    }
+  }]);
+
+  return Task;
+}(_react2.default.Component);
+
+exports.default = Task;
+
+
+function TaskTable(props) {
+  return _react2.default.createElement(
+    Table,
+    { title: props.title },
+    props.tasks.map(function (task, i) {
+      return _react2.default.createElement(
+        'a',
+        {
+          href: window.location.origin + "/dashboard/task/" + task.id,
+          target: '_blank', key: i,
+          className: 'task-attribute-table-row input-table-row'
+        },
+        _react2.default.createElement(
+          'span',
+          { className: 'task-row-header' },
+          _react2.default.createElement('img', { src: (0, _Task.icon)(task.process_type.icon) }),
+          task.display,
+          _react2.default.createElement(
+            'i',
+            { className: 'material-icons expand-i' },
+            'open_in_new'
+          )
+        ),
+        _react2.default.createElement('span', { className: '' })
+      );
+    })
+  );
+}
+
+function InformationTable(props) {
+  return _react2.default.createElement(
+    Table,
+    null,
+    props.attributes.map(function (attr, i) {
+      var isEmpty = attr.value == "";
+      return _react2.default.createElement(
+        'div',
+        { key: i, className: 'task-attribute-table-row' },
+        _react2.default.createElement(
+          'span',
+          { className: 'information-table-title' },
+          attr.name
+        ),
+        _react2.default.createElement(
+          'span',
+          { className: "information-table-answer " + (isEmpty ? "empty-answer" : "") },
+          isEmpty ? "n/a" : attr.value
+        )
+      );
+    })
+  );
+}
+
+function OutputTable(props) {
+  var team = window.localStorage.getItem("team") || "1";
+  return _react2.default.createElement(
+    Table,
+    { title: 'Outputs (' + (props.outputs || []).length + ')' },
+    (props.outputs || []).map(function (item, i) {
+      var isInInventory = !item.is_used && item.inventory && item.inventory.toString() == team;
+      var inventory = false;
+      var markAsUsed = false;
+      if (isInInventory) {
+        inventory = _react2.default.createElement(
+          'span',
+          { className: 'items-inventory' },
+          _react2.default.createElement('div', { className: 'inv-circle' }),
+          'Inventory'
+        );
+        markAsUsed = _react2.default.createElement(
+          'button',
+          { className: 'small-mark-button', onClick: function onClick() {
+              return props.onMark(i, item.id);
+            } },
+          'MARK AS USED'
+        );
+      }
+      return _react2.default.createElement(
+        'div',
+        { key: item.id, className: 'task-attribute-table-row output-table-row' },
+        _react2.default.createElement(
+          'span',
+          { className: 'items-qr' },
+          _react2.default.createElement(
+            'i',
+            { className: 'material-icons' },
+            'select_all'
+          ),
+          subs(item.item_qr),
+          _react2.default.createElement(
+            'button',
+            { style: { display: "none" }, className: 'small-print-button' },
+            'PRINT'
+          ),
+          markAsUsed
+        ),
+        _react2.default.createElement(
+          'span',
+          { className: 'items-inventory' },
+          inventory
+        )
+      );
+    })
+  );
+}
+
+function InputTable(props) {
+  var grouped = {};
+  (props.inputs || []).map(function (input, i) {
+    if (grouped[input.input_task]) {
+      grouped[input.input_task].push(input);
+    } else {
+      grouped[input.input_task] = [input];
+    }
+  });
+  return _react2.default.createElement(
+    Table,
+    { title: 'Inputs (' + (props.inputs || []).length + ')' },
+    Object.values(grouped).map(function (group, i) {
+      return _react2.default.createElement(
+        'a',
+        { href: window.location.origin + "/dashboard/task/" + group[0].input_task,
+          target: '_blank', key: i,
+          className: 'task-attribute-table-row input-table-row'
+        },
+        _react2.default.createElement(
+          'span',
+          null,
+          group[0].input_task_display,
+          _react2.default.createElement(
+            'i',
+            { className: 'material-icons expand-i' },
+            'open_in_new'
+          )
+        ),
+        _react2.default.createElement(
+          'span',
+          { className: 'input-count' },
+          pl(group.length, "item")
+        )
+      );
+    })
+  );
+}
+
+function subs(qr) {
+  return qr.substring(qr.length - 6);
+}
+
+function Table(props) {
+  var inside = _react2.default.createElement(
+    'div',
+    { className: 'task-attribute-table-row zero-state zero-state-clean' },
+    ' ',
+    _react2.default.createElement(
+      'span',
+      null,
+      ' Nothing to show here \xAF \\_(\u30C4)_/\xAF '
+    )
+  );
+  if (props.children) {
+    inside = props.children;
+  }
+
+  var header = false;
+  if (props.title) {
+    header = _react2.default.createElement(
+      'div',
+      { className: 'task-attribute-table-row task-attribute-table-row-header' },
+      _react2.default.createElement(
+        'span',
+        null,
+        props.title
+      ),
+      _react2.default.createElement('span', null)
+    );
+  }
+
+  return _react2.default.createElement(
+    'div',
+    { className: 'task-attribute-table' },
+    header,
+    inside
+  );
+}
+
+function pl(count, unit) {
+  if (count) {}
+  if (count == 1) return count + " " + unit;
+  return count + " " + unit + "s";
+}
+
+/***/ }),
+/* 427 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _filterInvalidDomProps = __webpack_require__(428);
+
+var _filterInvalidDomProps2 = _interopRequireDefault(_filterInvalidDomProps);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ReactImageFallback = function (_Component) {
+	_inherits(ReactImageFallback, _Component);
+
+	function ReactImageFallback(props) {
+		_classCallCheck(this, ReactImageFallback);
+
+		var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ReactImageFallback).call(this, props));
+
+		_this.state = {
+			imageSource: props.initialImage
+		};
+		_this.setDisplayImage = _this.setDisplayImage.bind(_this);
+		return _this;
+	}
+
+	_createClass(ReactImageFallback, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			this.displayImage = new window.Image();
+			this.setDisplayImage({ image: this.props.src, fallbacks: this.props.fallbackImage });
+		}
+	}, {
+		key: "componentWillReceiveProps",
+		value: function componentWillReceiveProps(nextProps) {
+			if (nextProps.src !== this.props.src) {
+				this.setDisplayImage({ image: nextProps.src, fallbacks: nextProps.fallbackImage });
+			}
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.displayImage.onerror = null;
+			this.displayImage.onload = null;
+			this.displayImage = null;
+		}
+	}, {
+		key: "setDisplayImage",
+		value: function setDisplayImage(_ref) {
+			var _this2 = this;
+
+			var image = _ref.image;
+			var fallbacks = _ref.fallbacks;
+
+			var imagesArray = [image].concat(fallbacks);
+			this.displayImage.onerror = function () {
+				if (imagesArray.length > 2 && typeof imagesArray[1] === "string") {
+					var updatedFallbacks = imagesArray.slice(2);
+					_this2.setDisplayImage({ image: imagesArray[1], fallbacks: updatedFallbacks });
+					return;
+				}
+				_this2.setState({
+					imageSource: imagesArray[1]
+				}, function () {
+					if (_this2.props.onError) {
+						_this2.props.onError(_this2.props.src);
+					}
+				});
+			};
+			this.displayImage.onload = function () {
+				_this2.setState({
+					imageSource: imagesArray[0]
+				}, function () {
+					if (_this2.props.onLoad) {
+						_this2.props.onLoad(imagesArray[0]);
+					}
+				});
+			};
+			this.displayImage.src = imagesArray[0];
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			return typeof this.state.imageSource === "string" ? _react2.default.createElement("img", _extends({}, (0, _filterInvalidDomProps2.default)(this.props), { src: this.state.imageSource })) : this.state.imageSource;
+		}
+	}]);
+
+	return ReactImageFallback;
+}(_react.Component);
+
+exports.default = ReactImageFallback;
+
+ReactImageFallback.displayName = "ReactImageFallback";
+
+ReactImageFallback.propTypes = {
+	src: _react.PropTypes.string.isRequired,
+	fallbackImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element, _react.PropTypes.array]).isRequired,
+	initialImage: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.element]),
+	onLoad: _react.PropTypes.func,
+	onError: _react.PropTypes.func
+};
+
+ReactImageFallback.defaultProps = {
+	initialImage: null
+};
+
+/***/ }),
+/* 428 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = filterInvalidDOMProps;
+
+var _htmlAttributes = __webpack_require__(429);
+
+var _htmlAttributes2 = _interopRequireDefault(_htmlAttributes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var eventProps = {
+	onCopy: true,
+	onCut: true,
+	onPaste: true,
+	onLoad: true,
+	onError: true,
+	onWheel: true,
+	onScroll: true,
+	onCompositionEnd: true,
+	onCompositionStart: true,
+	onCompositionUpdate: true,
+	onKeyDown: true,
+	onKeyPress: true,
+	onKeyUp: true,
+	onFocus: true,
+	onBlur: true,
+	onChange: true,
+	onInput: true,
+	onSubmit: true,
+	onClick: true,
+	onContextMenu: true,
+	onDoubleClick: true,
+	onDrag: true,
+	onDragEnd: true,
+	onDragEnter: true,
+	onDragExit: true,
+	onDragLeave: true,
+	onDragOver: true,
+	onDragStart: true,
+	onDrop: true,
+	onMouseDown: true,
+	onMouseEnter: true,
+	onMouseLeave: true,
+	onMouseMove: true,
+	onMouseOut: true,
+	onMouseOver: true,
+	onMouseUp: true,
+	onSelect: true,
+	onTouchCancel: true,
+	onTouchEnd: true,
+	onTouchMove: true,
+	onTouchStart: true,
+	onAnimationStart: true,
+	onAnimationEnd: true,
+	onAnimationIteration: true,
+	onTransitionEnd: true
+};
+
+function isValidDOMProp(prop) {
+	return eventProps[prop] || _htmlAttributes2.default[prop];
+}
+
+function filterInvalidDOMProps(props) {
+	var domProps = {};
+	for (var prop in props) {
+		if (props.hasOwnProperty(prop) && isValidDOMProp(prop)) {
+			domProps[prop] = props[prop];
+		}
+	}
+	return domProps;
+}
+
+/***/ }),
+/* 429 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/*!
+ * html-attributes
+ * https://github.com/alexmingoia/html-attributes
+ */
+
+
+
+/**
+ * @module html-attributes
+ */
+
+module.exports = {
+  "abbr": "abbr",
+  "accept": "accept",
+  "acceptCharset": "accept-charset",
+  "accessKey": "accesskey",
+  "action": "action",
+  "allowFullScreen": "allowfullscreen",
+  "allowTransparency": "allowtransparency",
+  "alt": "alt",
+  "async": "async",
+  "autoComplete": "autocomplete",
+  "autoFocus": "autofocus",
+  "autoPlay": "autoplay",
+  "cellPadding": "cellpadding",
+  "cellSpacing": "cellspacing",
+  "challenge": "challenge",
+  "charset": "charset",
+  "checked": "checked",
+  "cite": "cite",
+  "class": "class",
+  "className": "class",
+  "cols": "cols",
+  "colSpan": "colspan",
+  "command": "command",
+  "content": "content",
+  "contentEditable": "contenteditable",
+  "contextMenu": "contextmenu",
+  "controls": "controls",
+  "coords": "coords",
+  "crossOrigin": "crossorigin",
+  "data": "data",
+  "dateTime": "datetime",
+  "default": "default",
+  "defer": "defer",
+  "dir": "dir",
+  "disabled": "disabled",
+  "download": "download",
+  "draggable": "draggable",
+  "dropzone": "dropzone",
+  "encType": "enctype",
+  "for": "for",
+  "form": "form",
+  "formAction": "formaction",
+  "formEncType": "formenctype",
+  "formMethod": "formmethod",
+  "formNoValidate": "formnovalidate",
+  "formTarget": "formtarget",
+  "frameBorder": "frameBorder",
+  "headers": "headers",
+  "height": "height",
+  "hidden": "hidden",
+  "high": "high",
+  "href": "href",
+  "hrefLang": "hreflang",
+  "htmlFor": "for",
+  "httpEquiv": "http-equiv",
+  "icon": "icon",
+  "id": "id",
+  "inputMode": "inputmode",
+  "isMap": "ismap",
+  "itemId": "itemid",
+  "itemProp": "itemprop",
+  "itemRef": "itemref",
+  "itemScope": "itemscope",
+  "itemType": "itemtype",
+  "kind": "kind",
+  "label": "label",
+  "lang": "lang",
+  "list": "list",
+  "loop": "loop",
+  "manifest": "manifest",
+  "max": "max",
+  "maxLength": "maxlength",
+  "media": "media",
+  "mediaGroup": "mediagroup",
+  "method": "method",
+  "min": "min",
+  "minLength": "minlength",
+  "multiple": "multiple",
+  "muted": "muted",
+  "name": "name",
+  "noValidate": "novalidate",
+  "open": "open",
+  "optimum": "optimum",
+  "pattern": "pattern",
+  "ping": "ping",
+  "placeholder": "placeholder",
+  "poster": "poster",
+  "preload": "preload",
+  "radioGroup": "radiogroup",
+  "readOnly": "readonly",
+  "rel": "rel",
+  "required": "required",
+  "role": "role",
+  "rows": "rows",
+  "rowSpan": "rowspan",
+  "sandbox": "sandbox",
+  "scope": "scope",
+  "scoped": "scoped",
+  "scrolling": "scrolling",
+  "seamless": "seamless",
+  "selected": "selected",
+  "shape": "shape",
+  "size": "size",
+  "sizes": "sizes",
+  "sortable": "sortable",
+  "span": "span",
+  "spellCheck": "spellcheck",
+  "src": "src",
+  "srcDoc": "srcdoc",
+  "srcSet": "srcset",
+  "start": "start",
+  "step": "step",
+  "style": "style",
+  "tabIndex": "tabindex",
+  "target": "target",
+  "title": "title",
+  "translate": "translate",
+  "type": "type",
+  "typeMustMatch": "typemustmatch",
+  "useMap": "usemap",
+  "value": "value",
+  "width": "width",
+  "wmode": "wmode",
+  "wrap": "wrap"
+};
+
+
+/***/ }),
+/* 430 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _APIManager = __webpack_require__(25);
+
+var _ActivityLog = __webpack_require__(248);
+
+var _ActivityLog2 = _interopRequireDefault(_ActivityLog);
+
+var _Dialog = __webpack_require__(55);
+
+var _jquery = __webpack_require__(15);
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _dropdown = __webpack_require__(85);
+
+var _immutabilityHelper = __webpack_require__(18);
+
+var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Dash = function (_React$Component) {
+  _inherits(Dash, _React$Component);
+
+  function Dash() {
+    _classCallCheck(this, Dash);
+
+    return _possibleConstructorReturn(this, (Dash.__proto__ || Object.getPrototypeOf(Dash)).apply(this, arguments));
+  }
+
+  _createClass(Dash, [{
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(Goals, null),
+        _react2.default.createElement(_ActivityLog2.default, null)
+      );
+    }
+  }]);
+
+  return Dash;
+}(_react2.default.Component);
+
+exports.default = Dash;
+
+var Goals = function (_React$Component2) {
+  _inherits(Goals, _React$Component2);
+
+  function Goals(props) {
+    _classCallCheck(this, Goals);
+
+    var _this2 = _possibleConstructorReturn(this, (Goals.__proto__ || Object.getPrototypeOf(Goals)).call(this, props));
+
+    _this2.state = {
+      addGoalDialog: false,
+      editGoalDialog: -1,
+      loading: false,
+      lastRequestID: -1,
+      goals: []
+    };
+    return _this2;
+  }
+
+  _createClass(Goals, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      this.getGoals();
+    }
+  }, {
+    key: 'getGoals',
+    value: function getGoals() {
+      this.setState({ loading: true });
+      var url = window.location.origin + "/ics/goals/";
+      var component = this;
+
+      var rID = (0, _APIManager.requestID)();
+      this.lastRequestID = rID;
+
+      (0, _APIManager.fetch)(url, { team: window.localStorage.getItem("team") || "1" }).done(function (data) {
+        if (component.lastRequestID != rID) return;
+
+        component.setState({ goals: data });
+      }).always(function () {
+        if (component.lastRequestID != rID) return;
+        component.setState({ loading: false });
+      });
+    }
+  }, {
+    key: 'handleAddGoal',
+    value: function handleAddGoal(index, newGoal, success, failure) {
+      var url = window.location.origin + "/ics/goals/";
+      var component = this;
+      var params = {
+        "process_type": newGoal.processType.id,
+        "product_type": newGoal.productType.id,
+        "goal": newGoal.goal || 0
+      };
+
+      (0, _APIManager.post)(url, params).done(function (data) {
+        var ns = (0, _immutabilityHelper2.default)(component.state.goals, { $push: [data] });
+        component.setState({ goals: ns }, success);
+      }).fail(function (jqxhr, text, error) {
+        failure();
+      });
+    }
+  }, {
+    key: 'handleEditGoal',
+    value: function handleEditGoal(index, newGoal, success, failure) {
+      var url = window.location.origin + "/ics/goals/edit/" + this.state.goals[index].id + "/";
+      var component = this;
+      var params = {
+        process_type: newGoal.processType.id,
+        product_type: newGoal.productType.id,
+        goal: newGoal.goal
+      };
+
+      (0, _APIManager.put)(url, params).done(function (data) {
+        var ns = (0, _immutabilityHelper2.default)(component.state.goals, _defineProperty({}, index, { $set: data }));
+        component.setState({ goals: ns }, success);
+      }).fail(function (error) {
+        failure();
+      });
+    }
+  }, {
+    key: 'handleDeleteGoal',
+    value: function handleDeleteGoal(index) {
+      var url = window.location.origin + "/ics/goals/edit/" + this.state.goals[index].id + "/";
+      var component = this;
+
+      (0, _APIManager.del)(url).done(function (data) {
+        var ns = (0, _immutabilityHelper2.default)(component.state.goals, { $splice: [[index, 1]] });
+        component.setState({ goals: ns });
+      }).fail(function (error) {
+        alert("Oops, something went wrong");
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this3 = this;
+
+      var addGoalDialog = false;
+      if (this.state.addGoalDialog) {
+        addGoalDialog = _react2.default.createElement(AddGoalDialog, {
+          onCancel: function onCancel() {
+            return _this3.setState({ addGoalDialog: false });
+          },
+          onSubmit: this.handleAddGoal.bind(this),
+          goalIndex: -1
+        });
+      }
+
+      var editGoalDialog = false;
+      if (this.state.editGoalDialog >= 0) {
+        editGoalDialog = _react2.default.createElement(AddGoalDialog, {
+          onCancel: function onCancel() {
+            return _this3.setState({ editGoalDialog: -1 });
+          },
+          onSubmit: this.handleEditGoal.bind(this),
+          goalIndex: this.state.editGoalDialog,
+          goal: this.state.goals[this.state.editGoalDialog]
+        });
+      }
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'goals page mini' },
+        addGoalDialog,
+        editGoalDialog,
+        _react2.default.createElement(
+          'div',
+          { className: 'page-header' },
+          _react2.default.createElement(
+            'h2',
+            null,
+            'Production Goals'
+          ),
+          _react2.default.createElement(
+            'button',
+            { className: 'add-goal-button', onClick: function onClick() {
+                return _this3.setState({ addGoalDialog: true });
+              } },
+            'Add a new goal'
+          )
+        ),
+        this.state.goals.map(function (goal, i) {
+          var _this4 = this;
+
+          return _react2.default.createElement(Goal, {
+            goal: goal,
+            key: i,
+            onEditGoal: function onEditGoal() {
+              return _this4.setState({ editGoalDialog: i });
+            },
+            onDeleteGoal: function onDeleteGoal() {
+              return _this4.handleDeleteGoal(i);
+            }
+          });
+        }, this)
+      );
+    }
+  }]);
+
+  return Goals;
+}(_react2.default.Component);
+
+/* getDisplayProportions
+ * ---------------------
+ * Takes a @goal object and extracts display requirements. 
+ * Returns an object with the following fields:
+ * @achieved: whether the goal has been met or not
+ * @proportion: a ratio between actual and goal, order depends 
+ *              on which is smaller, since we have to mark out
+ *              the smaller one on a scale of the larger one
+ */
+
+function getDisplayProportions(g) {
+  var actual = parseFloat(g.actual || 0);
+  var goal = parseFloat(g.goal);
+
+  if (actual < goal) {
+    return {
+      achieved: false,
+      proportion: goal ? Math.max(actual / goal * 100, 3) : 100
+    };
+  } else {
+    return {
+      achieved: true,
+      proportion: actual ? Math.max(goal / actual * 100, 3) : 100
+    };
+  }
+}
+
+function Goal(props) {
+  var _getDisplayProportion = getDisplayProportions(props.goal),
+      achieved = _getDisplayProportion.achieved,
+      proportion = _getDisplayProportion.proportion;
+
+  return _react2.default.createElement(
+    'div',
+    { className: 'goal' },
+    _react2.default.createElement(
+      'div',
+      { className: 'goal-details' },
+      _react2.default.createElement(
+        'div',
+        { className: 'goal-details-left' },
+        _react2.default.createElement(
+          'span',
+          { className: 'product' },
+          props.goal.process_name + " " + props.goal.product_code
+        ),
+        _react2.default.createElement(
+          'span',
+          null,
+          parseInt(props.goal.actual) + '/' + parseInt(props.goal.goal) + ' ' + props.goal.process_unit.toUpperCase() + '(S)'
+        )
+      ),
+      _react2.default.createElement(
+        'div',
+        { className: 'goal-details-right goal-buttons' },
+        _react2.default.createElement(
+          'button',
+          { onClick: props.onEditGoal },
+          _react2.default.createElement(
+            'i',
+            { className: 'material-icons' },
+            'mode_edit'
+          )
+        ),
+        _react2.default.createElement(
+          'button',
+          { onClick: props.onDeleteGoal },
+          _react2.default.createElement(
+            'i',
+            { className: 'material-icons' },
+            'delete_forever'
+          )
+        )
+      )
+    ),
+    _react2.default.createElement(
+      'div',
+      { className: "goal-whole-bar " + (achieved ? "goal-achieved" : "") },
+      _react2.default.createElement(
+        'div',
+        { className: 'goal-filled-bar', style: { flex: proportion + '%' } },
+        parseInt(achieved ? props.goal.goal : props.goal.actual) || 0
+      ),
+      _react2.default.createElement(
+        'div',
+        { style: { flex: 100 - proportion + '%' } },
+        parseInt(achieved ? props.goal.actual : props.goal.goal) || 0
+      )
+    ),
+    _react2.default.createElement('div', { className: 'goal-buttons' })
+  );
+}
+
+var AddGoalDialog = function (_React$Component3) {
+  _inherits(AddGoalDialog, _React$Component3);
+
+  function AddGoalDialog(props) {
+    _classCallCheck(this, AddGoalDialog);
+
+    var _this5 = _possibleConstructorReturn(this, (AddGoalDialog.__proto__ || Object.getPrototypeOf(AddGoalDialog)).call(this, props));
+
+    _this5.state = {
+      loading: false,
+      done: false,
+      processType: null,
+      productType: null,
+      goal: "",
+      goal_unit: "",
+      setup: false,
+      processes: [],
+      products: []
+    };
+    return _this5;
+  }
+
+  _createClass(AddGoalDialog, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      this.getProductsAndProcesses();
+    }
+  }, {
+    key: 'getProductsAndProcesses',
+    value: function getProductsAndProcesses() {
+      var thisObj = this;
+      var goal = this.props.goal;
+      var container = {};
+      var defs = [this.getDeferred("processes", container), this.getDeferred("products", container)];
+
+      _jquery2.default.when.apply(null, defs).done(function () {
+        container.setup = true;
+        container.processType = container.processes[0].value;
+        container.productType = container.products[0].value;
+
+        // if there was an existing goal that we are editing, 
+        // set the form values to the existing goal
+        if (goal) {
+          container.processType = container.processes.find(function (e) {
+            return e.value.id == goal.process_type;
+          }).value;
+          container.productType = container.products.find(function (e) {
+            return e.value.id == goal.product_type;
+          }).value;
+          container.goal = parseInt(goal.goal);
+        }
+
+        thisObj.setState(container);
+      });
+    }
+  }, {
+    key: 'getDeferred',
+    value: function getDeferred(keyword, container) {
+      var deferred = _jquery2.default.Deferred();
+      var req = { created_by: window.localStorage.getItem("team") || "1" };
+      if (!req.created_by) {
+        alert("No teams loaded:(((");
+      }
+
+      _jquery2.default.get(window.location.origin + "/ics/" + keyword, req).done(function (data) {
+        container[keyword] = data.map(function (x) {
+          return { value: x, label: x.name };
+        });
+        deferred.resolve();
+      });
+      return deferred.promise();
+    }
+  }, {
+    key: 'handleAddGoal',
+    value: function handleAddGoal() {
+      this.setState({ loading: true });
+      var component = this;
+
+      this.props.onSubmit(this.props.goalIndex, this.state, function () {
+        component.setState({ done: true, error: false });
+      }, function () {
+        component.setState({ error: true });
+      });
+    }
+  }, {
+    key: 'handleChange',
+    value: function handleChange(which, val) {
+      this.setState(_defineProperty({}, which, val));
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this6 = this;
+
+      var title = this.props.goal ? "Edit goal" : "Add a new goal";
+
+      if (this.state.error) {
+        return _react2.default.createElement(
+          _Dialog.Dialog,
+          null,
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-title' },
+            title
+          ),
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-text' },
+            'Oops, something went wrong.'
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'dialog-actions' },
+            _react2.default.createElement(
+              'button',
+              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+              'OK'
+            )
+          )
+        );
+      }
+      if (!this.state.setup) {
+        return _react2.default.createElement(
+          _Dialog.Dialog,
+          null,
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-title' },
+            title
+          ),
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-text' },
+            'Hang on a sec...'
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'dialog-actions' },
+            _react2.default.createElement(
+              'button',
+              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+              'OK'
+            )
+          )
+        );
+      } else if (this.state.done) {
+        return _react2.default.createElement(
+          _Dialog.Dialog,
+          null,
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-title' },
+            title
+          ),
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-text' },
+            this.props.goal ? "Yay! Your goal has been updated." : "Yay! You added a new goal!"
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'dialog-actions' },
+            _react2.default.createElement(
+              'button',
+              { className: 'dialog-button dialog-cancel', onClick: this.props.onCancel },
+              'OK'
+            )
+          )
+        );
+      } else {
+        return _react2.default.createElement(
+          _Dialog.Dialog,
+          null,
+          _react2.default.createElement(
+            'span',
+            { className: 'dialog-title' },
+            title
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'dialog-text' },
+            _react2.default.createElement(
+              'div',
+              { className: 'row' },
+              _react2.default.createElement(
+                'div',
+                { className: 'addgoal-field' },
+                _react2.default.createElement(_dropdown.Dropdown, {
+                  source: this.state.processes,
+                  onChange: function onChange(val) {
+                    return _this6.handleChange("processType", val);
+                  },
+                  value: this.state.processType
+                })
+              ),
+              _react2.default.createElement(
+                'div',
+                { className: 'addgoal-field' },
+                _react2.default.createElement(_dropdown.Dropdown, {
+                  source: this.state.products,
+                  onChange: function onChange(val) {
+                    return _this6.handleChange("productType", val);
+                  },
+                  value: this.state.productType
+                })
+              )
+            ),
+            _react2.default.createElement(
+              'div',
+              { className: 'row' },
+              _react2.default.createElement(
+                'div',
+                { className: 'addgoal-field' },
+                _react2.default.createElement('input', { type: 'text', placeholder: '0', value: this.state.goal, onChange: function onChange(e) {
+                    return _this6.handleChange("goal", e.target.value);
+                  } })
+              ),
+              _react2.default.createElement(
+                'span',
+                null,
+                this.state.processType ? this.state.processType.unit : "unit(s)"
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'dialog-actions' },
+            _react2.default.createElement(
+              'button',
+              { className: 'dialog-button dialog-cancel', style: { display: this.state.loading ? "none" : "" }, onClick: this.props.onCancel },
+              'Cancel'
+            ),
+            _react2.default.createElement(
+              'button',
+              { className: 'dialog-button', onClick: this.handleAddGoal.bind(this) },
+              this.state.loading ? "Adding goal..." : "Confirm"
+            )
+          )
+        );
+      }
+      return false;
+    }
+  }]);
+
+  return AddGoalDialog;
+}(_react2.default.Component);
 
 /***/ })
 /******/ ]);
