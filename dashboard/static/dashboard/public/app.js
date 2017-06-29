@@ -69618,7 +69618,12 @@ var Task = function (_React$Component) {
         items: [{ item: '' + id }]
       };
 
-      (0, _APIManager.post)(url, JSON.stringify(params)).done(function (data) {
+      var headers = {
+        contentType: 'application/json',
+        processData: false
+      };
+
+      (0, _APIManager.post)(url, JSON.stringify(params), headers).done(function (data) {
         var newObj = (0, _immutabilityHelper2.default)(component.state.task, {
           items: _defineProperty({}, index, {
             $merge: { is_used: true }
@@ -69626,6 +69631,7 @@ var Task = function (_React$Component) {
         });
         component.setState({ task: newObj });
       }).fail(function (req, err) {
+        var qr = this.state.task.items[index].item_qr;
         alert('Couldn\'t mark the item with QR ' + qr.substring(qr.length - 6) + ' as used. :( \n ' + err);
       });
     }

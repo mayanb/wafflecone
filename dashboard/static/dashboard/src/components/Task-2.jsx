@@ -115,7 +115,12 @@ export default class Task extends React.Component {
       items: [ {item: `${id}`}] 
     }
 
-    post(url, JSON.stringify(params))
+    let headers = {
+      contentType: 'application/json',
+      processData: false,
+    }
+
+    post(url, JSON.stringify(params), headers)
       .done(function (data) {
         let newObj = update(component.state.task, {
           items: {
@@ -126,6 +131,7 @@ export default class Task extends React.Component {
         })
         component.setState({task: newObj})
       }).fail(function (req, err) {
+        let qr = this.state.task.items[index].item_qr
         alert(`Couldn't mark the item with QR ${qr.substring(qr.length-6)} as used. :( \n ${err}`)
       })
   }
