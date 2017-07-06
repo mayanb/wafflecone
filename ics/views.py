@@ -467,8 +467,8 @@ def potatoes(request):
     melange_input = pulled_melanger.inputs.first()
     if melange_input:
       melange_start = melange_input.input_item.creating_task
-      start_time = melange_start.created_at
-      end_time = pulled_melanger.created_at
+      start_time = melange_start.created_at.strptime(easy_format)
+      end_time = pulled_melanger.created_at.strptime(easy_format)
       delta = end_time - start_time
       origin = pulled_melanger.product_type.code
       melanger_name = melange_start.attribute_values.filter(attribute=melanger_attr)
@@ -484,6 +484,8 @@ def potatoes(request):
 def activityCSV(request):
   response = HttpResponse(content_type='text/csv')
   response['Content-Disposition'] = 'attachment; filename="logs.csv"'
+
+  easy_format = '%Y-%m-%d %H:%M'
 
   process = request.GET.get('process', None)
   start = request.GET.get('start', None)
@@ -520,9 +522,11 @@ def activityCSV(request):
     product_type = t.product_type.code
     inputs = t.inputcount
     outputs = t.outputcount
-    creation_date = t.created_at
-    close_date = t.updated_at
+    creation_date = t.created_at.strftime(easy_format)
+    close_date = t.updated_at.strftime(easy_format)
     first_use_date = t.first_use_date
+    if first_use_date is not None:
+      first_use_date = first_use_date.strftime(easy_format)
     results = [tid, display, product_type, inputs, outputs, creation_date, close_date, first_use_date]
     vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
     for attr in attrs:
