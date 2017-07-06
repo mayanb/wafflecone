@@ -42829,7 +42829,7 @@ function Process(props) {
 
   var link = window.location.origin + "/ics/potatoes/?";
   var team = window.localStorage.getItem("team") || "1";
-  var downloadURL = window.location.origin + '/ics/potatoes/?team=' + team + '&process=' + props.process_id + '&start=' + props.dates.start + '&end=' + props.dates.end;
+  var downloadURL = window.location.origin + '/ics/potatoes/?team=' + team + '&process=' + props.process_id + '&start=' + toUTCString(props.dates.start) + '&end=' + toUTCString(props.dates.end, true);
 
   var button = _react2.default.createElement(
     'a',

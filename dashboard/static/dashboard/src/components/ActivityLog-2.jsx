@@ -191,7 +191,8 @@ function Process(props) {
 
   let link = window.location.origin + "/ics/potatoes/?"
   let team = window.localStorage.getItem("team") || "1"
-  let downloadURL = `${window.location.origin}/ics/potatoes/?team=${team}&process=${props.process_id}&start=${props.dates.start}&end=${props.dates.end}`
+  let downloadURL = 
+    `${window.location.origin}/ics/potatoes/?team=${team}&process=${props.process_id}&start=${toUTCString(props.dates.start)}&end=${toUTCString(props.dates.end, true)}`
 
   let button = <a 
     href={downloadURL}
