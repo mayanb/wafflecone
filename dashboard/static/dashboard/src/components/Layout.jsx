@@ -6,8 +6,6 @@ import {Dropdown} from 'react-toolbox/lib/dropdown'
 var teams = [
     { value: '1', label: 'Bama Production'},
     { value: '5', label: 'Valencia Production' },
-    { value: '7', label: 'United Cold'},
-    {value: '3', label: 'Fulfillment'},
 ];
 
 function getTeam() {

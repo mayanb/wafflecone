@@ -80,8 +80,6 @@ img:before {
   flex: 1;
   max-height: 100vh;
   overflow: scroll; }
-  .d-content > div {
-    max-width: 80%; }
 
 .d-nav {
   flex: 0 0 13em;
@@ -414,7 +412,8 @@ div#blocker, #canvastest {
   .inventory .inventory-list {
     flex: 1;
     max-width: 900px;
-    margin: 0 auto; }
+    margin: 0 auto;
+    padding-top: 40px; }
     .inventory .inventory-list h2 {
       font-size: 20px; }
     .inventory .inventory-list.smallDetail {

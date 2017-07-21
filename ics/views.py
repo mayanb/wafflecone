@@ -266,16 +266,18 @@ class InventoryList(generics.ListAPIView):
         count=Sum('amount'),
     )
 
-
 class InventoryDetailTest(generics.ListAPIView):
   serializer_class = InventoryDetailSerializer
   pagination_class = SmallPagination
 
   def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    sq = Item.objects.filter(creating_task=OuterRef('id')).filter(input__isnull=True, inventory=1)
+   
     queryset = Task.objects.filter(is_trashed=False, items__isnull=False, items__input__isnull=True)
 
     # filter by team
-    team = self.request.query_params.get('team', None)
+    #team = self.request.query_params.get('team', None)
     if team is not None:
       queryset = queryset.filter(items__inventory=team).distinct()
 
