@@ -452,7 +452,15 @@ div#blocker, #canvastest {
       overflow: scroll; }
       .inventory .inventory-detail .i-detail-content .task-title {
         font-weight: bold;
-        padding-bottom: 4px; }
+        padding-bottom: 4px;
+        display: flex;
+        flex-direction: row; }
+        .inventory .inventory-detail .i-detail-content .task-title a {
+          flex: 1; }
+        .inventory .inventory-detail .i-detail-content .task-title button {
+          border: 0;
+          background-color: transparent;
+          color: #49A8F3; }
       .inventory .inventory-detail .i-detail-content .inventory-task {
         margin: 0px -16px;
         padding: 16px;

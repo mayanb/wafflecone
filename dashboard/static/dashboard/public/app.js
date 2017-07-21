@@ -22547,7 +22547,11 @@ var InventoryDetail = function (_React$Component) {
 
       var props = this.props;
 
-      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, { tasks: this.state.tasks, onChange: this.handleItemSelect.bind(this) }));
+      var contentArea = _react2.default.createElement(ItemList, _extends({}, props, {
+        tasks: this.state.tasks,
+        onChange: this.handleItemSelect.bind(this),
+        onSelectAll: this.handleSelectAllToggle.bind(this)
+      }));
       var loading = false;
       if (this.state.loading) {
         loading = _react2.default.createElement(_Loading2.default, null);
@@ -22676,68 +22680,24 @@ var InventoryDetail = function (_React$Component) {
       });
     }
   }, {
-    key: 'handleItemSelect',
-    value: function handleItemSelect(taskIndex, itemIndex) {
-      var newVal = this.state.tasks[taskIndex].items[itemIndex].selected;
-      if (newVal) newVal = false;else newVal = true;
+    key: 'handleSelectAllToggle',
+    value: function handleSelectAllToggle(taskIndex) {
+      var task = this.state.tasks[taskIndex];
 
-      var newCount = this.state.selectedCount;
-      if (newVal) {
-        newCount = this.state.selectedCount + 1;
-      } else {
-        newCount = this.state.selectedCount - 1;
-      }
-
-      var newArr = (0, _immutabilityHelper2.default)(this.state.tasks, _defineProperty({}, taskIndex, {
-        items: _defineProperty({}, itemIndex, {
-          $merge: { selected: newVal }
-        })
-      }));
-
-      console.log(newArr);
-
-      this.setState({ tasks: newArr, selectedCount: newCount });
-    }
-  }, {
-    key: 'deliverItems',
-    value: function deliverItems(destination, callback) {
-      var tasks = this.state.tasks;
-
-      var itemsToDeliver = [];
+      // get count of selected in this task
+      var count = 0;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this.state.tasks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var task = _step.value;
-          var _iteratorNormalCompletion2 = true;
-          var _didIteratorError2 = false;
-          var _iteratorError2 = undefined;
+        for (var _iterator = task.items[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var item = _step.value;
 
-          try {
-            for (var _iterator2 = task.items[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-              var item = _step2.value;
-
-              if (item.selected) {
-                itemsToDeliver.push({ item: '' + item.id });
-              }
-            }
-          } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                _iterator2.return();
-              }
-            } finally {
-              if (_didIteratorError2) {
-                throw _iteratorError2;
-              }
-            }
-          }
+          count += item.selected ? 1 : 0;
         }
+
+        // make a deep copy of the array
       } catch (err) {
         _didIteratorError = true;
         _iteratorError = err;
@@ -22749,6 +22709,111 @@ var InventoryDetail = function (_React$Component) {
         } finally {
           if (_didIteratorError) {
             throw _iteratorError;
+          }
+        }
+      }
+
+      var newTask = (0, _immutabilityHelper2.default)(task, { $merge: [] });
+      var totalSelected = this.state.selectedCount;
+
+      if (count == 0) {
+        for (var i = 0; i < newTask.items.length; i++) {
+          newTask.items[i].selected = true;
+          totalSelected += 1;
+        }
+      } else {
+        for (var i = 0; i < newTask.items.length; i++) {
+          if (newTask.items[i].selected) {
+            newTask.items[i].selected = false;
+            totalSelected -= 1;
+          }
+        }
+      }
+
+      this.setState({ task: newTask, selectedCount: totalSelected });
+    }
+  }, {
+    key: 'updateItem',
+    value: function updateItem(itemArray, index, merge) {
+      return (0, _immutabilityHelper2.default)(itemArray, index);
+    }
+  }, {
+    key: 'handleItemSelect',
+    value: function handleItemSelect(taskIndex, itemIndex) {
+
+      // get the toggled selection value
+      var newVal = !this.state.tasks[taskIndex].items[itemIndex].selected;
+
+      // get the count of selected items 
+      // after toggling this item's selection value
+      var newCount = this.state.selectedCount;
+      if (newVal) {
+        newCount = this.state.selectedCount + 1;
+      } else {
+        newCount = this.state.selectedCount - 1;
+      }
+
+      // update the task object
+      var newArr = (0, _immutabilityHelper2.default)(this.state.tasks, _defineProperty({}, taskIndex, {
+        items: _defineProperty({}, itemIndex, {
+          $merge: { selected: newVal }
+        })
+      }));
+
+      // update the state with new task object & selected count
+      this.setState({ tasks: newArr, selectedCount: newCount });
+    }
+  }, {
+    key: 'deliverItems',
+    value: function deliverItems(destination, callback) {
+      var tasks = this.state.tasks;
+
+      var itemsToDeliver = [];
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = this.state.tasks[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var task = _step2.value;
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
+
+          try {
+            for (var _iterator3 = task.items[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var item = _step3.value;
+
+              if (item.selected) {
+                itemsToDeliver.push({ item: '' + item.id });
+              }
+            }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                _iterator3.return();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
           }
         }
       }
@@ -22791,7 +22856,7 @@ function ItemList(props) {
     'div',
     null,
     (props.tasks || []).map(function (task, i) {
-      return _react2.default.createElement(TaskDropdown, _extends({ key: i, index: i }, task, { onChange: props.onChange }));
+      return _react2.default.createElement(TaskDropdown, _extends({ key: i, index: i }, task, { onChange: props.onChange, onSelectAll: props.onSelectAll }));
     }, this)
   );
 }
@@ -22835,6 +22900,7 @@ function Item(props) {
 }
 
 function TaskDropdown(props) {
+
   return _react2.default.createElement(
     'div',
     { className: 'inventory-task' },
@@ -22852,6 +22918,13 @@ function TaskDropdown(props) {
           { className: 'item-task' },
           ' ' + props.display + ' (' + props.items.length + ')'
         )
+      ),
+      _react2.default.createElement(
+        'button',
+        { onClick: function onClick() {
+            return props.onSelectAll(props.index);
+          } },
+        'all/none'
       )
     ),
     props.items.map(function (item, i) {

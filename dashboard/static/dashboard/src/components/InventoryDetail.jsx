@@ -39,7 +39,12 @@ class InventoryDetail extends React.Component {
   render() {
     let props = this.props
 
-    var contentArea = <ItemList {...props} tasks={this.state.tasks} onChange={this.handleItemSelect.bind(this)}/>
+    var contentArea = <ItemList 
+      {...props} 
+      tasks={this.state.tasks} 
+      onChange={this.handleItemSelect.bind(this)} 
+      onSelectAll={this.handleSelectAllToggle.bind(this)}
+    />
     var loading = false
     if (this.state.loading) {
       loading = <Loading />
@@ -129,12 +134,48 @@ class InventoryDetail extends React.Component {
       })
   }
 
-  handleItemSelect(taskIndex, itemIndex) {
-    let newVal = this.state.tasks[taskIndex].items[itemIndex].selected
-    if (newVal)
-      newVal = false
-    else newVal = true
+  handleSelectAllToggle(taskIndex) {
+    let task = this.state.tasks[taskIndex]
+    
+    // get count of selected in this task
+    let count = 0
+    for (var item of task.items) {
+      count += (item.selected ? 1 : 0)
+    }
 
+    // make a deep copy of the array
+    let newTask = update(task, {$merge: []})
+    let totalSelected = this.state.selectedCount
+
+    if (count == 0) {
+      for (var i = 0; i < newTask.items.length; i++) {
+        newTask.items[i].selected = true
+        totalSelected += 1
+      }
+    } else {
+      for (var i = 0; i < newTask.items.length; i++) {
+        if (newTask.items[i].selected) {
+          newTask.items[i].selected = false
+          totalSelected -= 1
+        }
+      }
+    }
+
+    this.setState({task: newTask, selectedCount: totalSelected})
+
+  }
+
+  updateItem(itemArray, index, merge) {
+    return update(itemArray, index)
+  }
+
+  handleItemSelect(taskIndex, itemIndex) {
+
+    // get the toggled selection value
+    let newVal = !(this.state.tasks[taskIndex].items[itemIndex].selected)
+
+    // get the count of selected items 
+    // after toggling this item's selection value
     let newCount = this.state.selectedCount
     if (newVal) {
       newCount =this.state.selectedCount + 1
@@ -142,6 +183,7 @@ class InventoryDetail extends React.Component {
       newCount = this.state.selectedCount - 1
     }
 
+    // update the task object
     let newArr = update(this.state.tasks, {
       [taskIndex]: {
         items: {
@@ -152,8 +194,7 @@ class InventoryDetail extends React.Component {
       }
     })
 
-    console.log(newArr)
-
+    // update the state with new task object & selected count
     this.setState({tasks: newArr, selectedCount: newCount})
   }
 
@@ -206,7 +247,7 @@ function ItemList(props) {
     <div>
     {
       (props.tasks || []).map(function (task, i) {
-        return <TaskDropdown key={i} index={i} {...task} onChange={props.onChange}/>
+        return <TaskDropdown key={i} index={i} {...task} onChange={props.onChange} onSelectAll={props.onSelectAll}/>
       }, this)
     }
     </div>
@@ -238,6 +279,7 @@ function Item(props) {
 }
 
 function TaskDropdown(props) {
+
   return (
     <div className="inventory-task">
       <div className="task-title">
@@ -247,6 +289,7 @@ function TaskDropdown(props) {
         >
           <span className="item-task">{` ${props.display} (${props.items.length})`}</span>
         </a>
+        <button onClick={() => props.onSelectAll(props.index)}>all/none</button>
       </div>
     {
       props.items.map(function (item, i) {
