@@ -263,7 +263,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__unit', 
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by').annotate(
-        count=Count('id'),
+        count=Sum('amount'),
     )
 
 class InventoryDetailTest(generics.ListAPIView):
