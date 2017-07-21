@@ -222,7 +222,7 @@ function Item(props) {
           <img src={src} />
         </div>
         <div>
-          <span className="item-qr">{props.item_qr.substring(42)}</span>
+          <span className="item-qr">{props.item_qr.substring(43)}</span>
         </div>
       </div>
       <div className="unflex">

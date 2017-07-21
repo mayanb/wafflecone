@@ -291,6 +291,37 @@ class InventoryDetailTest(generics.ListAPIView):
     process = self.request.query_params.get('process', '')
     return queryset.filter(process_type=process).annotate(team=Value(team, output_field=models.CharField()))
 
+class InventoryDetailTest2(generics.ListAPIView):
+  serializer_class = InventoryDetailSerializer
+  pagination_class = SmallPagination
+
+  def get_queryset(self):
+    item_query = Item.objects.filter(input__isnull=True)
+    
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      item_query = item_query.filter(inventory=team).distinct()
+
+
+    queryset = Task.objects.filter(is_trashed=False) 
+
+     # filter by products
+    products = self.request.query_params.get('products', None)
+    if products is not None:
+      products = products.strip().split(',')
+      queryset = queryset.filter(creating_task__product_type__code__in=products)
+
+    # filter by output type
+    process = self.request.query_params.get('process', '')
+    if process is not None:
+      queryset = queryset.filter(process_type=process)
+
+
+    queryset = queryset.filter(items__in=item_query).distinct()
+
+    return queryset.annotate(team=Value(team, output_field=models.CharField()))
+    #return queryset.filter(creating_task__process_type=process).values('creating_task').annotate(Value('creating_task'))
+
 
 
 class InventoryDetail(generics.ListAPIView):

@@ -22815,7 +22815,7 @@ function Item(props) {
         _react2.default.createElement(
           'span',
           { className: 'item-qr' },
-          props.item_qr.substring(42)
+          props.item_qr.substring(43)
         )
       )
     ),

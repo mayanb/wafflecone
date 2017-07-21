@@ -221,6 +221,7 @@ class InventoryListSerializer(serializers.ModelSerializer):
     model = Item
     fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id')
 
+
 class InventoryDetailSerializer(serializers.ModelSerializer):
   items = serializers.SerializerMethodField('getInventoryItems')
   display = serializers.CharField(source='*', read_only=True)
