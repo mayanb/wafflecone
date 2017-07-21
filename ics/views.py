@@ -244,7 +244,7 @@ class InventoryList(generics.ListAPIView):
   serializer_class = InventoryListSerializer
 
   def get_queryset(self):
-    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False)
+    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
 
     # filter by team
     team = self.request.query_params.get('team', None)
@@ -263,7 +263,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__unit', 
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by').annotate(
-        count=Sum('amount'),
+        count=Count('id'),
     )
 
 class InventoryDetailTest(generics.ListAPIView):
