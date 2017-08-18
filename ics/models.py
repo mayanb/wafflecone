@@ -269,27 +269,23 @@ class RecommendedInputs(models.Model):
     process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
     recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
 
+
 class Movement(models.Model):
+    # ENUM style statuses
     IN_TRANSIT = "IT"
     RECEIVED = "RC"
     STATUS_CHOICES = ((IN_TRANSIT, "in_transit"), (RECEIVED, "received"))
-
-    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=IN_TRANSIT)
+    
     timestamp = models.DateTimeField(auto_now_add=True)
-    intended_destination = models.CharField(max_length=50, blank=True)
-    deliverable = models.BooleanField(default=False)
     group_qr = models.CharField(max_length=50, blank=True)
     origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
     destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
+    
+    # not in use currently
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=IN_TRANSIT)
+    intended_destination = models.CharField(max_length=50, blank=True)
+    deliverable = models.BooleanField(default=False)
     notes = models.CharField(max_length=100, blank=True)
-
-    def save(self, *args, **kwargs):
-        if self.status is 'RC':
-            self.items.all().update(inventory=self.destination)
-        if self.status is 'IT':
-            self.items.all().update(inventory=None)
-        super(Movement, self).save(*args, **kwargs)
-
 
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
