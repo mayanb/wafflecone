@@ -63,17 +63,15 @@ class TaskFilter(django_filters.rest_framework.FilterSet):
 
 # tasks/create/
 class TaskCreate(generics.CreateAPIView):
-  """
-  Create a new task.
-  """
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = BasicTaskSerializer
 
-# tasks/edit/xxx
+# tasks/edit/[pk]
 class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
+# tasks/search/?label=[str]
 class TaskSearch(generics.ListAPIView):
   serializer_class = EditTaskSerializer
   pagination_class = SmallPagination
@@ -165,7 +163,7 @@ class TaskList(generics.ListAPIView):
     inv = self.request.query_params.get('inventory', None )
     return {"inventory": inv}
 
-# tasks/xxx/
+# tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
   queryset = Task.objects.filter(is_trashed=False).annotate(total_amount=Sum('items__amount'))
   serializer_class = NestedTaskSerializer
@@ -178,15 +176,18 @@ class TaskDetail(generics.RetrieveAPIView):
 # ITEM-RELATED VIEWS #
 ######################
 
+#items/create/
 class CreateItem(generics.ListCreateAPIView):
   queryset = Item.objects.all()
   serializer_class = BasicItemSerializer
 
+# items/
 class ItemList(generics.ListAPIView):
   queryset = Item.objects.all()
   serializer_class = NestedItemSerializer
   filter_fields = ('item_qr', 'creating_task')
 
+# items/[pk]/
 class ItemDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Item.objects.all()
   serializer_class = NestedItemSerializer
@@ -199,15 +200,18 @@ class ItemDetail(generics.RetrieveUpdateDestroyAPIView):
 # INPUT-RELATED VIEWS #
 #######################
 
+# inputs/create/
 class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializer
 
+# inputs/
 class InputList(generics.ListAPIView):
   queryset = Input.objects.all()
   serializer_class = NestedInputSerializer
   filter_fields = ('task',)
 
+# inputs/[pk]/
 class InputDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Input.objects.all()
   serializer_class = NestedInputSerializer
@@ -220,15 +224,18 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 # PROCESS-RELATED VIEWS #
 #########################
 
+# processes/
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.filter(is_trashed=False)
   serializer_class = ProcessTypeSerializer
   filter_fields = ('created_by',)
 
+# processes/[pk]/
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeSerializer
 
+# processes/move/[pk]
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
@@ -240,6 +247,7 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
 # INVENTORY VIEWS #
 ###################
 
+# inventory/
 class InventoryList(generics.ListAPIView):
   serializer_class = InventoryListSerializer
 
@@ -266,31 +274,7 @@ class InventoryList(generics.ListAPIView):
         count=Sum('amount'),
     )
 
-class InventoryDetailTest(generics.ListAPIView):
-  serializer_class = InventoryDetailSerializer
-  pagination_class = SmallPagination
-
-  def get_queryset(self):
-    team = self.request.query_params.get('team', None)
-    sq = Item.objects.filter(creating_task=OuterRef('id')).filter(input__isnull=True, inventory=1)
-   
-    queryset = Task.objects.filter(is_trashed=False, items__isnull=False, items__input__isnull=True)
-
-    # filter by team
-    #team = self.request.query_params.get('team', None)
-    if team is not None:
-      queryset = queryset.filter(items__inventory=team).distinct()
-
-    # filter by products
-    products = self.request.query_params.get('products', None)
-    if products is not None:
-      products = products.strip().split(',')
-      queryset = queryset.filter(product_type__code__in=products)
-
-    # filter by output type
-    process = self.request.query_params.get('process', '')
-    return queryset.filter(process_type=process).annotate(team=Value(team, output_field=models.CharField()))
-
+# inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
   serializer_class = InventoryDetailSerializer
   pagination_class = SmallPagination
@@ -323,7 +307,7 @@ class InventoryDetailTest2(generics.ListAPIView):
     #return queryset.filter(creating_task__process_type=process).values('creating_task').annotate(Value('creating_task'))
 
 
-
+# inventory/detail/
 class InventoryDetail(generics.ListAPIView):
   queryset = Item.objects.filter(creating_task=533)
   serializer_class = NestedItemSerializer
@@ -353,6 +337,7 @@ class InventoryDetail(generics.ListAPIView):
 # ACTIVITY VIEWS #
 ##################
 
+# activity/
 class ActivityList(generics.ListAPIView):
   serializer_class = ActivityListSerializer
 
@@ -385,6 +370,7 @@ class ActivityList(generics.ListAPIView):
       runs=Count('id', distinct=True)
     ).annotate(outputs=Coalesce(Sum('items__amount'), 0))
 
+# activity/detail/
 class ActivityListDetail(generics.ListAPIView):
   serializer_class = ActivityListDetailSerializer
 

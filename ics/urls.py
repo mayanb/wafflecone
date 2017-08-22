@@ -6,9 +6,7 @@ urlpatterns = [
     url(r'^users/$', views.UserList.as_view()),
 
     url(r'^$', views.index, name='index'),
-    # url(r'^tasks/create/$', views.CreateTask.as_view()),
-    url(r'^inputs/create/$', views.CreateInput.as_view()),
-    url(r'^items/create/$', views.CreateItem.as_view()),
+    
 
     url(r'^tasks/create/$', views.TaskCreate.as_view(), name='create_task'),
     url(r'^tasks/$', views.TaskList.as_view()),
@@ -16,9 +14,11 @@ urlpatterns = [
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
 
+    url(r'^items/create/$', views.CreateItem.as_view()),
     url(r'^items/$', views.ItemList.as_view()),
     url(r'^items/(?P<pk>[0-9]+)/$', views.ItemDetail.as_view()),
 
+    url(r'^inputs/create/$', views.CreateInput.as_view()),
     url(r'^inputs/$', views.InputList.as_view()),
     url(r'^inputs/(?P<pk>[0-9]+)/$', views.InputDetail.as_view()),
 

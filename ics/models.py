@@ -6,7 +6,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 
 
-# Create your models here.
+############################
+#                          #
+#    POLYMER CORE MODELS   #
+#                          #
+############################
+
 
 class ProcessType(models.Model):
     created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
@@ -27,14 +32,13 @@ class ProcessType(models.Model):
     def getAllAttributes(self):
         return self.attribute_set.filter(is_trashed=False)
 
-    def getInventoryCount(self):
-        return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self).count()
-
-    def getInventoryItems(self):
-        return Item.objects.filter(input__isnull=True).filter(creating_task__process_type=self)
-
     class Meta:
         ordering = ['x',]
+
+
+
+
+
 
 class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
@@ -45,6 +49,11 @@ class ProductType(models.Model):
     def __str__(self):
         return self.name
 
+
+
+
+
+
 class Attribute(models.Model):
     process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
@@ -53,6 +62,10 @@ class Attribute(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+
 
 
 class Task(models.Model):
@@ -105,18 +118,9 @@ class Task(models.Model):
             # highest label_index and set our label_index to that + 1
             if numItems > 0:
                 self.label_index = q[0].label_index + 1
-                self.display = "-".join([self.label, str(self.label_index)])
-            else:
-                self.display = self.label
-
-    def getAllItems(self):
-        return self.item_set.all()
 
     def getInventoryItems(self):
         return self.items.filter(input__isnull=True)
-
-    def getInputs(self):
-        return self.input_set.all()
 
     def getTaskAttributes(self):
         return self.taskattribute_set.filter(attribute__is_trashed=False)
@@ -234,6 +238,10 @@ class Task(models.Model):
             self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
 
+
+
+
+
 class Item(models.Model):
     item_qr = models.CharField(max_length=100, unique=True)
     creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
@@ -253,9 +261,17 @@ class Item(models.Model):
         super(Item, self).save(*args, **kwargs)
 
 
+
+
+
+
 class Input(models.Model):
     input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
+
+
+
+
 
 
 class TaskAttribute(models.Model):
@@ -265,9 +281,24 @@ class TaskAttribute(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+
+
+
+##################################
+#                                #
+#    POLYMER SECOENDARY MODELS   #
+#                                #
+##################################
+
+
+
 class RecommendedInputs(models.Model):
     process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
     recommended_input = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name='recommended_input')
+
+
+
+
 
 
 class Movement(models.Model):
@@ -287,6 +318,11 @@ class Movement(models.Model):
     deliverable = models.BooleanField(default=False)
     notes = models.CharField(max_length=100, blank=True)
 
+
+
+
+
+
 class MovementItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     movement = models.ForeignKey(Movement, on_delete=models.CASCADE, related_name="items")
@@ -296,6 +332,11 @@ class MovementItem(models.Model):
             self.item.inventory = self.movement.destination
             self.item.save()
         super(MovementItem, self).save(*args, **kwargs)
+
+
+
+
+
 
 class Goal(models.Model):
     process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
