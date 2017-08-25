@@ -43211,8 +43211,7 @@ var Main = function (_React$Component) {
               _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/zebra/", component: _ZebraPrinter2.default }),
               _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/dymo/", component: _LabelPrinter2.default }),
               _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings/", component: _FactoryMap2.default }),
-              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default }),
-              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/settings", component: Settings })
+              _react2.default.createElement(_reactRouterDom.Route, { path: "/dashboard/task/:id?", component: _Task2.default })
             ),
             _react2.default.createElement(_reactRouterDom.Route, { path: '/dashboard/:section?/:id?', component: _Layout.Navbar }),
             _react2.default.createElement('aside', { className: 'd-ads' })
