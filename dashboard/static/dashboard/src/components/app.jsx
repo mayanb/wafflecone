@@ -56,6 +56,7 @@ class Main extends React.Component {
               <Route path={"/dashboard/dymo/"} component={LabelPrinter} />
               <Route path={"/dashboard/settings/"} component={FactoryMap} />
               <Route path={"/dashboard/task/:id?"} component={Task} />
+              <Route path={"/dashboard/settings"} component={Settings} />
             </main>
 
             <Route path="/dashboard/:section?/:id?" component={Navbar} />

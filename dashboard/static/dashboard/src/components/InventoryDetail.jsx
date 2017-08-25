@@ -104,7 +104,7 @@ class InventoryDetail extends React.Component {
 
     this.setState(newState)
 
-    let url = u || window.location.origin + "/ics/inventory/detail-test/"// + props.match.params.id
+    let url = u || window.location.origin + "/ics/inventory/detail/"// + props.match.params.id
     let g = {process: props.match.params.id}
     if(this.props.filter) {
       g.products = this.props.filter
