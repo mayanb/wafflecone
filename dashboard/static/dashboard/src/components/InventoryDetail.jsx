@@ -319,7 +319,7 @@ class DeliveryDialog extends React.Component {
   }
 
   render() {
-    let teams = [{value: 1, label: "Bama Pirates"}, {value: 5, label: "Valencia Wizards"}, {value: 7, label: "United Cold"}, {value: 3, label: "Fulfillment"}, {value: null, label: "Other"}]
+    let teams = [{value: 1, label: "Bama Pirates"}, {value: 5, label: "Valencia Wizards"}, {value: null, label: "Other"}]
 
     if (this.state.done) {
       return (
