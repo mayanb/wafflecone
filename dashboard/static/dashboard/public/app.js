@@ -25730,7 +25730,7 @@ var InventoryDetail = function (_React$Component) {
 
       this.setState(newState);
 
-      var url = u || window.location.origin + "/ics/inventory/detail/"; // + props.match.params.id
+      var url = u || window.location.origin + "/ics/inventory/detail-test/"; // + props.match.params.id
       var g = { process: props.match.params.id };
       if (this.props.filter) {
         g.products = this.props.filter;
