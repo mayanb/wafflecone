@@ -1,9 +1,17 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
+from django.contrib.auth import views as auth_views
+
+import oauth2client.contrib.django_util.site as django_util_site
+
 
 urlpatterns = [
+
     url(r'^users/$', views.UserList.as_view()),
+
+    url(r'^users/create/$', views.UserProfileCreate.as_view()),
+
 
     url(r'^$', views.index, name='index'),
     

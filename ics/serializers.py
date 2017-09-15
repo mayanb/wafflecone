@@ -26,7 +26,7 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 class ProductTypeSerializer(serializers.ModelSerializer):
   class Meta:
     model = ProductType
-    fields = ('id', 'name', 'code')
+    fields = ('id', 'name', 'code', 'created_by')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -264,3 +264,17 @@ class BasicGoalSerializer(serializers.ModelSerializer):
   class Meta:
     model = Goal
     fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code')
+
+class UserProfileSerializer(serializers.ModelSerializer):
+
+  def create(self, validated_data):
+    user = User.objects.create(**validated_data)
+    userprofile = UserProfile.objects.create(user=user, gauth_access_token="", gauth_refresh_token="", token_type="")
+    return user
+
+  class Meta:
+    model = User
+    fields = ('username', 'password')
+
+
+

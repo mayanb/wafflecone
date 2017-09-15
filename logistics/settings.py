@@ -20,7 +20,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: change this before deploying to production!
-SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,22 +40,29 @@ INSTALLED_APPS = (
     'rest_framework',
     'ics',
     'qr',
-    'dashboard',
     'django_filters',
-    'debug_toolbar',
+    'storages',
+    'oauth2_provider',
+    'corsheaders',
+    'gauth'
+    #'dashboard', 
+    #'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # 'social_django.middleware.SocialAuthExceptionMiddleware',
 )
+
 
 ROOT_URLCONF = 'logistics.urls'
 
@@ -82,14 +89,25 @@ WSGI_APPLICATION = 'logistics.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'ics',
+#         'USER': 'ishita',
+#         'PASSWORD': '',
+#         'HOST': 'localhost',
+#         'PORT': '',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ics',
-        'USER': 'ishita',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': os.environ.get("DB_NAME", ''),
+        'USER': os.environ.get("DB_USER", ''),
+        'PASSWORD': os.environ.get("DB_PASSWORD", ''),
+        'HOST': os.environ.get("DB_HOST", ''),
+        'PORT': os.environ.get("DB_PORT", ''),
     }
 }
 
@@ -141,15 +159,50 @@ ALLOWED_HOSTS = ['*']
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
-STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
-    os.path.join(PROJECT_ROOT, 'static'),
-)
+     os.path.join(PROJECT_ROOT, 'static'),
+ )
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+#STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
-INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']
+
+#django-storages setup for leveraging s3
+AWS_STORAGE_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", '')
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS", '')
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET", '')
+
+ # Tell django-storages that when coming up with the URL for an item in S3 storage, keep
+    # it simple - just use this domain plus the path. (If this isn't set, things get complicated).
+    # This controls how the `static` template tag from `staticfiles` gets expanded, if you're using it.
+    # We also use it in the next setting.
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+
+    # This is used by the `static` template tag from `static`, if you're using that. Or if anything else
+    # refers directly to STATIC_URL. So it's safest to always set it.
+STATIC_URL = "https://%s/static/" % AWS_S3_CUSTOM_DOMAIN
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+    # Tell the staticfiles app to use S3Boto storage when writing the collected static files (when
+    # you run `collectstatic`).
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_HOST = "s3-us-west-1.amazonaws.com"
+S3_USE_SIGV4 = True
+
+GOOGLE_OAUTH2_CLIENT_ID = os.environ.get("GOOGLE_OAUTH2_CLIENT_ID", '')
+GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET", '')
+GOOGLE_OAUTH2_API_KEY = os.environ.get("GOOGLE_OAUTH2_API_KEY", '')
+GOOGLEAUTH_CALLBACK_DOMAIN = 'http://127.0.0.1:3000/googleconnect/ext/'
+#GOOGLEAUTH_CALLBACK_DOMAIN = 'https://eszlr18ifi.execute-api.us-west-1.amazonaws.com/staging/googleconnect/ext'
+GOOGLEAUTH_SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+
+#INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']

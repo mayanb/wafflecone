@@ -4,6 +4,19 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
+from django.contrib.auth.models import User
+from django.db import models
+
+
+
+# AUTH MODELS
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    gauth_access_token = models.TextField(null=True)
+    gauth_refresh_token = models.TextField(null=True)
+    token_type = models.CharField(max_length=100, null=True) 
+    expires_in = models.IntegerField(null=True)
+    expires_at = models.FloatField(null=True)
 
 
 ############################
@@ -342,3 +355,5 @@ class Goal(models.Model):
     process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
     product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
     goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+
+

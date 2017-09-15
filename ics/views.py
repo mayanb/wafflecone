@@ -13,13 +13,20 @@ import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
 from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
 
 
+
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
+
+class UserProfileCreate(generics.CreateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UserProfileSerializer
+
 
 ######################
 # GOAL-RELATED VIEWS #
