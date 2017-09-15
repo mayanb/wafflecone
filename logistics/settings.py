@@ -50,8 +50,8 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -185,6 +185,7 @@ AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
     # This is used by the `static` template tag from `static`, if you're using that. Or if anything else
     # refers directly to STATIC_URL. So it's safest to always set it.
 STATIC_URL = "https://%s/static/" % AWS_S3_CUSTOM_DOMAIN
+
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
@@ -198,11 +199,14 @@ S3_USE_SIGV4 = True
 GOOGLE_OAUTH2_CLIENT_ID = os.environ.get("GOOGLE_OAUTH2_CLIENT_ID", '')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET", '')
 GOOGLE_OAUTH2_API_KEY = os.environ.get("GOOGLE_OAUTH2_API_KEY", '')
-GOOGLEAUTH_CALLBACK_DOMAIN = 'http://127.0.0.1:3000/googleconnect/ext/'
-#GOOGLEAUTH_CALLBACK_DOMAIN = 'https://eszlr18ifi.execute-api.us-west-1.amazonaws.com/staging/googleconnect/ext'
+GOOGLEAUTH_CALLBACK_DOMAIN = os.environ.get("GOOGLEAUTH_CALLBACK_DOMAIN", '')
+
 GOOGLEAUTH_SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
 
-CORS_ORIGIN_ALLOW_ALL = True
+#CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '')
+CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = os.environ.get("CORS_ORIGIN_WHITELIST", '')
 
 #INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']
