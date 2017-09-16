@@ -5,6 +5,8 @@ from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
 
+easy_format = '%Y-%m-%d %H:%M'
+
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = Attribute
@@ -24,9 +26,17 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
+  last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
+
+  def get_last_used(self, product):
+    if product.last_used is not None:
+      return product.last_used.strftime(easy_format)
+    else:
+      return ""
+
   class Meta:
     model = ProductType
-    fields = ('id', 'name', 'code', 'created_by')
+    fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'last_used')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
   class Meta:

@@ -35,8 +35,8 @@ urlpatterns = [
     url(r'^processes/move/(?P<pk>[0-9]+)/$', views.ProcessMoveDetail.as_view()),
 
     url(r'^products/$', views.ProductList.as_view()),
+    url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view()),
     url(r'^products/codes/$', views.ProductCodes.as_view()),
-    url(r'^processes/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view()),
 
     url(r'^attributes/$', views.AttributeList.as_view()),
     url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),
