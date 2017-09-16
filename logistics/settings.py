@@ -204,9 +204,10 @@ GOOGLEAUTH_CALLBACK_DOMAIN = os.environ.get("GOOGLEAUTH_CALLBACK_DOMAIN", '')
 GOOGLEAUTH_SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
 
 #CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '')
+CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = os.environ.get("CORS_ORIGIN_WHITELIST", '')
+
+CSRF_TRUSTED_ORIGINS = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
 
 #INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']
