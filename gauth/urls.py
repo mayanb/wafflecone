@@ -8,6 +8,7 @@ urlpatterns = [
     #url(r'^$', views.index, name='index'),
     url(r'^create-auth-url/$', views.createAuthURL, name='x'),
     url(r'^create-auth-token/$', views.createAuthToken, name='y'),
+    url(r'^create-spreadsheet/$', views.createSpreadsheet, name='z'),
 
 
 ]
