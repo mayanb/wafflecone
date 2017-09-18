@@ -42,7 +42,6 @@ INSTALLED_APPS = (
     'qr',
     'django_filters',
     'storages',
-    'oauth2_provider',
     'corsheaders',
     'gauth'
     #'dashboard', 
@@ -203,8 +202,8 @@ GOOGLEAUTH_CALLBACK_DOMAIN = os.environ.get("GOOGLEAUTH_CALLBACK_DOMAIN", '')
 
 GOOGLEAUTH_SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
 
-#CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
+CORS_ORIGIN_ALLOW_ALL = True
+#CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
 CORS_ALLOW_CREDENTIALS = True
 
 

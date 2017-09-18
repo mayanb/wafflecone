@@ -14,8 +14,8 @@ urlpatterns = [
     url(r'^gauth/', include('gauth.urls')),
     url(r'^ics/', include('ics.urls')),
     url(r'^qr/', include('qr.urls')),
-    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    #url(r'^dashboard/', include('dashboard.urls')),
+    #url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    url(r'^dashboard/', include('dashboard.urls')),
 ]
 
 # if settings.DEBUG:
