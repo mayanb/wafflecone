@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 import os
 import dj_database_url
+import datetime
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -43,7 +44,8 @@ INSTALLED_APPS = (
     'django_filters',
     'storages',
     'corsheaders',
-    'gauth'
+    'gauth',
+    'rest_auth'
     #'dashboard', 
     #'debug_toolbar',
 )
@@ -113,7 +115,21 @@ DATABASES = {
 #DATABASES['default'] =  dj_database_url.config()
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+REST_USE_JWT = True
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA' : datetime.timedelta(days=7),
+    'JWT_ALLOW_REFRESH' : True,
+    'JWT_REFRESH_EXPIRATION_DELTA' : datetime.timedelta(days=21),
 }
 
 # Password validation
