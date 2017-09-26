@@ -125,6 +125,7 @@ REST_FRAMEWORK = {
     ),
 }
 
+REST_SESSION_LOGIN = False
 REST_USE_JWT = True
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA' : datetime.timedelta(days=7),
