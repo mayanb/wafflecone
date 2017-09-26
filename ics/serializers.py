@@ -26,7 +26,7 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
-  last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
+  #last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
 
   def get_last_used(self, product):
     if product.last_used is not None:
@@ -36,7 +36,7 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = ProductType
-    fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'last_used')
+    fields = ('id', 'name', 'code', 'created_by', 'is_trashed')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
   class Meta:
