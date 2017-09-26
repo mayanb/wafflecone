@@ -160,7 +160,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
       'items', 
       'inputs', 
       'attribute_values', 
-      'display'
+      'display',
+      'is_trashed'
     )
 
 
