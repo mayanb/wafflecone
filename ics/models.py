@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.auth.models import User
 from django.db import models
+import constants
 
 
 
@@ -72,6 +73,11 @@ class Attribute(models.Model):
     name = models.CharField(max_length=20)
     rank = models.PositiveSmallIntegerField(default=0)
     is_trashed = models.BooleanField(default=False)
+    datatype = models.CharField(
+        max_length=4, 
+        choices=constants.ATTRIBUTE_DATA_TYPES, 
+        default=constants.TEXT_TYPE
+    )
 
     def __str__(self):
         return self.name

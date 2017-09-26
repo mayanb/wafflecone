@@ -10,7 +10,7 @@ easy_format = '%Y-%m-%d %H:%M'
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = Attribute
-    fields = ('id', 'process_type', 'name', 'rank')
+    fields = ('id', 'process_type', 'name', 'rank', 'datatype')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
@@ -105,10 +105,11 @@ class NestedInputSerializer(serializers.ModelSerializer):
 
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
   att_name = serializers.CharField(source='attribute.name', read_only=True)
+  datatype = serializers.CharField(source='attribute.datatype', read_only=True)
   
   class Meta:
     model = TaskAttribute
-    fields = ('id', 'attribute', 'task', 'value', 'att_name')
+    fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
   attribute = AttributeSerializer(many=False, read_only=True)
