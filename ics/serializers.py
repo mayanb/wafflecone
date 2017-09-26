@@ -15,6 +15,10 @@ class AttributeSerializer(serializers.ModelSerializer):
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+  icon = serializers.CharField(read_only=True)
+  x = serializers.CharField(read_only=True)
+  y = serializers.CharField(read_only=True)
+  
   class Meta:
     model = ProcessType
     fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount')
@@ -215,9 +219,11 @@ class InventoryListSerializer(serializers.ModelSerializer):
   unit=serializers.CharField(source='creating_task__process_type__unit', read_only=True)
   team=serializers.CharField(source='creating_task__process_type__created_by__username', read_only=True)
   team_id=serializers.CharField(source='creating_task__process_type__created_by', read_only=True)
+  product_code=serializers.CharField(source='creating_task__product_type__code', read_only=True)
+  product_name=serializers.CharField(source='creating_task__product_type__name', read_only=True)
   class Meta:
     model = Item
-    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id')
+    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code')
 
 
 class InventoryDetailSerializer(serializers.ModelSerializer):

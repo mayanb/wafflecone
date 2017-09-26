@@ -272,6 +272,19 @@ class InventoryList(generics.ListAPIView):
       products = products.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__code__in=products)
 
+    # filter by process
+    processes = self.request.query_params.get('processes', None)
+    if processes is not None:
+      processes = processes.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__in=processes) 
+      return queryset.values(
+        'creating_task__product_type',
+        'creating_task__product_type__name',
+        'creating_task__product_type__code',
+        'creating_task__process_type__unit').annotate(
+          count=Sum('amount')
+        )
+
     return queryset.values(
       'creating_task__process_type', 
       'creating_task__process_type__output_desc', 
@@ -279,7 +292,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by').annotate(
         count=Sum('amount'),
-    )
+      )
 
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
@@ -303,7 +316,7 @@ class InventoryDetailTest2(generics.ListAPIView):
       queryset = queryset.filter(product_type__code__in=products)
 
     # filter by output type
-    process = self.request.query_params.get('process', '')
+    process = self.request.query_params.get('processes', '')
     if process is not None:
       queryset = queryset.filter(process_type=process)
 
