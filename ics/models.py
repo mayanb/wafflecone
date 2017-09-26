@@ -4,8 +4,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
-from django.contrib.auth.models import User
-from django.db import models
 
 
 
@@ -100,10 +98,9 @@ class Task(models.Model):
     def __str__(self):
         if self.custom_display:
             return self.custom_display
-        elif self.label_index > 0:
+        if self.label_index > 0:
             return "-".join([self.label, str(self.label_index)])
-        else:
-            return self.label
+        return self.label
 
     def save(self, *args, **kwargs):
         self.setLabelAndDisplay()
@@ -201,13 +198,13 @@ class Task(models.Model):
         # get all the tasks these items were input into
         child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
 
-        for input in child_task_rel:
-            t = input.task
+        for i in child_task_rel:
+            t = i.task
             if t.id not in all_descendents:
-                new_level_tasks.add(input.task)
-                all_descendents.add(input.task.id)
+                new_level_tasks.add(i.task)
+                all_descendents.add(i.task.id)
 
-        if len(new_level_tasks) > 0:
+        if new_level_tasks:
             self.descendents_helper(all_descendents, new_level_tasks, depth+1)
 
 
@@ -247,7 +244,7 @@ class Task(models.Model):
                 new_level_tasks.add(t)
                 all_ancestors.add(t.id)
 
-        if len(new_level_tasks) > 0:
+        if new_level_tasks:
             self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
 
@@ -355,5 +352,3 @@ class Goal(models.Model):
     process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
     product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
     goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-
-
