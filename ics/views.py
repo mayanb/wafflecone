@@ -316,7 +316,7 @@ class InventoryDetailTest2(generics.ListAPIView):
       queryset = queryset.filter(product_type__code__in=products)
 
     # filter by output type
-    process = self.request.query_params.get('processes', '')
+    process = self.request.query_params.get('process', '')
     if process is not None:
       queryset = queryset.filter(process_type=process)
 
