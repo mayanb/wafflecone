@@ -10,11 +10,15 @@ easy_format = '%Y-%m-%d %H:%M'
 class AttributeSerializer(serializers.ModelSerializer):
   class Meta:
     model = Attribute
-    fields = ('id', 'process_type', 'name', 'rank')
+    fields = ('id', 'process_type', 'name', 'rank', 'datatype')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
   created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+  icon = serializers.CharField(read_only=True)
+  x = serializers.CharField(read_only=True)
+  y = serializers.CharField(read_only=True)
+  
   class Meta:
     model = ProcessType
     fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount')
@@ -26,7 +30,7 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
-  last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
+  #last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
 
   def get_last_used(self, product):
     if product.last_used is not None:
@@ -36,7 +40,7 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = ProductType
-    fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'last_used')
+    fields = ('id', 'name', 'code', 'created_by', 'is_trashed')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -101,10 +105,11 @@ class NestedInputSerializer(serializers.ModelSerializer):
 
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
   att_name = serializers.CharField(source='attribute.name', read_only=True)
+  datatype = serializers.CharField(source='attribute.datatype', read_only=True)
   
   class Meta:
     model = TaskAttribute
-    fields = ('id', 'attribute', 'task', 'value', 'att_name')
+    fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
   attribute = AttributeSerializer(many=False, read_only=True)
@@ -215,9 +220,11 @@ class InventoryListSerializer(serializers.ModelSerializer):
   unit=serializers.CharField(source='creating_task__process_type__unit', read_only=True)
   team=serializers.CharField(source='creating_task__process_type__created_by__username', read_only=True)
   team_id=serializers.CharField(source='creating_task__process_type__created_by', read_only=True)
+  product_code=serializers.CharField(source='creating_task__product_type__code', read_only=True)
+  product_name=serializers.CharField(source='creating_task__product_type__name', read_only=True)
   class Meta:
     model = Item
-    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id')
+    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code')
 
 
 class InventoryDetailSerializer(serializers.ModelSerializer):
