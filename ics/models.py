@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.auth.models import User
 from django.db import models
-import ics.constants
+import constants
 
 
 
