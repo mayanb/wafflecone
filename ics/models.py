@@ -4,8 +4,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
-from django.contrib.auth.models import User
-from django.db import models
+from django.db.models import Max
 import constants
 
 
@@ -81,6 +80,16 @@ class Attribute(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # create the right rank
+        if self.pk is None:
+            prev_rank = Attribute.objects.filter(
+                process_type=self.process_type, 
+                is_trashed=False
+            ).aggregate(Max('rank'))['rank__max']
+            self.rank = prev_rank + 1
+        super(Attribute, self).save(*args, **kwargs)
 
 
 

@@ -8,9 +8,16 @@ from datetime import date, datetime, timedelta
 easy_format = '%Y-%m-%d %H:%M'
 
 class AttributeSerializer(serializers.ModelSerializer):
+  rank = serializers.IntegerField(read_only=True)
   class Meta:
     model = Attribute
     fields = ('id', 'process_type', 'name', 'rank', 'datatype')
+
+class AttributeDetailSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Attribute
+    fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed')
+    read_only_fields = ('id', 'process_type', 'name', 'rank', 'datatype')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
   attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
