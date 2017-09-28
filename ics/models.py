@@ -32,12 +32,15 @@ class ProcessType(models.Model):
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
     unit = models.CharField(max_length=20, default="container")
+
+    description = models.CharField(max_length=100, default="")
     output_desc = models.CharField(max_length=20, default="product")
+    default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+
     x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
     y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+
     is_trashed = models.BooleanField(default=False)
-    default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-    #default_unit = models.CharField(default="kg", max_length=20)
 
     def __str__(self):
         return self.name
@@ -57,6 +60,7 @@ class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
+    description = models.CharField(max_length=100, default="")
     is_trashed = models.BooleanField(default=False)
 
     def __str__(self):
