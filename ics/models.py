@@ -31,11 +31,13 @@ class ProcessType(models.Model):
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
-    unit = models.CharField(max_length=20, default="container")
+    created_at = models.DateTimeField(default=datetime.now, blank=True)
 
     description = models.CharField(max_length=100, default="")
     output_desc = models.CharField(max_length=20, default="product")
     default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    unit = models.CharField(max_length=20, default="container")
+
 
     x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
     y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
@@ -58,6 +60,7 @@ class ProcessType(models.Model):
 
 class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=datetime.now, blank=True)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     description = models.CharField(max_length=100, default="")
