@@ -286,6 +286,8 @@ class InventoryList(generics.ListAPIView):
         )
 
     return queryset.values(
+      'creating_task__process_type__code',
+      'creating_task__process_type__icon',
       'creating_task__process_type', 
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 

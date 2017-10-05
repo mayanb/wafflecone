@@ -216,6 +216,8 @@ class MovementReceiveSerializer(serializers.ModelSerializer):
 
 class InventoryListSerializer(serializers.ModelSerializer):
   process_id=serializers.CharField(source='creating_task__process_type', read_only=True)
+  process_code=serializers.CharField(source='creating_task__process_type__code', read_only=True)
+  process_icon=serializers.CharField(source='creating_task__process_type__icon', read_only=True)
   output_desc=serializers.CharField(source='creating_task__process_type__output_desc', read_only=True)
   count=serializers.CharField(read_only=True)
   unit=serializers.CharField(source='creating_task__process_type__unit', read_only=True)
@@ -225,7 +227,7 @@ class InventoryListSerializer(serializers.ModelSerializer):
   product_name=serializers.CharField(source='creating_task__product_type__name', read_only=True)
   class Meta:
     model = Item
-    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code')
+    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code', 'process_code', 'process_icon')
 
 
 class InventoryDetailSerializer(serializers.ModelSerializer):
