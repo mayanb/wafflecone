@@ -6,18 +6,32 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.auth.models import User
 from django.db import models
+from uuid import uuid4
+
 import constants
 
 
 
+
 # AUTH MODELS
+class Team(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
 class UserProfile(models.Model):
+    USERTYPES = (
+        ('a', 'admin'),
+        ('w', 'worker'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     gauth_access_token = models.TextField(null=True)
     gauth_refresh_token = models.TextField(null=True)
     token_type = models.CharField(max_length=100, null=True) 
     expires_in = models.IntegerField(null=True)
     expires_at = models.FloatField(null=True)
+    team = models.ForeignKey(Team, related_name='team', on_delete=models.CASCADE, null=True)
+    account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
+
 
 
 ############################
@@ -29,6 +43,7 @@ class UserProfile(models.Model):
 
 class ProcessType(models.Model):
     created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
+    team_created_by = models.ForeignKey(Team, related_name='processes', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
@@ -56,6 +71,7 @@ class ProcessType(models.Model):
 
 class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
+    team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     is_trashed = models.BooleanField(default=False)
@@ -114,6 +130,9 @@ class Task(models.Model):
         self.setLabelAndDisplay()
         self.refreshKeywords()
         super(Task, self).save(*args, **kwargs)
+        qr_code = "plmr.io/" + str(uuid4())
+        newVirtualItem = Item(is_virtual=True, creating_task=self, item_qr=qr_code)
+        newVirtualItem.save()
 
     def setLabelAndDisplay(self):
         """
@@ -265,7 +284,10 @@ class Item(models.Model):
     creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
     created_at = models.DateTimeField(auto_now_add=True)
     inventory = models.ForeignKey(User, on_delete=models.CASCADE, related_name="items", null=True)
+    team_inventory = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="items", null=True)
+
     amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
+    is_virtual = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
@@ -329,6 +351,10 @@ class Movement(models.Model):
     group_qr = models.CharField(max_length=50, blank=True)
     origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
     destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
+
+    team_origin = models.ForeignKey(Team, related_name="deliveries", on_delete=models.CASCADE, null=True)
+    team_destination = models.ForeignKey(Team, related_name="intakes", on_delete=models.CASCADE, null=True)
+
     
     # not in use currently
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=IN_TRANSIT)

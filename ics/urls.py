@@ -9,8 +9,12 @@ import oauth2client.contrib.django_util.site as django_util_site
 urlpatterns = [
 
     url(r'^users/$', views.UserList.as_view()),
-
+    url(r'^users/(?P<pk>[0-9]+)/$', views.UserGet.as_view()),
     url(r'^users/create/$', views.UserProfileCreate.as_view()),
+
+    url(r'^teams/$', views.TeamList.as_view()),
+    url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGet.as_view()),
+    url(r'^teams/create/$', views.TeamCreate.as_view()),
 
 
     url(r'^$', views.index, name='index'),

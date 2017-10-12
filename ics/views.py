@@ -15,7 +15,8 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
-from datetime import date, datetime, timedelta
+import datetime
+# from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
 
@@ -55,8 +56,29 @@ class UserList(generics.ListAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
 
+# users/[pk]/
+class UserGet(generics.RetrieveAPIView):
+  queryset = User.objects.all()
+  serializer_class = UserSerializer
 
 
+######################
+# TEAM-RELATED VIEWS #
+######################
+# teams/
+class TeamList(generics.ListAPIView):
+  queryset = Team.objects.all()
+  serializer_class = TeamSerializer
+
+# teams/[pk]/
+class TeamGet(generics.RetrieveAPIView):
+  queryset = Team.objects.all()
+  serializer_class = TeamSerializer
+
+# teams/create/
+class TeamCreate(generics.CreateAPIView):
+  queryset = Team.objects.all()
+  serializer_class = TeamSerializer
 
 ######################
 # TASK-RELATED VIEWS #
