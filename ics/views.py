@@ -283,7 +283,7 @@ class InventoryList(generics.ListAPIView):
         'creating_task__product_type__code',
         'creating_task__process_type__unit').annotate(
           count=Sum('amount')
-        )
+        ).annotate(oldest=Min('creating_task__created_at'))
 
     return queryset.values(
       'creating_task__process_type__code',
@@ -292,9 +292,12 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 
       'creating_task__process_type__created_by__username',
-      'creating_task__process_type__created_by').annotate(
+      'creating_task__process_type__created_by',
+      'creating_task__product_type',
+      'creating_task__product_type__code',
+      'creating_task__product_type__name').annotate(
         count=Sum('amount'),
-      )
+      ).annotate(oldest=Min('creating_task__created_at'))
 
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):

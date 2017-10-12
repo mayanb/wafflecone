@@ -225,9 +225,10 @@ class InventoryListSerializer(serializers.ModelSerializer):
   team_id=serializers.CharField(source='creating_task__process_type__created_by', read_only=True)
   product_code=serializers.CharField(source='creating_task__product_type__code', read_only=True)
   product_name=serializers.CharField(source='creating_task__product_type__name', read_only=True)
+  oldest = serializers.CharField(read_only=True)
   class Meta:
     model = Item
-    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code', 'process_code', 'process_icon')
+    fields = ('oldest', 'process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code', 'process_code', 'process_icon')
 
 
 class InventoryDetailSerializer(serializers.ModelSerializer):
