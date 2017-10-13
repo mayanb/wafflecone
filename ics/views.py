@@ -15,7 +15,8 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
 from paginations import *
-from datetime import date, datetime, timedelta
+import datetime
+# from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
 
@@ -27,6 +28,15 @@ class UserProfileCreate(generics.CreateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UserProfileSerializer
 
+# userprofiles/
+class UserProfileList(generics.ListAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UserProfileSerializer
+
+# userprofiles/[pk]/
+class UserProfileGet(generics.RetrieveAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UserProfileSerializer
 
 ######################
 # GOAL-RELATED VIEWS #
@@ -55,8 +65,29 @@ class UserList(generics.ListAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
 
+# users/[pk]/
+class UserGet(generics.RetrieveAPIView):
+  queryset = User.objects.all()
+  serializer_class = UserSerializer
 
 
+######################
+# TEAM-RELATED VIEWS #
+######################
+# teams/
+class TeamList(generics.ListAPIView):
+  queryset = Team.objects.all()
+  serializer_class = TeamSerializer
+
+# teams/[pk]/
+class TeamGet(generics.RetrieveAPIView):
+  queryset = Team.objects.all()
+  serializer_class = TeamSerializer
+
+# teams/create/
+class TeamCreate(generics.CreateAPIView):
+  queryset = Team.objects.all()
+  serializer_class = TeamSerializer
 
 ######################
 # TASK-RELATED VIEWS #
@@ -112,6 +143,7 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
+        dt = datetime.datetime
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
             total_amount=Sum('items__amount') 
           )
@@ -278,12 +310,9 @@ class InventoryList(generics.ListAPIView):
       processes = processes.strip().split(',')
       queryset = queryset.filter(creating_task__process_type__in=processes) 
       return queryset.values(
-        'creating_task__product_type',
-        'creating_task__product_type__name',
-        'creating_task__product_type__code',
         'creating_task__process_type__unit').annotate(
           count=Sum('amount')
-        )
+        ).annotate(oldest=Min('creating_task__created_at'))
 
     return queryset.values(
       'creating_task__process_type__code',
@@ -292,9 +321,9 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 
       'creating_task__process_type__created_by__username',
-      'creating_task__process_type__created_by').annotate(
+      'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
-      )
+      ).annotate(oldest=Min('creating_task__created_at'))
 
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
@@ -392,6 +421,7 @@ class ActivityList(generics.ListAPIView):
   serializer_class = ActivityListSerializer
 
   def get_queryset(self):
+    dt = datetime.datetime
     queryset = Task.objects.filter(is_trashed=False)
 
     team = self.request.query_params.get('team', None)
@@ -406,8 +436,8 @@ class ActivityList(generics.ListAPIView):
       # end = end.strip().split('-')
       # startDate = date(int(start[0]), int(start[1]), int(start[2]))
       # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = datetime.strptime(start, dateformat)
-      endDate = datetime.strptime(end, dateformat)
+      startDate = dt.strptime(start, dateformat)
+      endDate = dt.strptime(end, dateformat)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     # separate by process type
@@ -555,6 +585,7 @@ def activityCSV(request):
   response['Content-Disposition'] = 'attachment; filename="logs.csv"'
 
   easy_format = '%Y-%m-%d %H:%M'
+  dt = datetime.datetime
 
   process = request.GET.get('process', None)
   start = request.GET.get('start', None)
@@ -567,8 +598,8 @@ def activityCSV(request):
   # end = end.strip().split('-')
   # startDate = date(int(start[0]), int(start[1]), int(start[2]))
   # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-  startDate = datetime.strptime(start, dateformat)
-  endDate = datetime.strptime(end, dateformat)
+  startDate = dt.strptime(start, dateformat)
+  endDate = dt.strptime(end, dateformat)
 
   fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
   attrs = Attribute.objects.filter(process_type=process).order_by('rank')

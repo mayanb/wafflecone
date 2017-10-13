@@ -21,7 +21,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -40,7 +40,7 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = ProductType
-    fields = ('id', 'name', 'code', 'created_by', 'is_trashed')
+    fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -64,19 +64,21 @@ class EditTaskSerializer(serializers.ModelSerializer):
     model = Task
     fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'created_at')
 
-# serializes all fields of task
-class BasicTaskSerializer(serializers.ModelSerializer):
-  display = serializers.CharField(source='*', read_only=True)
-  class Meta:
-    model = Task
-    fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display')
-
 class BasicItemSerializer(serializers.ModelSerializer):
   is_used = serializers.CharField(read_only=True)
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory')
+
+# serializes all fields of task
+class BasicTaskSerializer(serializers.ModelSerializer):
+  display = serializers.CharField(source='*', read_only=True)
+  items = BasicItemSerializer(many=True, read_only=True)
+
+  class Meta:
+    model = Task
+    fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
 
 class NestedItemSerializer(serializers.ModelSerializer):
   creating_task = BasicTaskSerializer(many=False, read_only=True)
@@ -84,7 +86,7 @@ class NestedItemSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual')
 
 class BasicInputSerializer(serializers.ModelSerializer):
   input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
@@ -188,7 +190,7 @@ class MovementListSerializer(serializers.ModelSerializer):
   destination = serializers.CharField(source='destination.username')
   class Meta:
     model = Movement
-    fields = ('id', 'items', 'origin', 'status', 'destination', 'timestamp', 'notes')
+    fields = ('id', 'items', 'origin', 'status', 'destination', 'timestamp', 'notes', 'team_origin', 'team_destination')
 
 class MovementCreateSerializer(serializers.ModelSerializer):
   items = MovementItemSerializer(many=True, read_only=False)
@@ -225,9 +227,10 @@ class InventoryListSerializer(serializers.ModelSerializer):
   team_id=serializers.CharField(source='creating_task__process_type__created_by', read_only=True)
   product_code=serializers.CharField(source='creating_task__product_type__code', read_only=True)
   product_name=serializers.CharField(source='creating_task__product_type__name', read_only=True)
+  oldest = serializers.CharField(read_only=True)
   class Meta:
     model = Item
-    fields = ('process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code', 'process_code', 'process_icon')
+    fields = ('oldest', 'process_id', 'count', 'output_desc', 'unit', 'team', 'team_id', 'product_name', 'product_code', 'process_code', 'process_icon')
 
 
 class InventoryDetailSerializer(serializers.ModelSerializer):
@@ -286,15 +289,33 @@ class BasicGoalSerializer(serializers.ModelSerializer):
     fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code')
 
 class UserProfileSerializer(serializers.ModelSerializer):
+  username = serializers.CharField(source='user.username')
+  password = serializers.CharField(source='user.password')
+  team_name = serializers.CharField(source='team.name')
+  team = serializers.CharField(read_only=True)
 
   def create(self, validated_data):
-    user = User.objects.create(**validated_data)
-    userprofile = UserProfile.objects.create(user=user, gauth_access_token="", gauth_refresh_token="", token_type="")
-    return user
+    print(validated_data)
+    data = validated_data.get('user')
+    user = User.objects.create(**data)
+    user.set_password(data.get('password'))
+    user.save()
+
+    team_name = validated_data.get('team').get('name', '')
+    account_type = validated_data.get('account_type', '')
+    team = Team.objects.filter(name=team_name)[0]
+    userprofile = UserProfile.objects.create(user=user, gauth_access_token="", gauth_refresh_token="", token_type="", team=team)
+    return userprofile
 
   class Meta:
-    model = User
-    fields = ('username', 'password')
+    model = UserProfile
+    extra_kwargs = {'team_name': {'write_only': True}, 'account_type': {'write_only': True} }
+    fields = ('username', 'password', 'team', 'account_type', 'team_name', )
 
 
+class TeamSerializer(serializers.ModelSerializer):
+
+  class Meta:
+    model = Team
+    fields = ('id', 'name')
 
