@@ -188,8 +188,8 @@ class TaskList(generics.ListAPIView):
         if start is not None and end is not None:
           start = start.strip().split('-')
           end = end.strip().split('-')
-          startDate = dt.date(int(start[0]), int(start[1]), int(start[2]))
-          endDate = dt.date(int(end[0]), int(end[1]), int(end[2]))
+          startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
+          endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
           queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
 
