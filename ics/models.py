@@ -133,9 +133,10 @@ class Task(models.Model):
         self.setLabelAndDisplay()
         self.refreshKeywords()
         qr_code = "plmr.io/" + str(uuid4())
+        super(Task, self).save(*args, **kwargs)
         newVirtualItem = Item(is_virtual=True, creating_task=self, item_qr=qr_code)
         newVirtualItem.save()
-        super(Task, self).save(*args, **kwargs)
+        
 
     def setLabelAndDisplay(self):
         """

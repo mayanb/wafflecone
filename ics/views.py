@@ -143,6 +143,7 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
+        dt = datetime.datetime
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
             total_amount=Sum('items__amount') 
           )
@@ -187,8 +188,8 @@ class TaskList(generics.ListAPIView):
         if start is not None and end is not None:
           start = start.strip().split('-')
           end = end.strip().split('-')
-          startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
-          endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
+          startDate = dt.date(int(start[0]), int(start[1]), int(start[2]))
+          endDate = dt.date(int(end[0]), int(end[1]), int(end[2]))
           queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
 
@@ -309,9 +310,6 @@ class InventoryList(generics.ListAPIView):
       processes = processes.strip().split(',')
       queryset = queryset.filter(creating_task__process_type__in=processes) 
       return queryset.values(
-        'creating_task__product_type',
-        'creating_task__product_type__name',
-        'creating_task__product_type__code',
         'creating_task__process_type__unit').annotate(
           count=Sum('amount')
         ).annotate(oldest=Min('creating_task__created_at'))
@@ -323,10 +321,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 
       'creating_task__process_type__created_by__username',
-      'creating_task__process_type__created_by',
-      'creating_task__product_type',
-      'creating_task__product_type__code',
-      'creating_task__product_type__name').annotate(
+      'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
       ).annotate(oldest=Min('creating_task__created_at'))
 
@@ -426,6 +421,7 @@ class ActivityList(generics.ListAPIView):
   serializer_class = ActivityListSerializer
 
   def get_queryset(self):
+    dt = datetime.datetime
     queryset = Task.objects.filter(is_trashed=False)
 
     team = self.request.query_params.get('team', None)
@@ -440,8 +436,8 @@ class ActivityList(generics.ListAPIView):
       # end = end.strip().split('-')
       # startDate = date(int(start[0]), int(start[1]), int(start[2]))
       # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = datetime.strptime(start, dateformat)
-      endDate = datetime.strptime(end, dateformat)
+      startDate = dt.strptime(start, dateformat)
+      endDate = dt.strptime(end, dateformat)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     # separate by process type
@@ -589,6 +585,7 @@ def activityCSV(request):
   response['Content-Disposition'] = 'attachment; filename="logs.csv"'
 
   easy_format = '%Y-%m-%d %H:%M'
+  dt = datetime.datetime
 
   process = request.GET.get('process', None)
   start = request.GET.get('start', None)
@@ -601,8 +598,8 @@ def activityCSV(request):
   # end = end.strip().split('-')
   # startDate = date(int(start[0]), int(start[1]), int(start[2]))
   # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-  startDate = datetime.strptime(start, dateformat)
-  endDate = datetime.strptime(end, dateformat)
+  startDate = dt.strptime(start, dateformat)
+  endDate = dt.strptime(end, dateformat)
 
   fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
   attrs = Attribute.objects.filter(process_type=process).order_by('rank')
