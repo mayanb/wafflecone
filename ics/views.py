@@ -28,6 +28,15 @@ class UserProfileCreate(generics.CreateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UserProfileSerializer
 
+# userprofiles/
+class UserProfileList(generics.ListAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UserProfileSerializer
+
+# userprofiles/[pk]/
+class UserProfileGet(generics.RetrieveAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UserProfileSerializer
 
 ######################
 # GOAL-RELATED VIEWS #

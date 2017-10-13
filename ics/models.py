@@ -17,6 +17,9 @@ import constants
 class Team(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
+    def __str__(self):
+        return self.name
+
 class UserProfile(models.Model):
     USERTYPES = (
         ('a', 'admin'),
@@ -129,10 +132,10 @@ class Task(models.Model):
     def save(self, *args, **kwargs):
         self.setLabelAndDisplay()
         self.refreshKeywords()
-        super(Task, self).save(*args, **kwargs)
         qr_code = "plmr.io/" + str(uuid4())
         newVirtualItem = Item(is_virtual=True, creating_task=self, item_qr=qr_code)
         newVirtualItem.save()
+        super(Task, self).save(*args, **kwargs)
 
     def setLabelAndDisplay(self):
         """

@@ -21,7 +21,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -40,7 +40,7 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = ProductType
-    fields = ('id', 'name', 'code', 'created_by', 'is_trashed')
+    fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
   class Meta:
@@ -69,7 +69,7 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Item
-    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual')
+    fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory')
 
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
@@ -190,7 +190,7 @@ class MovementListSerializer(serializers.ModelSerializer):
   destination = serializers.CharField(source='destination.username')
   class Meta:
     model = Movement
-    fields = ('id', 'items', 'origin', 'status', 'destination', 'timestamp', 'notes')
+    fields = ('id', 'items', 'origin', 'status', 'destination', 'timestamp', 'notes', 'team_origin', 'team_destination')
 
 class MovementCreateSerializer(serializers.ModelSerializer):
   items = MovementItemSerializer(many=True, read_only=False)
@@ -291,20 +291,26 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
   username = serializers.CharField(source='user.username')
   password = serializers.CharField(source='user.password')
-  team_name = serializers.CharField(source='user.team.name')
+  team_name = serializers.CharField(source='team.name')
+  team = serializers.CharField(read_only=True)
 
   def create(self, validated_data):
-    user = User.objects.create(**validated_data)
-    team_name = validated_data.get('team_name', '')
+    print(validated_data)
+    data = validated_data.get('user')
+    user = User.objects.create(**data)
+    user.set_password(data.get('password'))
+    user.save()
+
+    team_name = validated_data.get('team').get('name', '')
     account_type = validated_data.get('account_type', '')
-    team = Team.objects.all().filter(name=team_name)
+    team = Team.objects.filter(name=team_name)[0]
     userprofile = UserProfile.objects.create(user=user, gauth_access_token="", gauth_refresh_token="", token_type="", team=team)
     return userprofile
 
   class Meta:
     model = UserProfile
-    extra_kwargs = {'team_name': {'write_only': True}, 'account_type': {'write_only': True}}
-    fields = ('username', 'password', 'team', 'account_type')
+    extra_kwargs = {'team_name': {'write_only': True}, 'account_type': {'write_only': True} }
+    fields = ('username', 'password', 'team', 'account_type', 'team_name', )
 
 
 class TeamSerializer(serializers.ModelSerializer):
