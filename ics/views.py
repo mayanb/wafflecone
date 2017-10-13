@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum
+from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
 from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
@@ -145,7 +145,11 @@ class TaskList(generics.ListAPIView):
   def get_queryset(self):
         dt = datetime.datetime
         queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
-            total_amount=Sum('items__amount') 
+            total_amount=Sum(Case(
+              When(items__is_virtual=True, then=Value(0)),
+              default=F('items__amount'),
+              output_field=DecimalField()
+            ))          
           )
 
         # filter according to various parameters
@@ -204,7 +208,16 @@ class TaskList(generics.ListAPIView):
 
 # tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.filter(is_trashed=False).annotate(total_amount=Sum('items__amount'))
+  queryset = Task.objects.filter(
+    is_trashed=False
+  ).annotate(
+    total_amount=Sum(Case(
+      When(items__is_virtual=True, then=Value(0)),
+      default=F('items__amount'),
+      output_field=DecimalField()
+    ))
+  )
+  
   serializer_class = NestedTaskSerializer
 
 
@@ -291,7 +304,7 @@ class InventoryList(generics.ListAPIView):
   serializer_class = InventoryListSerializer
 
   def get_queryset(self):
-    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
+    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])
 
     # filter by team
     team = self.request.query_params.get('team', None)
