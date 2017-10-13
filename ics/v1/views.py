@@ -14,7 +14,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
-from paginations import *
+from ics.paginations import *
 import datetime
 # from datetime import date, datetime, timedelta
 from django.http import HttpResponse
