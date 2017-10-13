@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
-from ics.serializers import *
+from ics.v1.serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
 import django_filters
