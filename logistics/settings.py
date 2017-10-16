@@ -11,7 +11,6 @@ import os
 import dj_database_url
 import datetime
 
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +20,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: change this before deploying to production!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", '')
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", '1234')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -132,6 +131,10 @@ JWT_AUTH = {
     'JWT_ALLOW_REFRESH' : True,
     'JWT_REFRESH_EXPIRATION_DELTA' : datetime.timedelta(days=21),
 }
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'ics.v2.serializers.UserDetailSerializer',
+}
+
 
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'ics.v2.serializers.UserDetailSerializer',
@@ -226,6 +229,14 @@ GOOGLEAUTH_SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
 CORS_ORIGIN_ALLOW_ALL = True
 #CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
 CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = default_headers + (
+    'process-data',
+    'processData'
+)
+
 
 
 CSRF_TRUSTED_ORIGINS = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
