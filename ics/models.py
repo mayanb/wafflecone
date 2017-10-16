@@ -32,7 +32,7 @@ class UserProfile(models.Model):
     token_type = models.CharField(max_length=100, null=True) 
     expires_in = models.IntegerField(null=True)
     expires_at = models.FloatField(null=True)
-    team = models.ForeignKey(Team, related_name='team', on_delete=models.CASCADE, null=True)
+    team = models.ForeignKey(Team, related_name='userprofiles', on_delete=models.CASCADE, null=True)
     account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 
 
