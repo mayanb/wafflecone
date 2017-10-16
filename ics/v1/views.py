@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
-from ics.serializers import *
+from ics.v1.serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
 import django_filters
@@ -14,7 +14,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
-from paginations import *
+from ics.paginations import *
 import datetime
 # from datetime import date, datetime, timedelta
 from django.http import HttpResponse
