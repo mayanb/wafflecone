@@ -331,7 +331,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 
       'creating_task__process_type__team_created_by',
-      'creating_task__process_type__team_created_by__name'
+      'creating_task__process_type__team_created_by__name',
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
