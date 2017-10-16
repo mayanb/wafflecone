@@ -119,7 +119,7 @@ class TaskSearch(generics.ListAPIView):
 
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset = queryset.filter(process_type__created_by=team)
+      queryset = queryset.filter(process_type__team_created_by=team)
 
     label = self.request.query_params.get('label', None)
     dashboard = self.request.query_params.get('dashboard', None)
@@ -169,7 +169,7 @@ class TaskList(generics.ListAPIView):
         if child is not None:
             queryset = Task.objects.get(pk=child).ancestors()
 
-        inv = self.request.query_params.get('inventory', None)
+        inv = self.request.query_params.get('team_inventory', None)
         if inv is not None:
           queryset = queryset.filter(items__isnull=False, items__input__isnull=True).distinct()
 
@@ -200,8 +200,8 @@ class TaskList(generics.ListAPIView):
         return queryset.select_related().prefetch_related('items', 'attribute_values')
 
   def get_serializer_context(self):
-    inv = self.request.query_params.get('inventory', None )
-    return {"inventory": inv}
+    inv = self.request.query_params.get('team_inventory', None )
+    return {"team_inventory": inv}
 
 # tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
@@ -277,7 +277,7 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.filter(is_trashed=False)
   serializer_class = ProcessTypeSerializer
-  filter_fields = ('created_by',)
+  filter_fields = ('created_by', 'team_created_by')
 
 # processes/[pk]/
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -330,6 +330,8 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type', 
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 
+      'creating_task__process_type__team_created_by',
+      'creating_task__process_type__team_created_by__name'
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
@@ -505,7 +507,7 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))
   serializer_class = ProductTypeSerializer
-  filter_fields = ('created_by',)
+  filter_fields = ('created_by', 'team_created_by')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.all()
@@ -551,7 +553,7 @@ class RecommendedInputsList(generics.ListCreateAPIView):
   def get_queryset(self):
     team = self.request.query_params.get('team_created_by', None)
     if team is not None:
-      return RecommendedInputs.objects.filter(process_type__created_by=team).filter(recommended_input__created_by=team)
+      return RecommendedInputs.objects.filter(process_type__team_created_by=team).filter(recommended_input__team_created_by=team)
     return RecommendedInputs.objects.all()
 
 class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -569,8 +571,8 @@ def potatoes(request):
   writer = csv.writer(response)
   writer.writerow(['id', 'melanger name', 'origin', 'start time', 'end time', 'time delta'])
 
-  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__created_by=1, process_type__code="MP")
-  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__created_by=1, process_type__code="MS")
+  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__team_created_by=1, process_type__code="MP")
+  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__team_created_by=1, process_type__code="MS")
 
   for pulled_melanger in pulled_melangers:
     melange_input = pulled_melanger.inputs.first()
@@ -660,7 +662,7 @@ class MovementList(generics.ListAPIView):
   serializer_class=MovementListSerializer
   pagination_class = SmallPagination
   filter_backends = (OrderingFilter, DjangoFilterBackend)
-  filter_fields=('group_qr', 'destination', 'origin')
+  filter_fields=('group_qr', 'destination', 'origin', 'team_destination', 'team_origin')
   ordering_fields = ('timestamp', )
 
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
