@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        for item in Item.objects.exclude(inventory=None):
+        for item in Item.objects.exclude(inventory=None).filter(team_inventory=none):
             inventory = item.inventory
             username = item.inventory.username
             assoc_team = Team.objects.filter(name=username)[0]
