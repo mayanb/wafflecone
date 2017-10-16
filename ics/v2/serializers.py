@@ -348,8 +348,8 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
   processes = ProcessTypeSerializer(many=True, read_only=True)
   products = ProductTypeSerializer(many=True, read_only=True)
-	users = UserProfileSerializer(source='userprofiles', many=True, read_only=True)
+  users = UserProfileSerializer(source='userprofiles', many=True, read_only=True)
 
-	class Meta:
+  class Meta:
 		model = Team
 		fields = ('id', 'name', 'users', 'products', 'processes')

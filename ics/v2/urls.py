@@ -7,7 +7,7 @@ import oauth2client.contrib.django_util.site as django_util_site
 
 
 urlpatterns = [
-  url(r'^members/$', views.MembersList.as_view()),
+    url(r'^members/$', views.MembersList.as_view()),
 
 	url(r'^users/$', views.UserList.as_view()),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserGet.as_view()),
