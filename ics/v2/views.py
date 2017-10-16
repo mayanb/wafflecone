@@ -20,13 +20,11 @@ import datetime
 from django.http import HttpResponse
 import csv
 
-
-
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
 class UserProfileCreate(generics.CreateAPIView):
   queryset = UserProfile.objects.all()
-  serializer_class = UserProfileSerializer
+  serializer_class = UserProfileCreateSerializer
 
 # userprofiles/
 class UserProfileList(generics.ListAPIView):
@@ -70,13 +68,12 @@ class UserGet(generics.RetrieveAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
 
-
 ######################
 # TEAM-RELATED VIEWS #
 ######################
 # teams/
 class TeamList(generics.ListAPIView):
-  queryset = Team.objects.filter(pk=1)
+  queryset = Team.objects.all()
   serializer_class = TeamSerializer
 
 # teams/[pk]/
@@ -669,3 +666,10 @@ class MovementList(generics.ListAPIView):
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()
   serializer_class = MovementReceiveSerializer
+
+class MembersList(generics.ListCreateAPIView):
+	queryset = UserProfile.objects.all()
+	serializer_class = UserProfileCreateSerializer
+
+	def get_queryset(self):
+		return UserProfile.objects.filter(team=self.request.query_params.get('team', None))
