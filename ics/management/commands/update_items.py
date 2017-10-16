@@ -8,8 +8,7 @@ class Command(BaseCommand):
     #     parser.add_argument('poll_id', nargs='+', type=int)
 
     def handle(self, *args, **options):
-
-        for item in Item.objects.exclude(inventory=None).filter(team_inventory=none):
+        for item in Item.objects.exclude(inventory=None).filter(team_inventory=None):
             inventory = item.inventory
             username = item.inventory.username
             assoc_team = Team.objects.filter(name=username)[0]
