@@ -133,6 +133,10 @@ JWT_AUTH = {
     'JWT_REFRESH_EXPIRATION_DELTA' : datetime.timedelta(days=21),
 }
 
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'ics.v2.serializers.UserDetailSerializer',
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 

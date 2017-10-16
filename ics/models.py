@@ -32,7 +32,7 @@ class UserProfile(models.Model):
     token_type = models.CharField(max_length=100, null=True) 
     expires_in = models.IntegerField(null=True)
     expires_at = models.FloatField(null=True)
-    team = models.ForeignKey(Team, related_name='team', on_delete=models.CASCADE, null=True)
+    team = models.ForeignKey(Team, related_name='userprofiles', on_delete=models.CASCADE, null=True)
     account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 
 
@@ -46,7 +46,7 @@ class UserProfile(models.Model):
 
 class ProcessType(models.Model):
     created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
-    team_created_by = models.ForeignKey(Team, related_name='processes', on_delete=models.CASCADE, null=True)
+    team_created_by = models.ForeignKey(Team, related_name='processes', on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
@@ -74,7 +74,7 @@ class ProcessType(models.Model):
 
 class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
-    team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE, null=True)
+    team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     is_trashed = models.BooleanField(default=False)
@@ -299,6 +299,7 @@ class Item(models.Model):
     def save(self, *args, **kwargs):
         if self.pk is None:
             self.inventory = self.creating_task.process_type.created_by
+            self.team_inventory = self.creating_task.process_type.team_created_by
             if self.amount < 0:
                 self.amount = self.creating_task.process_type.default_amount
 
@@ -356,7 +357,7 @@ class Movement(models.Model):
     origin = models.ForeignKey(User, related_name="deliveries", on_delete=models.CASCADE)
     destination = models.ForeignKey(User, related_name="intakes", on_delete=models.CASCADE, null=True)
 
-    team_origin = models.ForeignKey(Team, related_name="deliveries", on_delete=models.CASCADE, null=True)
+    team_origin = models.ForeignKey(Team, related_name="deliveries", on_delete=models.CASCADE)
     team_destination = models.ForeignKey(Team, related_name="intakes", on_delete=models.CASCADE, null=True)
 
     
@@ -378,6 +379,7 @@ class MovementItem(models.Model):
     def save(self, *args, **kwargs):
         if self.pk is None:
             self.item.inventory = self.movement.destination
+            self.item.team_inventory = self.movement.team_destination
             self.item.save()
         super(MovementItem, self).save(*args, **kwargs)
 
