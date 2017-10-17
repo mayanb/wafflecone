@@ -53,6 +53,10 @@ class GoalList(generics.ListAPIView):
     if userprofile is not None:
       queryset = queryset.filter(userprofile=userprofile)
     return queryset
+
+class GoalGet(generics.RetrieveAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = BasicGoalSerializer
  
 class GoalCreate(generics.CreateAPIView):
   queryset = Goal.objects.all()

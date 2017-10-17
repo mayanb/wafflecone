@@ -68,6 +68,7 @@ urlpatterns = [
     url(r'^potatoes/$', views.activityCSV, name='residence time'),
 
     url(r'^goals/$', views.GoalList.as_view()),
+    url(r'^goals/(?P<pk>[0-9]+)/$', views.GoalGet.as_view()),
     url(r'^goals/create/$', views.GoalCreate.as_view()),
     url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view()),
 ]
