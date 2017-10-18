@@ -56,6 +56,8 @@ class ProcessType(models.Model):
     y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
     is_trashed = models.BooleanField(default=False)
     default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    is_trashed = models.BooleanField(default=False)
+
     #default_unit = models.CharField(default="kg", max_length=20)
 
     def __str__(self):

@@ -22,7 +22,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   
   class Meta:
     model = ProcessType
-    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name')
+    fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -39,6 +39,13 @@ class ProductTypeSerializer(serializers.ModelSerializer):
     else:
       return ""
 
+  class Meta:
+    model = ProductType
+    fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by')
+
+
+class ProductTypeBasicSerializer(serializers.ModelSerializer):
+  #last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
   class Meta:
     model = ProductType
     fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by')
@@ -251,6 +258,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 class ActivityListSerializer(serializers.ModelSerializer):
   process_id=serializers.CharField(source='process_type', read_only=True)
   process_name=serializers.CharField(source='process_type__name', read_only=True)
+  process_code = serializers.CharField(source='process_type__code', read_only=True)
   process_unit=serializers.CharField(source='process_type__unit', read_only=True)
   product_id=serializers.CharField(source='product_type', read_only=True)
   product_code=serializers.CharField(source='product_type__code', read_only=True)
@@ -260,7 +268,7 @@ class ActivityListSerializer(serializers.ModelSerializer):
 
   class Meta:
     model=Task
-    fields = ('runs', 'outputs', 'flagged', 'process_id', 'process_name', 'process_unit', 'product_id', 'product_code')
+    fields = ('runs', 'outputs', 'flagged', 'process_id', 'process_name', 'process_unit', 'product_id', 'product_code', 'process_code')
 
 class ActivityListDetailSerializer(serializers.ModelSerializer):
   outputs=serializers.CharField(read_only=True)
@@ -324,9 +332,17 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
-  processes = ProcessTypeSerializer(many=True, read_only=True)
-  products = ProductTypeSerializer(many=True, read_only=True)
+  processes = serializers.SerializerMethodField('getProcesses')
+  products = serializers.SerializerMethodField('getProducts')
   users = UserProfileSerializer(source='userprofiles', many=True, read_only=True)
+
+
+  def getProcesses(self, team):
+    return ProcessTypeSerializer(team.processes.filter(is_trashed=False), many=True).data
+
+  def getProducts(self, team):
+    return ProductTypeSerializer(team.products.filter(is_trashed=False), many=True).data
+
 
   class Meta:
 		model = Team
