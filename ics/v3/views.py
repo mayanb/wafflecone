@@ -470,6 +470,12 @@ class ActivityList(generics.ListAPIView):
       endDate = dt.strptime(end, dateformat)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
+    sum_query = Case(
+                  When(items__is_virtual=True, then=Value(0)),
+                  default=F('items__amount'),
+                  output_field=DecimalField()
+                )
+
     # separate by process type
     return queryset.values(
       'process_type',
@@ -479,13 +485,14 @@ class ActivityList(generics.ListAPIView):
       'product_type__code',
       'process_type__unit').annotate(
       runs=Count('id', distinct=True)
-    ).annotate(outputs=Coalesce(Sum('items__amount'), 0))
+    ).annotate(outputs=Coalesce(Sum(sum_query), 0))
 
 # activity/detail/
 class ActivityListDetail(generics.ListAPIView):
   serializer_class = ActivityListDetailSerializer
 
   def get_queryset(self):
+    dt = datetime.datetime
     queryset = Task.objects.filter(is_trashed=False)
 
     team = self.request.query_params.get('team', None)
@@ -500,17 +507,21 @@ class ActivityListDetail(generics.ListAPIView):
     if product_type is not None:
       queryset = queryset.filter(product_type=product_type)
 
+    sum_query = Case(
+                  When(items__is_virtual=True, then=Value(0)),
+                  default=F('items__amount'),
+                  output_field=DecimalField()
+                )
+
 
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
-      start = start.strip().split('-')
-      end = end.strip().split('-')
-      startDate = date(int(start[0]), int(start[1]), int(start[2]))
-      endDate = date(int(end[0]), int(end[1]), int(end[2]))
+      startDate = dt.strptime(start, dateformat)
+      endDate = dt.strptime(end, dateformat)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
-    return queryset.annotate(outputs=Coalesce(Sum('items__amount'), 0))
+    return queryset.annotate(outputs=Coalesce(Sum(sum_query), 0))
 
 
 
