@@ -4,10 +4,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
-from django.contrib.auth.models import User
-from django.db import models
 from uuid import uuid4
-
+from django.db.models import Max
 import constants
 
 
@@ -50,13 +48,19 @@ class ProcessType(models.Model):
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
     icon = models.CharField(max_length=50)
-    unit = models.CharField(max_length=20, default="container")
+    created_at = models.DateTimeField(default=datetime.now, blank=True)
+
+    description = models.CharField(max_length=100, default="")
     output_desc = models.CharField(max_length=20, default="product")
+    default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    unit = models.CharField(max_length=20, default="container")
+
+
     x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
     y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-    is_trashed = models.BooleanField(default=False)
+
     default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-    #default_unit = models.CharField(default="kg", max_length=20)
+    is_trashed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -75,8 +79,10 @@ class ProcessType(models.Model):
 class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
     team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=datetime.now, blank=True)
     name = models.CharField(max_length=20)
     code = models.CharField(max_length=20)
+    description = models.CharField(max_length=100, default="")
     is_trashed = models.BooleanField(default=False)
 
     def __str__(self):
@@ -100,6 +106,16 @@ class Attribute(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # create the right rank
+        if self.pk is None:
+            prev_rank = Attribute.objects.filter(
+                process_type=self.process_type, 
+                is_trashed=False
+            ).aggregate(Max('rank'))['rank__max']
+            self.rank = prev_rank + 1
+        super(Attribute, self).save(*args, **kwargs)
 
 
 
@@ -389,6 +405,7 @@ class MovementItem(models.Model):
 
 
 class Goal(models.Model):
+    userprofile = models.ForeignKey(UserProfile, related_name="goals", on_delete=models.CASCADE, default=1)
     process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
     product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
     goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
