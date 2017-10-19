@@ -87,6 +87,13 @@ class TeamList(generics.ListAPIView):
   queryset = Team.objects.all()
   serializer_class = TeamSerializer
 
+  def get_queryset(self):
+    queryset = Team.objects.all()
+    team = self.request.query_params.get('team_name', None)
+    if team is not None:
+      queryset = queryset.filter(name=team)
+    return queryset
+
 # teams/[pk]/
 class TeamGet(generics.RetrieveAPIView):
   queryset = Team.objects.all()
