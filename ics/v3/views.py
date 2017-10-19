@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
-from ics.v1.serializers import *
+from ics.v3.serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
 import django_filters
@@ -20,13 +20,11 @@ import datetime
 from django.http import HttpResponse
 import csv
 
-
-
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
 class UserProfileCreate(generics.CreateAPIView):
   queryset = UserProfile.objects.all()
-  serializer_class = UserProfileSerializer
+  serializer_class = UserProfileCreateSerializer
 
 # userprofiles/
 class UserProfileList(generics.ListAPIView):
@@ -41,17 +39,28 @@ class UserProfileGet(generics.RetrieveAPIView):
 ######################
 # GOAL-RELATED VIEWS #
 ######################
-
-class GoalListCreate(generics.ListCreateAPIView):
+class GoalList(generics.ListAPIView):
   queryset = Goal.objects.all()
   serializer_class = BasicGoalSerializer
 
   def get_queryset(self):
     queryset = Goal.objects.all()
     team = self.request.query_params.get('team', None)
+    userprofile = self.request.query_params.get('userprofile', None)
+
     if team is not None:
-      queryset = queryset.filter(process_type__created_by=team)
+      queryset = queryset.filter(process_type__team_created_by=team)
+    if userprofile is not None:
+      queryset = queryset.filter(userprofile=userprofile)
     return queryset
+
+class GoalGet(generics.RetrieveAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = BasicGoalSerializer
+ 
+class GoalCreate(generics.CreateAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = GoalCreateSerializer 
 
 class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Goal.objects.all()
@@ -70,7 +79,6 @@ class UserGet(generics.RetrieveAPIView):
   queryset = User.objects.all()
   serializer_class = UserSerializer
 
-
 ######################
 # TEAM-RELATED VIEWS #
 ######################
@@ -78,6 +86,13 @@ class UserGet(generics.RetrieveAPIView):
 class TeamList(generics.ListAPIView):
   queryset = Team.objects.all()
   serializer_class = TeamSerializer
+
+  def get_queryset(self):
+    queryset = Team.objects.all()
+    team = self.request.query_params.get('team_name', None)
+    if team is not None:
+      queryset = queryset.filter(name=team)
+    return queryset
 
 # teams/[pk]/
 class TeamGet(generics.RetrieveAPIView):
@@ -122,14 +137,14 @@ class TaskSearch(generics.ListAPIView):
 
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset = queryset.filter(process_type__created_by=team)
+      queryset = queryset.filter(process_type__team_created_by=team)
 
     label = self.request.query_params.get('label', None)
     dashboard = self.request.query_params.get('dashboard', None)
     if label is not None and dashboard is not None:
       queryset = queryset.filter(Q(keywords__icontains=label))
     elif label is not None:
-      queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+      queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 
     return queryset
 
@@ -155,7 +170,7 @@ class TaskList(generics.ListAPIView):
         # filter according to various parameters
         team = self.request.query_params.get('team', None)
         if team is not None:
-          queryset = queryset.filter(process_type__created_by=team)
+          queryset = queryset.filter(process_type__team_created_by=team)
 
         label = self.request.query_params.get('label', None)
         dashboard = self.request.query_params.get('dashboard', None)
@@ -172,7 +187,7 @@ class TaskList(generics.ListAPIView):
         if child is not None:
             queryset = Task.objects.get(pk=child).ancestors()
 
-        inv = self.request.query_params.get('inventory', None)
+        inv = self.request.query_params.get('team_inventory', None)
         if inv is not None:
           queryset = queryset.filter(items__isnull=False, items__input__isnull=True).distinct()
 
@@ -203,8 +218,8 @@ class TaskList(generics.ListAPIView):
         return queryset.select_related().prefetch_related('items', 'attribute_values')
 
   def get_serializer_context(self):
-    inv = self.request.query_params.get('inventory', None )
-    return {"inventory": inv}
+    inv = self.request.query_params.get('team_inventory', None )
+    return {"team_inventory": inv}
 
 # tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
@@ -280,7 +295,7 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.filter(is_trashed=False)
   serializer_class = ProcessTypeSerializer
-  filter_fields = ('created_by',)
+  filter_fields = ('created_by', 'team_created_by')
 
 # processes/[pk]/
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -309,7 +324,7 @@ class InventoryList(generics.ListAPIView):
     # filter by team
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset = queryset.filter(inventory=team)
+      queryset = queryset.filter(team_inventory=team)
 
     # filter by products
     products = self.request.query_params.get('products', None)
@@ -333,6 +348,8 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type', 
       'creating_task__process_type__output_desc', 
       'creating_task__process_type__unit', 
+      'creating_task__process_type__team_created_by',
+      'creating_task__process_type__team_created_by__name',
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
@@ -348,7 +365,7 @@ class InventoryDetailTest2(generics.ListAPIView):
     
     team = self.request.query_params.get('team', None)
     if team is not None:
-      item_query = item_query.filter(inventory=team).distinct()
+      item_query = item_query.filter(team_inventory=team).distinct()
 
 
     queryset = Task.objects.filter(is_trashed=False) 
@@ -411,7 +428,7 @@ class InventoryDetail(generics.ListAPIView):
     # filter by team
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset = queryset.filter(inventory=team)
+      queryset = queryset.filter(team_inventory=team)
 
     # filter by products
     products = self.request.query_params.get('products', None)
@@ -439,7 +456,7 @@ class ActivityList(generics.ListAPIView):
 
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset = queryset.filter(process_type__created_by=team)
+      queryset = queryset.filter(process_type__team_created_by=team)
 
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
@@ -453,26 +470,34 @@ class ActivityList(generics.ListAPIView):
       endDate = dt.strptime(end, dateformat)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
+    sum_query = Case(
+                  When(items__is_virtual=True, then=Value(0)),
+                  default=F('items__amount'),
+                  output_field=DecimalField()
+                )
+
     # separate by process type
     return queryset.values(
       'process_type',
       'product_type',
       'process_type__name',
+      'process_type__code',
       'product_type__code',
       'process_type__unit').annotate(
       runs=Count('id', distinct=True)
-    ).annotate(outputs=Coalesce(Sum('items__amount'), 0))
+    ).annotate(outputs=Coalesce(Sum(sum_query), 0))
 
 # activity/detail/
 class ActivityListDetail(generics.ListAPIView):
   serializer_class = ActivityListDetailSerializer
 
   def get_queryset(self):
+    dt = datetime.datetime
     queryset = Task.objects.filter(is_trashed=False)
 
     team = self.request.query_params.get('team', None)
     if team is not None:
-      queryset = queryset.filter(process_type__created_by=team)
+      queryset = queryset.filter(process_type__team_created_by=team)
 
     process_type = self.request.query_params.get('process_type', None)
     if process_type is not None:
@@ -482,17 +507,21 @@ class ActivityListDetail(generics.ListAPIView):
     if product_type is not None:
       queryset = queryset.filter(product_type=product_type)
 
+    sum_query = Case(
+                  When(items__is_virtual=True, then=Value(0)),
+                  default=F('items__amount'),
+                  output_field=DecimalField()
+                )
+
 
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
-      start = start.strip().split('-')
-      end = end.strip().split('-')
-      startDate = date(int(start[0]), int(start[1]), int(start[2]))
-      endDate = date(int(end[0]), int(end[1]), int(end[2]))
+      startDate = dt.strptime(start, dateformat)
+      endDate = dt.strptime(end, dateformat)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
-    return queryset.annotate(outputs=Coalesce(Sum('items__amount'), 0))
+    return queryset.annotate(outputs=Coalesce(Sum(sum_query), 0))
 
 
 
@@ -508,11 +537,11 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))
   serializer_class = ProductTypeSerializer
-  filter_fields = ('created_by',)
+  filter_fields = ('created_by', 'team_created_by')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = ProductType.objects.all()
-  serializer_class = ProductTypeSerializer
+  queryset = ProductType.objects.filter(is_trashed=False)
+  serializer_class = ProductTypeBasicSerializer
 
 
 
@@ -552,9 +581,9 @@ class RecommendedInputsList(generics.ListCreateAPIView):
   serializer_class = RecommendedInputsSerializer
 
   def get_queryset(self):
-    team = self.request.query_params.get('created_by', None)
+    team = self.request.query_params.get('team_created_by', None)
     if team is not None:
-      return RecommendedInputs.objects.filter(process_type__created_by=team).filter(recommended_input__created_by=team)
+      return RecommendedInputs.objects.filter(process_type__team_created_by=team).filter(recommended_input__team_created_by=team)
     return RecommendedInputs.objects.all()
 
 class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -572,8 +601,8 @@ def potatoes(request):
   writer = csv.writer(response)
   writer.writerow(['id', 'melanger name', 'origin', 'start time', 'end time', 'time delta'])
 
-  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__created_by=1, process_type__code="MP")
-  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__created_by=1, process_type__code="MS")
+  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__team_created_by=1, process_type__code="MP")
+  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__team_created_by=1, process_type__code="MS")
 
   for pulled_melanger in pulled_melangers:
     melange_input = pulled_melanger.inputs.first()
@@ -623,7 +652,7 @@ def activityCSV(request):
   writer.writerow(fields)
 
   tasks = Task.objects.filter(is_trashed=False, 
-    process_type__created_by=team, process_type=process, 
+    process_type__team_created_by=team, process_type=process, 
     created_at__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     outputcount=Count('items', distinct=True)).annotate(
@@ -663,9 +692,16 @@ class MovementList(generics.ListAPIView):
   serializer_class=MovementListSerializer
   pagination_class = SmallPagination
   filter_backends = (OrderingFilter, DjangoFilterBackend)
-  filter_fields=('group_qr', 'destination', 'origin')
+  filter_fields=('group_qr', 'destination', 'origin', 'team_destination', 'team_origin')
   ordering_fields = ('timestamp', )
 
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()
   serializer_class = MovementReceiveSerializer
+
+class MembersList(generics.ListCreateAPIView):
+	queryset = UserProfile.objects.all()
+	serializer_class = UserProfileCreateSerializer
+
+	def get_queryset(self):
+		return UserProfile.objects.filter(team=self.request.query_params.get('team', None))
