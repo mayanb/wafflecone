@@ -8,6 +8,8 @@ from datetime import date, datetime, timedelta
 easy_format = '%Y-%m-%d %H:%M'
 
 class AttributeSerializer(serializers.ModelSerializer):
+  rank = serializers.IntegerField(read_only=True)
+
   class Meta:
     model = Attribute
     fields = ('id', 'process_type', 'name', 'rank', 'datatype')
@@ -23,6 +25,14 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
   class Meta:
     model = ProcessType
     fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed')
+
+
+class AttributeDetailSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Attribute
+    fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed')
+    read_only_fields = ('id', 'process_type', 'name', 'rank', 'datatype')
+
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
   class Meta:

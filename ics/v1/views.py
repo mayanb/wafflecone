@@ -528,7 +528,7 @@ class AttributeList(generics.ListCreateAPIView):
 
 class AttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Attribute.objects.all()
-  serializer_class = AttributeSerializer
+  serializer_class = AttributeDetailSerializer
   filter_fields = ('process_type',)
 
 class TaskAttributeFilter(django_filters.rest_framework.FilterSet):
