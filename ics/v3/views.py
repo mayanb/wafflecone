@@ -87,6 +87,13 @@ class TeamList(generics.ListAPIView):
   queryset = Team.objects.all()
   serializer_class = TeamSerializer
 
+  def get_queryset(self):
+    queryset = Team.objects.all()
+    team = self.request.query_params.get('team_name', None)
+    if team is not None:
+      queryset = queryset.filter(name=team)
+    return queryset
+
 # teams/[pk]/
 class TeamGet(generics.RetrieveAPIView):
   queryset = Team.objects.all()
@@ -137,7 +144,7 @@ class TaskSearch(generics.ListAPIView):
     if label is not None and dashboard is not None:
       queryset = queryset.filter(Q(keywords__icontains=label))
     elif label is not None:
-      queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+      queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 
     return queryset
 
@@ -468,6 +475,7 @@ class ActivityList(generics.ListAPIView):
       'process_type',
       'product_type',
       'process_type__name',
+      'process_type__code',
       'product_type__code',
       'process_type__unit').annotate(
       runs=Count('id', distinct=True)
@@ -521,8 +529,8 @@ class ProductList(generics.ListCreateAPIView):
   filter_fields = ('created_by', 'team_created_by')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = ProductType.objects.all()
-  serializer_class = ProductTypeSerializer
+  queryset = ProductType.objects.filter(is_trashed=False)
+  serializer_class = ProductTypeBasicSerializer
 
 
 
