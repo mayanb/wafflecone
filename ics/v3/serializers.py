@@ -275,10 +275,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
 	team = serializers.CharField(source='userprofile.team.id', read_only=True)
 	account_type = serializers.CharField(source='userprofile.account_type', read_only=True)
 	profile_id = serializers.CharField(source='userprofile.id')
+	user_id = serializers.CharField(source='userprofile.user.id')
 
 	class Meta:
 		model = User
-		fields = ('profile_id', 'username', 'first_name', 'last_name', 'team', 'account_type', 'team_name', )
+		fields = ('user_id', 'profile_id', 'username', 'first_name', 'last_name', 'team', 'account_type', 'team_name', )
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name')
