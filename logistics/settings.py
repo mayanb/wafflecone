@@ -219,7 +219,14 @@ GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET", '')
 GOOGLE_OAUTH2_API_KEY = os.environ.get("GOOGLE_OAUTH2_API_KEY", '')
 GOOGLEAUTH_CALLBACK_DOMAIN = os.environ.get("GOOGLEAUTH_CALLBACK_DOMAIN", '')
 
-GOOGLEAUTH_SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
+GOOGLEAUTH_SCOPE = [
+    'https://www.googleapis.com/auth/spreadsheets', 
+    'https://www.googleapis.com/auth/userinfo.email', 
+    'https://www.googleapis.com/auth/userinfo.profile', 
+    'https://www.googleapis.com/auth/plus.login', 
+    'https://www.googleapis.com/auth/plus.me', 
+    'https://www.googleapis.com/auth/drive'
+]
 
 CORS_ORIGIN_ALLOW_ALL = True
 #CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')

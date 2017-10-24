@@ -30,6 +30,7 @@ class UserProfile(models.Model):
     token_type = models.CharField(max_length=100, null=True) 
     expires_in = models.IntegerField(null=True)
     expires_at = models.FloatField(null=True)
+    gauth_email = models.TextField(null=True)
     team = models.ForeignKey(Team, related_name='userprofiles', on_delete=models.CASCADE, null=True)
     account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 
@@ -405,7 +406,15 @@ class MovementItem(models.Model):
 
 
 class Goal(models.Model):
+    TIMERANGES = (
+        ('d', 'day'),
+        ('w', 'week'),
+        ('m', 'month')
+    )
+
     userprofile = models.ForeignKey(UserProfile, related_name="goals", on_delete=models.CASCADE, default=1)
     process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
     product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
     goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+    timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w')
+
