@@ -4,6 +4,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
+from django.contrib.postgres.aggregates import StringAgg
+from django.db.models.signals import post_save, m2m_changed
+from django.contrib.postgres.indexes import GinIndex
+from django.dispatch import receiver
 from uuid import uuid4
 from django.db.models import Max
 import constants
@@ -121,6 +125,24 @@ class Attribute(models.Model):
 
 
 
+class TaskManager(models.Manager):
+    def with_documents(self):
+        vector = SearchVector('process_type__name') + \
+        SearchVector('product_type__name') + \
+        SearchVector('label') + \
+        SearchVector('custom_display') + \
+        SearchVector('experiment') + \
+        SearchVector('keywords') + \
+        SearchVector('attribute_values__value') + \
+        SearchVector('process_type__team_created_by__name') + \
+        SearchVector(StringAgg('items__readable_qr', delimiter=' '))
+        # vector = SearchVector('process_type__name', weight='D') + \
+        #     SearchVector('product_type__name', weight='C') + \
+        #     SearchVector('label', weight='A') + \
+        #     SearchVector('custom_display', weight='B') + \
+        #     SearchVector('experiment', weight='E') + \
+        #     SearchVector('keywords', weight='F')
+        return self.get_queryset().annotate(document=vector)
 
 
 class Task(models.Model):
@@ -139,6 +161,14 @@ class Task(models.Model):
     keywords = models.CharField(max_length=200, blank=True)
     search = SearchVectorField(null=True)
 
+    objects = TaskManager()
+
+    class Meta:
+        indexes = [
+            GinIndex(fields=['search'])
+        ]
+
+
     def __str__(self):
         if self.custom_display:
             return self.custom_display
@@ -151,9 +181,13 @@ class Task(models.Model):
         self.refreshKeywords()
         qr_code = "plmr.io/" + str(uuid4())
         super(Task, self).save(*args, **kwargs)
-        newVirtualItem = Item(is_virtual=True, creating_task=self, item_qr=qr_code)
-        newVirtualItem.save()
-        
+        if 'update_fields' not in kwargs or 'search' not in kwargs['update_fields']:
+            instance = self._meta.default_manager.with_documents().filter(pk=self.pk)[0]
+            instance.search = instance.document
+            instance.save(update_fields=['search'])
+        # if self.pk is None:
+        #     newVirtualItem = Item(is_virtual=True, creating_task=self, item_qr=qr_code)
+        #     newVirtualItem.save()
 
     def setLabelAndDisplay(self):
         """
@@ -296,16 +330,13 @@ class Task(models.Model):
             self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
 
-
-
-
-
 class Item(models.Model):
     item_qr = models.CharField(max_length=100, unique=True)
     creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
     created_at = models.DateTimeField(auto_now_add=True)
     inventory = models.ForeignKey(User, on_delete=models.CASCADE, related_name="items", null=True)
     team_inventory = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="items", null=True)
+    readable_qr = models.CharField(max_length=50)
 
     amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
     is_virtual = models.BooleanField(default=False)
@@ -314,6 +345,7 @@ class Item(models.Model):
         return str(self.creating_task) + " - " + self.item_qr[-6:]
     
     def save(self, *args, **kwargs):
+        self.readable_qr = self.item_qr[-6:]
         if self.pk is None:
             self.inventory = self.creating_task.process_type.created_by
             self.team_inventory = self.creating_task.process_type.team_created_by
