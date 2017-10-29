@@ -32,6 +32,12 @@ class UserProfileList(generics.ListAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UserProfileSerializer
 
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return UserProfile.objects.filter(team=team)
+    else return UserProfile.objects.all()
+
 # userprofiles/[pk]/
 class UserProfileGet(generics.RetrieveAPIView):
   queryset = UserProfile.objects.all()
@@ -707,9 +713,9 @@ class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()
   serializer_class = MovementReceiveSerializer
 
-class MembersList(generics.ListCreateAPIView):
+class MembersList(generics.ListAPIView):
 	queryset = UserProfile.objects.all()
-	serializer_class = UserProfileCreateSerializer
+	serializer_class = UserProfileList
 
 	def get_queryset(self):
 		return UserProfile.objects.filter(team=self.request.query_params.get('team', None))
