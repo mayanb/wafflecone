@@ -38,6 +38,11 @@ class UserProfile(models.Model):
     team = models.ForeignKey(Team, related_name='userprofiles', on_delete=models.CASCADE, null=True)
     account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 
+    def get_username_display(self):
+        print(self.user.username)
+        username_pieces = self.user.username.rsplit('_', 1)
+        return username_pieces[0]
+
 
 
 ############################

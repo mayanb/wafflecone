@@ -296,25 +296,27 @@ class UserDetailSerializer(serializers.ModelSerializer):
 	user_id = serializers.CharField(source='userprofile.user.id')
 	has_gauth_token = serializers.SerializerMethodField('hasGauthToken')
 	gauth_email = serializers.CharField(source='userprofile.gauth_email')
+	username_display = serializers.CharField(source='userprofile.get_username_display')
 
 	def hasGauthToken(self, user):
 		return bool(user.userprofile.gauth_access_token)
 
 	class Meta:
 		model = User
-		fields = ('user_id', 'profile_id', 'username', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email')
+		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email')
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name')
 	team = serializers.CharField(source='team.id', read_only=True)
 	profile_id = serializers.CharField(source='id')
 	username = serializers.CharField(source='user.username')
+	username_display = serializers.CharField(source='get_username_display')
 	first_name = serializers.CharField(source='user.first_name')
 	last_name = serializers.CharField(source='user.last_name')
 
 	class Meta:
 		model = UserProfile
-		fields = ('id', 'profile_id', 'username', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email')
+		fields = ('id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email')
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
 	username = serializers.CharField(source='user.username')
@@ -322,14 +324,19 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 	first_name = serializers.CharField(source='user.first_name')
 	team_name = serializers.CharField(source='team.name', read_only=True)
 	profile_id = serializers.CharField(source='id', read_only=True)
+	username_display = serializers.CharField(source='get_username_display', read_only=True)
 
 	def create(self, validated_data):
-		data = validated_data.get('user')
-		user = User.objects.create(**data)
+		team = validated_data['team']
+		data = validated_data['user']
+		long_username = data['username'] + '_' + team.name
+
+		# create the user 
+		user = User.objects.create(username=long_username, first_name=data['first_name'])
 		user.set_password(data.get('password'))
 		user.save()
 
-		team = validated_data.get('team')
+		# create the userprofile
 		account_type = validated_data.get('account_type', '')
 		userprofile = UserProfile.objects.create(
 			user=user, 
@@ -344,7 +351,7 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserProfile
 		extra_kwargs = {'account_type': {'write_only': True}, 'password': {'write_only': True}}
-		fields = ('id', 'profile_id', 'username', 'password', 'first_name', 'team', 'account_type', 'team_name', 'gauth_email')
+		fields = ('id', 'profile_id', 'username', 'password', 'first_name', 'team', 'account_type', 'team_name', 'gauth_email', 'username_display')
 
 
 class TeamSerializer(serializers.ModelSerializer):
