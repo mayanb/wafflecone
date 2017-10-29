@@ -132,7 +132,7 @@ JWT_AUTH = {
     'JWT_REFRESH_EXPIRATION_DELTA' : datetime.timedelta(days=21),
 }
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'ics.v3.serializers.UserDetailSerializer',
+    'USER_DETAILS_SERIALIZER': 'ics.v4.serializers.UserDetailSerializer',
 }
 
 # Password validation
