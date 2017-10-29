@@ -14,6 +14,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
 import datetime
 # from datetime import date, datetime, timedelta
@@ -143,17 +144,21 @@ class TaskSearch(generics.ListAPIView):
 
   def get_queryset(self):
     queryset = Task.objects.filter(is_trashed=False).order_by('-updated_at')
-
     team = self.request.query_params.get('team', None)
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
-
+      print(team)
     label = self.request.query_params.get('label', None)
     dashboard = self.request.query_params.get('dashboard', None)
     if label is not None and dashboard is not None:
       queryset = queryset.filter(Q(keywords__icontains=label))
     elif label is not None:
-      queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
+      print("hi")
+      query = SearchQuery(label)
+      # queryset.annotate(rank=SearchRank(F('search'), query)).filter(search=query).order_by('-rank')
+      queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+      print(queryset.query)
+      # queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 
     return queryset
 
@@ -707,9 +712,5 @@ class MovementList(generics.ListAPIView):
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()
   serializer_class = MovementReceiveSerializer
-
-class MembersList(generics.ListCreateAPIView):
-	queryset = UserProfile.objects.all()
-	serializer_class = UserProfileCreateSerializer
 
 	
