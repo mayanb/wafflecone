@@ -105,6 +105,7 @@ class NestedItemSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Item
 		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual', 'team_inventory')
+		read_only_fields = ('id', 'item_qr', 'creating_task', 'inventory', 'team_inventory')
 
 class BasicInputSerializer(serializers.ModelSerializer):
 	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
