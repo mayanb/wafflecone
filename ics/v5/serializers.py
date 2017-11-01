@@ -186,7 +186,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'inputs', 
 			'attribute_values', 
 			'display',
-			'is_trashed'
+			'is_trashed',
+			'search',
 		)
 
 

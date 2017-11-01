@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     'storages',
     'corsheaders',
     'gauth',
+    'graphs',
     'rest_auth'
     #'dashboard', 
     #'debug_toolbar',
