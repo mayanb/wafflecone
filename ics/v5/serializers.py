@@ -163,9 +163,9 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
 	def getItems(self, task):
 		if self.context.get('team_inventory', None) is not None:
-			return BasicItemSerializer(task.items.all().filter(input__isnull=True), many=True).data
+			return BasicItemSerializer(task.items.all().filter(inputs__isnull=True), many=True).data
 		else:
-			return BasicItemSerializer(task.items.all().annotate(is_used=F('input__task')), many=True).data
+			return BasicItemSerializer(task.items.all().annotate(is_used=F('inputs__task')), many=True).data
 
 	class Meta:
 		model = Task
@@ -295,7 +295,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 
 	def getInventoryItems(self, task):
-		return BasicItemSerializer(task.items.filter(input__isnull=True, team_inventory=task.team), many=True).data
+		return BasicItemSerializer(task.items.filter(inputs__isnull=True, team_inventory=task.team), many=True).data
 
 	class Meta:
 		model = Task

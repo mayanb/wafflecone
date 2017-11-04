@@ -208,7 +208,7 @@ class TaskList(generics.ListAPIView):
 
         inv = self.request.query_params.get('team_inventory', None)
         if inv is not None:
-          queryset = queryset.filter(items__isnull=False, items__input__isnull=True).distinct()
+          queryset = queryset.filter(items__isnull=False, items__inputs__isnull=True).distinct()
 
         processes = self.request.query_params.get('processes', None)
         if processes is not None:
@@ -338,7 +338,7 @@ class InventoryList(generics.ListAPIView):
   serializer_class = InventoryListSerializer
 
   def get_queryset(self):
-    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])
+    queryset = Item.objects.filter(inputs__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])
 
     # filter by team
     team = self.request.query_params.get('team', None)
@@ -380,7 +380,7 @@ class InventoryDetailTest2(generics.ListAPIView):
   pagination_class = SmallPagination
 
   def get_queryset(self):
-    item_query = Item.objects.filter(input__isnull=True)
+    item_query = Item.objects.filter(inputs__isnull=True)
     
     team = self.request.query_params.get('team', None)
     if team is not None:
@@ -442,7 +442,7 @@ class InventoryDetail(generics.ListAPIView):
   pagination_class = SmallPagination
 
   def get_queryset(self):
-    queryset = Item.objects.filter(input__isnull=True, creating_task__is_trashed=False)
+    queryset = Item.objects.filter(inputs__isnull=True, creating_task__is_trashed=False)
 
     # filter by team
     team = self.request.query_params.get('team', None)
@@ -675,7 +675,7 @@ def activityCSV(request):
     created_at__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     outputcount=Count('items', distinct=True)).annotate(
-    first_use_date=Min('items__input__task__created_at'))
+    first_use_date=Min('items__inputs__task__created_at'))
 
   for t in tasks:
     tid = t.id
