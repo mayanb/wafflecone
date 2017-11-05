@@ -17,6 +17,14 @@ from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, Oute
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
+# @csrf_exempt
+@api_view(['POST'])
+def test(request):
+  test_param = request.POST.get('test_param')
+  print(test_param)
+  r = requests.post("http://bugs.python.org", data={'number': 12524, 'type': 'issue', 'action': 'show'})
+  print(r.status_code, r.reason)  
+  return HttpResponse(r);
 
 
 # @csrf_exempt
