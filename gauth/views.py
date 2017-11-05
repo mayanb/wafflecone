@@ -21,8 +21,10 @@ dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 @api_view(['POST'])
 def test(request):
   test_param = request.POST.get('test_param')
+  print("test Param")
   print(test_param)
   r = requests.post("http://bugs.python.org", data={'number': 12524, 'type': 'issue', 'action': 'show'})
+  print("response")
   print(r.status_code, r.reason)  
   return HttpResponse(r);
 
