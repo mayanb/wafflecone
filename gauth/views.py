@@ -101,7 +101,7 @@ def activityArray(process, start, end, team):
     created_at__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     outputcount=Count('items', distinct=True)).annotate(
-    first_use_date=Min('items__input__task__created_at'))
+    first_use_date=Min('items__inputs__task__created_at'))
 
   for t in tasks:
     tid = t.id
