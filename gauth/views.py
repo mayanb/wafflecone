@@ -167,7 +167,8 @@ def createSpreadsheet(request):
   print( "response2: %s" % body2 )
 
   dt = datetime.datetime
-  title = ProcessType.objects.get(pk=process).name + " " + dt.strptime(start, dateformat) + " to " + dt.strptime(end, dateformat)
+  dt_format = "%Y-%m-%d"
+  title = ProcessType.objects.get(pk=process).name + " " + dt.strptime(start, dt_format) + " to " + dt.strptime(end, dt_format)
 
   updateTitleBody = {
     "requests": [{
