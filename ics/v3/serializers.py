@@ -377,8 +377,9 @@ class BasicGoalSerializer(serializers.ModelSerializer):
       creating_task__process_type=goal.process_type, 
       creating_task__product_type=goal.product_type,
       creating_task__is_trashed=False,
-      creating_task__created_at__range=(start, end)
-    ).count()
+      creating_task__created_at__range=(start, end),
+      is_virtual=False,
+    ).aggregate(amount_sum=Sum('amount'))['amount_sum']
 
   class Meta:
     model = Goal
