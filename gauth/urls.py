@@ -10,7 +10,8 @@ urlpatterns = [
     url(r'^create-auth-token/$', views.createAuthToken, name='y'),
     url(r'^create-spreadsheet/$', views.createSpreadsheet, name='z'),
     url(r'^token-saver/$', views.token_saver, name='a'),
-    url(r'^clear-token/$', views.clearToken, name='b')
+    url(r'^clear-token/$', views.clearToken, name='b'),
+    url(r'^test/$', views.test)
 
 
 

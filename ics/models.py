@@ -90,7 +90,7 @@ class ProductType(models.Model):
     created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
     team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE)
     created_at = models.DateTimeField(default=datetime.now, blank=True)
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=30)
     code = models.CharField(max_length=20)
     description = models.CharField(max_length=100, default="")
     is_trashed = models.BooleanField(default=False)
@@ -324,7 +324,7 @@ class Task(models.Model):
 
         # get all tasks where any of its items were used as inputs into a task 
         # that is in curr_level_tasks
-        parent_tasks = Task.objects.filter(items__input__task__in=curr_level_tasks)
+        parent_tasks = Task.objects.filter(items__inputs__task__in=curr_level_tasks)
 
         for t in parent_tasks:
             if t.id not in all_ancestors:
@@ -365,7 +365,7 @@ class Item(models.Model):
 
 
 class Input(models.Model):
-    input_item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 
 
