@@ -200,7 +200,7 @@ class FlowTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('new_task', 'creating_task', 'amount', 'new_process_type', 'creating_product')
+		fields = ('new_task', 'creating_task', 'amount', 'new_process_type', 'creating_product', 'label')
 		# write_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
 		# read_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
 		extra_kwargs = {'creating_task': {'write_only': True}, 'amount': {'write_only': True}, 'new_process_type': {'write_only': True}, 'creating_product': {'write_only': True}}
