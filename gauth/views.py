@@ -17,6 +17,16 @@ from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, Oute
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
+# @csrf_exempt
+@api_view(['POST'])
+def test(request):
+  test_param = request.POST.get('test_param')
+  print("test Param")
+  print(test_param)
+  r = requests.post("http://bugs.python.org", data={'number': 12524, 'type': 'issue', 'action': 'show'})
+  print("response")
+  print(r.status_code, r.reason)  
+  return HttpResponse(r);
 
 
 # @csrf_exempt
@@ -91,7 +101,7 @@ def activityArray(process, start, end, team):
     created_at__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     outputcount=Count('items', distinct=True)).annotate(
-    first_use_date=Min('items__input__task__created_at'))
+    first_use_date=Min('items__inputs__task__created_at'))
 
   for t in tasks:
     tid = t.id
@@ -170,8 +180,7 @@ def createSpreadsheet(request):
   titleURL = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + ':batchUpdate'
   r3 = google.post(titleURL, json.dumps(updateTitleBody))
   body3 = json.loads(r3.content)
-
-  return HttpResponse(r3);
+  return HttpResponse(r3, content_type='application/json')
 
 
 def createAuthURL(request):
