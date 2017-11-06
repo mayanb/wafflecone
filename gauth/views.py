@@ -180,8 +180,7 @@ def createSpreadsheet(request):
   titleURL = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + ':batchUpdate'
   r3 = google.post(titleURL, json.dumps(updateTitleBody))
   body3 = json.loads(r3.content)
-
-  return HttpResponse(r3);
+  return HttpResponse(r3, content_type='application/json')
 
 
 def createAuthURL(request):
