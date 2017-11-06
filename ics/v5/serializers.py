@@ -197,13 +197,14 @@ class FlowTaskSerializer(serializers.ModelSerializer):
 	new_process_type = serializers.IntegerField(write_only=True)
 	creating_product = serializers.IntegerField(write_only=True)
 	new_task = NestedTaskSerializer(source='*', read_only=True)
+	new_label = serializers.CharField(write_only=True)
 
 	class Meta:
 		model = Task
-		fields = ('new_task', 'creating_task', 'amount', 'new_process_type', 'creating_product', 'label')
+		fields = ('new_task', 'creating_task', 'amount', 'new_process_type', 'creating_product', 'new_label')
 		# write_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
 		# read_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		extra_kwargs = {'creating_task': {'write_only': True}, 'amount': {'write_only': True}, 'new_process_type': {'write_only': True}, 'creating_product': {'write_only': True}}
+		extra_kwargs = {'creating_task': {'write_only': True}, 'amount': {'write_only': True}, 'new_process_type': {'write_only': True}, 'creating_product': {'write_only': True}, 'new_label': {'write_only': True}}
 
 
 	def create(self, validated_data):
@@ -214,10 +215,11 @@ class FlowTaskSerializer(serializers.ModelSerializer):
 		amount = validated_data.get('amount')
 		new_process_type = validated_data.get('new_process_type')
 		creating_product = validated_data.get('creating_product')
+		new_label = validated_data.get('new_label')
 
 		qr_code = "plmr.io/" + str(uuid4())
 		virtual_item = Item.objects.create(is_virtual=True, creating_task_id=creating_task, item_qr=qr_code, amount=amount)
-		new_task = Task.objects.create(process_type_id=new_process_type, product_type_id=creating_product)
+		new_task = Task.objects.create(process_type_id=new_process_type, product_type_id=creating_product, label=new_label)
 		Input.objects.create(input_item=virtual_item, task=new_task)
 		return new_task
 
