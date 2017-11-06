@@ -167,12 +167,12 @@ def createSpreadsheet(request):
   print( "response2: %s" % body2 )
 
   dt = datetime.datetime
-  today = str(dt.today())
+  title = ProcessType.objects.get(pk=process).name + " " + dt.strptime(start, dateformat) + " to " + dt.strptime(end, dateformat)
 
   updateTitleBody = {
     "requests": [{
       "updateSpreadsheetProperties": {
-          "properties": {"title": today},
+          "properties": {"title": title},
           "fields": "title"
         }
     }]
