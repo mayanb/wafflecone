@@ -43,6 +43,10 @@ class UserProfileGet(generics.RetrieveAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UserProfileSerializer
 
+class UserProfileEdit(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UserProfileEditSerializer
+
 ######################
 # GOAL-RELATED VIEWS #
 ######################

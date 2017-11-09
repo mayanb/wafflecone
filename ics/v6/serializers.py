@@ -326,6 +326,8 @@ class ActivityListDetailSerializer(serializers.ModelSerializer):
 		fields = ('id', 'label', 'label_index', 'custom_display', 'outputs')
 
 
+
+## ONLY USED AS LOGINSERIALIZER ##
 class UserDetailSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='userprofile.team.name')
 	team = serializers.CharField(source='userprofile.team.id', read_only=True)
@@ -343,12 +345,18 @@ class UserDetailSerializer(serializers.ModelSerializer):
 		model = User
 		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email')
 
+
+class UserProfileEditSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = UserProfile
+		fields = ('id', 'account_type')
+
 class UserProfileSerializer(serializers.ModelSerializer):
-	team_name = serializers.CharField(source='team.name')
+	team_name = serializers.CharField(source='team.name', read_only=True)
 	team = serializers.CharField(source='team.id', read_only=True)
-	profile_id = serializers.CharField(source='id')
-	username = serializers.CharField(source='user.username')
-	username_display = serializers.CharField(source='get_username_display')
+	profile_id = serializers.CharField(source='id', read_only=True)
+	username = serializers.CharField(source='user.username', read_only=True)
+	username_display = serializers.CharField(source='get_username_display', read_only=True)
 	first_name = serializers.CharField(source='user.first_name')
 	last_name = serializers.CharField(source='user.last_name')
 
