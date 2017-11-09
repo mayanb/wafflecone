@@ -493,6 +493,7 @@ class Order(models.Model):
 	status = models.CharField(max_length=1, choices=ORDER_STATUS_TYPES, default='o')
 
 
+
 class InventoryUnit(models.Model):
 	process = models.ForeignKey(ProcessType, related_name='inventory_units', on_delete=models.CASCADE)
 	product = models.ForeignKey(ProductType, related_name='inventory_units', on_delete=models.CASCADE)
@@ -505,7 +506,13 @@ class OrderInventoryUnit(models.Model):
 	order = models.ForeignKey(Order, related_name='order_inventory_units', on_delete=models.CASCADE)
 	inventory_unit = models.ForeignKey(InventoryUnit, related_name='order_inventory_units', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
+	amount_description = models.CharField(max_length=100, default="")
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
+class OrderItem(models.Model):
+	order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
+	item = models.ForeignKey(Item, related_name='order_items', on_delete=models.CASCADE)
+	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
+	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
 

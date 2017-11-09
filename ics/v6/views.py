@@ -725,7 +725,7 @@ class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
 ######################
 class AccountList(generics.ListAPIView):
   queryset = Account.objects.all()
-  serializer_class = BasicAccountSerializer
+  serializer_class = AccountDetailSerializer
 
   def get_queryset(self):
     queryset = Account.objects.all()
@@ -737,7 +737,7 @@ class AccountList(generics.ListAPIView):
 
 class AccountGet(generics.RetrieveAPIView):
   queryset = Account.objects.all()
-  serializer_class = BasicAccountSerializer
+  serializer_class = AccountDetailSerializer
  
 class AccountCreate(generics.CreateAPIView):
   queryset = Account.objects.all()
@@ -801,4 +801,96 @@ class OrderCreate(generics.CreateAPIView):
 class OrderEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Order.objects.all()
   serializer_class = EditOrderSerializer
+
+######################
+# INVENTORYUNIT-RELATED VIEWS #
+######################
+class InventoryUnitList(generics.ListAPIView):
+  queryset = InventoryUnit.objects.all()
+  serializer_class = BasicInventoryUnitSerializer
+
+  def get_queryset(self):
+    queryset = InventoryUnit.objects.all()
+    team = self.request.query_params.get('team', None)
+
+    if team is not None:
+      queryset = queryset.filter(process__team_created_by=team)
+    return queryset
+
+class InventoryUnitGet(generics.RetrieveAPIView):
+  queryset = InventoryUnit.objects.all()
+  serializer_class = BasicInventoryUnitSerializer
+ 
+class InventoryUnitCreate(generics.CreateAPIView):
+  queryset = InventoryUnit.objects.all()
+  serializer_class = EditInventoryUnitSerializer
+
+class InventoryUnitEdit(generics.RetrieveUpdateDestroyAPIView):
+  queryset = InventoryUnit.objects.all()
+  serializer_class = EditInventoryUnitSerializer
+
+######################
+# ORDERINVENTORYUNIT-RELATED VIEWS #
+######################
+class OrderInventoryUnitList(generics.ListAPIView):
+  queryset = OrderInventoryUnit.objects.all()
+  serializer_class = BasicOrderInventoryUnitSerializer
+
+  def get_queryset(self):
+    queryset = OrderInventoryUnit.objects.all()
+    team = self.request.query_params.get('team', None)
+
+    if team is not None:
+      queryset = queryset.filter(order__contact__acount__team=team)
+    return queryset
+
+class OrderInventoryUnitGet(generics.RetrieveAPIView):
+  queryset = OrderInventoryUnit.objects.all()
+  serializer_class = BasicOrderInventoryUnitSerializer
+ 
+class OrderInventoryUnitCreate(generics.CreateAPIView):
+  queryset = OrderInventoryUnit.objects.all()
+  serializer_class = EditOrderInventoryUnitSerializer
+
+class OrderInventoryUnitEdit(generics.RetrieveUpdateDestroyAPIView):
+  queryset = OrderInventoryUnit.objects.all()
+  serializer_class = EditOrderInventoryUnitSerializer
+
+
+######################
+# ORDERITEM-RELATED VIEWS #
+######################
+class OrderItemList(generics.ListAPIView):
+  queryset = OrderItem.objects.all()
+  serializer_class = BasicOrderItemSerializer
+
+  def get_queryset(self):
+    queryset = OrderItem.objects.all()
+    team = self.request.query_params.get('team', None)
+
+    if team is not None:
+      queryset = queryset.filter(order__contact__acount__team=team)
+    return queryset
+
+class OrderItemGet(generics.RetrieveAPIView):
+  queryset = OrderItem.objects.all()
+  serializer_class = BasicOrderItemSerializer
+ 
+class OrderItemCreate(generics.CreateAPIView):
+  queryset = OrderItem.objects.all()
+  serializer_class = EditOrderItemSerializer
+
+class OrderItemEdit(generics.RetrieveUpdateDestroyAPIView):
+  queryset = OrderItem.objects.all()
+  serializer_class = EditOrderItemSerializer
+
+######################
+# PACKING ORDER-RELATED VIEWS #
+######################
+ 
+class CreatePackingOrder(generics.CreateAPIView):
+  queryset = Order.objects.all()
+  serializer_class = CreatePackingOrderSerializer
+
+
 
