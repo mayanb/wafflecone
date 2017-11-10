@@ -791,7 +791,7 @@ class OrderList(generics.ListAPIView):
     team = self.request.query_params.get('team', None)
 
     if team is not None:
-      queryset = queryset.filter(contact__account__team=team)
+      queryset = queryset.filter(ordered_by__account__team=team)
     return queryset
 
 class OrderGet(generics.RetrieveAPIView):
@@ -845,7 +845,7 @@ class OrderInventoryUnitList(generics.ListAPIView):
     team = self.request.query_params.get('team', None)
 
     if team is not None:
-      queryset = queryset.filter(order__contact__acount__team=team)
+      queryset = queryset.filter(order__ordered_by__account__team=team)
     return queryset
 
 class OrderInventoryUnitGet(generics.RetrieveAPIView):
@@ -873,7 +873,7 @@ class OrderItemList(generics.ListAPIView):
     team = self.request.query_params.get('team', None)
 
     if team is not None:
-      queryset = queryset.filter(order__contact__acount__team=team)
+      queryset = queryset.filter(order__ordered_by__account__team=team)
     return queryset
 
 class OrderItemGet(generics.RetrieveAPIView):
