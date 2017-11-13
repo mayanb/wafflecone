@@ -797,7 +797,7 @@ class OrderList(generics.ListAPIView):
 
 class OrderGet(generics.RetrieveAPIView):
   queryset = Order.objects.all()
-  serializer_class = BasicOrderSerializer
+  serializer_class = OrderDetailSerializer
  
 class OrderCreate(generics.CreateAPIView):
   queryset = Order.objects.all()
@@ -872,9 +872,12 @@ class OrderItemList(generics.ListAPIView):
   def get_queryset(self):
     queryset = OrderItem.objects.all()
     team = self.request.query_params.get('team', None)
+    order = self.request.query_params.get('order', None)
 
     if team is not None:
       queryset = queryset.filter(order__ordered_by__account__team=team)
+    if order is not None:
+      queryset = queryset.filter(order=order)
     return queryset
 
 class OrderItemGet(generics.RetrieveAPIView):
