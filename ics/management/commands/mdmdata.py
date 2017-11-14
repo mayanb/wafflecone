@@ -8,8 +8,8 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 
 		Team.objects.filter(name="mdm").delete()
-		User.objects.filter(username="coco").delete()
-		User.objects.filter(username="arely").delete()
+		User.objects.filter(username="coco_mdm").delete()
+		User.objects.filter(username="arely_mdm").delete()
 		UserProfile.objects.filter(team__name="mdm").delete()
 		ProductType.objects.filter(team_created_by__name="mdm").delete()
 		ProcessType.objects.filter(team_created_by__name="mdm").delete()
@@ -19,11 +19,11 @@ class Command(BaseCommand):
 
 		if(Team.objects.filter(name="mdm").count() == 0 ):
 			team = Team.objects.create(name="mdm")
-		if(User.objects.filter(username="coco").count() == 0 ):
-			user = User.objects.create(username="coco", password="temp123")
+		if(User.objects.filter(username="coco_mdm").count() == 0 ):
+			user = User.objects.create(username="coco_mdm", password="polymer123")
 			userprofile = UserProfile.objects.create(team=team, user=user)
-		if(User.objects.filter(username="arely").count() == 0 ):
-			user2 = User.objects.create(username="arely", password="temp123")
+		if(User.objects.filter(username="arely_mdm").count() == 0 ):
+			user2 = User.objects.create(username="arely_mdm", password="polymer123")
 			userprofile2 = UserProfile.objects.create(team=team, user=user2, account_type='w')
 
 
