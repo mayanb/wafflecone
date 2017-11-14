@@ -68,26 +68,34 @@ class BasicOrderSerializer(serializers.ModelSerializer):
 	# ordered_by = BasicContactSerializer()
 	order_inventory_units = serializers.SerializerMethodField('getOrderInventoryUnits')
 	ordered_by_name = serializers.CharField(source='ordered_by.name', read_only=True)
+	order_items = serializers.SerializerMethodField('getOrderItems')
 
 	def getOrderInventoryUnits(self, order):
 		return NestedOrderInventoryUnitSerializer(order.order_inventory_units.all(), many=True).data
 
+	def getOrderItems(self, order):
+		return SuperBasicOrderItemSerializer(order.order_items.all(), many=True).data
+
 	class Meta:
 		model = Order
-		fields = ('id', 'status', 'ordered_by', 'created_at', 'order_inventory_units', 'ordered_by_name')
+		fields = ('id', 'status', 'ordered_by', 'created_at', 'order_inventory_units', 'order_items', 'ordered_by_name')
 
 class OrderDetailSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
 	ordered_by = SuperBasicContactSerializer()
 	order_inventory_units = serializers.SerializerMethodField('getOrderInventoryUnits')
 	ordered_by_name = serializers.CharField(source='ordered_by.name', read_only=True)
+	order_items = serializers.SerializerMethodField('getOrderItems')
 
 	def getOrderInventoryUnits(self, order):
 		return NestedOrderInventoryUnitSerializer(order.order_inventory_units.all(), many=True).data
 
+	def getOrderItems(self, order):
+		return SuperBasicOrderItemSerializer(order.order_items.all(), many=True).data
+
 	class Meta:
 		model = Order
-		fields = ('id', 'status', 'ordered_by', 'created_at', 'order_inventory_units', 'ordered_by_name', 'ordered_by')
+		fields = ('id', 'status', 'ordered_by', 'created_at', 'order_inventory_units', 'order_items', 'ordered_by_name', 'ordered_by')
 
 class EditContactSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
@@ -169,6 +177,13 @@ class CreatePackingOrderSerializer(serializers.ModelSerializer):
 			OrderInventoryUnit.objects.create(order=order, **order_inventory_unit)
 		return order
 
+class SuperBasicOrderItemSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+	item = BasicItemSerializer()
+
+	class Meta:
+		model = OrderItem
+		fields = ('id', 'order', 'item', 'created_at', 'amount')
 
 class BasicOrderItemSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)

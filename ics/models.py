@@ -124,6 +124,8 @@ class Attribute(models.Model):
 				process_type=self.process_type, 
 				is_trashed=False
 			).aggregate(Max('rank'))['rank__max']
+			if prev_rank is None:
+				prev_rank = 0
 			self.rank = prev_rank + 1
 		super(Attribute, self).save(*args, **kwargs)
 
@@ -463,7 +465,7 @@ class Goal(models.Model):
 
 class Account(models.Model):
 	team = models.ForeignKey(Team, related_name='accounts', on_delete=models.CASCADE)
-	name = models.CharField(max_length=50)
+	name = models.CharField(max_length=200)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
 	def __str__(self):
@@ -472,7 +474,7 @@ class Account(models.Model):
 class Contact(models.Model):
 	account = models.ForeignKey(Account, related_name='contacts', on_delete=models.CASCADE)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
-	name = models.CharField(max_length=50)
+	name = models.CharField(max_length=200)
 	phone_number = models.CharField(max_length=15, null=True)
 	email = models.EmailField(max_length=70, null= True)
 	shipping_addr = models.CharField(max_length=150, null=True)

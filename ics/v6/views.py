@@ -790,9 +790,12 @@ class OrderList(generics.ListAPIView):
   def get_queryset(self):
     queryset = Order.objects.all()
     team = self.request.query_params.get('team', None)
+    status = self.request.query_params.get('status', None)
 
     if team is not None:
       queryset = queryset.filter(ordered_by__account__team=team)
+    if status is not None:
+      queryset = queryset.filter(status=status)
     return queryset
 
 class OrderGet(generics.RetrieveAPIView):
