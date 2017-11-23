@@ -48,6 +48,7 @@ urlpatterns = [
 
     url(r'^attributes/$', views.AttributeList.as_view()),
     url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),
+    url(r'^attributes/move/(?P<pk>[0-9]+)/$', views.ReorderAttribute.as_view()),
 
     url(r'^taskAttributes/$', views.TaskAttributeList.as_view()),
     url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
