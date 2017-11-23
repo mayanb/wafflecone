@@ -124,7 +124,10 @@ class Attribute(models.Model):
 				process_type=self.process_type, 
 				is_trashed=False
 			).aggregate(Max('rank'))['rank__max']
-			self.rank = prev_rank + 1
+			if prev_rank:
+				self.rank = prev_rank + 1
+			else:
+				self.rank = 0
 		super(Attribute, self).save(*args, **kwargs)
 
 
