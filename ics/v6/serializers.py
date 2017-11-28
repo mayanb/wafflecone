@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
+from model_utils import *
 
 easy_format = '%Y-%m-%d %H:%M'
 
@@ -513,23 +514,36 @@ class ReorderAttributeSerializer(serializers.ModelSerializer):
 	new_rank = serializers.IntegerField(write_only=True)
 
 	def update(self, instance, validated_data):
-		old_rank = instance.rank
-		new_rank = validated_data.get('new_rank', instance.rank)
-		if old_rank <= new_rank:
-			values = range(old_rank+1, new_rank+1)
-			attrs = Attribute.objects.filter(is_trashed=False, process_type=instance.process_type, rank__in=values)
-			attrs.update(rank=F('rank') - 1)
-		else:
-			values = range(new_rank, old_rank)
-			attrs = Attribute.objects.filter(is_trashed=False, process_type=instance.process_type, rank__in=values)
-			attrs.update(rank=F('rank') + 1)
-		instance.rank = new_rank
-		instance.save()
-		return instance
+		return reorder(
+			instance, 
+			validated_data, 
+			Attribute.objects.filter(is_trashed=False, process_type=instance.process_type)
+		)
+		# old_rank = instance.rank
+		# new_rank = validated_data.get('new_rank', instance.rank)
+		# if old_rank <= new_rank:
+		# 	values = range(old_rank+1, new_rank+1)
+		# 	attrs = Attribute.objects.filter(is_trashed=False, process_type=instance.process_type, rank__in=values)
+		# 	attrs.update(rank=F('rank') - 1)
+		# else:
+		# 	values = range(new_rank, old_rank)
+		# 	attrs = Attribute.objects.filter(is_trashed=False, process_type=instance.process_type, rank__in=values)
+		# 	attrs.update(rank=F('rank') + 1)
+		# instance.rank = new_rank
+		# instance.save()
+		# return instance
 
 	class Meta:
 		model = Attribute
 		fields = ('id', 'new_rank')
 		extra_kwargs = {'new_rank': {'write_only': True} }
 
+class ReorderGoalSerializer(serializers.ModelSerializer):
+	new_rank = serializers.IntegerField(write_only=True)
 
+	def update(self, instance, validated_data):
+		return reorder(
+			instance, 
+			validated_data, 
+			Goal.objects.filter(userprofile=instance.userprofile, timerange=instance.timerange)
+		)
