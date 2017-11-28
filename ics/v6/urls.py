@@ -89,4 +89,22 @@ urlpatterns = [
     url(r'^orders/(?P<pk>[0-9]+)/$', views.OrderGet.as_view()),
     url(r'^orders/create/$', views.OrderCreate.as_view()),
     url(r'^orders/edit/(?P<pk>[0-9]+)/$', views.OrderEdit.as_view()),
+
+    url(r'^inventoryunits/$', views.InventoryUnitList.as_view()),
+    url(r'^inventoryunits/(?P<pk>[0-9]+)/$', views.InventoryUnitGet.as_view()),
+    url(r'^inventoryunits/create/$', views.InventoryUnitCreate.as_view()),
+    url(r'^inventoryunits/edit/(?P<pk>[0-9]+)/$', views.InventoryUnitEdit.as_view()),
+
+    url(r'^orderinventoryunits/$', views.OrderInventoryUnitList.as_view()),
+    url(r'^orderinventoryunits/(?P<pk>[0-9]+)/$', views.OrderInventoryUnitGet.as_view()),
+    url(r'^orderinventoryunits/create/$', views.OrderInventoryUnitCreate.as_view()),
+    url(r'^orderinventoryunits/edit/(?P<pk>[0-9]+)/$', views.OrderInventoryUnitEdit.as_view()),
+
+    url(r'^orderitems/$', views.OrderItemList.as_view()),
+    url(r'^orderitems/(?P<pk>[0-9]+)/$', views.OrderItemGet.as_view()),
+    url(r'^orderitems/create/$', views.OrderItemCreate.as_view()),
+    url(r'^orderitems/edit/(?P<pk>[0-9]+)/$', views.OrderItemEdit.as_view()),
+
+    url(r'^packingorder/create/$', views.CreatePackingOrder.as_view()),
+
 ]

@@ -124,10 +124,9 @@ class Attribute(models.Model):
 				process_type=self.process_type, 
 				is_trashed=False
 			).aggregate(Max('rank'))['rank__max']
-			if prev_rank:
-				self.rank = prev_rank + 1
-			else:
-				self.rank = 0
+			if prev_rank is None:
+				prev_rank = 0
+			self.rank = prev_rank + 1
 		super(Attribute, self).save(*args, **kwargs)
 
 
@@ -481,7 +480,7 @@ class Goal(models.Model):
 
 class Account(models.Model):
 	team = models.ForeignKey(Team, related_name='accounts', on_delete=models.CASCADE)
-	name = models.CharField(max_length=50)
+	name = models.CharField(max_length=200)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
 	def __str__(self):
@@ -490,7 +489,7 @@ class Account(models.Model):
 class Contact(models.Model):
 	account = models.ForeignKey(Account, related_name='contacts', on_delete=models.CASCADE)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
-	name = models.CharField(max_length=50)
+	name = models.CharField(max_length=200)
 	phone_number = models.CharField(max_length=15, null=True)
 	email = models.EmailField(max_length=70, null= True)
 	shipping_addr = models.CharField(max_length=150, null=True)
@@ -511,6 +510,7 @@ class Order(models.Model):
 	status = models.CharField(max_length=1, choices=ORDER_STATUS_TYPES, default='o')
 
 
+
 class InventoryUnit(models.Model):
 	process = models.ForeignKey(ProcessType, related_name='inventory_units', on_delete=models.CASCADE)
 	product = models.ForeignKey(ProductType, related_name='inventory_units', on_delete=models.CASCADE)
@@ -523,7 +523,13 @@ class OrderInventoryUnit(models.Model):
 	order = models.ForeignKey(Order, related_name='order_inventory_units', on_delete=models.CASCADE)
 	inventory_unit = models.ForeignKey(InventoryUnit, related_name='order_inventory_units', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
+	amount_description = models.CharField(max_length=100, default="")
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
+class OrderItem(models.Model):
+	order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
+	item = models.ForeignKey(Item, related_name='order_items', on_delete=models.CASCADE)
+	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
+	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
 
