@@ -2,11 +2,13 @@ from __future__ import unicode_literals
 from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField, ExpressionWrapper, FloatField
-from django.db.models.functions import Coalesce
+from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField, ExpressionWrapper, FloatField, CharField, Value as V
+from django.db.models.functions import Coalesce, Concat
+from django.forms.models import model_to_dict
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
+from django.core import serializers
 from graphs.serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
@@ -107,6 +109,96 @@ def GetProcessCoocurrence(request):
 	response = HttpResponse(json.dumps({"nodes": nodes, "links": links}), content_type="text/plain")
 	return response;
 
+
+
+# @csrf_exempt
+@api_view(['GET'])
+def GetInputValidation(request):
+	team = request.GET.get('team')
+	input_item_qr = request.GET.get('input_item_qr')
+	input_task_id = request.GET.get('input_task_id')
+	print(input_item_qr)
+	print(input_task_id)
+
+	if Item.objects.filter(item_qr=input_item_qr).count() == 0:
+		body = {}
+		body['is_valid_qr'] = False
+		body['item'] = None
+		body['is_reasonable_input'] = False
+		return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+  	else:
+  		input_item = Item.objects.filter(item_qr=input_item_qr)[0]
+
+	input_task = Task.objects.get(pk=input_task_id)
+
+	inputs = Input.objects.filter(
+			task__process_type=input_task.process_type, 
+			task__product_type=input_task.product_type
+		).annotate(
+			prod_proc=Concat(
+				'input_item__creating_task__process_type__id', 
+				V(' '), 
+				'input_item__creating_task__product_type__id', 
+				output_field=CharField()
+			)
+		).values('prod_proc').annotate(count=Count('prod_proc')).order_by('-count')
+
+	input_types = {}
+	for inp in inputs:
+		input_types[inp['prod_proc']] = inp['count']
+
+	ordered_inputs = sorted(input_types, key=input_types.get, reverse=True)
+	if len(ordered_inputs) == 0:
+		body = {}
+		body['is_valid_qr'] = True
+		body['item'] = json.loads(serializers.serialize('json', [input_item,])[1:-1])
+		body['is_reasonable_input'] = False
+		return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+	if len(ordered_inputs) > 1:
+		initial_inputs = ordered_inputs[0:len(ordered_inputs)/2]
+		input_item_str = str(input_item.creating_task.process_type.id) + ' ' + str(input_item.creating_task.product_type.id)
+		if input_item_str in initial_inputs:
+			body = {}
+			body['is_valid_qr'] = True
+			body['item'] = json.loads(serializers.serialize('json', [input_item,])[1:-1])
+			body['is_reasonable_input'] = True
+			return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+		else:
+			body = {}
+			body['is_valid_qr'] = True
+			body['item'] = json.loads(serializers.serialize('json', [input_item,])[1:-1])
+			body['is_reasonable_input'] = False
+			return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+
+# @csrf_exempt
+@api_view(['GET'])
+def GetProcessTimes(request):
+	team = request.GET.get('team')
+
+		# nodes
+	nodes = []
+	team_procs = set()
+	for proctype in ProcessType.objects.filter(team_created_by=team):
+		new_node = {}
+		new_node["id"] = proctype.id
+		new_node["name"] = proctype.name
+		nodes.append(new_node)
+		team_procs.add(proctype.id)
+	print('done creating nodes')
+
+	times = {}
+	tasks = []
+	for task in Task.objects.filter(process_type__team_created_by=team):
+		start_time = task.created_at
+		end_time = start_time
+		for output in task.items.all():
+			if output.created_at > end_time:
+				end_time = output.created_at
+		time = end_time - start_time
+		times[task.id] = time
+
+	response = HttpResponse(json.dumps({"nodes": nodes, "links": links}), content_type="text/plain")
+	return response;
 
 
 # class GetProcessCoocurrence(generics.ListAPIView):

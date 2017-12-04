@@ -364,7 +364,7 @@ class Item(models.Model):
 
 
 
-
+ 
 
 class Input(models.Model):
 	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
