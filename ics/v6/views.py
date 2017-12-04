@@ -24,6 +24,14 @@ import csv
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
+class ReorderAttribute(generics.UpdateAPIView):
+  queryset = Attribute.objects.all()
+  serializer_class = ReorderAttributeSerializer
+
+class ReorderGoal(generics.UpdateAPIView):
+  queryset = Goal.objects.all()
+  serializers_class = ReorderGoalSerializer
+
 class UserProfileCreate(generics.CreateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UserProfileCreateSerializer

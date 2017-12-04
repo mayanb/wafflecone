@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
+from model_utils import *
 
 easy_format = '%Y-%m-%d %H:%M'
 
@@ -356,6 +357,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name', read_only=True)
 	team = serializers.CharField(source='team.id', read_only=True)
 	profile_id = serializers.CharField(source='id', read_only=True)
+	user_id = serializers.CharField(source='user.id', read_only=True)
 	username = serializers.CharField(source='user.username', read_only=True)
 	username_display = serializers.CharField(source='get_username_display', read_only=True)
 	first_name = serializers.CharField(source='user.first_name')
@@ -363,7 +365,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserProfile
-		fields = ('id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email')
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
 	username = serializers.CharField(source='user.username')
@@ -471,3 +473,78 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'process_type', 'product_type', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange')
 
+class BasicAccountSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+
+	class Meta:
+		model = Account
+		fields = ('id', 'team', 'name', 'created_at',)
+
+class BasicContactSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+	account = BasicAccountSerializer()
+
+	class Meta:
+		model = Contact
+		fields = ('id', 'account', 'name', 'phone_number', 'email', 'shipping_addr', 'billing_addr', 'created_at',)
+
+class EditContactSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+
+	class Meta:
+		model = Contact
+		fields = ('id', 'account', 'name', 'phone_number', 'email', 'shipping_addr', 'billing_addr', 'created_at',)
+
+class BasicOrderSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+	ordered_by = BasicContactSerializer()
+
+	class Meta:
+		model = Order
+		fields = ('id', 'status', 'ordered_by', 'created_at',)
+
+class EditOrderSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+
+	class Meta:
+		model = Order
+		fields = ('id', 'status', 'ordered_by', 'created_at',)
+
+
+class ReorderAttributeSerializer(serializers.ModelSerializer):
+	new_rank = serializers.IntegerField(write_only=True)
+
+	def update(self, instance, validated_data):
+		return reorder(
+			instance, 
+			validated_data, 
+			Attribute.objects.filter(is_trashed=False, process_type=instance.process_type)
+		)
+		# old_rank = instance.rank
+		# new_rank = validated_data.get('new_rank', instance.rank)
+		# if old_rank <= new_rank:
+		# 	values = range(old_rank+1, new_rank+1)
+		# 	attrs = Attribute.objects.filter(is_trashed=False, process_type=instance.process_type, rank__in=values)
+		# 	attrs.update(rank=F('rank') - 1)
+		# else:
+		# 	values = range(new_rank, old_rank)
+		# 	attrs = Attribute.objects.filter(is_trashed=False, process_type=instance.process_type, rank__in=values)
+		# 	attrs.update(rank=F('rank') + 1)
+		# instance.rank = new_rank
+		# instance.save()
+		# return instance
+
+	class Meta:
+		model = Attribute
+		fields = ('id', 'new_rank')
+		extra_kwargs = {'new_rank': {'write_only': True} }
+
+class ReorderGoalSerializer(serializers.ModelSerializer):
+	new_rank = serializers.IntegerField(write_only=True)
+
+	def update(self, instance, validated_data):
+		return reorder(
+			instance, 
+			validated_data, 
+			Goal.objects.filter(userprofile=instance.userprofile, timerange=instance.timerange)
+		)
