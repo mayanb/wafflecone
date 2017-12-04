@@ -307,8 +307,6 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = Input.objects.all()
   serializer_class = NestedInputSerializer
   filter_fields = ('task',)
-  
-
 
 
 #########################

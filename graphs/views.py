@@ -2,11 +2,13 @@ from __future__ import unicode_literals
 from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField, ExpressionWrapper, FloatField
-from django.db.models.functions import Coalesce
+from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField, ExpressionWrapper, FloatField, CharField, Value as V
+from django.db.models.functions import Coalesce, Concat
+from django.forms.models import model_to_dict
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
+from django.core import serializers
 from graphs.serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
@@ -18,6 +20,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
 import datetime
+from numpy import median, ceil
 
 from django.shortcuts import render
 import json
@@ -109,26 +112,114 @@ def GetProcessCoocurrence(request):
 
 
 
-# class GetProcessCoocurrence(generics.ListAPIView):
-# 	serializer_class = ProcessCooccurrenceSerializer
-# 	#pagination_class = SmallPagination
+# @csrf_exempt
+@api_view(['GET'])
+def GetInputValidation(request):
+	team = request.GET.get('team')
+	input_item_qr = request.GET.get('input_item_qr')
+	input_task_id = request.GET.get('input_task_id')
+	print(input_item_qr)
+	print(input_task_id)
 
-# 	def get_queryset(self):
-# 		team = self.request.query_params.get('team', None)
-# 		if team is not None:
-# 			return Team.objects.filter(pk=team)
-# 		return Team.objects.none()
-# 		# # filter according to various parameters
-# 		# team = self.request.query_params.get('team', None)
-# 		# if team is not None:
-# 		# 	queryset = queryset.filter(process_type__team_created_by=team)
-# 		# # filter according to date creation, based on parameters
-# 		# start = self.request.query_params.get('start', None)
-# 		# end = self.request.query_params.get('end', None)
-# 		# if start is not None and end is not None:
-# 		# 	start = start.strip().split('-')
-# 		# 	end = end.strip().split('-')
-# 		# 	startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
-# 		# 	endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
-# 		# 	queryset = queryset.filter(created_at__date__range=(startDate, endDate))
-# 		return queryset
+	if Item.objects.filter(item_qr=input_item_qr).count() == 0:
+		body = {}
+		body['is_valid_qr'] = False
+		body['item'] = None
+		body['is_reasonable_input'] = False
+		return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+  	else:
+  		input_item = Item.objects.filter(item_qr=input_item_qr)[0]
+
+	input_task = Task.objects.get(pk=input_task_id)
+
+	inputs = Input.objects.filter(
+			task__process_type=input_task.process_type, 
+			task__product_type=input_task.product_type
+		).annotate(
+			prod_proc=Concat(
+				'input_item__creating_task__process_type__id', 
+				V(' '), 
+				'input_item__creating_task__product_type__id', 
+				output_field=CharField()
+			)
+		).values('prod_proc').annotate(count=Count('prod_proc')).order_by('-count')
+
+	input_types = {}
+	for inp in inputs:
+		input_types[inp['prod_proc']] = inp['count']
+
+	ordered_inputs = sorted(input_types, key=input_types.get, reverse=True)
+	if len(ordered_inputs) == 0:
+		body = {}
+		body['is_valid_qr'] = True
+		body['item'] = json.loads(serializers.serialize('json', [input_item,])[1:-1])
+		body['is_reasonable_input'] = False
+		return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+	if len(ordered_inputs) > 1:
+		initial_inputs = ordered_inputs[0:len(ordered_inputs)/2]
+		input_item_str = str(input_item.creating_task.process_type.id) + ' ' + str(input_item.creating_task.product_type.id)
+		if input_item_str in initial_inputs:
+			body = {}
+			body['is_valid_qr'] = True
+			body['item'] = json.loads(serializers.serialize('json', [input_item,])[1:-1])
+			body['is_reasonable_input'] = True
+			return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+		else:
+			body = {}
+			body['is_valid_qr'] = True
+			body['item'] = json.loads(serializers.serialize('json', [input_item,])[1:-1])
+			body['is_reasonable_input'] = False
+			return HttpResponse(json.dumps(body), content_type="applicatiion/json")
+
+# @csrf_exempt
+@api_view(['GET'])
+def GetProcessTimes(request):
+	team = request.GET.get('team')
+	process = request.GET.get('process')
+
+	# nodes
+	nodes = []
+	team_procs = set()
+	for proctype in ProcessType.objects.filter(team_created_by=team):
+		new_node = {}
+		new_node["id"] = proctype.id
+		new_node["name"] = proctype.name
+		nodes.append(new_node)
+		team_procs.add(proctype.id)
+	print('done creating nodes')
+
+
+	bucket_size = 10*60
+	times = {}
+
+	for task in Task.objects.filter(process_type__team_created_by=team):
+		start_time = task.created_at
+		end_time = start_time
+		for output in task.items.all():
+			if output.created_at > end_time:
+				end_time = output.created_at
+		time = end_time - start_time
+		times[task.id] = time.total_seconds()
+
+	med_times = {}
+	for proctype in ProcessType.objects.filter(team_created_by=team):
+		total_time = 0.0
+		num_tasks = 0
+		median_times = []
+		for task in Task.objects.filter(process_type=proctype):
+			num_tasks += 1
+			total_time += times[task.id]
+			median_times.append(ceil(times[task.id]/bucket_size))
+			# median_times.append(times[task.id])
+			# print(times[task.id])
+		# avg_time = total_time/num_tasks
+		# print proctype.name
+		# print avg_time
+		med = median(median_times)
+		# print med*bucket_size
+		med_times[proctype.id] = med*(bucket_size*1.5)
+
+	response = HttpResponse(json.dumps({"nodes": nodes, "times": med_times}), content_type="text/plain")
+	return response;
+
+
