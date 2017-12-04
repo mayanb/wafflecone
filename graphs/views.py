@@ -20,6 +20,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
 import datetime
+from numpy import median, ceil
 
 from django.shortcuts import render
 import json
@@ -174,8 +175,9 @@ def GetInputValidation(request):
 @api_view(['GET'])
 def GetProcessTimes(request):
 	team = request.GET.get('team')
+	process = request.GET.get('process')
 
-		# nodes
+	# nodes
 	nodes = []
 	team_procs = set()
 	for proctype in ProcessType.objects.filter(team_created_by=team):
@@ -186,8 +188,10 @@ def GetProcessTimes(request):
 		team_procs.add(proctype.id)
 	print('done creating nodes')
 
+
+	bucket_size = 10*60
 	times = {}
-	tasks = []
+
 	for task in Task.objects.filter(process_type__team_created_by=team):
 		start_time = task.created_at
 		end_time = start_time
@@ -195,32 +199,27 @@ def GetProcessTimes(request):
 			if output.created_at > end_time:
 				end_time = output.created_at
 		time = end_time - start_time
-		times[task.id] = time
+		times[task.id] = time.total_seconds()
 
-	response = HttpResponse(json.dumps({"nodes": nodes, "links": links}), content_type="text/plain")
+	med_times = {}
+	for proctype in ProcessType.objects.filter(team_created_by=team):
+		total_time = 0.0
+		num_tasks = 0
+		median_times = []
+		for task in Task.objects.filter(process_type=proctype):
+			num_tasks += 1
+			total_time += times[task.id]
+			median_times.append(ceil(times[task.id]/bucket_size))
+			# median_times.append(times[task.id])
+			# print(times[task.id])
+		# avg_time = total_time/num_tasks
+		# print proctype.name
+		# print avg_time
+		med = median(median_times)
+		# print med*bucket_size
+		med_times[proctype.id] = med*(bucket_size*1.5)
+
+	response = HttpResponse(json.dumps({"nodes": nodes, "times": med_times}), content_type="text/plain")
 	return response;
 
 
-# class GetProcessCoocurrence(generics.ListAPIView):
-# 	serializer_class = ProcessCooccurrenceSerializer
-# 	#pagination_class = SmallPagination
-
-# 	def get_queryset(self):
-# 		team = self.request.query_params.get('team', None)
-# 		if team is not None:
-# 			return Team.objects.filter(pk=team)
-# 		return Team.objects.none()
-# 		# # filter according to various parameters
-# 		# team = self.request.query_params.get('team', None)
-# 		# if team is not None:
-# 		# 	queryset = queryset.filter(process_type__team_created_by=team)
-# 		# # filter according to date creation, based on parameters
-# 		# start = self.request.query_params.get('start', None)
-# 		# end = self.request.query_params.get('end', None)
-# 		# if start is not None and end is not None:
-# 		# 	start = start.strip().split('-')
-# 		# 	end = end.strip().split('-')
-# 		# 	startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
-# 		# 	endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
-# 		# 	queryset = queryset.filter(created_at__date__range=(startDate, endDate))
-# 		return queryset
