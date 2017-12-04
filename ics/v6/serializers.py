@@ -78,9 +78,10 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
 	display = serializers.CharField(source='*', read_only=True)
 	process_type = serializers.IntegerField(source='process_type.id', read_only=True)
+	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'created_at', 'search')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'product_type', 'created_at', 'search')
 
 class BasicItemSerializer(serializers.ModelSerializer):
 	is_used = serializers.CharField(read_only=True)
