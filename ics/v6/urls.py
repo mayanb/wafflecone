@@ -48,6 +48,7 @@ urlpatterns = [
 
     url(r'^attributes/$', views.AttributeList.as_view()),
     url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),
+    url(r'^attributes/move/(?P<pk>[0-9]+)/$', views.ReorderAttribute.as_view()),
 
     url(r'^taskAttributes/$', views.TaskAttributeList.as_view()),
     url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
@@ -72,6 +73,7 @@ urlpatterns = [
     url(r'^goals/(?P<pk>[0-9]+)/$', views.GoalGet.as_view()),
     url(r'^goals/create/$', views.GoalCreate.as_view()),
     url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view()),
+    url(r'^goals/move/(?P<pk>[0-9]+)/$', views.ReorderGoal.as_view()),
 
     url(r'^accounts/$', views.AccountList.as_view()),
     url(r'^accounts/(?P<pk>[0-9]+)/$', views.AccountGet.as_view()),
