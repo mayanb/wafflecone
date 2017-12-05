@@ -451,12 +451,13 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange')
+		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	product_code = serializers.CharField(source='product_type.code', read_only=True)
+	rank = serializers.IntegerField(source='rank', read_only=True)
 
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
@@ -471,7 +472,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange')
+		fields = ('id', 'process_type', 'product_type', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
 
 class BasicAccountSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
@@ -511,6 +512,22 @@ class EditOrderSerializer(serializers.ModelSerializer):
 		fields = ('id', 'status', 'ordered_by', 'created_at',)
 
 
+def reorder(instance, validated_data, dataset):
+	old_rank = instance.rank
+	new_rank = validated_data.get('new_rank', instance.rank)
+	if old_rank <= new_rank:
+		values = range(old_rank+1, new_rank+1)
+		attrs = dataset.filter(rank__in=values)
+		attrs.update(rank=F('rank') - 1)
+	else:
+		values = range(new_rank, old_rank)
+		attrs = dataset.filter(rank__in=values)
+		attrs.update(rank=F('rank') + 1)
+	instance.rank = new_rank
+	instance.save()
+	return instance
+
+
 class ReorderAttributeSerializer(serializers.ModelSerializer):
 	new_rank = serializers.IntegerField(write_only=True)
 
@@ -548,3 +565,8 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 			validated_data, 
 			Goal.objects.filter(userprofile=instance.userprofile, timerange=instance.timerange)
 		)
+
+	class Meta:
+		model = Goal
+		fields = ('id', 'new_rank')
+		extra_kwargs = {'new_rank': {'write_only': True} }

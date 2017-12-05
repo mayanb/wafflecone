@@ -30,7 +30,7 @@ class ReorderAttribute(generics.UpdateAPIView):
 
 class ReorderGoal(generics.UpdateAPIView):
   queryset = Goal.objects.all()
-  serializers_class = ReorderGoalSerializer
+  serializer_class = ReorderGoalSerializer
 
 class UserProfileCreate(generics.CreateAPIView):
   queryset = UserProfile.objects.all()
