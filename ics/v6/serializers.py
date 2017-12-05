@@ -512,6 +512,22 @@ class EditOrderSerializer(serializers.ModelSerializer):
 		fields = ('id', 'status', 'ordered_by', 'created_at',)
 
 
+def reorder(instance, validated_data, dataset):
+	old_rank = instance.rank
+	new_rank = validated_data.get('new_rank', instance.rank)
+	if old_rank <= new_rank:
+		values = range(old_rank+1, new_rank+1)
+		attrs = dataset.filter(rank__in=values)
+		attrs.update(rank=F('rank') - 1)
+	else:
+		values = range(new_rank, old_rank)
+		attrs = dataset.filter(rank__in=values)
+		attrs.update(rank=F('rank') + 1)
+	instance.rank = new_rank
+	instance.save()
+	return instance
+
+
 class ReorderAttributeSerializer(serializers.ModelSerializer):
 	new_rank = serializers.IntegerField(write_only=True)
 
@@ -554,4 +570,3 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'new_rank')
 		extra_kwargs = {'new_rank': {'write_only': True} }
-
