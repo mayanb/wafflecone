@@ -549,3 +549,9 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 			validated_data, 
 			Goal.objects.filter(userprofile=instance.userprofile, timerange=instance.timerange)
 		)
+
+	class Meta:
+		model = Goal
+		fields = (‘id’, ‘new_rank’)
+		extra_kwargs = {‘new_rank’: {‘write_only’: True} }
+
