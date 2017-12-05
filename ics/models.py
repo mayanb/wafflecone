@@ -462,8 +462,8 @@ class Goal(models.Model):
 		# create the right rank
 		if self.pk is None:
 			prev_rank = Goal.objects.filter(
-				process_type=self.process_type, 
-				is_trashed=False
+				userprofile=self.userprofile,
+				timerange=self.timerange
 			).aggregate(Max('rank'))['rank__max']
 			if prev_rank:
 				self.rank = prev_rank + 1
