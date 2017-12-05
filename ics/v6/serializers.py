@@ -552,6 +552,6 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = (‘id’, ‘new_rank’)
-		extra_kwargs = {‘new_rank’: {‘write_only’: True} }
+		fields = ('id', 'new_rank')
+		extra_kwargs = {'new_rank': {'write_only': True} }
 
