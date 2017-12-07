@@ -462,7 +462,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
-	input_products = serializers.CharField(write_only=True)
+	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
 
 	def get_product_types(self, goal):
@@ -476,10 +476,17 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 			goal=validated_data.get('goal', ''),
 			timerange=validated_data.get('timerange', '')
 		)
-		goal_product_types = validated_data.get('input_products', '').strip().split(',')
+		inputprods = validated_data.get('input_products', '')
+		goal_product_types = None
+		if inputprods:
+			goal_product_types = inputprods.strip().split(',')
 		if not goal_product_types:
-			team = UserProfile.objects.get(userprofile).team
-			goal_product_types = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+			team = UserProfile.objects.get(pk=userprofile.id).team
+			goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+			goal_product_types = []
+			for gp in goal_product_types_objects:
+				goal_product_types.append(gp.id)
+			print(goal_product_types)
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 		return goal
