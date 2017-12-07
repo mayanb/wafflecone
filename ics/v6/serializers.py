@@ -478,7 +478,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		)
 		inputprods = validated_data.get('input_products', '')
 		goal_product_types = None
-		if inputprods:
+		if (inputprods and inputprods != "ALL"):
 			goal_product_types = inputprods.strip().split(',')
 		if not goal_product_types:
 			team = UserProfile.objects.get(pk=userprofile.id).team
