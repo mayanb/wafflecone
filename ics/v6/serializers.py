@@ -426,8 +426,11 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	product_code = serializers.CharField(source='product_type.code', read_only=True)
+	product_code = serializers.SerializerMethodField('get_product_types')
 	userprofile = UserProfileSerializer(many=False, read_only=True)
+
+	def get_product_types(self, goal):
+		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def get_actual(self, goal):
 		base = date.today()
@@ -440,10 +443,12 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			start = datetime.combine(base, datetime.min.time())
 		elif goal.timerange == 'm':
 			start = datetime.combine(base.replace(day=1), datetime.min.time())
+
+		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
 		
 		return Item.objects.filter(
 			creating_task__process_type=goal.process_type, 
-			creating_task__product_type=goal.product_type,
+			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
 			creating_task__created_at__range=(start, end),
 			is_virtual=False,
@@ -456,23 +461,33 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	product_code = serializers.CharField(source='product_type.code', read_only=True)
+	product_code = serializers.SerializerMethodField('get_product_types')
+	input_products = serializers.CharField(write_only=True)
 	rank = serializers.IntegerField(read_only=True)
+
+	def get_product_types(self, goal):
+		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
 		goal = Goal.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
 			process_type=validated_data.get('process_type', ''),
-			product_type=validated_data.get('product_type', ''),
 			goal=validated_data.get('goal', ''),
 			timerange=validated_data.get('timerange', '')
 		)
+		goal_product_types = validated_data.get('input_products', '').strip().split(',')
+		if not goal_product_types:
+			team = UserProfile.objects.get(userprofile).team
+			goal_product_types = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+		for gp in goal_product_types:
+			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 		return goal
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicAccountSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
