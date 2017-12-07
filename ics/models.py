@@ -453,7 +453,7 @@ class Goal(models.Model):
 
 	userprofile = models.ForeignKey(UserProfile, related_name="goals", on_delete=models.CASCADE, default=1)
 	process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
-	product_type = models.ForeignKey(ProductType, related_name='goals', on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, null=True, related_name='goals', on_delete=models.CASCADE)
 	goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w')
 	rank = models.PositiveSmallIntegerField(default=0)
@@ -461,16 +461,20 @@ class Goal(models.Model):
 	def save(self, *args, **kwargs):
 		# create the right rank
 		if self.pk is None:
+
 			prev_rank = Goal.objects.filter(
 				userprofile=self.userprofile,
 				timerange=self.timerange
 			).aggregate(Max('rank'))['rank__max']
-			if prev_rank:
-				self.rank = prev_rank + 1
-			else:
-				self.rank = 0
+			if prev_rank is None:
+				prev_rank = 0
+			self.rank = prev_rank + 1
 		super(Goal, self).save(*args, **kwargs)
 
+
+class GoalProductType(models.Model):
+	goal = models.ForeignKey(Goal, related_name="goal_product_types", on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, related_name="goal_product_types", on_delete=models.CASCADE)
 
 ##################################
 #                                #
