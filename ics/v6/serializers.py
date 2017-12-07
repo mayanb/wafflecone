@@ -457,7 +457,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	product_code = serializers.CharField(source='product_type.code', read_only=True)
-	rank = serializers.IntegerField(source='rank', read_only=True)
+	rank = serializers.IntegerField(read_only=True)
 
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
