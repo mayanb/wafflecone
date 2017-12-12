@@ -1016,7 +1016,7 @@ class GetRecentAnomolousInputs(generics.ListAPIView):
       queryset = queryset.filter(task__process_type__team_created_by=team)
 
     endDate = dt.today() + timedelta(days=1)
-    startDate = dt.today() - timedelta(days=20)
+    startDate = dt.today() - timedelta(days=7)
     queryset = queryset.filter(input_item__created_at__date__range=(startDate, endDate))
 
 
