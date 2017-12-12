@@ -109,6 +109,7 @@ urlpatterns = [
 
     url(r'^alerts/recently-flagged-tasks/$', views.GetRecentlyFlaggedTasks.as_view()),
     url(r'^alerts/incomplete-goals/$', views.GetIncompleteGoals.as_view()),
+    url(r'^alerts/complete-goals/$', views.GetCompleteGoals.as_view()),
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
 ]
