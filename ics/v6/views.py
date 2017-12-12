@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from django.db import models
+from django.utils import timezone
 from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
 from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
@@ -21,6 +22,7 @@ import datetime
 # from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
+import pytz
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
@@ -29,7 +31,7 @@ class ReorderAttribute(generics.UpdateAPIView):
   serializer_class = ReorderAttributeSerializer
 
 class ReorderGoal(generics.UpdateAPIView):
-  queryset = Goal.objects.all()
+  queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = ReorderGoalSerializer
 
 class UserProfileCreate(generics.CreateAPIView):
@@ -60,11 +62,11 @@ class UserProfileEdit(generics.UpdateAPIView):
 # GOAL-RELATED VIEWS #
 ######################
 class GoalList(generics.ListAPIView):
-  queryset = Goal.objects.all()
+  queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = BasicGoalSerializer
 
   def get_queryset(self):
-    queryset = Goal.objects.all()
+    queryset = Goal.objects.filter(is_trashed=False)
     team = self.request.query_params.get('team', None)
     userprofile = self.request.query_params.get('userprofile', None)
     timerange = self.request.query_params.get('timerange', None)
@@ -78,15 +80,15 @@ class GoalList(generics.ListAPIView):
     return queryset
 
 class GoalGet(generics.RetrieveAPIView):
-  queryset = Goal.objects.all()
+  queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = BasicGoalSerializer
  
 class GoalCreate(generics.CreateAPIView):
-  queryset = Goal.objects.all()
+  queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = GoalCreateSerializer 
 
 class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Goal.objects.all()
+  queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = BasicGoalSerializer
 
 ######################
@@ -910,4 +912,103 @@ class CreatePackingOrder(generics.CreateAPIView):
   serializer_class = CreatePackingOrderSerializer
 
 
+
+######################
+# ALERTS-RELATED VIEWS #
+######################
+class GetRecentlyFlaggedTasks(generics.ListAPIView):
+  queryset = Task.objects.filter(is_flagged=True)
+  serializer_class = NestedTaskSerializer
+
+  def get_queryset(self):
+    queryset = Task.objects.filter(is_flagged=True)
+    team = self.request.query_params.get('team', None)
+    dt = datetime.datetime
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+
+    endDate = dt.today() + timedelta(days=1)
+    startDate = dt.today() - timedelta(days=2)
+    queryset = queryset.filter(flag_update_time__date__range=(startDate, endDate))
+    return queryset
+
+class GetIncompleteGoals(generics.ListAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = BasicGoalSerializer
+
+  def get_queryset(self):
+    queryset = Goal.objects.all()
+    team = self.request.query_params.get('team', None)
+    userprofile = self.request.query_params.get('userprofile', None)
+    timerange = self.request.query_params.get('timerange', None)
+
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+    if userprofile is not None:
+      queryset = queryset.filter(userprofile=userprofile)
+
+
+    incomplete_goals = []
+    # get the goals that were active during that time period
+    # get the goals that are either not trashed and were created before the start time
+    # are trashed and were created before the start time and trashed after the end time
+    # that were not fulfilled during that time period
+    dt = datetime.datetime
+    base = dt.utcnow() - timedelta(days=7)
+
+    start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
+    end = dt.combine(start + timedelta(days=7), dt.min.time())
+    for goal in queryset:
+      if goal.timerange == 'w':
+        start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
+      elif goal.timerange == 'd':
+        start = dt.combine(base, dt.min.time())
+      elif goal.timerange == 'm':
+        start = dt.combine(base.replace(day=1), dt.min.time())
+
+      start_aware = pytz.utc.localize(start)
+      end_aware = pytz.utc.localize(end)
+      print(start_aware)
+      print(end_aware)
+      print "*****************"
+      if goal.created_at <= start_aware:
+        if (not goal.is_trashed) or (goal.is_trashed and goal.trashed_time >= end_aware):
+          product_types = ProductType.objects.filter(goal_product_types__goal=goal)
+          amount = Item.objects.filter(
+            creating_task__process_type=goal.process_type, 
+            creating_task__product_type__in=product_types,
+            creating_task__is_trashed=False,
+            creating_task__created_at__range=(start_aware, end_aware),
+            is_virtual=False,
+          ).aggregate(amount_sum=Sum('amount'))['amount_sum']
+          if amount < goal.goal:
+            incomplete_goals.append(goal.id)
+          print amount
+    queryset.filter(pk__in=incomplete_goals)
+    return queryset
+
+class GetRecentAnomolousInputs(generics.ListAPIView):
+  queryset = Input.objects.all()
+  serializer_class = BasicInputSerializer
+
+  def get_queryset(self):
+    queryset = Input.objects.all()
+    team = self.request.query_params.get('team', None)
+    dt = datetime.datetime
+    if team is not None:
+      queryset = queryset.filter(task__process_type__team_created_by=team)
+
+    endDate = dt.today() + timedelta(days=1)
+    startDate = dt.today() - timedelta(days=7)
+    queryset = queryset.filter(input_item__created_at__date__range=(startDate, endDate))
+
+
+    # for each input, if any of the items' creating tasks have a different product type from the input task
+    queryset = queryset.exclude(Q(input_item__creating_task__product_type__id=F('task__product_type__id')))
+    print( queryset.query )
+
+    return queryset
+
+
+      # queryset.filter(created_at__lt=startDate).filter(Q(is_trashed=False) | Q(is_trashed=True, trashed_time__gt=endDate))
 

@@ -164,6 +164,7 @@ class Task(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated_at = models.DateTimeField(auto_now=True, db_index=True)
 	is_flagged = models.BooleanField(default=False)
+	flag_update_time = models.DateTimeField(auto_now_add=True)
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
@@ -174,6 +175,10 @@ class Task(models.Model):
 		indexes = [
 			GinIndex(fields=['search'])
 		]
+
+	def __init__(self, *args, **kwargs):
+		super(Task, self).__init__(*args, **kwargs)
+		self.old_is_flagged = self.is_flagged
 
 
 	def __str__(self):
@@ -186,6 +191,10 @@ class Task(models.Model):
 	def save(self, *args, **kwargs):
 		self.setLabelAndDisplay()
 		self.refreshKeywords()
+		# update the flag_update_time if the flag is toggled
+		if self.old_is_flagged != self.is_flagged:
+			self.flag_update_time = datetime.now()
+		self.old_is_flagged = self.is_flagged
 		qr_code = "plmr.io/" + str(uuid4())
 		super(Task, self).save(*args, **kwargs)
 		if 'update_fields' not in kwargs or 'search' not in kwargs['update_fields']:
@@ -457,11 +466,17 @@ class Goal(models.Model):
 	goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w')
 	rank = models.PositiveSmallIntegerField(default=0)
+	is_trashed = models.BooleanField(default=False)
+	trashed_time = models.DateTimeField(blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
 
 	def save(self, *args, **kwargs):
 		# create the right rank
-		if self.pk is None:
+		if self.is_trashed:
+			self.trashed_time = datetime.now()
 
+		if self.pk is None:
 			prev_rank = Goal.objects.filter(
 				userprofile=self.userprofile,
 				timerange=self.timerange

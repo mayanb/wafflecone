@@ -82,7 +82,7 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'product_type', 'created_at', 'search')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'search')
 
 class BasicItemSerializer(serializers.ModelSerializer):
 	is_used = serializers.CharField(read_only=True)
@@ -99,7 +99,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
 
 class NestedItemSerializer(serializers.ModelSerializer):
 	creating_task = BasicTaskSerializer(many=False, read_only=True)
@@ -180,6 +180,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'input_unit', 
 			'is_open', 
 			'is_flagged', 
+			'flag_update_time', 
 			'created_at', 
 			'updated_at', 
 			'label_index', 
@@ -456,7 +457,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
@@ -493,7 +494,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicAccountSerializer(serializers.ModelSerializer):

@@ -107,4 +107,8 @@ urlpatterns = [
 
     url(r'^packingorder/create/$', views.CreatePackingOrder.as_view()),
 
+    url(r'^alerts/recently-flagged-tasks/$', views.GetRecentlyFlaggedTasks.as_view()),
+    url(r'^alerts/get-incomplete-goals/$', views.GetIncompleteGoals.as_view()),
+    url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
+
 ]
