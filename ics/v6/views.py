@@ -1005,18 +1005,18 @@ class GetIncompleteGoals(generics.ListAPIView):
     return queryset
 
 class GetRecentAnomolousInputs(generics.ListAPIView):
-  queryset = Input.objects.all()
+  queryset = Input.objects.filter(task__is_trashed=False, input_item__creating_task__is_trashed=False)
   serializer_class = BasicInputSerializer
 
   def get_queryset(self):
-    queryset = Input.objects.all()
+    queryset = Input.objects.filter(task__is_trashed=False, input_item__creating_task__is_trashed=False)
     team = self.request.query_params.get('team', None)
     dt = datetime.datetime
     if team is not None:
       queryset = queryset.filter(task__process_type__team_created_by=team)
 
     endDate = dt.today() + timedelta(days=1)
-    startDate = dt.today() - timedelta(days=3)
+    startDate = dt.today() - timedelta(days=5)
     queryset = queryset.filter(input_item__created_at__date__range=(startDate, endDate))
 
 
