@@ -947,6 +947,9 @@ class GetIncompleteGoals(generics.ListAPIView):
     if userprofile is not None:
       queryset = queryset.filter(userprofile=userprofile)
 
+    # TODO: for now we are just getting incomplete weekly goals from the last week
+    # for the future - make an endpoint that gets the incomplete goals from the last month
+    queryset = queryset.filter(timerange='w')
 
     incomplete_goals = []
     # get the goals that were active during that time period
@@ -968,9 +971,7 @@ class GetIncompleteGoals(generics.ListAPIView):
 
       start_aware = pytz.utc.localize(start)
       end_aware = pytz.utc.localize(end)
-      print(start_aware)
-      print(end_aware)
-      print "*****************"
+
       if goal.created_at <= start_aware:
         if (not goal.is_trashed) or (goal.is_trashed and goal.trashed_time >= end_aware):
           product_types = ProductType.objects.filter(goal_product_types__goal=goal)
@@ -984,7 +985,7 @@ class GetIncompleteGoals(generics.ListAPIView):
           if amount < goal.goal:
             incomplete_goals.append(goal.id)
           print amount
-    queryset.filter(pk__in=incomplete_goals)
+    queryset = queryset.filter(pk__in=incomplete_goals)
     return queryset
 
 class GetRecentAnomolousInputs(generics.ListAPIView):
@@ -1005,10 +1006,61 @@ class GetRecentAnomolousInputs(generics.ListAPIView):
 
     # for each input, if any of the items' creating tasks have a different product type from the input task
     queryset = queryset.exclude(Q(input_item__creating_task__product_type__id=F('task__product_type__id')))
-    print( queryset.query )
 
     return queryset
 
 
-      # queryset.filter(created_at__lt=startDate).filter(Q(is_trashed=False) | Q(is_trashed=True, trashed_time__gt=endDate))
+class GetCompleteGoals(generics.ListAPIView):
+  queryset = Goal.objects.all()
+  serializer_class = BasicGoalSerializer
+
+  def get_queryset(self):
+    queryset = Goal.objects.all()
+    team = self.request.query_params.get('team', None)
+    userprofile = self.request.query_params.get('userprofile', None)
+    timerange = self.request.query_params.get('timerange', None)
+
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+    if userprofile is not None:
+      queryset = queryset.filter(userprofile=userprofile)
+
+    # TODO: for now we are just getting incomplete weekly goals from the last week
+    # for the future - make an endpoint that gets the incomplete goals from the last month
+    queryset = queryset.filter(timerange='w')
+
+    complete_goals = []
+    dt = datetime.datetime
+    base = dt.utcnow() - timedelta(days=7)
+
+    start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
+    end = dt.combine(start + timedelta(days=7), dt.min.time())
+    for goal in queryset:
+      if goal.timerange == 'w':
+        start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
+      elif goal.timerange == 'd':
+        start = dt.combine(base, dt.min.time())
+      elif goal.timerange == 'm':
+        start = dt.combine(base.replace(day=1), dt.min.time())
+
+      start_aware = pytz.utc.localize(start)
+      end_aware = pytz.utc.localize(end)
+
+      if goal.created_at <= start_aware:
+        if (not goal.is_trashed) or (goal.is_trashed and goal.trashed_time >= end_aware):
+          product_types = ProductType.objects.filter(goal_product_types__goal=goal)
+          amount = Item.objects.filter(
+            creating_task__process_type=goal.process_type, 
+            creating_task__product_type__in=product_types,
+            creating_task__is_trashed=False,
+            creating_task__created_at__range=(start_aware, end_aware),
+            is_virtual=False,
+          ).aggregate(amount_sum=Sum('amount'))['amount_sum']
+          if amount >= goal.goal:
+            complete_goals.append(goal.id)
+    queryset = queryset.filter(pk__in=complete_goals)
+    return queryset
+
+
+
 
