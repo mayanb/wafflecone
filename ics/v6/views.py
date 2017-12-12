@@ -1006,13 +1006,8 @@ class GetRecentAnomolousInputs(generics.ListAPIView):
 
     # for each input, if any of the items' creating tasks have a different product type from the input task
     queryset = queryset.exclude(Q(input_item__creating_task__product_type__id=F('task__product_type__id')))
-    print( queryset.query )
 
     return queryset
-
-
-      # queryset.filter(created_at__lt=startDate).filter(Q(is_trashed=False) | Q(is_trashed=True, trashed_time__gt=endDate))
-
 
 
 class GetCompleteGoals(generics.ListAPIView):
@@ -1065,3 +1060,7 @@ class GetCompleteGoals(generics.ListAPIView):
             complete_goals.append(goal.id)
     queryset = queryset.filter(pk__in=complete_goals)
     return queryset
+
+
+
+
