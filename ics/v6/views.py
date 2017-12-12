@@ -932,6 +932,22 @@ class GetRecentlyFlaggedTasks(generics.ListAPIView):
     queryset = queryset.filter(flag_update_time__date__range=(startDate, endDate))
     return queryset
 
+class GetRecentlyUnflaggedTasks(generics.ListAPIView):
+  queryset = Task.objects.filter(is_flagged=False)
+  serializer_class = NestedTaskSerializer
+
+  def get_queryset(self):
+    queryset = Task.objects.filter(is_flagged=False)
+    team = self.request.query_params.get('team', None)
+    dt = datetime.datetime
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+
+    endDate = dt.today() + timedelta(days=1)
+    startDate = dt.today() - timedelta(days=2)
+    queryset = queryset.filter(flag_update_time__date__range=(startDate, endDate))
+    return queryset
+
 class GetIncompleteGoals(generics.ListAPIView):
   queryset = Goal.objects.all()
   serializer_class = BasicGoalSerializer
@@ -1000,7 +1016,7 @@ class GetRecentAnomolousInputs(generics.ListAPIView):
       queryset = queryset.filter(task__process_type__team_created_by=team)
 
     endDate = dt.today() + timedelta(days=1)
-    startDate = dt.today() - timedelta(days=7)
+    startDate = dt.today() - timedelta(days=20)
     queryset = queryset.filter(input_item__created_at__date__range=(startDate, endDate))
 
 
