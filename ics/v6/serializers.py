@@ -82,7 +82,7 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'product_type', 'created_at', 'search')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'search')
 
 class BasicItemSerializer(serializers.ModelSerializer):
 	is_used = serializers.CharField(read_only=True)
@@ -99,7 +99,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
 
 class NestedItemSerializer(serializers.ModelSerializer):
 	creating_task = BasicTaskSerializer(many=False, read_only=True)
@@ -117,10 +117,11 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
+	task_display = serializers.CharField(source='task', read_only=True)
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'task', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
 
 class NestedInputSerializer(serializers.ModelSerializer):
 	input_item = NestedItemSerializer(many=False, read_only=True)
@@ -180,6 +181,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'input_unit', 
 			'is_open', 
 			'is_flagged', 
+			'flag_update_time', 
 			'created_at', 
 			'updated_at', 
 			'label_index', 
@@ -456,7 +458,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
@@ -493,7 +495,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicAccountSerializer(serializers.ModelSerializer):
@@ -592,3 +594,11 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'new_rank')
 		extra_kwargs = {'new_rank': {'write_only': True} }
+
+
+class AlertSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = Alert
+		fields = ('id', 'alert_type', 'variable_content', 'is_displayed', 'userprofile')
+

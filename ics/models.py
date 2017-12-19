@@ -113,6 +113,7 @@ class Attribute(models.Model):
 		choices=constants.ATTRIBUTE_DATA_TYPES, 
 		default=constants.TEXT_TYPE
 	)
+	required = models.BooleanField(default=True)
 
 	def __str__(self):
 		return self.name
@@ -164,6 +165,7 @@ class Task(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated_at = models.DateTimeField(auto_now=True, db_index=True)
 	is_flagged = models.BooleanField(default=False)
+	flag_update_time = models.DateTimeField(auto_now_add=True)
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
@@ -174,6 +176,10 @@ class Task(models.Model):
 		indexes = [
 			GinIndex(fields=['search'])
 		]
+
+	def __init__(self, *args, **kwargs):
+		super(Task, self).__init__(*args, **kwargs)
+		self.old_is_flagged = self.is_flagged
 
 
 	def __str__(self):
@@ -186,6 +192,10 @@ class Task(models.Model):
 	def save(self, *args, **kwargs):
 		self.setLabelAndDisplay()
 		self.refreshKeywords()
+		# update the flag_update_time if the flag is toggled
+		if self.old_is_flagged != self.is_flagged:
+			self.flag_update_time = datetime.now()
+		self.old_is_flagged = self.is_flagged
 		qr_code = "plmr.io/" + str(uuid4())
 		super(Task, self).save(*args, **kwargs)
 		if 'update_fields' not in kwargs or 'search' not in kwargs['update_fields']:
@@ -457,11 +467,17 @@ class Goal(models.Model):
 	goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w')
 	rank = models.PositiveSmallIntegerField(default=0)
+	is_trashed = models.BooleanField(default=False)
+	trashed_time = models.DateTimeField(blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
 
 	def save(self, *args, **kwargs):
 		# create the right rank
-		if self.pk is None:
+		if self.is_trashed:
+			self.trashed_time = datetime.now()
 
+		if self.pk is None:
 			prev_rank = Goal.objects.filter(
 				userprofile=self.userprofile,
 				timerange=self.timerange
@@ -535,5 +551,27 @@ class OrderItem(models.Model):
 	item = models.ForeignKey(Item, related_name='order_items', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
+
+
+##################################
+#                                #
+#    POLYMER ALERTS MODELS   	 #
+#                                #
+##################################
+class Alert(models.Model):
+
+	ALERTS_TYPES = (
+		('ig', 'incomplete goals'),
+		('cg', 'complete goals'),
+		('ai', 'anomolous inputs'),
+		('ft', 'recently flagged tasks'),
+		('ut', 'recently unflagged tasks'),
+	)
+
+	alert_type = models.CharField(max_length=2, choices=ALERTS_TYPES)
+	variable_content = models.TextField(null=True)
+	userprofile = models.ForeignKey(UserProfile, related_name='alerts', on_delete=models.CASCADE)
+	is_displayed = models.BooleanField(default=True)
+
 
 
