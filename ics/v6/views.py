@@ -1078,5 +1078,30 @@ class GetCompleteGoals(generics.ListAPIView):
     return queryset
 
 
+class AlertCreate(generics.CreateAPIView):
+  queryset = Alert.objects.all()
+  serializer_class = AlertSerializer
+
+class AlertList(generics.ListAPIView):
+  queryset = Alert.objects.filter(is_displayed=True)
+  serializer_class = AlertSerializer
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    userprofile = self.request.query_params.get('userprofile', None)
+    queryset = Alert.objects.filter(is_displayed=True)
+    if team is not None:
+      queryset = queryset.filter(userprofile__team=team)
+    if userprofile is not None:
+      queryset = queryset.filter(userprofile=userprofile)
+    return queryset
+
+class AlertGet(generics.RetrieveAPIView):
+  queryset = Alert.objects.all()
+  serializer_class = AlertSerializer
+
+class AlertEdit(generics.UpdateAPIView):
+  queryset = Alert.objects.all()
+  serializer_class = AlertSerializer
 
 

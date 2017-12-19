@@ -553,3 +553,25 @@ class OrderItem(models.Model):
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
 
+##################################
+#                                #
+#    POLYMER ALERTS MODELS   	 #
+#                                #
+##################################
+class Alert(models.Model):
+
+	ALERTS_TYPES = (
+		('ig', 'incomplete goals'),
+		('cg', 'complete goals'),
+		('ai', 'anomolous inputs'),
+		('ft', 'recently flagged tasks'),
+		('ut', 'recently unflagged tasks'),
+	)
+
+	alert_type = models.CharField(max_length=2, choices=ALERTS_TYPES)
+	variable_content = models.TextField(null=True)
+	userprofile = models.ForeignKey(UserProfile, related_name='alerts', on_delete=models.CASCADE)
+	is_displayed = models.BooleanField(default=True)
+
+
+

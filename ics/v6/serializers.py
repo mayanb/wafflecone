@@ -594,3 +594,11 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'new_rank')
 		extra_kwargs = {'new_rank': {'write_only': True} }
+
+
+class AlertSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = Alert
+		fields = ('id', 'alert_type', 'variable_content', 'is_displayed', 'userprofile')
+
