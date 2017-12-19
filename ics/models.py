@@ -113,6 +113,7 @@ class Attribute(models.Model):
 		choices=constants.ATTRIBUTE_DATA_TYPES, 
 		default=constants.TEXT_TYPE
 	)
+	required = models.BooleanField(default=True)
 
 	def __str__(self):
 		return self.name
