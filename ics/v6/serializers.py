@@ -597,8 +597,9 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 
 
 class AlertSerializer(serializers.ModelSerializer):
-
+	created_at = serializers.DateTimeField(read_only=True)
+	
 	class Meta:
 		model = Alert
-		fields = ('id', 'alert_type', 'variable_content', 'is_displayed', 'userprofile')
+		fields = ('id', 'alert_type', 'variable_content', 'is_displayed', 'userprofile', 'created_at')
 

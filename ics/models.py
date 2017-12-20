@@ -572,6 +572,7 @@ class Alert(models.Model):
 	variable_content = models.TextField(null=True)
 	userprofile = models.ForeignKey(UserProfile, related_name='alerts', on_delete=models.CASCADE)
 	is_displayed = models.BooleanField(default=True)
+	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
 
 

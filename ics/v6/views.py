@@ -1094,6 +1094,8 @@ class AlertList(generics.ListAPIView):
       queryset = queryset.filter(userprofile__team=team)
     if userprofile is not None:
       queryset = queryset.filter(userprofile=userprofile)
+
+    # get the unique alert_type and userprofile entries with the latest created_by
     return queryset
 
 class AlertGet(generics.RetrieveAPIView):
