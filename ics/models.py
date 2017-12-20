@@ -35,8 +35,11 @@ class UserProfile(models.Model):
 	expires_in = models.IntegerField(null=True)
 	expires_at = models.FloatField(null=True)
 	gauth_email = models.TextField(null=True)
+	email = models.TextField(null=True)
 	team = models.ForeignKey(Team, related_name='userprofiles', on_delete=models.CASCADE, null=True)
 	account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
+	send_emails = models.BooleanField(default=True)
+	last_seen = models.DateTimeField(default=datetime.now)
 
 	def get_username_display(self):
 		print(self.user.username)

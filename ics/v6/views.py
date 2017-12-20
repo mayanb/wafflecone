@@ -58,6 +58,11 @@ class UserProfileEdit(generics.UpdateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UserProfileEditSerializer
 
+class UserProfileLastSeenUpdate(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = UpdateUserProfileLastSeenSerializer
+
+
 ######################
 # GOAL-RELATED VIEWS #
 ######################
@@ -1094,6 +1099,12 @@ class AlertList(generics.ListAPIView):
       queryset = queryset.filter(userprofile__team=team)
     if userprofile is not None:
       queryset = queryset.filter(userprofile=userprofile)
+
+    dt = datetime.datetime
+
+    endDate = dt.today() + timedelta(days=1)
+    startDate = dt.today() - timedelta(days=1)
+    queryset = queryset.filter(created_at__date__range=(startDate, endDate))
 
     # get the unique alert_type and userprofile entries with the latest created_by
     return queryset

@@ -12,7 +12,10 @@ urlpatterns = [
     url(r'^userprofiles/$', views.UserProfileList.as_view()),
     url(r'^userprofiles/(?P<pk>[0-9]+)/$', views.UserProfileGet.as_view()),
     url(r'^userprofiles/edit/(?P<pk>[0-9]+)/$', views.UserProfileEdit.as_view()),
+    url(r'^userprofiles/last-seen/(?P<pk>[0-9]+)/$', views.UserProfileLastSeenUpdate.as_view()),
+
     url(r'^users/create/$', views.UserProfileCreate.as_view()),
+
 
     url(r'^teams/$', views.TeamList.as_view()),
     url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGet.as_view()),
