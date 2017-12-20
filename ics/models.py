@@ -473,7 +473,7 @@ class Goal(models.Model):
 	is_trashed = models.BooleanField(default=False)
 	trashed_time = models.DateTimeField(blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
-
+	all_product_types = models.BooleanField(default=False)
 
 	def save(self, *args, **kwargs):
 		# create the right rank

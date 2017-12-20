@@ -461,7 +461,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		fields = ('id', 'all_product_types', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
@@ -469,36 +469,43 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	product_code = serializers.SerializerMethodField('get_product_types')
 	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
+	all_product_types = serializers.BooleanField(read_only=True)
 
 	def get_product_types(self, goal):
 		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
+		inputprods = validated_data.get('input_products', '')
+		goal_product_types = None
+
 		goal = Goal.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
 			process_type=validated_data.get('process_type', ''),
 			goal=validated_data.get('goal', ''),
-			timerange=validated_data.get('timerange', '')
+			timerange=validated_data.get('timerange', ''),
+			all_product_types=(inputprods == "ALL")
 		)
-		inputprods = validated_data.get('input_products', '')
-		goal_product_types = None
+
+		# if we didn't mean to put all product types in this goal:
 		if (inputprods and inputprods != "ALL"):
-			goal_product_types = inputprods.strip().split(',')
+			goal_product_types = inputprods.strip().split(',')	
+
+		# if we did mean to put all product types in this goal:	
 		if not goal_product_types:
 			team = UserProfile.objects.get(pk=userprofile.id).team
 			goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
 			goal_product_types = []
 			for gp in goal_product_types_objects:
 				goal_product_types.append(gp.id)
-			print(goal_product_types)
+
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 		return goal
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicAccountSerializer(serializers.ModelSerializer):
