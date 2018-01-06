@@ -12,7 +12,10 @@ urlpatterns = [
     url(r'^userprofiles/$', views.UserProfileList.as_view()),
     url(r'^userprofiles/(?P<pk>[0-9]+)/$', views.UserProfileGet.as_view()),
     url(r'^userprofiles/edit/(?P<pk>[0-9]+)/$', views.UserProfileEdit.as_view()),
+    url(r'^userprofiles/last-seen/(?P<pk>[0-9]+)/$', views.UserProfileLastSeenUpdate.as_view()),
+
     url(r'^users/create/$', views.UserProfileCreate.as_view()),
+
 
     url(r'^teams/$', views.TeamList.as_view()),
     url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGet.as_view()),
@@ -106,5 +109,17 @@ urlpatterns = [
     url(r'^orderitems/edit/(?P<pk>[0-9]+)/$', views.OrderItemEdit.as_view()),
 
     url(r'^packingorder/create/$', views.CreatePackingOrder.as_view()),
+
+
+    url(r'^alerts/$', views.AlertList.as_view()),
+    url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),
+    url(r'^alerts/create/$', views.AlertCreate.as_view()),
+    url(r'^alerts/edit/(?P<pk>[0-9]+)/$', views.AlertEdit.as_view()),
+
+    url(r'^alerts/recently-flagged-tasks/$', views.GetRecentlyFlaggedTasks.as_view()),
+    url(r'^alerts/recently-unflagged-tasks/$', views.GetRecentlyUnflaggedTasks.as_view()),
+    url(r'^alerts/incomplete-goals/$', views.GetIncompleteGoals.as_view()),
+    url(r'^alerts/complete-goals/$', views.GetCompleteGoals.as_view()),
+    url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
 ]

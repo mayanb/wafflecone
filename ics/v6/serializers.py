@@ -82,7 +82,7 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'display', 'process_type', 'product_type', 'created_at', 'search')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'search')
 
 class BasicItemSerializer(serializers.ModelSerializer):
 	is_used = serializers.CharField(read_only=True)
@@ -99,7 +99,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
 
 class NestedItemSerializer(serializers.ModelSerializer):
 	creating_task = BasicTaskSerializer(many=False, read_only=True)
@@ -117,10 +117,11 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
+	task_display = serializers.CharField(source='task', read_only=True)
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'task', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
 
 class NestedInputSerializer(serializers.ModelSerializer):
 	input_item = NestedItemSerializer(many=False, read_only=True)
@@ -180,6 +181,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'input_unit', 
 			'is_open', 
 			'is_flagged', 
+			'flag_update_time', 
 			'created_at', 
 			'updated_at', 
 			'label_index', 
@@ -338,20 +340,23 @@ class UserDetailSerializer(serializers.ModelSerializer):
 	user_id = serializers.CharField(source='userprofile.user.id')
 	has_gauth_token = serializers.SerializerMethodField('hasGauthToken')
 	gauth_email = serializers.CharField(source='userprofile.gauth_email')
+	email = serializers.CharField(source='userprofile.email')
 	username_display = serializers.CharField(source='userprofile.get_username_display')
+	send_emails = serializers.BooleanField(source='userprofile.send_emails')
+	last_seen = serializers.DateTimeField(source='userprofile.last_seen')
 
 	def hasGauthToken(self, user):
 		return bool(user.userprofile.gauth_access_token)
 
 	class Meta:
 		model = User
-		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email')
+		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email', 'email', 'send_emails', 'last_seen')
 
 
 class UserProfileEditSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserProfile
-		fields = ('id', 'account_type')
+		fields = ('id', 'account_type', 'send_emails', 'email')
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name', read_only=True)
@@ -365,7 +370,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserProfile
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen')
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
 	username = serializers.CharField(source='user.username')
@@ -400,7 +405,7 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserProfile
 		extra_kwargs = {'account_type': {'write_only': True}, 'password': {'write_only': True}}
-		fields = ('id', 'profile_id', 'username', 'password', 'first_name', 'team', 'account_type', 'team_name', 'gauth_email', 'username_display')
+		fields = ('id', 'profile_id', 'username', 'password', 'first_name', 'team', 'account_type', 'team_name', 'gauth_email', 'email', 'username_display')
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -426,8 +431,11 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	product_code = serializers.CharField(source='product_type.code', read_only=True)
+	product_code = serializers.SerializerMethodField('get_product_types')
 	userprofile = UserProfileSerializer(many=False, read_only=True)
+
+	def get_product_types(self, goal):
+		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def get_actual(self, goal):
 		base = date.today()
@@ -440,10 +448,12 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			start = datetime.combine(base, datetime.min.time())
 		elif goal.timerange == 'm':
 			start = datetime.combine(base.replace(day=1), datetime.min.time())
+
+		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
 		
 		return Item.objects.filter(
 			creating_task__process_type=goal.process_type, 
-			creating_task__product_type=goal.product_type,
+			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
 			creating_task__created_at__range=(start, end),
 			is_virtual=False,
@@ -451,28 +461,52 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'all_product_types', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	product_code = serializers.CharField(source='product_type.code', read_only=True)
+	product_code = serializers.SerializerMethodField('get_product_types')
+	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
+	all_product_types = serializers.BooleanField(read_only=True)
+
+	def get_product_types(self, goal):
+		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
+		inputprods = validated_data.get('input_products', '')
+		goal_product_types = None
+
 		goal = Goal.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
 			process_type=validated_data.get('process_type', ''),
-			product_type=validated_data.get('product_type', ''),
 			goal=validated_data.get('goal', ''),
-			timerange=validated_data.get('timerange', '')
+			timerange=validated_data.get('timerange', ''),
+			all_product_types=(inputprods == "ALL")
 		)
+
+		# if we didn't mean to put all product types in this goal:
+		if (inputprods and inputprods != "ALL"):
+			goal_product_types = inputprods.strip().split(',')	
+
+		# if we did mean to put all product types in this goal:	
+		if not goal_product_types:
+			team = UserProfile.objects.get(pk=userprofile.id).team
+			goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+			goal_product_types = []
+			for gp in goal_product_types_objects:
+				goal_product_types.append(gp.id)
+
+		for gp in goal_product_types:
+			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 		return goal
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'process_type', 'product_type', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicAccountSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
@@ -570,3 +604,33 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'new_rank')
 		extra_kwargs = {'new_rank': {'write_only': True} }
+
+
+class AlertSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+
+	class Meta:
+		model = Alert
+		fields = ('id', 'alert_type', 'variable_content', 'is_displayed', 'userprofile', 'created_at')
+
+class UpdateUserProfileLastSeenSerializer(serializers.ModelSerializer):
+	team_name = serializers.CharField(source='team.name', read_only=True)
+	team = serializers.CharField(source='team.id', read_only=True)
+	profile_id = serializers.CharField(source='id', read_only=True)
+	user_id = serializers.CharField(source='user.id', read_only=True)
+	username = serializers.CharField(source='user.username', read_only=True)
+	username_display = serializers.CharField(source='get_username_display', read_only=True)
+	first_name = serializers.CharField(source='user.first_name', read_only=True)
+	last_name = serializers.CharField(source='user.last_name', read_only=True)
+
+	def update(self, instance, validated_data):
+		instance.last_seen = datetime.now()
+		instance.save()
+		return instance
+
+	class Meta:
+		model = UserProfile
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen')
+
+
+
