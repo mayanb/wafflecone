@@ -134,6 +134,11 @@ class Attribute(models.Model):
 		super(Attribute, self).save(*args, **kwargs)
 
 
+class FormulaAttribute(models.Model):
+	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+	formula = models.TextField()
+	comparator = models.CharField(max_length=2)
 
 
 class TaskManager(models.Manager):
@@ -395,7 +400,14 @@ class TaskAttribute(models.Model):
 	updated_at = models.DateTimeField(auto_now=True)
 
 
+class TaskFormulaAttribute(models.Model):
+	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCASE)
+	task_attribute = models.ForeignKey(TaskAttribute, on_delete=models.CASCADE)
+	calculated_value = models.CharField(max_length=50, blank=True)
 
+class FormulaDependency(models.Model):
+	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCASE)
+	dependency = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name="dependencies")
 
 
 ##################################
