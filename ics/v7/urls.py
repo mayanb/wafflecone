@@ -122,4 +122,18 @@ urlpatterns = [
     url(r'^alerts/complete-goals/$', views.GetCompleteGoals.as_view()),
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
+    url(r'^formula-attributes/$', views.FormulaAttributeList.as_view()),
+    url(r'^formula-attributes/(?P<pk>[0-9]+)/$', views.FormulaAttributeGet.as_view()),
+    url(r'^formula-attributes/create/$', views.FormulaAttributeCreate.as_view()),
+    url(r'^formula-attributes/delete/(?P<pk>[0-9]+)/$', views.FormulaAttributeDelete.as_view()),
+
+    url(r'^attributes/direct-dependents/$', views.GetDirectAttributeDependents.as_view()),
+
+    url(r'^formula-dependencies/$', views.FormulaDependencyList.as_view()),
+
+    url(r'^task-formula-attributes/$', views.TaskFormulaAttributeList.as_view()),
+    url(r'^task-formula-attributes/(?P<pk>[0-9]+)/$', views.TaskFormulaAttributeDetail.as_view()),
+
+
+
 ]

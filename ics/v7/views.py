@@ -9,6 +9,7 @@ from ics.models import *
 from django.contrib.auth.models import User
 from ics.v7.serializers import *
 from ics.v7.order_serializers import *
+from ics.v7.calculated_fields_serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
 import django_filters
@@ -586,7 +587,6 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
 ###########################
 # ATTRIBUTE-RELATED VIEWS #
 ###########################
-
 class AttributeList(generics.ListCreateAPIView):
   queryset = Attribute.objects.all()
   serializer_class = AttributeSerializer
@@ -1116,5 +1116,84 @@ class AlertGet(generics.RetrieveAPIView):
 class AlertEdit(generics.UpdateAPIView):
   queryset = Alert.objects.all()
   serializer_class = AlertSerializer
+
+
+
+###################################
+# CALCULATED FIELDS RELATED VIEWS #
+###################################
+
+class FormulaAttributeList(generics.ListAPIView):
+  queryset = FormulaAttribute.objects.filter(is_trashed=False)
+  serializer_class = FormulaAttributeSerializer
+  filter_fields = ('product_type',)
+
+  def get_queryset(self):
+    queryset = FormulaAttribute.objects.filter(is_trashed=False)
+    team = self.request.query_params.get('team', None)
+    process_type = self.request.query_params.get('process_type', None)
+
+    if team is not None:
+      queryset = queryset.filter(attribute__process_type__team_created_by=team)
+    if process_type is not None:
+      queryset = queryset.filter(attribute__process_type=process_type)
+    return queryset
+
+class FormulaAttributeGet(generics.RetrieveAPIView):
+  queryset = FormulaAttribute.objects.filter(is_trashed=False)
+  serializer_class = FormulaAttributeSerializer
+
+class FormulaAttributeDelete(generics.UpdateAPIView):
+  queryset = FormulaAttribute.objects.all()
+  serializer_class = FormulaAttributeDeleteSerializer
+
+class FormulaAttributeCreate(generics.CreateAPIView):
+  queryset = FormulaAttribute.objects.all()
+  serializer_class = FormulaAttributeCreateSerializer
+
+
+class GetDirectAttributeDependents(generics.ListAPIView):
+  queryset = Attribute.objects.filter(is_trashed=False)
+  serializer_class = AttributeSerializer
+
+  def get_queryset(self):
+    formula_attribute = self.request.query_params.get('formula_attribute', None)
+    if formula_attribute is None:
+      return Attribute.objects.none()
+    formula_attribute_object = FormulaAttribute.objects.get(pk=formula_attribute)
+
+    dependencies = FormulaDependency.objects.filter(formula_attribute=formula_attribute_object, is_trashed=False).values('dependency')
+    dependency_list = list(dependencies)
+    formatted_dependency_list = map(lambda d: d['dependency'], dependency_list)
+
+    queryset = Attribute.objects.filter(pk__in=formatted_dependency_list, is_trashed=False)
+    return queryset
+
+
+class FormulaDependencyList(generics.ListAPIView):
+  queryset = FormulaDependency.objects.filter(is_trashed=False)
+  serializer_class = FormulaDependencySerializer
+
+class TaskFormulaAttributeList(generics.ListCreateAPIView):
+  queryset = TaskFormulaAttribute.objects.all()
+  serializer_class = TaskFormulaAttributeSerializer
+
+  def get_queryset(self):
+    queryset = TaskFormulaAttribute.objects.all()
+    team = self.request.query_params.get('team', None)
+    task = self.request.query_params.get('task', None)
+    task_attribute = self.request.query_params.get('task_attribute', None)
+
+    if team is not None:
+      queryset = queryset.filter(task_attribute__attribute__process_type__team_created_by=team)
+    if task is not None:
+      queryset = queryset.filter(task_attribute__task__id=task)
+    if task_attribute is not None:
+      queryset = queryset.filter(task_attribute__id=tas_attribute)
+    return queryset
+
+class TaskFormulaAttributeDetail(generics.RetrieveAPIView):
+  queryset = TaskAttribute.objects.all()
+  serializer_class = TaskFormulaAttributeSerializer
 
 

@@ -10,10 +10,11 @@ easy_format = '%Y-%m-%d %H:%M'
 
 class AttributeSerializer(serializers.ModelSerializer):
 	rank = serializers.IntegerField(read_only=True)
+	process_name = serializers.CharField(source='process_type.name')
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'name', 'rank', 'datatype')
+		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
 	attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)

@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^v4/', include('ics.v4.urls')),
     url(r'^v5/', include('ics.v5.urls')),
     url(r'^v6/', include('ics.v6.urls')),
+    url(r'^v7/', include('ics.v7.urls')),
     url(r'', include('ics.v1.urls'))
 ]
 

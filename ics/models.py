@@ -134,11 +134,6 @@ class Attribute(models.Model):
 		super(Attribute, self).save(*args, **kwargs)
 
 
-class FormulaAttribute(models.Model):
-	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
-	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
-	formula = models.TextField()
-	comparator = models.CharField(max_length=2)
 
 
 class TaskManager(models.Manager):
@@ -390,6 +385,13 @@ class Input(models.Model):
 
 
 
+class FormulaAttribute(models.Model):
+	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+	formula = models.TextField()
+	comparator = models.CharField(max_length=2)
+	is_trashed = models.BooleanField(default=False)
+
 
 
 
@@ -401,13 +403,14 @@ class TaskAttribute(models.Model):
 
 
 class TaskFormulaAttribute(models.Model):
-	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCASE)
+	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE)
 	task_attribute = models.ForeignKey(TaskAttribute, on_delete=models.CASCADE)
-	calculated_value = models.CharField(max_length=50, blank=True)
+	predicted_value = models.CharField(max_length=50, blank=True)
 
 class FormulaDependency(models.Model):
-	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCASE)
+	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE)
 	dependency = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name="dependencies")
+	is_trashed = models.BooleanField(default=False)
 
 
 ##################################
