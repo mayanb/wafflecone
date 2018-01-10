@@ -39,34 +39,19 @@ class FormulaAttributeDeleteSerializer(serializers.ModelSerializer):
 
 
 class FormulaAttributeCreateSerializer(serializers.ModelSerializer):
-	attribute_process_type = serializers.IntegerField(write_only=True)
-	attribute_name = serializers.CharField(write_only=True)
-	attribute_datatype = serializers.CharField(write_only=True)
-	attribute = AttributeSerializer(many=False, read_only=True)
-
-
 	class Meta:
 		model = FormulaAttribute
-		fields = ('id', 'attribute', 'is_trashed', 'product_type', 'formula', 'comparator', 'attribute_process_type', 'attribute_name', 'attribute_datatype')
-		# write_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		# read_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		extra_kwargs = {'attribute_process_type': {'write_only': True}, 'attribute_name': {'write_only': True}, 'attribute_datatype': {'write_only': True}}
-
+		fields = ('id', 'attribute', 'is_trashed', 'product_type', 'formula', 'comparator')
 
 	def create(self, validated_data):
 		print("hi1")
 		print(validated_data)
 		product_type = validated_data.get('product_type')
+		attribute = validated_data.get('attribute')
 		formula = validated_data.get('formula')
 		comparator = validated_data.get('comparator')
-		attribute_process_type = validated_data.get('attribute_process_type')
-		attribute_name = validated_data.get('attribute_name')
-		attribute_datatype = validated_data.get('attribute_datatype')
-		attribute_datatype = validated_data.get('attribute_datatype')
 
-		process_type_obj = ProcessType.objects.get(pk=attribute_process_type)
-		new_attribute = Attribute.objects.create(process_type=process_type_obj, name=attribute_name, datatype=attribute_datatype)
-		new_formula_attribute = FormulaAttribute.objects.create(attribute=new_attribute, product_type=product_type, formula=formula, comparator=comparator)
+		new_formula_attribute = FormulaAttribute.objects.create(attribute=attribute, product_type=product_type, formula=formula, comparator=comparator)
 
 		# write a regex to get all the dependency attribute id's from the formula string
 		# this regex matches numbers of all lengths inside curly braces e.g. {23}
