@@ -575,7 +575,7 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))
   serializer_class = ProductTypeSerializer
-  filter_fields = ('created_by', 'team_created_by')
+  filter_fields = ('created_by', 'team_created_by', 'id')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)
