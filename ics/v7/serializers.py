@@ -45,6 +45,9 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 
 class ProductTypeSerializer(serializers.ModelSerializer):
 	#last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
+	# created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+
 
 	def get_last_used(self, product):
 		if product.last_used is not None:
@@ -52,16 +55,28 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 		else:
 			return ""
 
+	def get_username(self, product):
+		print(product.created_by)
+		username = product.created_by.username
+		return username.split("_",1)[1] 
+
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at')
 
 
 class ProductTypeBasicSerializer(serializers.ModelSerializer):
 	#last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
+	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+
+	def get_username(self, product):
+		print(product.created_by)
+		username = product.created_by.username
+		return username.split("_",1)[1] 
+		
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
 	class Meta:
