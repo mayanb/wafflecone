@@ -54,6 +54,7 @@ urlpatterns = [
     url(r'^attributes/move/(?P<pk>[0-9]+)/$', views.ReorderAttribute.as_view()),
 
     url(r'^taskAttributes/$', views.TaskAttributeList.as_view()),
+    url(r'^taskAttributes/create/$', views.TaskAttributeCreate.as_view()),
     url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
 
     url(r'^recommendedInputs/$', views.RecommendedInputsList.as_view()),

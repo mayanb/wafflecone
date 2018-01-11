@@ -604,10 +604,15 @@ class TaskAttributeFilter(django_filters.rest_framework.FilterSet):
         model = TaskAttribute
         fields = ['task', 'attribute']
 
-class TaskAttributeList(generics.ListCreateAPIView):
+class TaskAttributeList(generics.ListAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = BasicTaskAttributeSerializer
   filter_class = TaskAttributeFilter
+
+class TaskAttributeCreate(generics.CreateAPIView):
+  queryset = TaskAttribute.objects.all()
+  serializer_class = CreateTaskAttributeSerializer
+
 
 class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
@@ -1182,14 +1187,11 @@ class TaskFormulaAttributeList(generics.ListCreateAPIView):
     queryset = TaskFormulaAttribute.objects.all()
     team = self.request.query_params.get('team', None)
     task = self.request.query_params.get('task', None)
-    task_attribute = self.request.query_params.get('task_attribute', None)
 
     if team is not None:
-      queryset = queryset.filter(task_attribute__attribute__process_type__team_created_by=team)
+      queryset = queryset.filter(task__process_type__team_created_by=team)
     if task is not None:
-      queryset = queryset.filter(task_attribute__task__id=task)
-    if task_attribute is not None:
-      queryset = queryset.filter(task_attribute__id=tas_attribute)
+      queryset = queryset.filter(task__id=task)
     return queryset
 
 class TaskFormulaAttributeDetail(generics.RetrieveAPIView):

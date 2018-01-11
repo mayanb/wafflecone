@@ -5,6 +5,7 @@ from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
 from model_utils import *
+# from ics.v7.calculated_fields_serializers import TaskFormulaAttributeSerializer
 
 easy_format = '%Y-%m-%d %H:%M'
 
@@ -145,88 +146,6 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = TaskAttribute
 		fields = ('id', 'attribute', 'task', 'value')
-
-# serializes all fields of the task, with nested items, inputs, and attributes
-class NestedTaskSerializer(serializers.ModelSerializer):
-	items = BasicItemSerializer(many=True)
-	inputs = BasicInputSerializer(many=True, read_only=True)
-	input_unit = serializers.CharField(read_only=True)
-	#inputUnit = serializers.SerializerMethodField('getInputUnit')
-	attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
-	product_type = ProductTypeSerializer(many=False, read_only=True)
-	process_type = ProcessTypeSerializer(many=False, read_only=True)
-	display = serializers.CharField(source='*')
-	total_amount = serializers.CharField(read_only=True)
-
-	def getInputUnit(self, task):
-		input = task.inputs.first()
-		if input is not None:
-			return input.input_item.creating_task.process_type.unit
-		else: 
-			return ''
-
-	def getItems(self, task):
-		if self.context.get('team_inventory', None) is not None:
-			return BasicItemSerializer(task.items.all().filter(inputs__isnull=True), many=True).data
-		else:
-			return BasicItemSerializer(task.items.all().annotate(is_used=F('inputs__task')), many=True).data
-
-	class Meta:
-		model = Task
-		fields = (
-			'id', 
-			'total_amount', 
-			'process_type', 
-			'product_type', 
-			'label', 
-			'input_unit', 
-			'is_open', 
-			'is_flagged', 
-			'flag_update_time', 
-			'created_at', 
-			'updated_at', 
-			'label_index', 
-			'custom_display', 
-			'items', 
-			'inputs', 
-			'attribute_values', 
-			'display',
-			'is_trashed',
-			'search',
-		)
-
-
-class FlowTaskSerializer(serializers.ModelSerializer):
-	creating_task = serializers.IntegerField(write_only=True)
-	amount = serializers.DecimalField(max_digits=10, decimal_places=3, write_only=True)
-	new_process_type = serializers.IntegerField(write_only=True)
-	creating_product = serializers.IntegerField(write_only=True)
-	new_task = NestedTaskSerializer(source='*', read_only=True)
-	new_label = serializers.CharField(write_only=True)
-
-	class Meta:
-		model = Task
-		fields = ('new_task', 'creating_task', 'amount', 'new_process_type', 'creating_product', 'new_label')
-		# write_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		# read_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		extra_kwargs = {'creating_task': {'write_only': True}, 'amount': {'write_only': True}, 'new_process_type': {'write_only': True}, 'creating_product': {'write_only': True}, 'new_label': {'write_only': True}}
-
-
-	def create(self, validated_data):
-		print("hi1")
-		print(validated_data)
-		print("hi2")
-		creating_task = validated_data.get('creating_task')
-		amount = validated_data.get('amount')
-		new_process_type = validated_data.get('new_process_type')
-		creating_product = validated_data.get('creating_product')
-		new_label = validated_data.get('new_label')
-
-		qr_code = "plmr.io/" + str(uuid4())
-		virtual_item = Item.objects.create(is_virtual=True, creating_task_id=creating_task, item_qr=qr_code, amount=amount)
-		new_task = Task.objects.create(process_type_id=new_process_type, product_type_id=creating_product, label=new_label)
-		Input.objects.create(input_item=virtual_item, task=new_task)
-		return new_task
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
