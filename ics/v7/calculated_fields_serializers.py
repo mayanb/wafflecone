@@ -176,10 +176,15 @@ class FlowTaskSerializer(serializers.ModelSerializer):
 class CreateTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
+	task_predicted_values = TaskFormulaAttributeSerializer(source='getTaskPredictedAttributes', read_only=True, many=True)
+
+
+	def getTaskPredictedAttributes(self, task_attribute):
+		return TaskFormulaAttribute.objects.filter(task=task_attribute.task)
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'task_predicted_values')
 
 	def create(self, validated_data):
 		print(validated_data)

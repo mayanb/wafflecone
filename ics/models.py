@@ -400,6 +400,8 @@ class TaskAttribute(models.Model):
 	value = models.CharField(max_length=50, blank=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
+	def getTaskPredictedAttributes(self):
+		return TaskFormulaAttribute.objects.filter(task=self.task)
 
 class TaskFormulaAttribute(models.Model):
 	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE)
