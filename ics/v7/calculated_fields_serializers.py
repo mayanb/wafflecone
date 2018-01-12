@@ -41,9 +41,11 @@ class FormulaAttributeDeleteSerializer(serializers.ModelSerializer):
 
 
 class FormulaAttributeCreateSerializer(serializers.ModelSerializer):
+	attribute_obj = AttributeSerializer(source='attribute', read_only=True)
 	class Meta:
 		model = FormulaAttribute
-		fields = ('id', 'attribute', 'is_trashed', 'product_type', 'formula', 'comparator')
+		fields = ('id', 'attribute', 'attribute_obj', 'is_trashed', 'product_type', 'formula', 'comparator')
+
 
 	def create(self, validated_data):
 		print("hi1")
