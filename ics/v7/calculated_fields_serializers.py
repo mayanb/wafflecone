@@ -29,9 +29,6 @@ class FormulaAttributeDeleteSerializer(serializers.ModelSerializer):
 	def update(self, instance, validated_data):
 		instance.is_trashed = True
 		instance.save()
-		attribute = instance.attribute
-		attribute.is_trashed = True
-		attribute.save()
 		dependencies = FormulaDependency.objects.filter(formula_attribute=instance).update(is_trashed=True)
 		return instance
 
