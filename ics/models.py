@@ -349,6 +349,9 @@ class Task(models.Model):
 		if new_level_tasks:
 			self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
 
+	def getAllPredictedAttributes(self):
+		return TaskFormulaAttribute.objects.filter(task=self)
+
 
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
@@ -375,15 +378,18 @@ class Item(models.Model):
 		super(Item, self).save(*args, **kwargs)
 
 
-
-
- 
-
 class Input(models.Model):
 	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 
 
+
+class FormulaAttribute(models.Model):
+	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+	formula = models.TextField()
+	comparator = models.CharField(max_length=2)
+	is_trashed = models.BooleanField(default=False)
 
 
 
@@ -394,8 +400,18 @@ class TaskAttribute(models.Model):
 	value = models.CharField(max_length=50, blank=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
+	def getTaskPredictedAttributes(self):
+		return TaskFormulaAttribute.objects.filter(task=self.task)
 
+class TaskFormulaAttribute(models.Model):
+	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	predicted_value = models.CharField(max_length=50, blank=True)
 
+class FormulaDependency(models.Model):
+	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE, related_name="ancestors")
+	dependency = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name="dependencies")
+	is_trashed = models.BooleanField(default=False)
 
 
 ##################################

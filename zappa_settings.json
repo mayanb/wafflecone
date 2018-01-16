@@ -2,7 +2,6 @@
     "staging": {
         "django_settings": "logistics.settings", 
         "aws_region": "us-west-1", 
-        "profile_name": "default", 
         "s3_bucket": "zappa-polymer",
         "slim_handler": "False",
          "vpc_config" : {
@@ -13,7 +12,6 @@
     "production": {
         "django_settings": "logistics.settings", 
         "aws_region": "us-west-1", 
-        "profile_name": "default", 
         "s3_bucket": "zappa-polymer",
         "slim_handler": "False",
          "vpc_config" : {
@@ -24,7 +22,6 @@
     "demo": {
         "django_settings": "logistics.settings", 
         "aws_region": "us-west-1", 
-        "profile_name": "default", 
         "s3_bucket": "zappa-polymer",
         "slim_handler": "False",
          "vpc_config" : {
