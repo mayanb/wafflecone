@@ -202,9 +202,10 @@ class CreateTaskAttributeSerializer(serializers.ModelSerializer):
 			print("updating/creating a taskformulaatribute")
 			formula_attr = dependent_attr.formula_attribute
 			predicted = calculateFormula(formula_attr.formula, task_obj)
-
-			TaskFormulaAttribute.objects.update_or_create(formula_attribute=formula_attr, task=task_obj, defaults={'predicted_value': predicted})
-
+			if(predicted != None):
+				TaskFormulaAttribute.objects.update_or_create(formula_attribute=formula_attr, task=task_obj, defaults={'predicted_value': predicted})
+			else:
+				TaskFormulaAttribute.objects.update_or_create(formula_attribute=formula_attr, task=task_obj, defaults={'predicted_value': ""})
 		return new_task_attribute
 
 
@@ -215,8 +216,9 @@ def calculateFormula(formula, task_obj):
 	attribute_objects = Attribute.objects.filter(id__in=dependent_attributes)
 
 	for attribute in attribute_objects:
-		dependent_task_attribute = TaskAttribute.objects.filter(attribute=attribute, task=task_obj).latest('updated_at')
-		dependent_attr_map[attribute.id] = dependent_task_attribute.value
+		if(TaskAttribute.objects.filter(attribute=attribute, task=task_obj).count() > 0):
+			dependent_task_attribute = TaskAttribute.objects.filter(attribute=attribute, task=task_obj).latest('updated_at')
+			dependent_attr_map[attribute.id] = dependent_task_attribute.value
 
 	if all(value != None for value in dependent_attr_map.values()):
 		# fill in the formula with all the values
@@ -227,10 +229,14 @@ def calculateFormula(formula, task_obj):
 			filled_in_formula = string.replace(filled_in_formula, attr_id_str, dependent_attr_map[attr_id])
 		print("*************************************")
 		print(filled_in_formula)
+		if(('{' in filled_in_formula) or ('}' in filled_in_formula)):
+			return None
 		new_predicted_value = eval(filled_in_formula)
 		return new_predicted_value
 	else:
 		return None
+
+
 
 
 # def updateDependencies(root_formula_attribute, task):
