@@ -13,7 +13,7 @@ easy_format = '%Y-%m-%d %H:%M'
 
 class AttributeSerializer(serializers.ModelSerializer):
 	rank = serializers.IntegerField(read_only=True)
-	process_name = serializers.CharField(source='process_type.name')
+	process_name = serializers.CharField(source='process_type.name', read_only=True)
 
 	class Meta:
 		model = Attribute
