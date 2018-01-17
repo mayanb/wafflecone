@@ -13,6 +13,9 @@ urlpatterns = [
     url(r'^userprofiles/(?P<pk>[0-9]+)/$', views.UserProfileGet.as_view()),
     url(r'^userprofiles/edit/(?P<pk>[0-9]+)/$', views.UserProfileEdit.as_view()),
     url(r'^userprofiles/last-seen/(?P<pk>[0-9]+)/$', views.UserProfileLastSeenUpdate.as_view()),
+    url(r'^userprofiles/increment-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileIncrementWalkthroughUpdate.as_view()),
+    url(r'^userprofiles/complete-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileCompleteWalkthroughUpdate.as_view()),
+
 
     url(r'^users/create/$', views.UserProfileCreate.as_view(), name='create_userprofile'),
 

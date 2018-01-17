@@ -63,6 +63,14 @@ class UserProfileLastSeenUpdate(generics.UpdateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UpdateUserProfileLastSeenSerializer
 
+class UserProfileIncrementWalkthroughUpdate(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = IncrementUserProfileWalkthroughSerializer
+
+class UserProfileCompleteWalkthroughUpdate(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = CompleteUserProfileWalkthroughSerializer
+
 
 ######################
 # GOAL-RELATED VIEWS #

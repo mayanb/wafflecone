@@ -40,6 +40,7 @@ class UserProfile(models.Model):
 	account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 	send_emails = models.BooleanField(default=True)
 	last_seen = models.DateTimeField(default=datetime.now)
+	walkthrough = models.IntegerField(default=0)
 
 	def get_username_display(self):
 		print(self.user.username)
