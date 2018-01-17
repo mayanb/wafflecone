@@ -37,4 +37,5 @@ jobs:
       - run:
           name: Run database migration
           command: |
+            source venv/bin/activate
             zappa manage staging migrate
