@@ -5,6 +5,8 @@ from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
 from model_utils import *
+import re
+import string
 # from ics.v7.calculated_fields_serializers import TaskFormulaAttributeSerializer
 
 easy_format = '%Y-%m-%d %H:%M'
@@ -73,7 +75,7 @@ class ProductTypeBasicSerializer(serializers.ModelSerializer):
 		print(product.created_by)
 		username = product.created_by.username
 		return username.split("_",1)[1] 
-		
+
 	class Meta:
 		model = ProductType
 		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at')
@@ -109,6 +111,35 @@ class BasicItemSerializer(serializers.ModelSerializer):
 		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory')
 
 
+
+def calculateFormula(formula, task_obj):
+	filled_in_formula = formula
+	dependent_attributes = re.findall(r'(?<=\{)\d*(?=\})', formula)
+	dependent_attr_map = {}
+	attribute_objects = Attribute.objects.filter(id__in=dependent_attributes)
+
+	for attribute in attribute_objects:
+		if(TaskAttribute.objects.filter(attribute=attribute, task=task_obj).count() > 0):
+			dependent_task_attribute = TaskAttribute.objects.filter(attribute=attribute, task=task_obj).latest('updated_at')
+			dependent_attr_map[attribute.id] = dependent_task_attribute.value
+
+	if all(value != None for value in dependent_attr_map.values()):
+		# fill in the formula with all the values
+		for attr_id in dependent_attr_map:
+			attr_id_str = "{" + str(attr_id) + "}"
+			print(attr_id_str)
+			print(dependent_attr_map[attr_id])
+			filled_in_formula = string.replace(filled_in_formula, attr_id_str, dependent_attr_map[attr_id])
+		print("*************************************")
+		print(filled_in_formula)
+		if(('{' in filled_in_formula) or ('}' in filled_in_formula)):
+			return None
+		new_predicted_value = eval(filled_in_formula)
+		return new_predicted_value
+	else:
+		return None
+
+
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
@@ -117,6 +148,20 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
+
+	def create(self, validated_data):
+		print(validated_data)
+		task = Task.objects.create(**validated_data)
+		formula_attrs = FormulaAttribute.objects.filter(product_type=task.product_type, attribute__process_type=task.process_type, is_trashed=False)
+		for formula_attr in formula_attrs:
+			predicted_val = calculateFormula(formula_attr.formula, task)
+			if (predicted_val != None):
+				TaskFormulaAttribute.objects.create(formula_attribute=formula_attr, task=task, predicted_value=predicted_val)
+			else:
+				TaskFormulaAttribute.objects.create(formula_attribute=formula_attr, task=task)
+			print("creating..........")
+		return task
+
 
 class NestedItemSerializer(serializers.ModelSerializer):
 	creating_task = BasicTaskSerializer(many=False, read_only=True)
