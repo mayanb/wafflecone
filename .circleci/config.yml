@@ -34,3 +34,7 @@ jobs:
           name: Upload Environment Variables to AWS Lambda function
           command: |
             bash uploadEnvs.sh staging
+      - run:
+          name: Run database migration
+          command: |
+            zappa manage staging migrate
