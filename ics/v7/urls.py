@@ -14,12 +14,12 @@ urlpatterns = [
     url(r'^userprofiles/edit/(?P<pk>[0-9]+)/$', views.UserProfileEdit.as_view()),
     url(r'^userprofiles/last-seen/(?P<pk>[0-9]+)/$', views.UserProfileLastSeenUpdate.as_view()),
 
-    url(r'^users/create/$', views.UserProfileCreate.as_view()),
+    url(r'^users/create/$', views.UserProfileCreate.as_view(), name='create_userprofile'),
 
 
     url(r'^teams/$', views.TeamList.as_view()),
     url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGet.as_view()),
-    url(r'^teams/create/$', views.TeamCreate.as_view()),
+    url(r'^teams/create/$', views.TeamCreate.as_view(), name='create_team'),
 
 
     url(r'^$', views.index, name='index'),
@@ -41,15 +41,15 @@ urlpatterns = [
     url(r'^inputs/$', views.InputList.as_view()),
     url(r'^inputs/(?P<pk>[0-9]+)/$', views.InputDetail.as_view()),
 
-    url(r'^processes/$', views.ProcessList.as_view()),
+    url(r'^processes/$', views.ProcessList.as_view(), name='processes'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view()),
     url(r'^processes/move/(?P<pk>[0-9]+)/$', views.ProcessMoveDetail.as_view()),
 
-    url(r'^products/$', views.ProductList.as_view()),
+    url(r'^products/$', views.ProductList.as_view(), name='products'),
     url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view()),
     url(r'^products/codes/$', views.ProductCodes.as_view()),
 
-    url(r'^attributes/$', views.AttributeList.as_view()),
+    url(r'^attributes/$', views.AttributeList.as_view(), name='attributes'),
     url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),
     url(r'^attributes/move/(?P<pk>[0-9]+)/$', views.ReorderAttribute.as_view()),
 
