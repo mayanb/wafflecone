@@ -170,7 +170,7 @@ class CreateTaskFlow(generics.CreateAPIView):
 
 # tasks/search/?label=[str]
 class TaskSearch(generics.ListAPIView):
-  serializer_class = EditTaskSerializer
+  serializer_class = NestedTaskSerializer
   pagination_class = SmallPagination
   filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_class = TaskFilter
