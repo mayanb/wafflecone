@@ -13,6 +13,9 @@ urlpatterns = [
     url(r'^userprofiles/(?P<pk>[0-9]+)/$', views.UserProfileGet.as_view()),
     url(r'^userprofiles/edit/(?P<pk>[0-9]+)/$', views.UserProfileEdit.as_view()),
     url(r'^userprofiles/last-seen/(?P<pk>[0-9]+)/$', views.UserProfileLastSeenUpdate.as_view()),
+    url(r'^userprofiles/increment-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileIncrementWalkthroughUpdate.as_view()),
+    url(r'^userprofiles/complete-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileCompleteWalkthroughUpdate.as_view()),
+
 
     url(r'^users/create/$', views.UserProfileCreate.as_view(), name='create_userprofile'),
 
@@ -31,6 +34,7 @@ urlpatterns = [
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
     url(r'^tasks/flow/$', views.CreateTaskFlow.as_view()),
+    url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
 
 
     url(r'^items/create/$', views.CreateItem.as_view()),

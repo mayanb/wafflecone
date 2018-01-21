@@ -63,6 +63,14 @@ class UserProfileLastSeenUpdate(generics.UpdateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = UpdateUserProfileLastSeenSerializer
 
+class UserProfileIncrementWalkthroughUpdate(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = IncrementUserProfileWalkthroughSerializer
+
+class UserProfileCompleteWalkthroughUpdate(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = CompleteUserProfileWalkthroughSerializer
+
 
 ######################
 # GOAL-RELATED VIEWS #
@@ -159,10 +167,14 @@ class CreateTaskFlow(generics.CreateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = FlowTaskSerializer
 
+class DeleteTask(generics.UpdateAPIView):
+  queryset = Task.objects.filter(is_trashed=False)
+  serializer_class = DeleteTaskSerializer
+
 
 # tasks/search/?label=[str]
 class TaskSearch(generics.ListAPIView):
-  serializer_class = EditTaskSerializer
+  serializer_class = NestedTaskSerializer
   pagination_class = SmallPagination
   filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_class = TaskFilter
