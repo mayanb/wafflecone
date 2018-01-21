@@ -167,6 +167,10 @@ class CreateTaskFlow(generics.CreateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = FlowTaskSerializer
 
+class DeleteTask(generics.UpdateAPIView):
+  queryset = Task.objects.filter(is_trashed=False)
+  serializer_class = DeleteTaskSerializer
+
 
 # tasks/search/?label=[str]
 class TaskSearch(generics.ListAPIView):

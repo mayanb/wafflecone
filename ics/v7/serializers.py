@@ -103,6 +103,11 @@ class EditTaskSerializer(serializers.ModelSerializer):
 		model = Task
 		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'search')
 
+class DeleteTaskSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Task
+		fields = ('id', 'is_trashed')
+
 class BasicItemSerializer(serializers.ModelSerializer):
 	is_used = serializers.CharField(read_only=True)
 
