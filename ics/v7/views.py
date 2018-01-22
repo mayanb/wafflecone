@@ -99,6 +99,9 @@ class UserProfileCompleteWalkthroughUpdate(generics.UpdateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = CompleteUserProfileWalkthroughSerializer
 
+class UserProfileClearToken(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = ClearUserProfileTokenSerializer
 
 ######################
 # GOAL-RELATED VIEWS #

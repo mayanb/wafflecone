@@ -684,5 +684,27 @@ class CompleteUserProfileWalkthroughSerializer(serializers.ModelSerializer):
 		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
 
 
+class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
+	team_name = serializers.CharField(source='team.name', read_only=True)
+	team = serializers.CharField(source='team.id', read_only=True)
+	profile_id = serializers.CharField(source='id', read_only=True)
+	user_id = serializers.CharField(source='user.id', read_only=True)
+	username = serializers.CharField(source='user.username', read_only=True)
+	username_display = serializers.CharField(source='get_username_display', read_only=True)
+	first_name = serializers.CharField(source='user.first_name', read_only=True)
+	last_name = serializers.CharField(source='user.last_name', read_only=True)
+	last_seen = serializers.DateTimeField(read_only=True)
+	# walkthrough = serializers.IntegerField(read_only=True)
+
+	def update(self, instance, validated_data):
+		instance.gauth_email = ""
+		instance.gauth_access_token = ""
+		instance.save()
+		return instance
+
+	class Meta:
+		model = UserProfile
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
+
 
 
