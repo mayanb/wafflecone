@@ -7,6 +7,10 @@ import oauth2client.contrib.django_util.site as django_util_site
 
 
 urlpatterns = [
+    url(r'^use-code/$', views.UseCode.as_view()),
+    url(r'^is-code-available/$', views.IsCodeAvailable.as_view()),
+    url(r'^codes/$', views.InviteCodeList.as_view()), 
+
     url(r'^users/$', views.UserList.as_view()),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserGet.as_view()),
     url(r'^userprofiles/$', views.UserProfileList.as_view()),

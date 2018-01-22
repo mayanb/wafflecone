@@ -11,6 +11,21 @@ import string
 
 easy_format = '%Y-%m-%d %H:%M'
 
+class InviteCodeSerializer(serializers.ModelSerializer):
+	invite_code = serializers.CharField(read_only=True)
+	is_used = serializers.BooleanField(read_only=True)
+
+	# def update(self, instance, validated_data):	
+	# 	code = validated_data.get('code')
+	# 	invitecode = InviteCode.objects.get(invite_code=code)
+	# 	invitecode.is_used = True
+	# 	invitecode.save()
+	# 	return invitecode
+
+	class Meta:
+		model = InviteCode
+		fields = ('id', 'invite_code', 'is_used')
+
 class AttributeSerializer(serializers.ModelSerializer):
 	rank = serializers.IntegerField(read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)

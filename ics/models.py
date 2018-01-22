@@ -16,6 +16,10 @@ import constants
 
 
 # AUTH MODELS
+class InviteCode(models.Model):
+	invite_code = models.CharField(max_length=100, unique=True)
+	is_used = models.BooleanField(default=False)
+
 class Team(models.Model):
 	name = models.CharField(max_length=50, unique=True)
 
