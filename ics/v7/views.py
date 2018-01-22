@@ -55,15 +55,6 @@ class UseCode(generics.ListAPIView):
     print(InviteCode.objects.filter(invite_code=code))
     return InviteCode.objects.filter(invite_code=code)
 
-  # def get_object(self):
-  #   queryset = InviteCode.objects.filter(is_used=False)
-  #   # make sure to catch 404's below
-  #   code = self.request.query_params.get('code', None)
-  #   print(code)
-  #   obj = queryset.get(invite_code=code)
-  #   print(obj)
-  #   return obj
-
 class ReorderAttribute(generics.UpdateAPIView):
   queryset = Attribute.objects.all()
   serializer_class = ReorderAttributeSerializer
