@@ -27,6 +27,34 @@ import pytz
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
+class IsCodeAvailable(generics.ListAPIView):
+  queryset = InviteCode.objects.filter(is_used=False)
+  serializer_class = InviteCodeSerializer
+
+  def get_queryset(self):
+    code = self.request.query_params.get('code', None)
+    return InviteCode.objects.filter(is_used=False, invite_code=code)
+
+class InviteCodeList(generics.ListAPIView):
+  queryset = InviteCode.objects.all()
+  serializer_class = InviteCodeSerializer
+
+class UseCode(generics.ListAPIView):
+  queryset = InviteCode.objects.all()
+  serializer_class = InviteCodeSerializer
+
+  def get_queryset(self):
+    code = self.request.query_params.get('code', None)
+    print(code)
+    invitecode = InviteCode.objects.filter(invite_code=code, is_used=False)
+    print(invitecode)
+    if invitecode.count() == 0:
+      print("none")
+      return InviteCode.objects.none()
+    invitecode.update(is_used=True)
+    print(InviteCode.objects.filter(invite_code=code))
+    return InviteCode.objects.filter(invite_code=code)
+
 class ReorderAttribute(generics.UpdateAPIView):
   queryset = Attribute.objects.all()
   serializer_class = ReorderAttributeSerializer
@@ -71,6 +99,9 @@ class UserProfileCompleteWalkthroughUpdate(generics.UpdateAPIView):
   queryset = UserProfile.objects.all()
   serializer_class = CompleteUserProfileWalkthroughSerializer
 
+class UserProfileClearToken(generics.UpdateAPIView):
+  queryset = UserProfile.objects.all()
+  serializer_class = ClearUserProfileTokenSerializer
 
 ######################
 # GOAL-RELATED VIEWS #

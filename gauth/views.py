@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view
 import requests
 import datetime
 from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
+from django.core import serializers
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
@@ -62,19 +63,20 @@ def createAuthToken(request):
 # @csrf_exempt
 @api_view(['POST'])
 def clearToken(request):
-  received_json_data = json.loads(request.body.decode("utf-8"))
-  user_id = received_json_data["user_id"]
+  # received_json_data = json.loads(request.body.decode("utf-8"))
+  user_id = request.POST.get('user_id')
+  print(user_id)
+  # user_id = received_json_data["user_id"]
   user_profile = UserProfile.objects.get(user=user_id)
+  print(user_profile.gauth_email)
   user_profile.gauth_access_token = ""
+  user_profile.gauth_email = ""
   # # user_profile.gauth_refresh_token = token['refresh_token']
   # # user_profile.expires_in = ""
   # # user_profile.expires_at = ""
   user_profile.save()
-  response = HttpResponse(user_profile, content_type="text/plain")
+  response = HttpResponse(serializers.serialize('json', [user_profile]))
   return response;
-
-
-
 
 def activityArray(process, start, end, team):
   easy_format = '%Y-%m-%d %H:%M'

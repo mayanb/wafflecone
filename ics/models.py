@@ -16,6 +16,10 @@ import constants
 
 
 # AUTH MODELS
+class InviteCode(models.Model):
+	invite_code = models.CharField(max_length=100, unique=True)
+	is_used = models.BooleanField(default=False)
+
 class Team(models.Model):
 	name = models.CharField(max_length=50, unique=True)
 
@@ -40,7 +44,7 @@ class UserProfile(models.Model):
 	account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 	send_emails = models.BooleanField(default=True)
 	last_seen = models.DateTimeField(default=datetime.now)
-	walkthrough = models.IntegerField(default=-1)
+	walkthrough = models.IntegerField(default=1)
 
 	def get_username_display(self):
 		print(self.user.username)

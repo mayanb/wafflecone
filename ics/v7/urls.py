@@ -7,11 +7,16 @@ import oauth2client.contrib.django_util.site as django_util_site
 
 
 urlpatterns = [
+    url(r'^use-code/$', views.UseCode.as_view()),
+    url(r'^is-code-available/$', views.IsCodeAvailable.as_view()),
+    url(r'^codes/$', views.InviteCodeList.as_view()), 
+
     url(r'^users/$', views.UserList.as_view()),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserGet.as_view()),
     url(r'^userprofiles/$', views.UserProfileList.as_view()),
     url(r'^userprofiles/(?P<pk>[0-9]+)/$', views.UserProfileGet.as_view()),
     url(r'^userprofiles/edit/(?P<pk>[0-9]+)/$', views.UserProfileEdit.as_view()),
+    url(r'^userprofiles/clear-token/(?P<pk>[0-9]+)/$', views.UserProfileClearToken.as_view()),
     url(r'^userprofiles/last-seen/(?P<pk>[0-9]+)/$', views.UserProfileLastSeenUpdate.as_view()),
     url(r'^userprofiles/increment-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileIncrementWalkthroughUpdate.as_view()),
     url(r'^userprofiles/complete-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileCompleteWalkthroughUpdate.as_view()),
