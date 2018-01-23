@@ -376,7 +376,7 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.filter(is_trashed=False)
   serializer_class = ProcessTypeSerializer
-  filter_fields = ('created_by', 'team_created_by')
+  filter_fields = ('created_by', 'team_created_by', 'id')
 
 # processes/[pk]/
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
