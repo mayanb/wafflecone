@@ -37,14 +37,20 @@ class AttributeSerializer(serializers.ModelSerializer):
 class ProcessTypeSerializer(serializers.ModelSerializer):
 	attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
 	created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+	username = serializers.SerializerMethodField(source='get_username', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
 	icon = serializers.CharField(read_only=True)
 	x = serializers.CharField(read_only=True)
 	y = serializers.CharField(read_only=True)
+
+	def get_username(self, product):
+		print(product.created_by)
+		username = product.created_by.username
+		return username.split("_",1)[1] 
 	
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
