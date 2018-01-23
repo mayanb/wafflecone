@@ -650,7 +650,7 @@ class IncrementUserProfileWalkthroughSerializer(serializers.ModelSerializer):
 	first_name = serializers.CharField(source='user.first_name', read_only=True)
 	last_name = serializers.CharField(source='user.last_name', read_only=True)
 	last_seen = serializers.DateTimeField(read_only=True)
-	# walkthrough = serializers.IntegerField(read_only=True)
+	walkthrough = serializers.IntegerField(read_only=True)
 
 	def update(self, instance, validated_data):
 		current_walkthrough_screen = instance.walkthrough
