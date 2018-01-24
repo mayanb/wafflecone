@@ -20,7 +20,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: change this before deploying to production!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", '1234')
+SECRET_KEY = os.environ.get("WAFFLE_DJANGO_SECRET_KEY", '1234')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -104,11 +104,11 @@ WSGI_APPLICATION = 'logistics.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get("DB_NAME", ''),
-        'USER': os.environ.get("DB_USER", ''),
-        'PASSWORD': os.environ.get("DB_PASSWORD", ''),
-        'HOST': os.environ.get("DB_HOST", ''),
-        'PORT': os.environ.get("DB_PORT", ''),
+        'NAME': os.environ.get("WAFFLE_DB_NAME", ''),
+        'USER': os.environ.get("WAFFLE_DB_USER", ''),
+        'PASSWORD': os.environ.get("WAFFLE_DB_PASSWORD", ''),
+        'HOST': os.environ.get("WAFFLE_DB_HOST", ''),
+        'PORT': os.environ.get("WAFFLE_DB_PORT", ''),
     }
 }
 
@@ -133,7 +133,7 @@ JWT_AUTH = {
     'JWT_REFRESH_EXPIRATION_DELTA' : datetime.timedelta(days=21),
 }
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'ics.v4.serializers.UserDetailSerializer',
+    'USER_DETAILS_SERIALIZER': 'ics.v7.serializers.UserDetailSerializer',
 }
 
 # Password validation
@@ -191,9 +191,9 @@ STATICFILES_DIRS = (
 
 
 #django-storages setup for leveraging s3
-AWS_STORAGE_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", '')
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS", '')
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET", '')
+AWS_STORAGE_BUCKET_NAME = os.environ.get("WAFFLE_S3_BUCKET_NAME", '')
+AWS_ACCESS_KEY_ID = os.environ.get("WAFFLE_AWS_ACCESS", '')
+AWS_SECRET_ACCESS_KEY = os.environ.get("WAFFLE_AWS_SECRET", '')
 
  # Tell django-storages that when coming up with the URL for an item in S3 storage, keep
     # it simple - just use this domain plus the path. (If this isn't set, things get complicated).
@@ -215,10 +215,10 @@ STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_S3_HOST = "s3-us-west-1.amazonaws.com"
 S3_USE_SIGV4 = True
 
-GOOGLE_OAUTH2_CLIENT_ID = os.environ.get("GOOGLE_OAUTH2_CLIENT_ID", '')
-GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET", '')
-GOOGLE_OAUTH2_API_KEY = os.environ.get("GOOGLE_OAUTH2_API_KEY", '')
-GOOGLEAUTH_CALLBACK_DOMAIN = os.environ.get("GOOGLEAUTH_CALLBACK_DOMAIN", '')
+GOOGLE_OAUTH2_CLIENT_ID = os.environ.get("WAFFLE_GOOGLE_OAUTH2_CLIENT_ID", '')
+GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get("WAFFLE_GOOGLE_OAUTH2_CLIENT_SECRET", '')
+GOOGLE_OAUTH2_API_KEY = os.environ.get("WAFFLE_GOOGLE_OAUTH2_API_KEY", '')
+GOOGLEAUTH_CALLBACK_DOMAIN = os.environ.get("WAFFLE_GOOGLEAUTH_CALLBACK_DOMAIN", '')
 
 GOOGLEAUTH_SCOPE = [
     'https://www.googleapis.com/auth/spreadsheets', 
@@ -230,7 +230,7 @@ GOOGLEAUTH_SCOPE = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
-#CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
+#CORS_ORIGIN_WHITELIST = os.environ.get("WAFFLE_CORS_ORIGIN_WHITELIST", '').split(' ')
 CORS_ALLOW_CREDENTIALS = True
 
 from corsheaders.defaults import default_headers
@@ -242,6 +242,6 @@ CORS_ALLOW_HEADERS = default_headers + (
 
 
 
-CSRF_TRUSTED_ORIGINS = os.environ.get("CORS_ORIGIN_WHITELIST", '').split(' ')
+CSRF_TRUSTED_ORIGINS = os.environ.get("WAFFLE_CORS_ORIGIN_WHITELIST", '').split(' ')
 
 #INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']
