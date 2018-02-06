@@ -226,10 +226,9 @@ class TaskSearch(generics.ListAPIView):
       query = SearchQuery(label)
       # queryset.annotate(rank=SearchRank(F('search'), query)).filter(search=query).order_by('-rank')
       queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
-      print(queryset.query)
       # queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 
-    return queryset
+    return queryset.select_related().prefetch_related('attribute_values', 'items', 'inputs')
 
 
 # tasks/
