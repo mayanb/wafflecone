@@ -1164,6 +1164,16 @@ class AlertEdit(generics.UpdateAPIView):
   queryset = Alert.objects.all()
   serializer_class = AlertSerializer
 
+class AlertsMarkAsRead(generics.ListAPIView):
+  queryset = Alert.objects.all()
+  serializer_class = AlertSerializer
+
+  def get_queryset(self):
+    alert_ids = self.request.query_params.get('alert_ids', None)
+    alert_ids = alert_ids.split(',')
+    queryset = Alert.objects.filter(pk__in=alert_ids)
+    queryset.update(is_displayed=False)
+    return queryset
 
 
 ###################################
