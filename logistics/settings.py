@@ -45,9 +45,9 @@ INSTALLED_APPS = (
     'corsheaders',
     'gauth',
     'graphs',
-    'rest_auth'
+    'rest_auth',
     #'dashboard', 
-    #'debug_toolbar',
+    'silk',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -55,7 +55,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'silk.middleware.SilkyMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -244,4 +244,4 @@ CORS_ALLOW_HEADERS = default_headers + (
 
 CSRF_TRUSTED_ORIGINS = os.environ.get("WAFFLE_CORS_ORIGIN_WHITELIST", '').split(' ')
 
-#INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']
+INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']

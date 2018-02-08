@@ -410,7 +410,7 @@ class TaskAttribute(models.Model):
 
 class TaskFormulaAttribute(models.Model):
 	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE)
-	task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="formula_attributes")
 	predicted_value = models.CharField(max_length=50, blank=True)
 
 class FormulaDependency(models.Model):
