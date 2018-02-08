@@ -35,26 +35,29 @@ def test(request):
 def createAuthToken(request):
   auth_response = request.POST.get('auth_response')
   user_id = request.POST.get('user_id')
-  oauth = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, 
+  oauth = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID,
     redirect_uri=settings.GOOGLEAUTH_CALLBACK_DOMAIN, 
     scope=settings.GOOGLEAUTH_SCOPE)
   token = oauth.fetch_token('https://accounts.google.com/o/oauth2/token', 
     authorization_response=auth_response, 
     client_secret=settings.GOOGLE_OAUTH2_CLIENT_SECRET)
+
+  # get information about this google user
   google_user_data = oauth.get('https://www.googleapis.com/plus/v1/people/me')
   google_user = google_user_data.json()
   google_user_email = google_user.get("emails")[0].get("value")
-  print(google_user_email)
-  print(token)
   token['user_id'] = user_id
+
+  # update the userprofile object
   user_profile = UserProfile.objects.get(user=user_id)
-  print(user_profile.id)
   user_profile.gauth_access_token = token['access_token']
-  # user_profile.gauth_refresh_token = token['refresh_token']
+  user_profile.gauth_refresh_token = token['refresh_token']
   user_profile.expires_in = token['expires_in']
   user_profile.expires_at = token['expires_at']
   user_profile.gauth_email = google_user_email
   user_profile.save()
+
+  # success response
   response = HttpResponse(json.dumps({"token": token['access_token'], "email": google_user_email}), content_type="text/plain")
   return response;
 
@@ -143,8 +146,7 @@ def createSpreadsheet(request):
   token = {}
   # token['access_token'] = 'ya29.GlvIBC1eeMAd_vmPZLLlqY8erwyCvx8kn2qmZChRTSMabPEscXUVsNUZWO2dguIqF6KopAZqZxUYlMVVviEgpYuYGJFFLmP4IkF9zVXNHINo7V8cACFAhWwzU6X-'
   token['access_token'] = user_profile.gauth_access_token
-  token['refresh_token'] = 'afsdsd'
-  # user_profile.gauth_refresh_token
+  token['refresh_token'] = user_profile.gauth_refresh_token
   token['token_type'] = 'Bearer'
   # token['expires_in']=3600
   token['expires_in'] = user_profile.expires_in
@@ -189,7 +191,7 @@ def createAuthURL(request):
   user_id = request.GET.get('user_id')
   user_profile = UserProfile.objects.get(user=user_id)
   oauth = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, redirect_uri=settings.GOOGLEAUTH_CALLBACK_DOMAIN, scope=settings.GOOGLEAUTH_SCOPE)
-  authorization_url, state = oauth.authorization_url( 'https://accounts.google.com/o/oauth2/auth', access_type="offline", prompt="select_account")
+  authorization_url, state = oauth.authorization_url( 'https://accounts.google.com/o/oauth2/auth', access_type="offline", prompt="consent")
   response = HttpResponse(authorization_url, content_type="text/plain")
   return response
 
