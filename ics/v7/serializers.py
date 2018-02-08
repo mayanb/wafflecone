@@ -705,6 +705,9 @@ class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
 	def update(self, instance, validated_data):
 		instance.gauth_email = ""
 		instance.gauth_access_token = ""
+		instance.gauth_refresh_token = ""
+		instance.expires_in = 0
+		instance.expires_at = 0
 		instance.save()
 		return instance
 
