@@ -1058,7 +1058,7 @@ class GetIncompleteGoals(generics.ListAPIView):
 
 class GetRecentAnomolousInputs(generics.ListAPIView):
   queryset = Input.objects.filter(task__is_trashed=False, input_item__creating_task__is_trashed=False)
-  serializer_class = BasicInputSerializer
+  serializer_class = AlertInputSerializer
 
   def get_queryset(self):
     queryset = Input.objects.filter(task__is_trashed=False, input_item__creating_task__is_trashed=False)
