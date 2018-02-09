@@ -42,6 +42,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 	icon = serializers.CharField(read_only=True)
 	x = serializers.CharField(read_only=True)
 	y = serializers.CharField(read_only=True)
+	created_at = serializers.DateTimeField(read_only=True)
 
 	def get_username(self, product):
 		print(product.created_by)
@@ -50,7 +51,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 	
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
