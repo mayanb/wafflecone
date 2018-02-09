@@ -1152,6 +1152,7 @@ class AlertList(generics.ListAPIView):
     endDate = dt.today() + timedelta(days=1)
     startDate = dt.today() - timedelta(days=1)
     queryset = queryset.filter(created_at__date__range=(startDate, endDate))
+    queryset = queryset.order_by('alert_type', '-created_at').distinct('alert_type')
 
     # get the unique alert_type and userprofile entries with the latest created_by
     return queryset
