@@ -655,18 +655,23 @@ class UserProfileChangePasswordSerializer(serializers.ModelSerializer):
 	last_name = serializers.CharField(source='user.last_name', read_only=True)
 	walkthrough = serializers.IntegerField(read_only=True)
 	new_password = serializers.CharField(write_only=True, required=True)
+	new_username = serializers.CharField(write_only=True, required=True)
 
 	def update(self, instance, validated_data):
-		new_pass = validated_data['new_password']
+		new_pass = validated_data.get('new_password', None)
+		new_uname = validated_data.get('new_username', None)
 		user = instance.user
-		user.set_password(new_pass)
+		if(new_pass):
+			user.set_password(new_pass)
+		if(new_uname):
+			user.username = new_uname + "_" + instance.team.name
 		user.save()
 		return instance
 
 	class Meta:
 		model = UserProfile
-		extra_kwargs = {'new_password': {'write_only': True}}
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'new_password')
+		extra_kwargs = {'new_password': {'write_only': True}, 'new_username': {'write_only': True}}
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'new_password', 'new_username')
 
 
 class UpdateUserProfileLastSeenSerializer(serializers.ModelSerializer):

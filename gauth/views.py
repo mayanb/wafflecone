@@ -15,6 +15,7 @@ import requests
 import datetime
 from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
 from django.core import serializers
+from django.core.mail import send_mail
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
@@ -186,6 +187,33 @@ def createSpreadsheet(request):
   body3 = json.loads(r3.content)
   return HttpResponse(r3, content_type='application/json')
 
+
+# @csrf_exempt
+@api_view(['POST'])
+def sendEmail(request):
+  userprofile_id = request.POST.get('userprofile')
+
+  userprofile = UserProfile.objects.get(pk=userprofile_id)
+  team_name = userprofile.team.name
+  email = userprofile.email
+
+  link = "https://dashboard.usepolymer.com/join/" + userprofile_id + "/"
+
+  subject = "You're invited to team " + team_name + " on Polymer!"
+  message = ""
+  html_message = "You have been invited to join team: <b>" + team_name + '</b> on Polymer. Click the link to accept your invitation and set your username/password. ' + link
+  try:
+    send_mail(
+        subject,
+        message,
+        'admin@polymerize.co',
+        [email],
+        fail_silently=False,
+        html_message=html_message,
+    )
+    return HttpResponse("Email sent!")
+  except SMTPException:
+    return HttpResponse("Failed to send email.")
 
 def createAuthURL(request):
   user_id = request.GET.get('user_id')
