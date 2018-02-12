@@ -166,15 +166,29 @@ def calculateFormula(formula, task_obj):
 	else:
 		return None
 
+class BasicInputSerializer(serializers.ModelSerializer):
+	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
+	input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
+	input_qr = serializers.CharField(source='input_item.item_qr', read_only=True)
+	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
+	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
+	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
+	task_display = serializers.CharField(source='task', read_only=True)
+
+	class Meta:
+		model = Input
+		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+
 
 # serializes all fields of task
 class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
+	inputs = BasicInputSerializer(many=True, read_only=True)
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		print(validated_data)
@@ -198,19 +212,6 @@ class NestedItemSerializer(serializers.ModelSerializer):
 		model = Item
 		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual', 'team_inventory')
 		read_only_fields = ('id', 'item_qr', 'creating_task', 'inventory', 'team_inventory')
-
-class BasicInputSerializer(serializers.ModelSerializer):
-	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
-	input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
-	input_qr = serializers.CharField(source='input_item.item_qr', read_only=True)
-	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
-	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
-	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
-	task_display = serializers.CharField(source='task', read_only=True)
-
-	class Meta:
-		model = Input
-		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
 
 class AlertInputSerializer(serializers.ModelSerializer):
 	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
