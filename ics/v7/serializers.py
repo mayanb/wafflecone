@@ -8,6 +8,7 @@ from datetime import date, datetime, timedelta
 from model_utils import *
 import re
 import string
+from django.core.mail import send_mail
 # from ics.v7.calculated_fields_serializers import TaskFormulaAttributeSerializer
 
 easy_format = '%Y-%m-%d %H:%M'
@@ -400,6 +401,30 @@ class UserProfileSerializer(serializers.ModelSerializer):
 		model = UserProfile
 		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
 
+
+
+def sendEmail(userprofile_id):
+  userprofile = UserProfile.objects.get(pk=userprofile_id)
+  team_name = userprofile.team.name
+  email = userprofile.email
+
+  link = "https://dashboard.usepolymer.com/join/" + str(userprofile_id) + "/"
+
+  subject = "You're invited to team " + team_name + " on Polymer!"
+  message = ""
+  html_message = "You have been invited to join team: <b>" + team_name + '</b> on Polymer. Click the link to accept your invitation and set your username/password. ' + link
+  try:
+    send_mail(
+        subject,
+        message,
+        'admin@polymerize.co',
+        [email],
+        fail_silently=False,
+        html_message=html_message,
+    )
+  except SMTPException:
+    print('ugh')
+
 class UserProfileCreateSerializer(serializers.ModelSerializer):
 	username = serializers.CharField(source='user.username')
 	password = serializers.CharField(source='user.password')
@@ -410,6 +435,7 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 	username_display = serializers.CharField(source='get_username_display', read_only=True)
 	walkthrough = serializers.IntegerField(read_only=True)
 	email = serializers.CharField()
+	invited = serializers.BooleanField(write_only=True)
 
 	def create(self, validated_data):
 		team = validated_data['team']
@@ -424,6 +450,14 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 		# create the userprofile
 		account_type = validated_data.get('account_type', 'a')
 		email = validated_data.get('email', '')
+		invited = validated_data.get('invited', False)
+
+		print(invited)
+
+		walkthrough_num = 1
+		if invited:
+			walkthrough_num = -1
+
 		userprofile = UserProfile.objects.create(
 			user=user, 
 			gauth_access_token="", 
@@ -431,14 +465,19 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 			token_type="", 
 			team=team,
 			account_type=account_type,
-			email=email
+			email=email,
+			walkthrough=walkthrough_num
 		)
+
+		if invited:
+			sendEmail(userprofile.id)
+
 		return userprofile
 
 	class Meta:
 		model = UserProfile
-		extra_kwargs = {'account_type': {'write_only': True}, 'password': {'write_only': True}}
-		fields = ('id', 'profile_id', 'username', 'password', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_email', 'email', 'username_display', 'walkthrough', 'email')
+		extra_kwargs = {'account_type': {'write_only': True}, 'password': {'write_only': True}, 'invited': {'write_only': True}}
+		fields = ('id', 'profile_id', 'username', 'password', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_email', 'email', 'username_display', 'walkthrough', 'email', 'invited')
 
 
 class TeamSerializer(serializers.ModelSerializer):
