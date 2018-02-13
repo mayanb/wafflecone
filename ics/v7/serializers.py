@@ -645,6 +645,36 @@ class AlertSerializer(serializers.ModelSerializer):
 		model = Alert
 		fields = ('id', 'alert_type', 'variable_content', 'is_displayed', 'userprofile', 'created_at')
 
+class UserProfileChangePasswordSerializer(serializers.ModelSerializer):
+	team_name = serializers.CharField(source='team.name', read_only=True)
+	team = serializers.CharField(source='team.id', read_only=True)
+	profile_id = serializers.CharField(source='id', read_only=True)
+	user_id = serializers.CharField(source='user.id', read_only=True)
+	username = serializers.CharField(source='user.username', read_only=True)
+	username_display = serializers.CharField(source='get_username_display', read_only=True)
+	first_name = serializers.CharField(source='user.first_name', read_only=True)
+	last_name = serializers.CharField(source='user.last_name', read_only=True)
+	walkthrough = serializers.IntegerField(read_only=True)
+	new_password = serializers.CharField(write_only=True, required=True)
+	new_username = serializers.CharField(write_only=True, required=True)
+
+	def update(self, instance, validated_data):
+		new_pass = validated_data.get('new_password', None)
+		new_uname = validated_data.get('new_username', None)
+		user = instance.user
+		if(new_pass):
+			user.set_password(new_pass)
+		if(new_uname):
+			user.username = new_uname + "_" + instance.team.name
+		user.save()
+		return instance
+
+	class Meta:
+		model = UserProfile
+		extra_kwargs = {'new_password': {'write_only': True}, 'new_username': {'write_only': True}}
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'new_password', 'new_username')
+
+
 class UpdateUserProfileLastSeenSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name', read_only=True)
 	team = serializers.CharField(source='team.id', read_only=True)
