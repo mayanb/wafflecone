@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ics.models import *
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
@@ -665,7 +666,13 @@ class UserProfileChangePasswordSerializer(serializers.ModelSerializer):
 		if(new_pass):
 			user.set_password(new_pass)
 		if(new_uname):
-			user.username = new_uname + "_" + instance.team.name
+			try:
+				user.username = new_uname + "_" + instance.team.name
+				user.full_clean()
+			except ValidationError:
+				raise serializers.ValidationError({"username": "Username already exists"})
+			else:
+				user.save()
 		user.save()
 		return instance
 
