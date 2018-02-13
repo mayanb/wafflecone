@@ -4,12 +4,15 @@ general:
   branches:
     only:
       - staging
+      - ci-test
 
 jobs:
   build:
     docker:
       - image: circleci/python:2.7.13
     working_directory: '~/wafflecone'
+    environment:
+
     steps:
       - checkout
       - restore_cache:
@@ -20,7 +23,7 @@ jobs:
             python -m virtualenv venv
             source venv/bin/activate
             pip install -r requirements.txt
-            sudo pip install awscli --upgrade
+            sudo pip install boto3
       - save_cache:
           key: deps2-{{ .Branch }}-{{ checksum "requirements.txt" }}
           paths:
@@ -29,13 +32,25 @@ jobs:
           name: Package and Deploy Django app using Zappa
           command: |
             source venv/bin/activate
-            zappa update staging
+            if [ "${CIRCLE_BRANCH}" == "ci-test" ]; then
+              zappa update staging
+            elif [ "${CIRCLE_BRANCH}" == "master" ]; then
+              zappa update staging
+            fi
       - run:
           name: Upload Environment Variables to AWS Lambda function
           command: |
-            bash uploadEnvs.sh staging
+            if [ "${CIRCLE_BRANCH}" == "ci-test" ]; then
+              python ./transformEnvs.py staging
+            elif [ "${CIRCLE_BRANCH}" == "master" ]; then
+              python ./transformEnvs.py staging
+            fi
       - run:
           name: Run database migration
           command: |
             source venv/bin/activate
-            zappa manage staging migrate
+            if [ "${CIRCLE_BRANCH}" == "ci-test" ]; then
+              zappa manage staging migrate
+            elif [ "${CIRCLE_BRANCH}" == "master" ]; then
+              zappa manage staging migrate
+            fi
