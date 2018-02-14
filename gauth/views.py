@@ -156,8 +156,8 @@ def createSpreadsheet(request):
   extra = {}
   extra['client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
   extra['client_secret'] = settings.GOOGLE_OAUTH2_CLIENT_SECRET
-  google = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, token=token, auto_refresh_url=refresh_url,
-    auto_refresh_kwargs=extra, token_updater=token_saver, scope=settings.GOOGLEAUTH_SCOPE)
+  google = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, token=token, auto_refresh_url=refresh_url, 
+    refresh_token=user_profile.gauth_refresh_token, auto_refresh_kwargs=extra, token_updater=token_saver, scope=settings.GOOGLEAUTH_SCOPE)
   r = google.post('https://sheets.googleapis.com/v4/spreadsheets')
   body = json.loads(r.content)
   spreadsheetID = body["spreadsheetId"]
