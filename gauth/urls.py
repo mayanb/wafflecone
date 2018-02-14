@@ -11,7 +11,7 @@ urlpatterns = [
     url(r'^create-spreadsheet/$', views.createSpreadsheet, name='z'),
     #url(r'^token-saver/$', views.token_saver, name='a'),
     url(r'^clear-token/$', views.clearToken, name='b'),
-    url(r'^send-email/$', views.sendEmail),
+    #url(r'^send-email/$', views.sendEmail),
     url(r'^test/$', views.test)
 
 
