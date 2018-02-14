@@ -43,5 +43,3 @@ def get_output_by_month(start, end, process_type):
 	).annotate(
 		num_tasks=Count('id', distinct=True)
 	).order_by('bucket')
-
-	return t
