@@ -8,7 +8,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from ics.models import *
 from django.http import HttpResponse
-from requests_oauthlib import OAuth2Session
+from requests_oauthlib import OAuth2Session, TokenUpdated
 from django.conf import settings
 from rest_framework.decorators import api_view
 import requests
@@ -18,6 +18,7 @@ from django.core import serializers
 from django.core.mail import send_mail
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
+REFRESH_URL = 'https://accounts.google.com/o/oauth2/token'
 
 # @csrf_exempt
 @api_view(['POST'])
@@ -30,6 +31,13 @@ def test(request):
   print(r.status_code, r.reason)  
   return HttpResponse(r);
 
+def createAuthURL(request):
+  user_id = request.GET.get('user_id')
+  user_profile = UserProfile.objects.get(user=user_id)
+  oauth = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, redirect_uri=settings.GOOGLEAUTH_CALLBACK_DOMAIN, scope=settings.GOOGLEAUTH_SCOPE)
+  authorization_url, state = oauth.authorization_url( 'https://accounts.google.com/o/oauth2/auth', access_type="offline", prompt="consent")
+  response = HttpResponse(authorization_url, content_type="text/plain")
+  return response
 
 # @csrf_exempt
 @api_view(['POST'])
@@ -51,28 +59,26 @@ def createAuthToken(request):
 
   # update the userprofile object
   user_profile = UserProfile.objects.get(user=user_id)
-  user_profile.gauth_access_token = token['access_token']
-  user_profile.gauth_refresh_token = token['refresh_token']
-  user_profile.expires_in = token['expires_in']
-  user_profile.expires_at = token['expires_at']
-  user_profile.gauth_email = google_user_email
+  update_userprofile_token(user_profile, token)
   user_profile.save()
 
   # success response
   response = HttpResponse(json.dumps({"token": token['access_token'], "email": google_user_email}), content_type="text/plain")
   return response;
 
-
+def update_userprofile_token(user_profile, token):
+  user_profile.gauth_access_token = token['access_token']
+  user_profile.gauth_refresh_token = token['refresh_token']
+  user_profile.expires_in = token['expires_in']
+  user_profile.expires_at = token['expires_at']
 
 # @csrf_exempt
 @api_view(['POST'])
 def clearToken(request):
   # received_json_data = json.loads(request.body.decode("utf-8"))
   user_id = request.POST.get('user_id')
-  print(user_id)
   # user_id = received_json_data["user_id"]
   user_profile = UserProfile.objects.get(user=user_id)
-  print(user_profile.gauth_email)
   user_profile.gauth_access_token = ""
   user_profile.gauth_email = ""
   # # user_profile.gauth_refresh_token = token['refresh_token']
@@ -134,32 +140,51 @@ def activityArray(process, start, end, team):
 @api_view(['POST'])
 def createSpreadsheet(request):
   user_id = request.POST.get('user_id')
+  user_profile = UserProfile.objects.get(user=user_id)
+  team = user_profile.team.id
   process = request.POST.get('process', None)
   start = request.POST.get('start', None)
   end = request.POST.get('end', None)
-  user_profile = UserProfile.objects.get(user=user_id)
-  team = user_profile.team.id
-  print(team)
-  data = activityArray(process, start, end, team)
+  token = {
+    'access_token': user_profile.gauth_access_token,
+    'refresh_token': user_profile.gauth_refresh_token,
+    'token_type':  'Bearer',
+    'expires_at': user_profile.expires_at,
+    'expires_in': user_profile.expires_in
+  }
+  extra = {
+    'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+    'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET
+  }
+
+  # try to authenticate or refresh the token
+  try: 
+    google = OAuth2Session(
+      settings.GOOGLE_OAUTH2_CLIENT_ID,
+      token=token, 
+      auto_refresh_url=REFRESH_URL, 
+      auto_refresh_kwargs=extra, 
+      scope=settings.GOOGLEAUTH_SCOPE
+    )
+    # do a random call to force the oauth2session to try to authenticate
+    google_user_data = google.get('https://www.googleapis.com/plus/v1/people/me')
+  except TokenUpdated as e:
+    update_userprofile_token(user_profile, e.token)
+    user_profile.save()
+
+  # get the spreadsheet data
+  title = str(ProcessType.objects.get(pk=process).name) + " " + str(start) + " to " + str(end)
+  data = activityArray(process, start, end, team)  
+
+  # post the spreadsheet to google & return happily
+  r = post_spreadsheet(google, title, data)
+  return HttpResponse(r, content_type='application/json')
 
 
-
-  token = {}
-  # token['access_token'] = 'ya29.GlvIBC1eeMAd_vmPZLLlqY8erwyCvx8kn2qmZChRTSMabPEscXUVsNUZWO2dguIqF6KopAZqZxUYlMVVviEgpYuYGJFFLmP4IkF9zVXNHINo7V8cACFAhWwzU6X-'
-  token['access_token'] = user_profile.gauth_access_token
-  token['refresh_token'] = user_profile.gauth_refresh_token
-  token['token_type'] = 'Bearer'
-  # token['expires_in']=3600
-  token['expires_in'] = user_profile.expires_in
-  token['expires_at'] = user_profile.expires_at
-  refresh_url = 'https://accounts.google.com/o/oauth2/token'
-  extra = {}
-  extra['client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
-  extra['client_secret'] = settings.GOOGLE_OAUTH2_CLIENT_SECRET
-  google = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, token=token, auto_refresh_url=refresh_url,
-    auto_refresh_kwargs=extra, token_updater=token_saver, scope=settings.GOOGLEAUTH_SCOPE)
+def post_spreadsheet(google, title, data):
   r = google.post('https://sheets.googleapis.com/v4/spreadsheets')
   body = json.loads(r.content)
+  print(body)
   spreadsheetID = body["spreadsheetId"]
   startRange = "Sheet1!A1:A1"
   body = {
@@ -169,11 +194,8 @@ def createSpreadsheet(request):
   URLAppend = ('https://sheets.googleapis.com/v4/spreadsheets/' + str(spreadsheetID).encode('utf-8') + '/values/' + str(startRange).encode('utf-8') + ':append').encode('utf-8') + '?valueInputOption=RAW'
   r2 = google.post(URLAppend, json.dumps(body))
   body2 = json.loads(r2.content)
-  print( "response2: %s" % body2 )
 
   dt = datetime.datetime
-  title = str(ProcessType.objects.get(pk=process).name) + " " + str(start) + " to " + str(end)
-  print(title)
   updateTitleBody = {
     "requests": [{
       "updateSpreadsheetProperties": {
@@ -185,50 +207,4 @@ def createSpreadsheet(request):
   titleURL = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + ':batchUpdate'
   r3 = google.post(titleURL, json.dumps(updateTitleBody))
   body3 = json.loads(r3.content)
-  return HttpResponse(r3, content_type='application/json')
-
-
-# @csrf_exempt
-@api_view(['POST'])
-def sendEmail(request):
-  userprofile_id = request.POST.get('userprofile')
-
-  userprofile = UserProfile.objects.get(pk=userprofile_id)
-  team_name = userprofile.team.name
-  email = userprofile.email
-
-  link = "https://dashboard.usepolymer.com/join/" + userprofile_id + "/"
-
-  subject = "You're invited to team " + team_name + " on Polymer!"
-  message = ""
-  html_message = "You have been invited to join team: <b>" + team_name + '</b> on Polymer. Click the link to accept your invitation and set your username/password. ' + link
-  try:
-    send_mail(
-        subject,
-        message,
-        'admin@polymerize.co',
-        [email],
-        fail_silently=False,
-        html_message=html_message,
-    )
-    return HttpResponse("Email sent!")
-  except SMTPException:
-    return HttpResponse("Failed to send email.")
-
-def createAuthURL(request):
-  user_id = request.GET.get('user_id')
-  user_profile = UserProfile.objects.get(user=user_id)
-  oauth = OAuth2Session(settings.GOOGLE_OAUTH2_CLIENT_ID, redirect_uri=settings.GOOGLEAUTH_CALLBACK_DOMAIN, scope=settings.GOOGLEAUTH_SCOPE)
-  authorization_url, state = oauth.authorization_url( 'https://accounts.google.com/o/oauth2/auth', access_type="offline", prompt="consent")
-  response = HttpResponse(authorization_url, content_type="text/plain")
-  return response
-
-def token_saver(token):
-  print("hi")
-  userprofile = UserProfile.objects.get(user=token['user_id'])
-  userprofile.gauth_access_token = token['access_token']
-  userprofile.gauth_refresh_token = token['refresh_token']
-  userprofile.gauth_refresh_token = token['token_type']
-  userprofile.gauth_refresh_token = token['expires_in']
-  userprofile.gauth_refresh_token = token['expires_at']
-  userprofile.save()
+  return r3
