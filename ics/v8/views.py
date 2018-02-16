@@ -23,3 +23,25 @@ class TaskList(generics.ListAPIView):
   def get_queryset(self):
     return get_tasks(self.request.query_params)
 
+
+'''
+-----------------
+API SPEC:
+- Required endpoints to duplicate effect of /tasks/v7/ through multiple requests:
+  -- /tasks/ : list of tasks
+  -- /tasks/{task_id}/ : single task 
+  -- /task-inputs/{task_id}/ : inputs for a single task
+  -- /task-items/{task_id}/ : items/outputs for a single task 
+  -- /task-attribute-values/{task_id}/ : task_attributes for a single task
+  -- /process-type-attributes/{process_type}/ : attributes for a single process_type
+
+- Then in the frontend, we would only need /tasks/ to render Main.js
+- We would need to call /task-attribute-values/ and /process-type-attributes/ to render Task.js
+- We would need /task-items/ and/or /task-inputs/ to render QRScanner.js
+
+'''
+
+
+
+
+
