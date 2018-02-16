@@ -38,6 +38,7 @@ API SPEC:
 - Then in the frontend, we would only need /tasks/ to render Main.js
 - We would need to call /task-attribute-values/ and /process-type-attributes/ to render Task.js
 - We would need /task-items/ and/or /task-inputs/ to render QRScanner.js
+- Right??? Hmmm
 
 '''
 
