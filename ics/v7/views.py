@@ -126,7 +126,7 @@ class GoalList(generics.ListAPIView):
       queryset = queryset.filter(userprofile=userprofile)
     if (timerange is not None) and (timerange == 'w' or timerange == 'd' or timerange == 'm'):
       queryset = queryset.filter(timerange=timerange)
-    return queryset
+    return queryset.select_related('process_type').prefetch_related('product_types')
 
 class GoalGet(generics.RetrieveAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
@@ -620,12 +620,12 @@ class ProductCodes(generics.ListAPIView):
 
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))
-  serializer_class = ProductTypeSerializer
+  serializer_class = ProductTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)
-  serializer_class = ProductTypeBasicSerializer
+  serializer_class = ProductTypeWithUserSerializer
 
 
 

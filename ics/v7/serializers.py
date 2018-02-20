@@ -69,40 +69,24 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 		fields = ('id','x','y')
 
 
-class ProductTypeSerializer(serializers.ModelSerializer):
+class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	#last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
-	# created_by_username = serializers.CharField(source='created_by.username', read_only=True)
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
-
-
-	def get_last_used(self, product):
-		if product.last_used is not None:
-			return product.last_used.strftime(easy_format)
-		else:
-			return ""
 
 	def get_username(self, product):
 		print(product.created_by)
 		username = product.created_by.username
-		return username.split("_",1)[1] 
+		return username.split("_", 1)[1]
 
 	class Meta:
 		model = ProductType
 		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description')
 
 
-class ProductTypeBasicSerializer(serializers.ModelSerializer):
-	#last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
-	username = serializers.SerializerMethodField(source='get_username', read_only=True)
-
-	def get_username(self, product):
-		print(product.created_by)
-		username = product.created_by.username
-		return username.split("_",1)[1] 
-
+class ProductTypeSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description')
 
 class ProductCodeSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -111,7 +95,7 @@ class ProductCodeSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 	processes = ProcessTypeSerializer(many=True, read_only=True)
-	products = ProductTypeSerializer(many=True, read_only=True)
+	products = ProductTypeWithUserSerializer(many=True, read_only=True)
 	class Meta:
 		model = User
 		fields = ('id', 'username', 'processes', 'products')
@@ -490,7 +474,7 @@ class TeamSerializer(serializers.ModelSerializer):
 		return ProcessTypeSerializer(team.processes.filter(is_trashed=False), many=True).data
 
 	def getProducts(self, team):
-		return ProductTypeSerializer(team.products.filter(is_trashed=False), many=True).data
+		return ProductTypeWithUserSerializer(team.products.filter(is_trashed=False), many=True).data
 
 
 	class Meta:
@@ -504,10 +488,9 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
-	userprofile = UserProfileSerializer(many=False, read_only=True)
 
 	def get_product_types(self, goal):
-		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
+		return ProductTypeSerializer(goal.product_types, many=True).data
 
 	def get_actual(self, goal):
 		base = date.today()
@@ -533,7 +516,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'product_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
@@ -544,7 +527,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	all_product_types = serializers.BooleanField(read_only=True)
 
 	def get_product_types(self, goal):
-		return ProductTypeSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
+		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')

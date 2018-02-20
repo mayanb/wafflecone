@@ -17,7 +17,7 @@ class BasicInventoryUnitSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
 	price_updated_at = serializers.DateTimeField(read_only=True)
 	process = ProcessTypeSerializer()
-	product = ProductTypeSerializer()
+	product = ProductTypeWithUserSerializer()
 
 	class Meta:
 		model = InventoryUnit

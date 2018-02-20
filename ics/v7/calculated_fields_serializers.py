@@ -11,7 +11,7 @@ import string
 
 class FormulaAttributeSerializer(serializers.ModelSerializer):
 	attribute = AttributeSerializer(many=False, read_only=True)
-	product_type = ProductTypeSerializer(many=False, read_only=True)
+	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
 	formula = serializers.CharField(read_only=True)
 	comparator = serializers.CharField(read_only=True)
 
@@ -21,7 +21,7 @@ class FormulaAttributeSerializer(serializers.ModelSerializer):
 
 class FormulaAttributeDeleteSerializer(serializers.ModelSerializer):
 	attribute = AttributeSerializer(many=False, read_only=True)
-	product_type = ProductTypeSerializer(many=False, read_only=True)
+	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
 	formula = serializers.CharField(read_only=True)
 	comparator = serializers.CharField(read_only=True)
 	is_trashed = serializers.BooleanField(read_only=True)
@@ -95,7 +95,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
 	predicted_attribute_values = TaskFormulaAttributeSerializer(source='getAllPredictedAttributes', read_only=True, many=True)
 
-	product_type = ProductTypeSerializer(many=False, read_only=True)
+	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
 	process_type = ProcessTypeSerializer(many=False, read_only=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
