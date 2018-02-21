@@ -380,13 +380,13 @@ class ProcessList(generics.ListCreateAPIView):
   queryset = ProcessType.objects.filter(is_trashed=False)\
     .select_related('created_by', 'team_created_by')\
     .prefetch_related('attribute_set')
-  serializer_class = ProcessTypeSerializer
+  serializer_class = ProcessTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
 
 # processes/[pk]/
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
-  serializer_class = ProcessTypeSerializer
+  serializer_class = ProcessTypeWithUserSerializer
 
 # processes/move/[pk]
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
@@ -621,7 +621,8 @@ class ProductCodes(generics.ListAPIView):
 
 
 class ProductList(generics.ListCreateAPIView):
-  queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))
+  queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))\
+    .select_related('created_by')
   serializer_class = ProductTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
 

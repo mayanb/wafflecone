@@ -96,7 +96,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	predicted_attribute_values = TaskFormulaAttributeSerializer(source='getAllPredictedAttributes', read_only=True, many=True)
 
 	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
-	process_type = ProcessTypeSerializer(many=False, read_only=True)
+	process_type = ProcessTypeWithUserSerializer(many=False, read_only=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
 

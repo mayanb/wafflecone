@@ -36,7 +36,8 @@ class AttributeSerializer(serializers.ModelSerializer):
 		model = Attribute
 		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype')
 
-class ProcessTypeSerializer(serializers.ModelSerializer):
+
+class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	attributes = serializers.SerializerMethodField()
 	created_by_name = serializers.CharField(source='created_by.username', read_only=True)
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
@@ -50,7 +51,6 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 		return AttributeSerializer(process_type.attribute_set, many=True).data
 
 	def get_username(self, product):
-		print(product.created_by)
 		username = product.created_by.username
 		return username.split("_",1)[1] 
 	
@@ -73,11 +73,9 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
-	#last_used = serializers.SerializerMethodField(source='get_last_used', read_only=True)
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
 
 	def get_username(self, product):
-		print(product.created_by)
 		username = product.created_by.username
 		return username.split("_", 1)[1]
 
@@ -97,7 +95,7 @@ class ProductCodeSerializer(serializers.ModelSerializer):
 		fields = ('code',)
 
 class UserSerializer(serializers.ModelSerializer):
-	processes = ProcessTypeSerializer(many=True, read_only=True)
+	processes = ProcessTypeWithUserSerializer(many=True, read_only=True)
 	products = ProductTypeWithUserSerializer(many=True, read_only=True)
 	class Meta:
 		model = User
@@ -474,7 +472,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 	def getProcesses(self, team):
-		return ProcessTypeSerializer(team.processes.filter(is_trashed=False), many=True).data
+		return ProcessTypeWithUserSerializer(team.processes.filter(is_trashed=False), many=True).data
 
 	def getProducts(self, team):
 		return ProductTypeWithUserSerializer(team.products.filter(is_trashed=False), many=True).data
@@ -508,7 +506,8 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			start = datetime.combine(base.replace(day=1), datetime.min.time())
 
 		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
-		
+
+		#TODO Optimize "actual" calculation into fewer queries
 		return Item.objects.filter(
 			creating_task__process_type=goal.process_type, 
 			creating_task__product_type__in=product_types,
