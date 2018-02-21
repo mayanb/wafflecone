@@ -84,7 +84,8 @@ class UserProfileList(generics.ListAPIView):
 
 # userprofiles/[pk]/
 class UserProfileGet(generics.RetrieveAPIView):
-  queryset = UserProfile.objects.all()
+  queryset = UserProfile.objects.all()\
+    .select_related('team', 'user')
   serializer_class = UserProfileSerializer
 
 class UserProfileEdit(generics.UpdateAPIView):
@@ -627,7 +628,8 @@ class ProductList(generics.ListCreateAPIView):
   filter_fields = ('created_by', 'team_created_by', 'id')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = ProductType.objects.filter(is_trashed=False)
+  queryset = ProductType.objects.filter(is_trashed=False)\
+    .select_related('created_by')
   serializer_class = ProductTypeWithUserSerializer
 
 
