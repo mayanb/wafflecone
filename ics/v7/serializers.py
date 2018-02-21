@@ -37,7 +37,7 @@ class AttributeSerializer(serializers.ModelSerializer):
 		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype')
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
-	attributes = AttributeSerializer(source='getAllAttributes', read_only=True, many=True)
+	attributes = serializers.SerializerMethodField()
 	created_by_name = serializers.CharField(source='created_by.username', read_only=True)
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
@@ -45,6 +45,9 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 	x = serializers.CharField(read_only=True)
 	y = serializers.CharField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
+
+	def get_attributes(self, process_type):
+		return AttributeSerializer(process_type.attribute_set, many=True).data
 
 	def get_username(self, product):
 		print(product.created_by)
