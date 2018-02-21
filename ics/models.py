@@ -63,13 +63,13 @@ class UserProfile(models.Model):
 class ProcessType(models.Model):
 	created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
 	team_created_by = models.ForeignKey(Team, related_name='processes', on_delete=models.CASCADE)
-	name = models.CharField(max_length=20)
+	name = models.CharField(max_length=50)
 	code = models.CharField(max_length=20)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
 
-	description = models.CharField(max_length=100, default="")
-	output_desc = models.CharField(max_length=20, default="product")
+	description = models.CharField(max_length=200, default="")
+	output_desc = models.CharField(max_length=200, default="product")
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
 
@@ -98,9 +98,9 @@ class ProductType(models.Model):
 	created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
 	team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE)
 	created_at = models.DateTimeField(default=datetime.now, blank=True)
-	name = models.CharField(max_length=30)
+	name = models.CharField(max_length=200)
 	code = models.CharField(max_length=20)
-	description = models.CharField(max_length=100, default="")
+	description = models.CharField(max_length=200, default="")
 	is_trashed = models.BooleanField(default=False)
 
 	def __str__(self):
@@ -164,9 +164,9 @@ class TaskManager(models.Manager):
 class Task(models.Model):
 	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name="tasks")
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
-	label = models.CharField(max_length=20, db_index=True)  
+	label = models.CharField(max_length=50, db_index=True)  
 	label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
-	custom_display = models.CharField(max_length=25, blank=True)
+	custom_display = models.CharField(max_length=50, blank=True)
 	#created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 	is_open = models.BooleanField(default=True)
 	is_trashed = models.BooleanField(default=False)
@@ -402,7 +402,7 @@ class FormulaAttribute(models.Model):
 class TaskAttribute(models.Model):
 	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attribute_values")
-	value = models.CharField(max_length=50, blank=True)
+	value = models.CharField(max_length=104, blank=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	def getTaskPredictedAttributes(self):
