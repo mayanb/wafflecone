@@ -318,8 +318,8 @@ class TaskDetail(generics.RetrieveAPIView):
       default=F('items__amount'),
       output_field=DecimalField()
     ))
-  )
-  
+  ).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by')
+
   serializer_class = NestedTaskSerializer
 
 
