@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'graphs',
     'rest_auth',
     #'dashboard', 
-    'silk',
+    #'silk',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -61,7 +61,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'silk.middleware.SilkyMiddleware',
+    #'silk.middleware.SilkyMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
