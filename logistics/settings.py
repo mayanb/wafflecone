@@ -29,7 +29,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SECRET_KEY = os.environ.get("WAFFLE_DJANGO_SECRET_KEY", '1234')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 # Application definition

@@ -18,5 +18,5 @@ urlpatterns = [
     url(r'^auth/', include('rest_auth.urls'))
 ]
 
-if settings.DEBUG:
-    urlpatterns += [url(r'^silk/', include('silk.urls', namespace='silk'))]
+# if settings.DEBUG:
+#     urlpatterns += [url(r'^silk/', include('silk.urls', namespace='silk'))]
