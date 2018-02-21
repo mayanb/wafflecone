@@ -15,7 +15,8 @@ urlpatterns = [
     url(r'^ics/', include('ics.urls')),
     url(r'^qr/', include('qr.urls')),
     url(r'^api-token-auth/', obtain_jwt_token),
-    url(r'^auth/', include('rest_auth.urls'))
+    url(r'^auth/', include('rest_auth.urls')),
+    url(r'^graphs/', include('graphs.urls')),
 ]
 
 if settings.DEBUG:
