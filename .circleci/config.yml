@@ -1,11 +1,5 @@
 version: 2
 
-general:
-  branches:
-    only:
-      - staging
-      - master
-
 jobs:
   build:
     docker:
@@ -26,6 +20,10 @@ jobs:
           key: deps2-{{ .Branch }}-{{ checksum "requirements.txt" }}
           paths:
             - ./venv
+      - run:
+          name: Run Tests
+          command: |
+            ./manage.py test
       - run:
           name: Package and Deploy Django app using Zappa
           command: |
