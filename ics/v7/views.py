@@ -84,7 +84,8 @@ class UserProfileList(generics.ListAPIView):
 
 # userprofiles/[pk]/
 class UserProfileGet(generics.RetrieveAPIView):
-  queryset = UserProfile.objects.all()
+  queryset = UserProfile.objects.all()\
+    .select_related('team', 'user')
   serializer_class = UserProfileSerializer
 
 class UserProfileEdit(generics.UpdateAPIView):
@@ -126,7 +127,7 @@ class GoalList(generics.ListAPIView):
       queryset = queryset.filter(userprofile=userprofile)
     if (timerange is not None) and (timerange == 'w' or timerange == 'd' or timerange == 'm'):
       queryset = queryset.filter(timerange=timerange)
-    return queryset
+    return queryset.select_related('process_type').prefetch_related('product_types')
 
 class GoalGet(generics.RetrieveAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
@@ -232,7 +233,9 @@ class TaskSearch(generics.ListAPIView):
       queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
       # queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 
-    return queryset.select_related().prefetch_related('attribute_values', 'items', 'inputs')
+    return queryset\
+      .select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by', 'process_type__team_created_by', 'product_type__team_created_by')\
+      .prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute', 'formula_attributes', 'items', 'inputs', 'inputs__input_item', 'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type', 'inputs__input_item__creating_task__product_type')
 
 
 # tasks/
@@ -301,7 +304,13 @@ class TaskList(generics.ListAPIView):
         # make sure that we get at least one input unit and return it along with the task
         i = Input.objects.filter(task=OuterRef('id')).order_by('id')
         queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
-        return queryset.select_related().prefetch_related('items', 'attribute_values')
+        return queryset \
+          .select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by',
+                          'process_type__team_created_by', 'product_type__team_created_by') \
+          .prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute',
+                      'formula_attributes', 'items', 'inputs', 'inputs__input_item',
+                      'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type',
+                      'inputs__input_item__creating_task__product_type')
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('team_inventory', None )
@@ -317,8 +326,8 @@ class TaskDetail(generics.RetrieveAPIView):
       default=F('items__amount'),
       output_field=DecimalField()
     ))
-  )
-  
+  ).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by')
+
   serializer_class = NestedTaskSerializer
 
 
@@ -377,14 +386,16 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # processes/
 class ProcessList(generics.ListCreateAPIView):
-  queryset = ProcessType.objects.filter(is_trashed=False)
-  serializer_class = ProcessTypeSerializer
+  queryset = ProcessType.objects.filter(is_trashed=False)\
+    .select_related('created_by', 'team_created_by')\
+    .prefetch_related('attribute_set')
+  serializer_class = ProcessTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
 
 # processes/[pk]/
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
-  serializer_class = ProcessTypeSerializer
+  serializer_class = ProcessTypeWithUserSerializer
 
 # processes/move/[pk]
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
@@ -619,13 +630,15 @@ class ProductCodes(generics.ListAPIView):
 
 
 class ProductList(generics.ListCreateAPIView):
-  queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))
-  serializer_class = ProductTypeSerializer
+  queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))\
+    .select_related('created_by')
+  serializer_class = ProductTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = ProductType.objects.filter(is_trashed=False)
-  serializer_class = ProductTypeBasicSerializer
+  queryset = ProductType.objects.filter(is_trashed=False)\
+    .select_related('created_by')
+  serializer_class = ProductTypeWithUserSerializer
 
 
 

@@ -488,6 +488,7 @@ class Goal(models.Model):
 	userprofile = models.ForeignKey(UserProfile, related_name="goals", on_delete=models.CASCADE, default=1)
 	process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, null=True, related_name='goals', on_delete=models.CASCADE)
+	product_types = models.ManyToManyField(ProductType, through='GoalProductType')
 	goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w')
 	rank = models.PositiveSmallIntegerField(default=0)
