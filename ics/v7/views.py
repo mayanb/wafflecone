@@ -304,7 +304,13 @@ class TaskList(generics.ListAPIView):
         # make sure that we get at least one input unit and return it along with the task
         i = Input.objects.filter(task=OuterRef('id')).order_by('id')
         queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
-        return queryset.select_related().prefetch_related('items', 'attribute_values')
+        return queryset \
+          .select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by',
+                          'process_type__team_created_by', 'product_type__team_created_by') \
+          .prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute',
+                      'formula_attributes', 'items', 'inputs', 'inputs__input_item',
+                      'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type',
+                      'inputs__input_item__creating_task__product_type')
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('team_inventory', None )
