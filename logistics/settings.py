@@ -123,6 +123,8 @@ DATABASES = {
 if 'test' in sys.argv:
     DATABASES['default']['NAME'] = 'ics'
     DATABASES['default']['USER'] = 'testuser'
+    DATABASES['default']['HOST'] = 'localhost'
+    DATABASES['default']['PORT'] = '5432'
 
 #DATABASES['default'] =  dj_database_url.config()
 
