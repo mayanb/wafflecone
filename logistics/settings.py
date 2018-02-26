@@ -1,3 +1,5 @@
+import sys
+
 """
 Django settings for logistics project, on Heroku. For more info, see:
 https://github.com/heroku/heroku-django-template
@@ -117,6 +119,12 @@ DATABASES = {
         'PORT': os.environ.get("WAFFLE_DB_PORT", ''),
     }
 }
+
+if 'test' in sys.argv:
+    DATABASES['default']['NAME'] = 'ics'
+    DATABASES['default']['USER'] = 'testuser'
+    DATABASES['default']['HOST'] = 'localhost'
+    DATABASES['default']['PORT'] = '5432'
 
 #DATABASES['default'] =  dj_database_url.config()
 
