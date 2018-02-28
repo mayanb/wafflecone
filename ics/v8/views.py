@@ -238,16 +238,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.filter(
-    is_trashed=False
-  ).annotate(
-    total_amount=Sum(Case(
-      When(items__is_virtual=True, then=Value(0)),
-      default=F('items__amount'),
-      output_field=DecimalField()
-    ))
-  ).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by')
-
+  queryset = taskDetail()
   serializer_class = NestedTaskSerializer
 
 

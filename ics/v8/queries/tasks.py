@@ -102,7 +102,7 @@ def taskSearch(query_params):
 		.order_by('-updated_at')
 
 def taskDetail():
-	Task.objects.filter(
+	return Task.objects.filter(
 		is_trashed=False
 	).annotate(
 		total_amount=Sum(Case(
