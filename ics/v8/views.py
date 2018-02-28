@@ -218,25 +218,7 @@ class TaskSearch(generics.ListAPIView):
   ordering_fields = ('created_at', 'updated_at')
 
   def get_queryset(self):
-    queryset = Task.objects.filter(is_trashed=False).order_by('-updated_at')
-    team = self.request.query_params.get('team', None)
-    if team is not None:
-      queryset = queryset.filter(process_type__team_created_by=team)
-      print(team)
-    label = self.request.query_params.get('label', None)
-    dashboard = self.request.query_params.get('dashboard', None)
-    if label is not None and dashboard is not None:
-      queryset = queryset.filter(Q(keywords__icontains=label))
-    elif label is not None:
-      print("hi")
-      query = SearchQuery(label)
-      # queryset.annotate(rank=SearchRank(F('search'), query)).filter(search=query).order_by('-rank')
-      queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
-      # queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
-
-    return queryset\
-      .select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by', 'process_type__team_created_by', 'product_type__team_created_by')\
-      .prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute', 'formula_attributes', 'items', 'inputs', 'inputs__input_item', 'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type', 'inputs__input_item__creating_task__product_type')
+    return taskSearch(self.request.query_params)
 
 
 # tasks/
