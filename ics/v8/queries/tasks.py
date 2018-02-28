@@ -100,3 +100,14 @@ def taskSearch(query_params):
 		.select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by', 'process_type__team_created_by', 'product_type__team_created_by')\
 		.prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute', 'formula_attributes', 'items', 'inputs', 'inputs__input_item', 'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type', 'inputs__input_item__creating_task__product_type')\
 		.order_by('-updated_at')
+
+def taskDetail():
+	Task.objects.filter(
+		is_trashed=False
+	).annotate(
+		total_amount=Sum(Case(
+			When(items__is_virtual=True, then=Value(0)),
+			default=F('items__amount'),
+			output_field=DecimalField()
+		))
+	).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by')
