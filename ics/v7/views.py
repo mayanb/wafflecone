@@ -7,9 +7,9 @@ from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.models import *
 from django.contrib.auth.models import User
-from ics.v8.serializers import *
-from ics.v8.order_serializers import *
-from ics.v8.calculated_fields_serializers import *
+from ics.v7.serializers import *
+from ics.v7.order_serializers import *
+from ics.v7.calculated_fields_serializers import *
 from rest_framework import generics
 from django.shortcuts import get_object_or_404, render
 import django_filters
@@ -19,7 +19,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
-from ics.v8.queries.tasks import *
+from ics.v7.queries.tasks import *
 import datetime
 # from datetime import date, datetime, timedelta
 from django.http import HttpResponse
@@ -219,6 +219,17 @@ class TaskSearch(generics.ListAPIView):
 
   def get_queryset(self):
     return taskSearch(self.request.query_params)
+
+# tasks/simple/
+class SimpleTaskSearch(generics.ListAPIView):
+  serializer_class = FlatTaskSerializer
+  pagination_class = SmallPagination
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
+  filter_class = TaskFilter
+  ordering_fields = ('created_at', 'updated_at')
+
+  def get_queryset(self):
+    return simpleTaskSearch(self.request.query_params)
 
 
 # tasks/

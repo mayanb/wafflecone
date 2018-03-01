@@ -137,6 +137,29 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'is_trashed'
 		)
 
+# serializes the task, without nested items, inputs, or attributes
+class FlatTaskSerializer(serializers.ModelSerializer):
+	# product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
+	display = serializers.CharField(source='*')
+	total_amount = serializers.CharField(read_only=True)
+
+	class Meta:
+		model = Task
+		fields = (
+			'id', 
+			'total_amount',
+			'label',
+			'is_open', 
+			'is_flagged', 
+			'flag_update_time', 
+			'created_at', 
+			'updated_at', 
+			'label_index', 
+			'custom_display',
+			'display',
+			'is_trashed'
+		)
+
 
 class FlowTaskSerializer(serializers.ModelSerializer):
 	creating_task = serializers.IntegerField(write_only=True)

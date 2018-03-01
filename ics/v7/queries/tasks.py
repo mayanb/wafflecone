@@ -101,6 +101,33 @@ def taskSearch(query_params):
 		.prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute', 'formula_attributes', 'items', 'inputs', 'inputs__input_item', 'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type', 'inputs__input_item__creating_task__product_type')\
 		.order_by('-updated_at')
 
+def simpleTaskSearch(query_params):
+	queryset = Task.objects.filter(is_trashed=False)
+
+	team = query_params.get('team', None)
+	if team is not None:
+		queryset = queryset.filter(process_type__team_created_by=team)
+
+	is_open = query_params.get('is_open', None)
+	if is_open == "false":
+		is_open = False
+	else:
+		is_open = True
+	if is_open is not None:
+		queryset = queryset.filter(is_open=is_open)
+
+	label = query_params.get('label', None)
+	dashboard = query_params.get('dashboard', None)
+	if label is not None and dashboard is not None:
+		queryset = queryset.filter(Q(keywords__icontains=label))
+	elif label is not None:
+		query = SearchQuery(label)
+		# queryset.annotate(rank=SearchRank(F('search'), query)).filter(search=query).order_by('-rank')
+		queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+		# queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
+	return queryset\
+		.order_by('-updated_at')
+
 def taskDetail():
 	return Task.objects.filter(
 		is_trashed=False

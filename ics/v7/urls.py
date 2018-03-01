@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
-from ics.v8 import views
+from ics.v7 import views
 from django.contrib.auth import views as auth_views
 
 import oauth2client.contrib.django_util.site as django_util_site
@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view()),
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
+    url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/flow/$', views.CreateTaskFlow.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
 
