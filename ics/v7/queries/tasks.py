@@ -79,14 +79,6 @@ def taskSearch(query_params):
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
 
-	is_open = query_params.get('is_open', None)
-	if is_open == "false":
-		is_open = False
-	else:
-		is_open = True
-	if is_open is not None:
-		queryset = queryset.filter(is_open=is_open)
-
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
 	if label is not None and dashboard is not None:
@@ -107,14 +99,6 @@ def simpleTaskSearch(query_params):
 	team = query_params.get('team', None)
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
-
-	is_open = query_params.get('is_open', None)
-	if is_open == "false":
-		is_open = False
-	else:
-		is_open = True
-	if is_open is not None:
-		queryset = queryset.filter(is_open=is_open)
 
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
