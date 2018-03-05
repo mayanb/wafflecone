@@ -5,8 +5,9 @@ A barebones Python app, which can easily be deployed to Heroku.
 This application supports the [Getting Started with Python on Heroku](https://devcenter.heroku.com/articles/getting-started-with-python) article - check it out.
 
 ## Stress-Testing
-Install Siege using `brew install siege`
-I use the following scripts:
+Install Siege using `brew install siege`.
+
+We use the following scripts:
 ```sh
 $ siege -c 100 -r 10 http://localhost:8000/ics/tasks/simple/?team=1
 $ siege -c 100 -r 10 http://localhost:8000/ics/tasks/9012/
