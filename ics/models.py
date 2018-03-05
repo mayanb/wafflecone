@@ -173,7 +173,7 @@ class Task(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated_at = models.DateTimeField(auto_now=True, db_index=True)
 	is_flagged = models.BooleanField(default=False, db_index=True)
-	flag_update_time = models.DateTimeField(auto_now_add=True, db_index=True)
+	flag_update_time = models.DateTimeField(default='2017-01-01 23:25:26.835087+00:00')
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
