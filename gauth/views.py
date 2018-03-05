@@ -60,6 +60,7 @@ def createAuthToken(request):
   # update the userprofile object
   user_profile = UserProfile.objects.get(user=user_id)
   update_userprofile_token(user_profile, token)
+  user_profile.gauth_email = google_user_email
   user_profile.save()
 
   # success response

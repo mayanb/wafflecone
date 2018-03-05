@@ -3,6 +3,7 @@
         "django_settings": "logistics.settings", 
         "aws_region": "us-west-1", 
         "s3_bucket": "zappa-polymer",
+        "memory_size": 2048,
         "slim_handler": "False",
          "vpc_config" : {
             "SubnetIds": [ "subnet-6755a300", "subnet-5f0f0907" ], // use the private subnet
@@ -13,6 +14,7 @@
         "django_settings": "logistics.settings", 
         "aws_region": "us-west-1", 
         "s3_bucket": "zappa-polymer",
+        "memory_size": 2048,
         "slim_handler": "False",
          "vpc_config" : {
             "SubnetIds": [ "subnet-b0976bd7", "subnet-cf616c97" ], // use the private subnet
@@ -23,6 +25,7 @@
         "django_settings": "logistics.settings", 
         "aws_region": "us-west-1", 
         "s3_bucket": "zappa-polymer",
+        "memory_size": 2048,
         "slim_handler": "False",
          "vpc_config" : {
             "SubnetIds": [ "subnet-6755a300", "subnet-5f0f0907" ], // use the private subnet

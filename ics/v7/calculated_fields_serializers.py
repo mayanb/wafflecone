@@ -11,7 +11,7 @@ import string
 
 class FormulaAttributeSerializer(serializers.ModelSerializer):
 	attribute = AttributeSerializer(many=False, read_only=True)
-	product_type = ProductTypeSerializer(many=False, read_only=True)
+	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
 	formula = serializers.CharField(read_only=True)
 	comparator = serializers.CharField(read_only=True)
 
@@ -21,7 +21,7 @@ class FormulaAttributeSerializer(serializers.ModelSerializer):
 
 class FormulaAttributeDeleteSerializer(serializers.ModelSerializer):
 	attribute = AttributeSerializer(many=False, read_only=True)
-	product_type = ProductTypeSerializer(many=False, read_only=True)
+	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
 	formula = serializers.CharField(read_only=True)
 	comparator = serializers.CharField(read_only=True)
 	is_trashed = serializers.BooleanField(read_only=True)
@@ -93,10 +93,10 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	input_unit = serializers.CharField(read_only=True)
 	#inputUnit = serializers.SerializerMethodField('getInputUnit')
 	attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
-	predicted_attribute_values = TaskFormulaAttributeSerializer(source='getAllPredictedAttributes', read_only=True, many=True)
+	predicted_attribute_values = TaskFormulaAttributeSerializer(source='formula_attributes', read_only=True, many=True)
 
-	product_type = ProductTypeSerializer(many=False, read_only=True)
-	process_type = ProcessTypeSerializer(many=False, read_only=True)
+	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
+	process_type = ProcessTypeWithUserSerializer(many=False, read_only=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
 
@@ -118,8 +118,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 		fields = (
 			'id', 
 			'total_amount', 
-			'process_type', 
-			'product_type', 
+			'process_type',
+			'product_type',
 			'label', 
 			'input_unit', 
 			'is_open', 
@@ -129,13 +129,12 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'updated_at', 
 			'label_index', 
 			'custom_display', 
-			'items', 
-			'inputs', 
+			'items',
+			'inputs',
 			'attribute_values',
-			'predicted_attribute_values',  
+			'predicted_attribute_values',
 			'display',
-			'is_trashed',
-			'search',
+			'is_trashed'
 		)
 
 

@@ -17,8 +17,8 @@ import constants
 
 # AUTH MODELS
 class InviteCode(models.Model):
-	invite_code = models.CharField(max_length=100, unique=True)
-	is_used = models.BooleanField(default=False)
+	invite_code = models.CharField(max_length=100, unique=True, db_index=True)
+	is_used = models.BooleanField(default=False, db_index=True)
 
 class Team(models.Model):
 	name = models.CharField(max_length=50, unique=True)
@@ -74,11 +74,11 @@ class ProcessType(models.Model):
 	unit = models.CharField(max_length=20, default="container")
 
 
-	x = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)
 	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-	is_trashed = models.BooleanField(default=False)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 
 	def __str__(self):
 		return self.name
@@ -101,7 +101,7 @@ class ProductType(models.Model):
 	name = models.CharField(max_length=200)
 	code = models.CharField(max_length=20)
 	description = models.CharField(max_length=200, default="")
-	is_trashed = models.BooleanField(default=False)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 
 	def __str__(self):
 		return self.name
@@ -114,8 +114,8 @@ class ProductType(models.Model):
 class Attribute(models.Model):
 	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
 	name = models.CharField(max_length=20)
-	rank = models.PositiveSmallIntegerField(default=0)
-	is_trashed = models.BooleanField(default=False)
+	rank = models.PositiveSmallIntegerField(default=0, db_index=True)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 	datatype = models.CharField(
 		max_length=4, 
 		choices=constants.ATTRIBUTE_DATA_TYPES, 
@@ -169,11 +169,11 @@ class Task(models.Model):
 	custom_display = models.CharField(max_length=50, blank=True)
 	#created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 	is_open = models.BooleanField(default=True)
-	is_trashed = models.BooleanField(default=False)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 	created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated_at = models.DateTimeField(auto_now=True, db_index=True)
-	is_flagged = models.BooleanField(default=False)
-	flag_update_time = models.DateTimeField(auto_now_add=True)
+	is_flagged = models.BooleanField(default=False, db_index=True)
+	flag_update_time = models.DateTimeField(default='2017-01-01 23:25:26.835087+00:00')
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
@@ -361,13 +361,13 @@ class Task(models.Model):
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
 	creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
-	created_at = models.DateTimeField(auto_now_add=True)
+	created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 	inventory = models.ForeignKey(User, on_delete=models.CASCADE, related_name="items", null=True)
 	team_inventory = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="items", null=True)
 	readable_qr = models.CharField(max_length=50)
 
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
-	is_virtual = models.BooleanField(default=False)
+	is_virtual = models.BooleanField(default=False, db_index=True)
 
 	def __str__(self):
 		return str(self.creating_task) + " - " + self.item_qr[-6:]
@@ -394,7 +394,7 @@ class FormulaAttribute(models.Model):
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	formula = models.TextField()
 	comparator = models.CharField(max_length=2)
-	is_trashed = models.BooleanField(default=False)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 
 
 
@@ -416,7 +416,7 @@ class TaskFormulaAttribute(models.Model):
 class FormulaDependency(models.Model):
 	formula_attribute = models.ForeignKey(FormulaAttribute, on_delete=models.CASCADE, related_name="ancestors")
 	dependency = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name="dependencies")
-	is_trashed = models.BooleanField(default=False)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 
 
 ##################################
@@ -488,10 +488,11 @@ class Goal(models.Model):
 	userprofile = models.ForeignKey(UserProfile, related_name="goals", on_delete=models.CASCADE, default=1)
 	process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, null=True, related_name='goals', on_delete=models.CASCADE)
+	product_types = models.ManyToManyField(ProductType, through='GoalProductType')
 	goal = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-	timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w')
+	timerange = models.CharField(max_length=1, choices=TIMERANGES, default='w', db_index=True)
 	rank = models.PositiveSmallIntegerField(default=0)
-	is_trashed = models.BooleanField(default=False)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 	trashed_time = models.DateTimeField(blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	all_product_types = models.BooleanField(default=False)
@@ -592,11 +593,11 @@ class Alert(models.Model):
 		('ut', 'recently unflagged tasks'),
 	)
 
-	alert_type = models.CharField(max_length=2, choices=ALERTS_TYPES)
+	alert_type = models.CharField(max_length=2, choices=ALERTS_TYPES, db_index=True)
 	variable_content = models.TextField(null=True)
 	userprofile = models.ForeignKey(UserProfile, related_name='alerts', on_delete=models.CASCADE)
-	is_displayed = models.BooleanField(default=True)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	is_displayed = models.BooleanField(default=True, db_index=True)
+	created_at = models.DateTimeField(default=datetime.now, blank=True, db_index=True)
 
 
 
