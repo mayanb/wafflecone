@@ -1,11 +1,27 @@
-from django.test import TestCase
 from ics.models import *
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APITestCase
+from ics.tests.factories import TaskFactory
+import datetime
 
+
+def format_date(date):
+	return date.strftime('%Y-%m-%d-%H-%M-%S-%f')
 
 class TestCreateBasics(APITestCase):
+
+	def test_get_tasks(self):
+		task1 = TaskFactory(label='Jan-Task', created_at=datetime.datetime(2018,1,10))
+		task2 = TaskFactory(label='Feb-Task', created_at=datetime.datetime(2018,2,10))
+		print task1.created_at
+		url = reverse('tasks')
+		query_params = {
+			'start': format_date(datetime.datetime(2018,1,5)),
+			'end': format_date(datetime.datetime(2018,1,15))
+		}
+		response = self.client.get(url, query_params, format='json')
+		self.assertEqual(len(response.data), 1)
+		self.assertEqual(response.data[0]['label'], 'Jan-Task')
 
 	def test_create_process(self):
 		# create a user
@@ -67,9 +83,6 @@ class TestCreateBasics(APITestCase):
 		url = reverse('processes')
 		data = {'code': 'TPC', 'name': 'TestProcess', 'created_by': user.id, 'team_created_by': team.id, 'icon': "testicon", 'default_amount': 10.0}
 		response = self.client.post(url, data, format='json')
-		print(response)
-		print(ProcessType.objects.all().count())
-		print(Team.objects.all().count())
 		process = ProcessType.objects.all()[0].id
 		url = reverse('products')
 		data = {'code': 'TPD', 'name': 'TestProduct', 'created_by': user.id, 'team_created_by': team.id}

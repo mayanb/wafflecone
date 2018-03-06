@@ -34,7 +34,7 @@ urlpatterns = [
     
 
     url(r'^tasks/create/$', views.TaskCreate.as_view(), name='create_task'),
-    url(r'^tasks/$', views.TaskList.as_view()),
+    url(r'^tasks/$', views.TaskList.as_view(), name='tasks'),
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view()),
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
