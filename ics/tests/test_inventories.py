@@ -1,0 +1,71 @@
+from ics.models import *
+from django.urls import reverse
+from rest_framework.test import APITestCase
+from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, AdjustmentFactory, ItemFactory
+import datetime
+import mock
+
+
+class TestInventoriesList(APITestCase):
+
+	def setUp(self):
+		self.process_type = ProcessTypeFactory(name='process-name', code='process-code', unit='process-unit')
+		self.product_type = ProductTypeFactory(name='product-name', code='product-code')
+		self.url = reverse('inventories')
+		self.past_time = datetime.datetime(2018, 1, 10)
+		self.task = TaskFactory(process_type=self.process_type, product_type=self.product_type)
+
+	def test_no_items(self):
+		response = self.client.get(self.url, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 0)
+
+	def test_items_only(self):
+		ItemFactory(creating_task=self.task, amount=18)
+		ItemFactory(creating_task=self.task, amount=3)
+		response = self.client.get(self.url, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 1)
+		item = response.data['results'][0]
+		self.assertEqual(item['process_id'], str(self.process_type.id))
+		self.assertEqual(item['process_name'], 'process-name')
+		self.assertEqual(item['process_unit'], 'process-unit')
+		self.assertEqual(item['process_code'], 'process-code')
+		self.assertEqual(item['product_id'], str(self.product_type.id))
+		self.assertEqual(item['product_name'], 'product-name')
+		self.assertEqual(item['product_code'], 'product-code')
+		self.assertEqual(item['adjusted_amount'], 21)
+
+	def test_adjustment(self):
+		with mock.patch('django.utils.timezone.now') as mock_now:
+			mock_now.return_value = self.past_time
+			ItemFactory(creating_task=self.task, amount=18)
+			ItemFactory(creating_task=self.task, amount=3)
+		adjustment_date = datetime.datetime(2018, 2, 10)
+		adjustment = AdjustmentFactory(
+			process_type=self.process_type,
+			product_type=self.product_type,
+			amount=37,
+			adjustment_date=adjustment_date
+		)
+		response = self.client.get(self.url, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], 37)
+
+	def test_items_after_adjustment(self):
+		with mock.patch('django.utils.timezone.now') as mock_now:
+			mock_now.return_value = self.past_time
+			adjustment_date = datetime.datetime(2018, 2, 10)
+			adjustment = AdjustmentFactory(
+				process_type=self.process_type,
+				product_type=self.product_type,
+				amount=45,
+				adjustment_date=adjustment_date
+			)
+		ItemFactory(creating_task=self.task, amount=3)
+		ItemFactory(creating_task=self.task, amount=19)
+		response = self.client.get(self.url, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], 67)

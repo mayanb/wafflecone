@@ -52,8 +52,8 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_",1)[1] 
-	
+		return username.split("_",1)[1]
+
 	class Meta:
 		model = ProcessType
 		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at')
@@ -227,7 +227,7 @@ class NestedInputSerializer(serializers.ModelSerializer):
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
-	
+
 	class Meta:
 		model = TaskAttribute
 		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
@@ -444,10 +444,10 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 			walkthrough_num = -1
 
 		userprofile = UserProfile.objects.create(
-			user=user, 
-			gauth_access_token="", 
-			gauth_refresh_token="", 
-			token_type="", 
+			user=user,
+			gauth_access_token="",
+			gauth_refresh_token="",
+			token_type="",
 			team=team,
 			account_type=account_type,
 			email=email,
@@ -509,7 +509,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 		#TODO Optimize "actual" calculation into fewer queries
 		return Item.objects.filter(
-			creating_task__process_type=goal.process_type, 
+			creating_task__process_type=goal.process_type,
 			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
 			creating_task__created_at__range=(start, end),
@@ -546,7 +546,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 		# if we didn't mean to put all product types in this goal:
 		if (inputprods and inputprods != "ALL"):
-			goal_product_types = inputprods.strip().split(',')	
+			goal_product_types = inputprods.strip().split(',')
 
 		# if we did mean to put all product types in this goal:	
 		if not goal_product_types:
@@ -624,8 +624,8 @@ class ReorderAttributeSerializer(serializers.ModelSerializer):
 
 	def update(self, instance, validated_data):
 		return reorder(
-			instance, 
-			validated_data, 
+			instance,
+			validated_data,
 			Attribute.objects.filter(is_trashed=False, process_type=instance.process_type)
 		)
 		# old_rank = instance.rank
@@ -652,8 +652,8 @@ class ReorderGoalSerializer(serializers.ModelSerializer):
 
 	def update(self, instance, validated_data):
 		return reorder(
-			instance, 
-			validated_data, 
+			instance,
+			validated_data,
 			Goal.objects.filter(userprofile=instance.userprofile, timerange=instance.timerange)
 		)
 
@@ -800,3 +800,34 @@ class AdjustmentSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Adjustment
 		fields = ('created_by', 'created_at', 'process_type', 'product_type', 'adjustment_date', 'amount')
+
+class InventoryList2Serializer(serializers.Serializer):
+	process_id = serializers.CharField(source='creating_task__process_type')
+	process_name = serializers.CharField(source='creating_task__process_type__name')
+	process_unit = serializers.CharField(source='creating_task__process_type__unit')
+	process_code = serializers.CharField(source='creating_task__process_type__code')
+	process_icon = serializers.CharField(source='creating_task__process_type__icon')
+	product_id = serializers.CharField(source='creating_task__product_type')
+	product_name = serializers.CharField(source='creating_task__product_type__name')
+	product_code = serializers.CharField(source='creating_task__product_type__code')
+	adjusted_amount = serializers.SerializerMethodField(source='get_adjusted_amount')
+
+	def get_adjusted_amount(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_type = item_summary['creating_task__product_type']
+
+		latest_adjustment = Adjustment.objects.all() \
+			.filter(process_type=process_type, product_type=product_type) \
+			.order_by('-created_at').first()
+
+		if latest_adjustment:
+			recent_items_total = Item.objects.filter(inputs__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])\
+				.filter(
+				creating_task__process_type=process_type,
+				creating_task__product_type=product_type,
+				created_at__gt=latest_adjustment.created_at
+			).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+			adjusted_amount = latest_adjustment.amount + recent_items_total
+		else:
+			adjusted_amount = item_summary['total_amount']
+		return adjusted_amount

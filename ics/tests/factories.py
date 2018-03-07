@@ -56,6 +56,13 @@ class TaskFactory(factory.django.DjangoModelFactory):
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
 
+class ItemFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.Item
+
+	creating_task = factory.SubFactory(TaskFactory)
+	item_qr = factory.Sequence(lambda n: 'item-qr-{0}'.format(n))
+
 
 class AdjustmentFactory(factory.django.DjangoModelFactory):
 	class Meta:

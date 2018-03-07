@@ -3,7 +3,6 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, UserFactory, AdjustmentFactory
 import datetime
-from ics.tests.utilities import format_date
 
 class TestAdjustments(APITestCase):
 

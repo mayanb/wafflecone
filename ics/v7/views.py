@@ -440,9 +440,9 @@ class InventoryList(generics.ListAPIView):
     return queryset.values(
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
-      'creating_task__process_type', 
-      'creating_task__process_type__output_desc', 
-      'creating_task__process_type__unit', 
+      'creating_task__process_type',
+      'creating_task__process_type__output_desc',
+      'creating_task__process_type__unit',
       'creating_task__process_type__team_created_by',
       'creating_task__process_type__team_created_by__name',
       'creating_task__process_type__created_by__username',
@@ -1275,3 +1275,33 @@ class CreateAdjustment(generics.CreateAPIView):
 class DetailAdjustment(generics.RetrieveUpdateDestroyAPIView):
   queryset = Adjustment.objects.all()
   serializer_class = AdjustmentSerializer
+
+class InventoryList2(generics.ListAPIView):
+  pagination_class = SmallPagination
+  serializer_class = InventoryList2Serializer
+
+  def get_queryset(self):
+    queryset = Item.objects.filter(inputs__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])
+
+    # filter by team
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(team_inventory=team)
+
+    return queryset.values(
+      'creating_task__process_type',
+      'creating_task__process_type__name',
+      'creating_task__process_type__unit',
+      'creating_task__process_type__code',
+      'creating_task__process_type__icon',
+      'creating_task__product_type',
+      'creating_task__product_type__name',
+      'creating_task__product_type__code',
+    ).annotate(
+      total_amount=Sum('amount'),
+    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')\
+
+
+
+    #if not (process_type and product_type):
+    #  return Response('Must include product type and process type', status=status.HTTP_400_BAD_REQUEST)

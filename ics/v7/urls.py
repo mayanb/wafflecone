@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from rest_framework.urlpatterns import format_suffix_patterns
 from ics.v7 import views
 from django.contrib.auth import views as auth_views
@@ -148,4 +148,6 @@ urlpatterns = [
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
     url(r'^adjustments/(?P<pk>[0-9]+)/$', views.DetailAdjustment.as_view(), name="adjustmentDetail"),
 
+    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 ]
+
