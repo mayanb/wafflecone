@@ -1268,4 +1268,10 @@ class TaskFormulaAttributeDetail(generics.RetrieveAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = TaskFormulaAttributeSerializer
 
+class CreateAdjustment(generics.CreateAPIView):
+  queryset = Adjustment.objects.all()
+  serializer_class = AdjustmentSerializer
 
+class DetailAdjustment(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Adjustment.objects.all()
+  serializer_class = AdjustmentSerializer

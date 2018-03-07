@@ -796,4 +796,7 @@ class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
 		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
 
 
-
+class AdjustmentSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Adjustment
+		fields = ('created_by', 'created_at', 'process_type', 'product_type', 'adjustment_date', 'amount')
