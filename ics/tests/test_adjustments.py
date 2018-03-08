@@ -22,7 +22,7 @@ class TestAdjustments(APITestCase):
 		self.assertEqual(Adjustment.objects.count(), 1)
 		adjustment = Adjustment.objects.get()
 		self.assertEqual(adjustment.created_by.id, user.id)
-		secondsDiff = abs((datetime.datetime.today() - adjustment.created_at).total_seconds())
+		secondsDiff = abs((datetime.datetime.today() - adjustment.created_at.replace(tzinfo=None)).total_seconds())
 		self.assertLess(secondsDiff, 10)
 		self.assertEqual(adjustment.process_type.id, process_type.id)
 		self.assertEqual(adjustment.product_type.id, product_type.id)
