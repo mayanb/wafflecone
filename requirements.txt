@@ -54,12 +54,14 @@ jsonpickle==0.9.5
 kappa==0.6.0
 lambda-packages==0.16.1
 MarkupSafe==1.0
+mock==2.0.0
 oauth2client==4.1.2
 oauthlib==2.0.3
 olefile==0.44
 paramiko==2.2.1
 pathlib==1.0.1
 pathtools==0.1.2
+pbr==3.1.1
 pew==0.1.26
 Pillow==5.0.0
 pip-tools==1.9.0
