@@ -1272,21 +1272,19 @@ class CreateAdjustment(generics.CreateAPIView):
   queryset = Adjustment.objects.all()
   serializer_class = AdjustmentSerializer
 
-class DetailAdjustment(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Adjustment.objects.all()
-  serializer_class = AdjustmentSerializer
-
 class InventoryList2(generics.ListAPIView):
   pagination_class = SmallPagination
   serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
-    queryset = Item.objects.filter(inputs__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])
+    queryset = Item.unused_objects
+
+    team = self.request.query_params.get('team', None)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
 
     # filter by team
-    team = self.request.query_params.get('team', None)
-    if team is not None:
-      queryset = queryset.filter(team_inventory=team)
+    queryset = queryset.filter(team_inventory=team)
 
     return queryset.values(
       'creating_task__process_type',

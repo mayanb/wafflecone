@@ -20,7 +20,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('adjustment_date', models.DateTimeField(db_index=True)),
                 ('amount', models.DecimalField(decimal_places=3, default=0, max_digits=10)),
                 ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='adjustments', to=settings.AUTH_USER_MODEL)),
                 ('process_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='adjustments', to='ics.ProcessType')),

@@ -797,9 +797,11 @@ class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
 
 
 class AdjustmentSerializer(serializers.ModelSerializer):
+	created_at = serializers.DateTimeField(read_only=True)
+
 	class Meta:
 		model = Adjustment
-		fields = ('created_by', 'created_at', 'process_type', 'product_type', 'adjustment_date', 'amount')
+		fields = ('created_by', 'created_at', 'process_type', 'product_type', 'amount')
 
 class InventoryList2Serializer(serializers.Serializer):
 	process_id = serializers.CharField(source='creating_task__process_type')
@@ -821,8 +823,7 @@ class InventoryList2Serializer(serializers.Serializer):
 			.order_by('-created_at').first()
 
 		if latest_adjustment:
-			recent_items_total = Item.objects.filter(inputs__isnull=True, creating_task__is_trashed=False, is_virtual=False).exclude(creating_task__process_type__code__in=['SH','D'])\
-				.filter(
+			recent_items_total = Item.unused_objects.filter(
 				creating_task__process_type=process_type,
 				creating_task__product_type=product_type,
 				created_at__gt=latest_adjustment.created_at

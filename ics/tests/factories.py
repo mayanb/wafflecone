@@ -64,6 +64,12 @@ class ItemFactory(factory.django.DjangoModelFactory):
 	item_qr = factory.Sequence(lambda n: 'item-qr-{0}'.format(n))
 
 
+class InputFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.Input
+
+	task = factory.SubFactory(TaskFactory)
+
 class AdjustmentFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Adjustment

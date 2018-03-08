@@ -146,7 +146,6 @@ urlpatterns = [
     url(r'^task-formula-attributes/(?P<pk>[0-9]+)/$', views.TaskFormulaAttributeDetail.as_view()),
 
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
-    url(r'^adjustments/(?P<pk>[0-9]+)/$', views.DetailAdjustment.as_view(), name="adjustmentDetail"),
 
     url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 ]
