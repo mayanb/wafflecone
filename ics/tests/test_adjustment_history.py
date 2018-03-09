@@ -74,7 +74,7 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(len(response.data), 3)
 		history = response.data[1]
 		self.assertEqual(history['type'], 'adjustment')
-		self.assertEqual(history['date'], self.past_time)
+		self.assertEqual(history['date'].replace(tzinfo=None), self.past_time)
 		self.assertEqual(float(history['data']['amount']), 37)
 
 	def test_items(self):
