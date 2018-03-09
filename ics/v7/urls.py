@@ -148,5 +148,7 @@ urlpatterns = [
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
 
     url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
+
+    url(r'^adjustment-history/$', views.AdjustmentHistory.as_view(), name='adjustment-history'),
 ]
 

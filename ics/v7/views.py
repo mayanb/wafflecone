@@ -1300,6 +1300,70 @@ class InventoryList2(generics.ListAPIView):
     ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')\
 
 
+class AdjustmentHistory(APIView):
+  def set_params(self):
+    self.team = self.request.query_params.get('team', None)
+    if self.team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
 
-    #if not (process_type and product_type):
-    #  return Response('Must include product type and process type', status=status.HTTP_400_BAD_REQUEST)
+    self.process_type = self.request.query_params.get('process_type', None)
+    if self.process_type is None:
+      raise serializers.ValidationError('Request must include "process_type" query param')
+
+    self.product_type = self.request.query_params.get('product_type', None)
+    if self.product_type is None:
+      raise serializers.ValidationError('Request must include "product_type" query param')
+
+  def get_adjustments(self):
+    queryset = Adjustment.objects.filter(process_type=self.process_type, product_type=self.product_type)\
+      .order_by('-created_at')
+    return queryset.all()
+
+  def get_item_summary(self, start, end):
+    data = Item.objects.filter(
+      creating_task__is_trashed=False,
+      creating_task__process_type=self.process_type,
+      creating_task__product_type=self.product_type,
+      team_inventory=self.team,
+      created_at__range=(start, end)
+    ) \
+      .aggregate(
+      created_count=Count('amount'),
+      created_amount=Coalesce(Sum('amount'), 0),
+      used_count=Coalesce(Sum(
+        Case(
+          When(inputs__isnull=False, then=1),
+          default=0,
+          output_field=models.IntegerField()
+        )
+      ), 0),
+      used_amount=Coalesce(Sum(
+        Case(
+          When(inputs__isnull=False, then=F('amount')),
+          default=0,
+          output_field=models.IntegerField()
+        )
+      ), 0),
+    )
+    return ItemSummarySerializer(data, context={'date': end}).data
+
+  def get(self, request):
+    self.set_params()
+    adjustments = self.get_adjustments()
+
+    objects = []
+
+    BEGINNING_OF_TIME = datetime.datetime(1, 1, 1)
+    END_OF_TIME = datetime.datetime(3000, 1, 1)
+
+    end_date = END_OF_TIME
+
+    for adjustment in adjustments:
+      objects.append(self.get_item_summary(adjustment.created_at, end_date))
+      objects.append(AdjustmentHistorySerializer(adjustment).data)
+      end_date = adjustment.created_at
+
+    objects.append(self.get_item_summary(BEGINNING_OF_TIME, end_date))
+
+    return Response(objects)
+

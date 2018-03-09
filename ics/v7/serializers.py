@@ -832,3 +832,37 @@ class InventoryList2Serializer(serializers.Serializer):
 		else:
 			adjusted_amount = item_summary['total_amount']
 		return adjusted_amount
+
+
+class ItemSummarySerializer(serializers.Serializer):
+	date = serializers.SerializerMethodField()
+	type = serializers.SerializerMethodField()
+	data = serializers.SerializerMethodField()
+
+	def get_date(self, obj):
+		return self.context.get('date')
+
+	def get_type(self, obj):
+		return 'item_summary'
+
+	def get_data(self, obj):
+		return obj
+
+
+class AdjustmentHistorySerializer(serializers.Serializer):
+	date = serializers.SerializerMethodField()
+	type = serializers.SerializerMethodField()
+	data = serializers.SerializerMethodField()
+
+	def get_date(self, obj):
+		return obj.created_at
+
+	def get_type(self, obj):
+		return 'adjustment'
+
+	def get_data(self, obj):
+		return AdjustmentSerializer(obj).data
+
+
+
+

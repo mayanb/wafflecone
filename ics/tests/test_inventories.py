@@ -98,7 +98,7 @@ class TestInventoriesList(APITestCase):
 	def test_team_filter(self):
 		item = ItemFactory(creating_task=self.task, amount=3)
 
-		other_team = TeamFactory(name='other team')
+		other_team = TeamFactory(name='other-team')
 		other_team_process_type = ProcessTypeFactory(team_created_by=other_team)
 		other_team_product_type = ProductTypeFactory(team_created_by=other_team)
 		other_team_task = TaskFactory(process_type=other_team_process_type, product_type=other_team_product_type)
