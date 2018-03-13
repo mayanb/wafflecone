@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from rest_framework.urlpatterns import format_suffix_patterns
 from ics.v7 import views
 from django.contrib.auth import views as auth_views
@@ -34,7 +34,7 @@ urlpatterns = [
     
 
     url(r'^tasks/create/$', views.TaskCreate.as_view(), name='create_task'),
-    url(r'^tasks/$', views.TaskList.as_view()),
+    url(r'^tasks/$', views.TaskList.as_view(), name='tasks'),
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view()),
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
@@ -145,6 +145,10 @@ urlpatterns = [
     url(r'^task-formula-attributes/$', views.TaskFormulaAttributeList.as_view()),
     url(r'^task-formula-attributes/(?P<pk>[0-9]+)/$', views.TaskFormulaAttributeDetail.as_view()),
 
+    url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
 
+    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 
+    url(r'^adjustment-history/$', views.AdjustmentHistory.as_view(), name='adjustment-history'),
 ]
+

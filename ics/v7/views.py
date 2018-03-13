@@ -440,9 +440,9 @@ class InventoryList(generics.ListAPIView):
     return queryset.values(
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
-      'creating_task__process_type', 
-      'creating_task__process_type__output_desc', 
-      'creating_task__process_type__unit', 
+      'creating_task__process_type',
+      'creating_task__process_type__output_desc',
+      'creating_task__process_type__unit',
       'creating_task__process_type__team_created_by',
       'creating_task__process_type__team_created_by__name',
       'creating_task__process_type__created_by__username',
@@ -1268,4 +1268,102 @@ class TaskFormulaAttributeDetail(generics.RetrieveAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = TaskFormulaAttributeSerializer
 
+class CreateAdjustment(generics.CreateAPIView):
+  queryset = Adjustment.objects.all()
+  serializer_class = AdjustmentSerializer
+
+class InventoryList2(generics.ListAPIView):
+  pagination_class = SmallPagination
+  serializer_class = InventoryList2Serializer
+
+  def get_queryset(self):
+    queryset = Item.unused_objects
+
+    team = self.request.query_params.get('team', None)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    # filter by team
+    queryset = queryset.filter(team_inventory=team)
+
+    return queryset.values(
+      'creating_task__process_type',
+      'creating_task__process_type__name',
+      'creating_task__process_type__unit',
+      'creating_task__process_type__code',
+      'creating_task__process_type__icon',
+      'creating_task__product_type',
+      'creating_task__product_type__name',
+      'creating_task__product_type__code',
+    ).annotate(
+      total_amount=Sum('amount'),
+    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')\
+
+
+class AdjustmentHistory(APIView):
+  def set_params(self):
+    self.team = self.request.query_params.get('team', None)
+    if self.team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    self.process_type = self.request.query_params.get('process_type', None)
+    if self.process_type is None:
+      raise serializers.ValidationError('Request must include "process_type" query param')
+
+    self.product_type = self.request.query_params.get('product_type', None)
+    if self.product_type is None:
+      raise serializers.ValidationError('Request must include "product_type" query param')
+
+  def get_adjustments(self):
+    queryset = Adjustment.objects.filter(process_type=self.process_type, product_type=self.product_type)\
+      .order_by('-created_at')
+    return queryset.all()
+
+  def get_item_summary(self, start, end):
+    data = Item.objects.filter(
+      creating_task__is_trashed=False,
+      creating_task__process_type=self.process_type,
+      creating_task__product_type=self.product_type,
+      team_inventory=self.team,
+      created_at__range=(start, end)
+    ) \
+      .aggregate(
+      created_count=Count('amount'),
+      created_amount=Coalesce(Sum('amount'), 0),
+      used_count=Coalesce(Sum(
+        Case(
+          When(inputs__isnull=False, then=1),
+          default=0,
+          output_field=models.IntegerField()
+        )
+      ), 0),
+      used_amount=Coalesce(Sum(
+        Case(
+          When(inputs__isnull=False, then=F('amount')),
+          default=0,
+          output_field=models.IntegerField()
+        )
+      ), 0),
+    )
+    return ItemSummarySerializer(data, context={'date': end}).data
+
+  def get(self, request):
+    self.set_params()
+    adjustments = self.get_adjustments()
+
+    objects = []
+
+    BEGINNING_OF_TIME = datetime.datetime(1, 1, 1)
+    END_OF_TIME = datetime.datetime(3000, 1, 1)
+
+    end_date = END_OF_TIME
+
+    for adjustment in adjustments:
+      objects.append(self.get_item_summary(adjustment.created_at, end_date))
+      objects.append(AdjustmentHistorySerializer(adjustment).data)
+      end_date = adjustment.created_at
+
+    objects.append(self.get_item_summary(BEGINNING_OF_TIME, end_date))
+
+    return Response(objects)
 
