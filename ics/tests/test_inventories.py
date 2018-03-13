@@ -119,3 +119,28 @@ class TestInventoriesList(APITestCase):
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(len(response.data['results']), 0)
 
+	def test_process_filter(self):
+		ItemFactory(creating_task=self.task, amount=3)
+		other_process_type = ProcessTypeFactory()
+		other_task = TaskFactory(process_type=other_process_type, product_type=self.product_type)
+		other_item = ItemFactory(creating_task=other_task, amount=7)
+		query_params = {
+			'team': self.process_type.team_created_by.id,
+			'process_type': self.process_type.id
+		}
+		response = self.client.get(self.url, query_params, format='json')
+		self.assertEqual(len(response.data['results']), 1)
+		item = response.data['results'][0]
+		self.assertEqual(item['process_id'], str(self.process_type.id))
+
+	def test_product_filter(self):
+		ItemFactory(creating_task=self.task, amount=3)
+		other_product_type = ProductTypeFactory()
+		other_task = TaskFactory(process_type=self.process_type, product_type=other_product_type)
+		other_item = ItemFactory(creating_task=other_task, amount=7)
+		query_params = {
+			'team': self.product_type.team_created_by.id,
+			'product_type': self.product_type.id
+		}
+		response = self.client.get(self.url, query_params, format='json')
+		self.assertEqual(len(response.data['results']), 1)
