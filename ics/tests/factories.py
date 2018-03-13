@@ -14,6 +14,14 @@ class UserFactory(factory.django.DjangoModelFactory):
 	username = factory.LazyAttribute(lambda o: 'user_' + o.team_name)
 
 
+class UserProfileFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.UserProfile
+		django_get_or_create = ('user',)
+
+	user = factory.SubFactory(UserFactory)
+
+
 class TeamFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Team
@@ -74,6 +82,6 @@ class AdjustmentFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Adjustment
 
-	created_by = factory.SubFactory(UserFactory)
+	userprofile = factory.SubFactory(UserProfileFactory)
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)

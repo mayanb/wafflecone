@@ -801,7 +801,7 @@ class AdjustmentSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Adjustment
-		fields = ('created_by', 'created_at', 'process_type', 'product_type', 'amount')
+		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount')
 
 class InventoryList2Serializer(serializers.Serializer):
 	process_id = serializers.CharField(source='creating_task__process_type')

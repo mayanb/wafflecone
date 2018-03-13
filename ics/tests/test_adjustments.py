@@ -1,17 +1,17 @@
 from ics.models import *
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, UserFactory, AdjustmentFactory
+from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, UserProfileFactory
 import datetime
 
 class TestAdjustments(APITestCase):
 
 	def test_create_adjustment(self):
-		user = UserFactory()
+		userprofile = UserProfileFactory()
 		process_type = ProcessTypeFactory()
 		product_type = ProductTypeFactory()
 		data = {
-			'created_by': user.id,
+			'userprofile': userprofile.id,
 			'process_type': process_type.id,
 			'product_type': product_type.id,
 			'amount': 175
@@ -21,7 +21,7 @@ class TestAdjustments(APITestCase):
 		response = self.client.post(url, data, format='json')
 		self.assertEqual(Adjustment.objects.count(), 1)
 		adjustment = Adjustment.objects.get()
-		self.assertEqual(adjustment.created_by.id, user.id)
+		self.assertEqual(adjustment.userprofile.id, userprofile.id)
 		secondsDiff = abs((datetime.datetime.today() - adjustment.created_at.replace(tzinfo=None)).total_seconds())
 		self.assertLess(secondsDiff, 10)
 		self.assertEqual(adjustment.process_type.id, process_type.id)

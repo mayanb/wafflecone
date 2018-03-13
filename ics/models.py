@@ -465,7 +465,7 @@ class Movement(models.Model):
 
 
 class Adjustment(models.Model):
-	created_by = models.ForeignKey(User, related_name='adjustments', on_delete=models.CASCADE)
+	userprofile = models.ForeignKey(UserProfile, related_name='adjustments', on_delete=models.CASCADE)
 	created_at = models.DateTimeField(auto_now_add=True)
 	process_type = models.ForeignKey(ProcessType, related_name='adjustments', on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, null=True, related_name='adjustments', on_delete=models.CASCADE)
