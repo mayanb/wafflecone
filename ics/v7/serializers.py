@@ -798,6 +798,7 @@ class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
 
 class AdjustmentSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	class Meta:
 		model = Adjustment
