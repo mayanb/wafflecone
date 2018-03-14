@@ -110,7 +110,7 @@ def simpleTaskSearch(query_params):
 		queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 		# queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 	return queryset\
-		.order_by('-updated_at')
+		.order_by('-updated_at').select_related('process_type', 'product_type')
 
 def taskDetail():
 	return Task.objects.filter(
