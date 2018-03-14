@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view()),
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
+    url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/flow/$', views.CreateTaskFlow.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
 
