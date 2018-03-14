@@ -1208,13 +1208,16 @@ class InventoryList2(generics.ListAPIView):
     # filter by team
     queryset = queryset.filter(team_inventory=team)
 
-    process_type = self.request.query_params.get('process_type', None)
-    if process_type is not None:
-      queryset = queryset.filter(creating_task__process_type=process_type)
+    process_types = self.request.query_params.get('process_types', None)
+    if process_types is not None:
+      process_ids = process_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__in=process_ids)
 
-    product_type = self.request.query_params.get('product_type', None)
-    if product_type is not None:
-      queryset = queryset.filter(creating_task__product_type=product_type)
+    product_types = self.request.query_params.get('product_types', None)
+    if product_types is not None:
+      product_ids = product_types.strip().split(',')
+      queryset = queryset.filter(creating_task__product_type__in=product_ids)
+
 
     return queryset.values(
       'creating_task__process_type',

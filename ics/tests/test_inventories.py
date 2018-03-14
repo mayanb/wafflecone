@@ -121,26 +121,39 @@ class TestInventoriesList(APITestCase):
 
 	def test_process_filter(self):
 		ItemFactory(creating_task=self.task, amount=3)
-		other_process_type = ProcessTypeFactory()
-		other_task = TaskFactory(process_type=other_process_type, product_type=self.product_type)
-		other_item = ItemFactory(creating_task=other_task, amount=7)
+		included_other_process_type = ProcessTypeFactory()
+		included_other_task = TaskFactory(process_type=included_other_process_type, product_type=self.product_type)
+		included_other_item = ItemFactory(creating_task=included_other_task, amount=7)
+		excluded_other_process_type = ProcessTypeFactory()
+		excluded_other_task = TaskFactory(process_type=excluded_other_process_type, product_type=self.product_type)
+		excluded_other_item = ItemFactory(creating_task=excluded_other_task, amount=7)
+		process_ids = [str(i) for i in [self.process_type.id, included_other_process_type.id]]
+		process_id_string = ','.join(process_ids)
 		query_params = {
 			'team': self.process_type.team_created_by.id,
-			'process_type': self.process_type.id
+			'process_types': process_id_string
 		}
 		response = self.client.get(self.url, query_params, format='json')
-		self.assertEqual(len(response.data['results']), 1)
-		item = response.data['results'][0]
-		self.assertEqual(item['process_id'], str(self.process_type.id))
+		self.assertEqual(len(response.data['results']), 2)
+		response_process_ids = [response.data['results'][0]['process_id'], response.data['results'][1]['process_id']]
+		self.assertEqual(sorted(process_ids), sorted(response_process_ids))
 
 	def test_product_filter(self):
 		ItemFactory(creating_task=self.task, amount=3)
-		other_product_type = ProductTypeFactory()
-		other_task = TaskFactory(process_type=self.process_type, product_type=other_product_type)
-		other_item = ItemFactory(creating_task=other_task, amount=7)
+		included_other_product_type = ProductTypeFactory()
+		included_other_task = TaskFactory(process_type=self.process_type, product_type=included_other_product_type)
+		included_other_item = ItemFactory(creating_task=included_other_task, amount=7)
+		excluded_other_product_type = ProductTypeFactory()
+		excluded_other_task = TaskFactory(process_type=self.process_type, product_type=excluded_other_product_type)
+		excluded_other_item = ItemFactory(creating_task=excluded_other_task, amount=7)
+		product_ids = [str(i) for i in [self.product_type.id, included_other_product_type.id]]
+		product_id_string = ','.join(product_ids)
 		query_params = {
 			'team': self.product_type.team_created_by.id,
-			'product_type': self.product_type.id
+			'product_types': product_id_string
 		}
 		response = self.client.get(self.url, query_params, format='json')
-		self.assertEqual(len(response.data['results']), 1)
+		self.assertEqual(len(response.data['results']), 2)
+		response_product_ids = [response.data['results'][0]['product_id'], response.data['results'][1]['product_id']]
+		self.assertEqual(sorted(product_ids), sorted(response_product_ids))
+
