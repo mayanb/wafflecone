@@ -142,6 +142,11 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 	# product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
+	product_name = serializers.CharField(source='product_type.name')
+	product_id = serializers.IntegerField(source='product_type.id')
+	process_name = serializers.CharField(source='process_type.name')
+	process_id = serializers.IntegerField(source='process_type.id')
+	process_icon = serializers.CharField(source='process_type.icon')
 
 	class Meta:
 		model = Task
@@ -157,7 +162,12 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'label_index', 
 			'custom_display',
 			'display',
-			'is_trashed'
+			'is_trashed',
+			'product_name',
+			'product_id',
+			'process_name',
+			'process_id',
+			'process_icon'
 		)
 
 
