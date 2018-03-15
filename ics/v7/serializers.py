@@ -48,7 +48,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
 
 	def get_attributes(self, process_type):
-		return AttributeSerializer(process_type.attribute_set, many=True).data
+		return AttributeSerializer(process_type.attribute_set.filter(is_trashed=False), many=True).data
 
 	def get_username(self, product):
 		username = product.created_by.username
