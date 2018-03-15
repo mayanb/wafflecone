@@ -85,3 +85,9 @@ class AdjustmentFactory(factory.django.DjangoModelFactory):
 	userprofile = factory.SubFactory(UserProfileFactory)
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
+
+class AttributeFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.Attribute
+
+

@@ -121,4 +121,7 @@ def taskDetail():
 			default=F('items__amount'),
 			output_field=DecimalField()
 		))
-	).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by')
+	).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by') \
+		.prefetch_related('attribute_values', 'attribute_values__attribute', 'items', 'inputs__input_item',
+	                      'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type',
+	                      'inputs__input_item__creating_task__product_type')
