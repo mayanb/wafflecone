@@ -358,6 +358,10 @@ class Task(models.Model):
 		return TaskFormulaAttribute.objects.filter(task=self)
 
 
+class UnusedManager(models.Manager):
+	def get_queryset(self):
+		return super(UnusedManager, self).get_queryset().filter(inputs__isnull=True, creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
+
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
 	creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="items")
@@ -368,6 +372,9 @@ class Item(models.Model):
 
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
 	is_virtual = models.BooleanField(default=False, db_index=True)
+
+	objects = models.Manager()
+	unused_objects = UnusedManager()
 
 	def __str__(self):
 		return str(self.creating_task) + " - " + self.item_qr[-6:]
@@ -381,7 +388,6 @@ class Item(models.Model):
 				self.amount = self.creating_task.process_type.default_amount
 
 		super(Item, self).save(*args, **kwargs)
-
 
 class Input(models.Model):
 	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
@@ -458,7 +464,12 @@ class Movement(models.Model):
 	notes = models.CharField(max_length=100, blank=True)
 
 
-
+class Adjustment(models.Model):
+	userprofile = models.ForeignKey(UserProfile, related_name='adjustments', on_delete=models.CASCADE)
+	created_at = models.DateTimeField(auto_now_add=True)
+	process_type = models.ForeignKey(ProcessType, related_name='adjustments', on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, null=True, related_name='adjustments', on_delete=models.CASCADE)
+	amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
 
 

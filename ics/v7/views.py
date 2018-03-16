@@ -19,6 +19,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
+from ics.v7.queries.tasks import *
 import datetime
 # from datetime import date, datetime, timedelta
 from django.http import HttpResponse
@@ -217,25 +218,18 @@ class TaskSearch(generics.ListAPIView):
   ordering_fields = ('created_at', 'updated_at')
 
   def get_queryset(self):
-    queryset = Task.objects.filter(is_trashed=False).order_by('-updated_at')
-    team = self.request.query_params.get('team', None)
-    if team is not None:
-      queryset = queryset.filter(process_type__team_created_by=team)
-      print(team)
-    label = self.request.query_params.get('label', None)
-    dashboard = self.request.query_params.get('dashboard', None)
-    if label is not None and dashboard is not None:
-      queryset = queryset.filter(Q(keywords__icontains=label))
-    elif label is not None:
-      print("hi")
-      query = SearchQuery(label)
-      # queryset.annotate(rank=SearchRank(F('search'), query)).filter(search=query).order_by('-rank')
-      queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
-      # queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
+    return taskSearch(self.request.query_params)
 
-    return queryset\
-      .select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by', 'process_type__team_created_by', 'product_type__team_created_by')\
-      .prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute', 'formula_attributes', 'items', 'inputs', 'inputs__input_item', 'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type', 'inputs__input_item__creating_task__product_type')
+# tasks/simple/
+class SimpleTaskSearch(generics.ListAPIView):
+  serializer_class = FlatTaskSerializer
+  pagination_class = SmallPagination
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
+  filter_class = TaskFilter
+  ordering_fields = ('created_at', 'updated_at')
+
+  def get_queryset(self):
+    return simpleTaskSearch(self.request.query_params)
 
 
 # tasks/
@@ -247,70 +241,7 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
-        dt = datetime.datetime
-        queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
-            total_amount=Sum(Case(
-              When(items__is_virtual=True, then=Value(0)),
-              default=F('items__amount'),
-              output_field=DecimalField()
-            ))          
-          )
-
-        # filter according to various parameters
-        team = self.request.query_params.get('team', None)
-        if team is not None:
-          queryset = queryset.filter(process_type__team_created_by=team)
-
-        label = self.request.query_params.get('label', None)
-        dashboard = self.request.query_params.get('dashboard', None)
-        if label is not None and dashboard is not None:
-          queryset = queryset.filter(Q(keywords__icontains=label))
-        elif label is not None:
-          queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
-
-        parent = self.request.query_params.get('parent', None)
-        if parent is not None:
-          queryset = Task.objects.get(pk=parent).descendents()
-
-        child = self.request.query_params.get('child', None)
-        if child is not None:
-            queryset = Task.objects.get(pk=child).ancestors()
-
-        inv = self.request.query_params.get('team_inventory', None)
-        if inv is not None:
-          queryset = queryset.filter(items__isnull=False, items__inputs__isnull=True).distinct()
-
-        processes = self.request.query_params.get('processes', None)
-        if processes is not None:
-          processes = processes.strip().split(',')
-          queryset = queryset.filter(process_type__in=processes)
-
-        products = self.request.query_params.get('products', None)
-        if products is not None:
-          products = products.strip().split(',')
-          queryset = queryset.filter(product_type__in=products)
-
-        # filter according to date creation, based on parameters
-        start = self.request.query_params.get('start', None)
-        end = self.request.query_params.get('end', None)
-        if start is not None and end is not None:
-          start = start.strip().split('-')
-          end = end.strip().split('-')
-          startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
-          endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
-          queryset = queryset.filter(created_at__date__range=(startDate, endDate))
-
-
-        # make sure that we get at least one input unit and return it along with the task
-        i = Input.objects.filter(task=OuterRef('id')).order_by('id')
-        queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
-        return queryset \
-          .select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by',
-                          'process_type__team_created_by', 'product_type__team_created_by') \
-          .prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute',
-                      'formula_attributes', 'items', 'inputs', 'inputs__input_item',
-                      'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type',
-                      'inputs__input_item__creating_task__product_type')
+    return tasks(self.request.query_params)
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('team_inventory', None )
@@ -318,16 +249,7 @@ class TaskList(generics.ListAPIView):
 
 # tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = Task.objects.filter(
-    is_trashed=False
-  ).annotate(
-    total_amount=Sum(Case(
-      When(items__is_virtual=True, then=Value(0)),
-      default=F('items__amount'),
-      output_field=DecimalField()
-    ))
-  ).select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by')
-
+  queryset = taskDetail()
   serializer_class = NestedTaskSerializer
 
 
@@ -440,9 +362,9 @@ class InventoryList(generics.ListAPIView):
     return queryset.values(
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
-      'creating_task__process_type', 
-      'creating_task__process_type__output_desc', 
-      'creating_task__process_type__unit', 
+      'creating_task__process_type',
+      'creating_task__process_type__output_desc',
+      'creating_task__process_type__unit',
       'creating_task__process_type__team_created_by',
       'creating_task__process_type__team_created_by__name',
       'creating_task__process_type__created_by__username',
@@ -1268,4 +1190,113 @@ class TaskFormulaAttributeDetail(generics.RetrieveAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = TaskFormulaAttributeSerializer
 
+class CreateAdjustment(generics.CreateAPIView):
+  queryset = Adjustment.objects.all()
+  serializer_class = AdjustmentSerializer
+
+class InventoryList2(generics.ListAPIView):
+  pagination_class = SmallPagination
+  serializer_class = InventoryList2Serializer
+
+  def get_queryset(self):
+    queryset = Item.unused_objects
+
+    team = self.request.query_params.get('team', None)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    # filter by team
+    queryset = queryset.filter(team_inventory=team)
+
+    process_types = self.request.query_params.get('process_types', None)
+    if process_types is not None:
+      process_ids = process_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__in=process_ids)
+
+    product_types = self.request.query_params.get('product_types', None)
+    if product_types is not None:
+      product_ids = product_types.strip().split(',')
+      queryset = queryset.filter(creating_task__product_type__in=product_ids)
+
+
+    return queryset.values(
+      'creating_task__process_type',
+      'creating_task__process_type__name',
+      'creating_task__process_type__unit',
+      'creating_task__process_type__code',
+      'creating_task__process_type__icon',
+      'creating_task__product_type',
+      'creating_task__product_type__name',
+      'creating_task__product_type__code',
+    ).annotate(
+      total_amount=Sum('amount'),
+    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')\
+
+
+class AdjustmentHistory(APIView):
+  def set_params(self):
+    self.team = self.request.query_params.get('team', None)
+    if self.team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    self.process_type = self.request.query_params.get('process_type', None)
+    if self.process_type is None:
+      raise serializers.ValidationError('Request must include "process_type" query param')
+
+    self.product_type = self.request.query_params.get('product_type', None)
+    if self.product_type is None:
+      raise serializers.ValidationError('Request must include "product_type" query param')
+
+  def get_adjustments(self):
+    queryset = Adjustment.objects.filter(process_type=self.process_type, product_type=self.product_type)\
+      .order_by('-created_at')
+    return queryset.all()
+
+  def get_item_summary(self, start, end):
+    data = Item.objects.filter(
+      creating_task__is_trashed=False,
+      creating_task__process_type=self.process_type,
+      creating_task__product_type=self.product_type,
+      team_inventory=self.team,
+      created_at__range=(start, end)
+    ) \
+      .aggregate(
+      created_count=Count('amount'),
+      created_amount=Coalesce(Sum('amount'), 0),
+      used_count=Coalesce(Sum(
+        Case(
+          When(inputs__isnull=False, then=1),
+          default=0,
+          output_field=models.IntegerField()
+        )
+      ), 0),
+      used_amount=Coalesce(Sum(
+        Case(
+          When(inputs__isnull=False, then=F('amount')),
+          default=0,
+          output_field=models.IntegerField()
+        )
+      ), 0),
+    )
+    return ItemSummarySerializer(data, context={'date': end}).data
+
+  def get(self, request):
+    self.set_params()
+    adjustments = self.get_adjustments()
+
+    objects = []
+
+    BEGINNING_OF_TIME = datetime.datetime(1, 1, 1)
+    END_OF_TIME = datetime.datetime(3000, 1, 1)
+
+    end_date = END_OF_TIME
+
+    for adjustment in adjustments:
+      objects.append(self.get_item_summary(adjustment.created_at, end_date))
+      objects.append(AdjustmentHistorySerializer(adjustment).data)
+      end_date = adjustment.created_at
+
+    objects.append(self.get_item_summary(BEGINNING_OF_TIME, end_date))
+
+    return Response(objects)
 

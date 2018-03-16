@@ -91,7 +91,6 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	items = BasicItemSerializer(many=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
 	input_unit = serializers.CharField(read_only=True)
-	#inputUnit = serializers.SerializerMethodField('getInputUnit')
 	attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
 	predicted_attribute_values = TaskFormulaAttributeSerializer(source='formula_attributes', read_only=True, many=True)
 
@@ -135,6 +134,39 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'predicted_attribute_values',
 			'display',
 			'is_trashed'
+		)
+
+# serializes the task, without nested items, inputs, or attributes
+class FlatTaskSerializer(serializers.ModelSerializer):
+	# product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
+	display = serializers.CharField(source='*')
+	total_amount = serializers.CharField(read_only=True)
+	product_name = serializers.CharField(source='product_type.name')
+	product_id = serializers.IntegerField(source='product_type.id')
+	process_name = serializers.CharField(source='process_type.name')
+	process_id = serializers.IntegerField(source='process_type.id')
+	process_icon = serializers.CharField(source='process_type.icon')
+
+	class Meta:
+		model = Task
+		fields = (
+			'id', 
+			'total_amount',
+			'label',
+			'is_open', 
+			'is_flagged', 
+			'flag_update_time', 
+			'created_at', 
+			'updated_at', 
+			'label_index', 
+			'custom_display',
+			'display',
+			'is_trashed',
+			'product_name',
+			'product_id',
+			'process_name',
+			'process_id',
+			'process_icon'
 		)
 
 
