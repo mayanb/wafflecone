@@ -5,9 +5,10 @@ from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFact
 	TeamFactory, InputFactory
 import datetime
 import mock
+from django.utils import timezone
 
 
-class TestInventoriesList(APITestCase):
+class TestAdjustmentHistory(APITestCase):
 
 	def setUp(self):
 		self.process_type = ProcessTypeFactory(name='process-name', code='process-code', unit='process-unit')
@@ -18,7 +19,7 @@ class TestInventoriesList(APITestCase):
 			'process_type': self.process_type.id,
 			'product_type': self.product_type.id,
 		}
-		self.past_time = datetime.datetime(2018, 1, 10)
+		self.past_time = timezone.make_aware(datetime.datetime(2018, 1, 10), timezone.utc)
 		self.task = TaskFactory(process_type=self.process_type, product_type=self.product_type)
 
 	def test_no_items(self):
@@ -74,7 +75,7 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(len(response.data), 3)
 		history = response.data[1]
 		self.assertEqual(history['type'], 'adjustment')
-		self.assertEqual(history['date'].replace(tzinfo=None), self.past_time)
+		self.assertEqual(history['date'], self.past_time)
 		self.assertEqual(float(history['data']['amount']), 37)
 
 	def test_items(self):

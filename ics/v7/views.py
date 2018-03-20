@@ -25,6 +25,7 @@ import datetime
 from django.http import HttpResponse
 import csv
 import pytz
+from django.utils import timezone
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
@@ -1286,8 +1287,8 @@ class AdjustmentHistory(APIView):
 
     objects = []
 
-    BEGINNING_OF_TIME = datetime.datetime(1, 1, 1)
-    END_OF_TIME = datetime.datetime(3000, 1, 1)
+    BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)
+    END_OF_TIME = timezone.make_aware(datetime.datetime(3000, 1, 1), timezone.utc)
 
     end_date = END_OF_TIME
 

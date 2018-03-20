@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 from ics.tests.factories import TaskFactory
 from ics.tests.utilities import format_date
 import datetime
+from django.utils import timezone
 import mock
 
 
@@ -11,10 +12,10 @@ class TestCreateBasics(APITestCase):
 
 	def test_get_tasks(self):
 		with mock.patch('django.utils.timezone.now') as mock_now:
-			mock_now.return_value = datetime.datetime(2018, 1, 10)
+			mock_now.return_value = timezone.make_aware(datetime.datetime(2018, 1, 10), timezone.utc)
 			task1 = TaskFactory(label='Jan-Task')
 		with mock.patch('django.utils.timezone.now') as mock_now:
-			mock_now.return_value = datetime.datetime(2018, 2, 10)
+			mock_now.return_value = timezone.make_aware(datetime.datetime(2018, 2, 10), timezone.utc)
 			task2 = TaskFactory(label='Feb-Task')
 		print task1.created_at
 		url = reverse('tasks')
