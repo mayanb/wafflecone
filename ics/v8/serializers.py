@@ -9,7 +9,6 @@ from model_utils import *
 import re
 import string
 from django.core.mail import send_mail
-# from ics.v8.calculated_fields_serializers import TaskFormulaAttributeSerializer
 
 easy_format = '%Y-%m-%d %H:%M'
 
@@ -564,43 +563,6 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 		extra_kwargs = {'input_products': {'write_only': True} }
-
-class BasicAccountSerializer(serializers.ModelSerializer):
-	created_at = serializers.DateTimeField(read_only=True)
-
-	class Meta:
-		model = Account
-		fields = ('id', 'team', 'name', 'created_at',)
-
-class BasicContactSerializer(serializers.ModelSerializer):
-	created_at = serializers.DateTimeField(read_only=True)
-	account = BasicAccountSerializer()
-
-	class Meta:
-		model = Contact
-		fields = ('id', 'account', 'name', 'phone_number', 'email', 'shipping_addr', 'billing_addr', 'created_at',)
-
-class EditContactSerializer(serializers.ModelSerializer):
-	created_at = serializers.DateTimeField(read_only=True)
-
-	class Meta:
-		model = Contact
-		fields = ('id', 'account', 'name', 'phone_number', 'email', 'shipping_addr', 'billing_addr', 'created_at',)
-
-class BasicOrderSerializer(serializers.ModelSerializer):
-	created_at = serializers.DateTimeField(read_only=True)
-	ordered_by = BasicContactSerializer()
-
-	class Meta:
-		model = Order
-		fields = ('id', 'status', 'ordered_by', 'created_at',)
-
-class EditOrderSerializer(serializers.ModelSerializer):
-	created_at = serializers.DateTimeField(read_only=True)
-
-	class Meta:
-		model = Order
-		fields = ('id', 'status', 'ordered_by', 'created_at',)
 
 
 def reorder(instance, validated_data, dataset):

@@ -1,27 +1,15 @@
-from rest_framework import status
 from rest_framework.response import Response
-from django.db import models
-from django.utils import timezone
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
 from django.db.models.functions import Coalesce
-from django.contrib.postgres.aggregates.general import ArrayAgg
-from ics.models import *
-from django.contrib.auth.models import User
-from ics.v8.serializers import *
 from ics.v8.order_serializers import *
 from ics.v8.calculated_fields_serializers import *
 from rest_framework import generics
-from django.shortcuts import get_object_or_404, render
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
 from ics.v8.queries.tasks import *
 import datetime
-# from datetime import date, datetime, timedelta
 from django.http import HttpResponse
 import csv
 import pytz
@@ -600,51 +588,10 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
 
-class RecommendedInputsList(generics.ListCreateAPIView):
-  #queryset = RecommendedInputs.objects.all()
-  serializer_class = RecommendedInputsSerializer
-
-  def get_queryset(self):
-    team = self.request.query_params.get('team_created_by', None)
-    if team is not None:
-      return RecommendedInputs.objects.filter(process_type__team_created_by=team).filter(recommended_input__team_created_by=team)
-    return RecommendedInputs.objects.all()
-
-class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = RecommendedInputs.objects.all()
-  serializer_class = RecommendedInputsSerializer
 
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
 
-def potatoes(request):
- # Create the HttpResponse object with the appropriate CSV header.
-  response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
-
-  writer = csv.writer(response)
-  writer.writerow(['id', 'melanger name', 'origin', 'start time', 'end time', 'time delta'])
-
-  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__team_created_by=1, process_type__code="MP")
-  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__team_created_by=1, process_type__code="MS")
-
-  for pulled_melanger in pulled_melangers:
-    melange_input = pulled_melanger.inputs.first()
-    if melange_input:
-      melange_start = melange_input.input_item.creating_task
-      start_time = melange_start.created_at.strptime(easy_format)
-      end_time = pulled_melanger.created_at.strptime(easy_format)
-      delta = end_time - start_time
-      origin = pulled_melanger.product_type.code
-      melanger_name = melange_start.attribute_values.filter(attribute=melanger_attr)
-      if melanger_name.count():
-        melanger_name = melanger_name[0].value
-      else:
-        melanger_name = ""
-
-      writer.writerow([pulled_melanger.id, melanger_name, origin, start_time, end_time, delta])
-
-  return response
 
 def activityCSV(request):
   response = HttpResponse(content_type='text/csv')
@@ -722,186 +669,6 @@ class MovementList(generics.ListAPIView):
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()
   serializer_class = MovementReceiveSerializer
-
-  
-
-######################
-# ACCOUNT-RELATED VIEWS #
-######################
-class AccountList(generics.ListAPIView):
-  queryset = Account.objects.all()
-  serializer_class = AccountDetailSerializer
-
-  def get_queryset(self):
-    queryset = Account.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(team=team)
-    return queryset
-
-class AccountGet(generics.RetrieveAPIView):
-  queryset = Account.objects.all()
-  serializer_class = AccountDetailSerializer
- 
-class AccountCreate(generics.CreateAPIView):
-  queryset = Account.objects.all()
-  serializer_class = BasicAccountSerializer 
-
-class AccountEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Account.objects.all()
-  serializer_class = BasicAccountSerializer
-
-
-######################
-# CONTACT-RELATED VIEWS #
-######################
-class ContactList(generics.ListAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = BasicContactSerializer
-
-  def get_queryset(self):
-    queryset = Contact.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(account__team=team)
-    return queryset
-
-class ContactGet(generics.RetrieveAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = BasicContactSerializer
- 
-class ContactCreate(generics.CreateAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = EditContactSerializer
-
-class ContactEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = EditContactSerializer
-
-######################
-# ORDER-RELATED VIEWS #
-######################
-class OrderList(generics.ListAPIView):
-  queryset = Order.objects.all()
-  serializer_class = BasicOrderSerializer
-
-  def get_queryset(self):
-    queryset = Order.objects.all()
-    team = self.request.query_params.get('team', None)
-    status = self.request.query_params.get('status', None)
-
-    if team is not None:
-      queryset = queryset.filter(ordered_by__account__team=team)
-    if status is not None:
-      queryset = queryset.filter(status=status)
-    return queryset
-
-class OrderGet(generics.RetrieveAPIView):
-  queryset = Order.objects.all()
-  serializer_class = OrderDetailSerializer
- 
-class OrderCreate(generics.CreateAPIView):
-  queryset = Order.objects.all()
-  serializer_class = EditOrderSerializer
-
-class OrderEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Order.objects.all()
-  serializer_class = EditOrderSerializer
-
-######################
-# INVENTORYUNIT-RELATED VIEWS #
-######################
-class InventoryUnitList(generics.ListAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = BasicInventoryUnitSerializer
-
-  def get_queryset(self):
-    queryset = InventoryUnit.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(process__team_created_by=team)
-    return queryset
-
-class InventoryUnitGet(generics.RetrieveAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = BasicInventoryUnitSerializer
- 
-class InventoryUnitCreate(generics.CreateAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = EditInventoryUnitSerializer
-
-class InventoryUnitEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = EditInventoryUnitSerializer
-
-######################
-# ORDERINVENTORYUNIT-RELATED VIEWS #
-######################
-class OrderInventoryUnitList(generics.ListAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = BasicOrderInventoryUnitSerializer
-
-  def get_queryset(self):
-    queryset = OrderInventoryUnit.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(order__ordered_by__account__team=team)
-    return queryset
-
-class OrderInventoryUnitGet(generics.RetrieveAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = BasicOrderInventoryUnitSerializer
- 
-class OrderInventoryUnitCreate(generics.CreateAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = EditOrderInventoryUnitSerializer
-
-class OrderInventoryUnitEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = EditOrderInventoryUnitSerializer
-
-
-######################
-# ORDERITEM-RELATED VIEWS #
-######################
-class OrderItemList(generics.ListAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = BasicOrderItemSerializer
-
-  def get_queryset(self):
-    queryset = OrderItem.objects.all()
-    team = self.request.query_params.get('team', None)
-    order = self.request.query_params.get('order', None)
-
-    if team is not None:
-      queryset = queryset.filter(order__ordered_by__account__team=team)
-    if order is not None:
-      queryset = queryset.filter(order=order)
-    return queryset
-
-class OrderItemGet(generics.RetrieveAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = BasicOrderItemSerializer
- 
-class OrderItemCreate(generics.CreateAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = EditOrderItemSerializer
-
-class OrderItemEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = EditOrderItemSerializer
-
-######################
-# PACKING ORDER-RELATED VIEWS #
-######################
- 
-class CreatePackingOrder(generics.CreateAPIView):
-  queryset = Order.objects.all()
-  serializer_class = CreatePackingOrderSerializer
 
 
 

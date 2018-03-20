@@ -67,9 +67,6 @@ urlpatterns = [
     url(r'^taskAttributes/create/$', views.TaskAttributeCreate.as_view()),
     url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
 
-    url(r'^recommendedInputs/$', views.RecommendedInputsList.as_view()),
-    url(r'^recommendedInputs/(?P<pk>[0-9]+)/$', views.RecommendedInputsDetail.as_view()),
-
     url(r'^movements/create/$', views.MovementCreate.as_view()),
     url(r'^movements/$', views.MovementList.as_view()),
     url(r'^movements/(?P<pk>[0-9]+)/$', views.MovementReceive.as_view()),
@@ -81,46 +78,11 @@ urlpatterns = [
     url(r'^activity/$', views.ActivityList.as_view()),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
 
-    url(r'^potatoes/$', views.activityCSV, name='residence time'),
-
     url(r'^goals/$', views.GoalList.as_view()),
     url(r'^goals/(?P<pk>[0-9]+)/$', views.GoalGet.as_view()),
     url(r'^goals/create/$', views.GoalCreate.as_view()),
     url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view()),
     url(r'^goals/move/(?P<pk>[0-9]+)/$', views.ReorderGoal.as_view()),
-
-    url(r'^accounts/$', views.AccountList.as_view()),
-    url(r'^accounts/(?P<pk>[0-9]+)/$', views.AccountGet.as_view()),
-    url(r'^accounts/create/$', views.AccountCreate.as_view()),
-    url(r'^accounts/edit/(?P<pk>[0-9]+)/$', views.AccountEdit.as_view()),
-
-    url(r'^contacts/$', views.ContactList.as_view()),
-    url(r'^contacts/(?P<pk>[0-9]+)/$', views.ContactGet.as_view()),
-    url(r'^contacts/create/$', views.ContactCreate.as_view()),
-    url(r'^contacts/edit/(?P<pk>[0-9]+)/$', views.ContactEdit.as_view()),
-
-    url(r'^orders/$', views.OrderList.as_view()),
-    url(r'^orders/(?P<pk>[0-9]+)/$', views.OrderGet.as_view()),
-    url(r'^orders/create/$', views.OrderCreate.as_view()),
-    url(r'^orders/edit/(?P<pk>[0-9]+)/$', views.OrderEdit.as_view()),
-
-    url(r'^inventoryunits/$', views.InventoryUnitList.as_view()),
-    url(r'^inventoryunits/(?P<pk>[0-9]+)/$', views.InventoryUnitGet.as_view()),
-    url(r'^inventoryunits/create/$', views.InventoryUnitCreate.as_view()),
-    url(r'^inventoryunits/edit/(?P<pk>[0-9]+)/$', views.InventoryUnitEdit.as_view()),
-
-    url(r'^orderinventoryunits/$', views.OrderInventoryUnitList.as_view()),
-    url(r'^orderinventoryunits/(?P<pk>[0-9]+)/$', views.OrderInventoryUnitGet.as_view()),
-    url(r'^orderinventoryunits/create/$', views.OrderInventoryUnitCreate.as_view()),
-    url(r'^orderinventoryunits/edit/(?P<pk>[0-9]+)/$', views.OrderInventoryUnitEdit.as_view()),
-
-    url(r'^orderitems/$', views.OrderItemList.as_view()),
-    url(r'^orderitems/(?P<pk>[0-9]+)/$', views.OrderItemGet.as_view()),
-    url(r'^orderitems/create/$', views.OrderItemCreate.as_view()),
-    url(r'^orderitems/edit/(?P<pk>[0-9]+)/$', views.OrderItemEdit.as_view()),
-
-    url(r'^packingorder/create/$', views.CreatePackingOrder.as_view()),
-
 
     url(r'^alerts/$', views.AlertList.as_view()),
     url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),
