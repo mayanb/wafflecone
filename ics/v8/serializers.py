@@ -154,17 +154,15 @@ def calculateFormula(formula, task_obj):
 		return None
 
 class BasicInputSerializer(serializers.ModelSerializer):
-	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
-	input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
-	input_qr = serializers.CharField(source='input_item.item_qr', read_only=True)
-	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
-	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
-	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+	creating_task_display = serializers.CharField(source='creating_task', read_only=True)
+	creating_task_n = EditTaskSerializer(source='creating_task', read_only=True)
+	creating_task_amount = serializers.DecimalField(source='creating_task.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'amount', 'task', 'creating_task', 'creating_task_display', 'creating_task_n', 'creating_task_amount', 'task_display')
 
 
 # serializes all fields of task
@@ -216,13 +214,6 @@ class AlertInputSerializer(serializers.ModelSerializer):
 		model = Input
 		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount', 'input_task_process_icon', 'input_task_process_name', 'input_task_product_name')
 
-
-class NestedInputSerializer(serializers.ModelSerializer):
-	input_item = NestedItemSerializer(many=False, read_only=True)
-
-	class Meta:
-		model = Input
-		fields = ('id', 'input_item', 'task')
 
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)

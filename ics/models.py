@@ -387,10 +387,12 @@ class Item(models.Model):
 
 		super(Item, self).save(*args, **kwargs)
 
-class Input(models.Model):
-	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
-	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 
+class Input(models.Model):
+	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs", blank=True, null=True)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
+	creating_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="outputs", blank=True, null=True)
+	amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
 
 class FormulaAttribute(models.Model):

@@ -1,6 +1,6 @@
 from ics.models import *
 from rest_framework.test import APITestCase
-from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory
+from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, InputFactory
 
 
 class TestTasks(APITestCase):
@@ -36,10 +36,16 @@ class TestTasks(APITestCase):
 
 	def test_task_detail(self):
 		task = TaskFactory.create(amount=414, process_type=self.process_type, product_type=self.product_type)
+		creating_task = TaskFactory.create(amount=976)
+		InputFactory.create(task=task, creating_task=creating_task, amount=767)
 		url = '/ics/v8/tasks/{}/'.format(task.id)
 		response = self.client.get(url, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response.data['amount'], 414)
+		print response.data
+		self.assertEqual(len(response.data['inputs']), 1)
+		self.assertEqual(response.data['inputs'][0]['amount'], 767)
+		self.assertEqual(response.data['inputs'][0]['creating_task_n']['amount'], 976)
 
 	def test_task_edit(self):
 		task = TaskFactory.create(amount=414, process_type=self.process_type, product_type=self.product_type)
