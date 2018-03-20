@@ -45,6 +45,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	x = serializers.CharField(read_only=True)
 	y = serializers.CharField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
+	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	def get_attributes(self, process_type):
 		return AttributeSerializer(process_type.attribute_set.filter(is_trashed=False), many=True).data

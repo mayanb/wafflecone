@@ -49,7 +49,6 @@ class UserProfile(models.Model):
 		return username_pieces[0]
 
 
-
 ############################
 #                          #
 #    POLYMER CORE MODELS   #
@@ -70,11 +69,9 @@ class ProcessType(models.Model):
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
 
-
 	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)
 	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
-	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	is_trashed = models.BooleanField(default=False, db_index=True)
 
 	def __str__(self):
@@ -85,10 +82,6 @@ class ProcessType(models.Model):
 
 	class Meta:
 		ordering = ['x',]
-
-
-
-
 
 
 class ProductType(models.Model):

@@ -14,20 +14,21 @@ class UserFactory(factory.django.DjangoModelFactory):
 	username = factory.LazyAttribute(lambda o: 'user_' + o.team_name)
 
 
-class UserProfileFactory(factory.django.DjangoModelFactory):
-	class Meta:
-		model = ics.models.UserProfile
-		django_get_or_create = ('user',)
-
-	user = factory.SubFactory(UserFactory)
-
-
 class TeamFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Team
 		django_get_or_create = ('name',)
 
 	name = 'team1'
+
+
+class UserProfileFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.UserProfile
+		django_get_or_create = ('user',)
+
+	user = factory.SubFactory(UserFactory)
+	team = factory.SubFactory(TeamFactory)
 
 
 class ProcessTypeFactory(factory.django.DjangoModelFactory):
@@ -55,6 +56,7 @@ class TaskFactory(factory.django.DjangoModelFactory):
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
 
+
 class ItemFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Item
@@ -69,6 +71,7 @@ class InputFactory(factory.django.DjangoModelFactory):
 
 	task = factory.SubFactory(TaskFactory)
 
+
 class AdjustmentFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Adjustment
@@ -76,6 +79,7 @@ class AdjustmentFactory(factory.django.DjangoModelFactory):
 	userprofile = factory.SubFactory(UserProfileFactory)
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
+
 
 class AttributeFactory(factory.django.DjangoModelFactory):
 	class Meta:
