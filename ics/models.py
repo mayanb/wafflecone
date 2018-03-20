@@ -164,6 +164,7 @@ class Task(models.Model):
 	label = models.CharField(max_length=50, db_index=True)  
 	label_index = models.PositiveSmallIntegerField(default=0, db_index=True)
 	custom_display = models.CharField(max_length=50, blank=True)
+	amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	#created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 	is_open = models.BooleanField(default=True)
 	is_trashed = models.BooleanField(default=False, db_index=True)
