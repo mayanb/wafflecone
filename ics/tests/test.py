@@ -4,13 +4,18 @@ from rest_framework.test import APITestCase
 from ics.tests.factories import TaskFactory
 from ics.tests.utilities import format_date
 import datetime
+import mock
 
 
 class TestCreateBasics(APITestCase):
 
 	def test_get_tasks(self):
-		task1 = TaskFactory(label='Jan-Task', created_at=datetime.datetime(2018, 1, 10))
-		task2 = TaskFactory(label='Feb-Task', created_at=datetime.datetime(2018, 2, 10))
+		with mock.patch('django.utils.timezone.now') as mock_now:
+			mock_now.return_value = datetime.datetime(2018, 1, 10)
+			task1 = TaskFactory(label='Jan-Task')
+		with mock.patch('django.utils.timezone.now') as mock_now:
+			mock_now.return_value = datetime.datetime(2018, 2, 10)
+			task2 = TaskFactory(label='Feb-Task')
 		print task1.created_at
 		url = reverse('tasks')
 		query_params = {

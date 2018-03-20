@@ -52,15 +52,6 @@ class TaskFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Task
 
-	@classmethod
-	def _create(cls, target_class, *args, **kwargs):
-		created_at = kwargs.pop('created_at', None)
-		obj = super(TaskFactory, cls)._create(target_class, *args, **kwargs)
-		if created_at is not None:
-			obj.created_at = created_at
-			obj.save()
-		return obj
-
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
 

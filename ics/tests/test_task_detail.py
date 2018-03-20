@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 from ics.tests.factories import ProcessTypeFactory, TaskFactory, AttributeFactory
 
 
-class TestInventoriesList(APITestCase):
+class TestTaskDetail(APITestCase):
 
 	def setUp(self):
 		self.process_type = ProcessTypeFactory()
