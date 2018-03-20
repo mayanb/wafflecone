@@ -98,6 +98,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	process_type = ProcessTypeWithUserSerializer(many=False, read_only=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	def getInputUnit(self, task):
 		input = task.inputs.first()
@@ -119,7 +120,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'total_amount', 
 			'process_type',
 			'product_type',
-			'label', 
+			'label',
+			'amount',
 			'input_unit', 
 			'is_open', 
 			'is_flagged', 
@@ -146,6 +148,7 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name')
 	process_id = serializers.IntegerField(source='process_type.id')
 	process_icon = serializers.CharField(source='process_type.icon')
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	class Meta:
 		model = Task
@@ -153,6 +156,7 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'id', 
 			'total_amount',
 			'label',
+			'amount',
 			'is_open', 
 			'is_flagged', 
 			'flag_update_time', 

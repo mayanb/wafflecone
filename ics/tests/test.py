@@ -79,30 +79,6 @@ class TestCreateBasics(APITestCase):
 		self.assertEqual(Attribute.objects.count(), 1)
 		self.assertEqual(Attribute.objects.get().name, 'TestAttribute')
 
-	def test_create_task(self):
-		user = User.objects.create_user(username='testuser_testteam', password='ABCD12345*')
-		team = Team.objects.create(name="testteam")
-		userprofile = UserProfile.objects.create(user=user, team=team)
-		url = reverse('processes')
-		data = {'code': 'TPC', 'name': 'TestProcess', 'created_by': user.id, 'team_created_by': team.id,
-		        'icon': "testicon", 'default_amount': 10.0}
-		response = self.client.post(url, data, format='json')
-		process = ProcessType.objects.all()[0].id
-		url = reverse('products')
-		data = {'code': 'TPD', 'name': 'TestProduct', 'created_by': user.id, 'team_created_by': team.id}
-		response = self.client.post(url, data, format='json')
-		product = ProductType.objects.all()[0].id
-		# url = reverse('attributes')
-		# data = {'name': 'TestAttribute', 'process_type': process}
-		# response = self.client.post(url, data, format='json')
-		# product = ProductType.objects.all()[0].id
-
-		url = reverse('create_task')
-		data = {'label': 'T1', 'process_type': process, 'product_type': product}
-		response = self.client.post(url, data, format='json')
-		# self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-		self.assertEqual(Task.objects.count(), 1)
-		self.assertEqual(Task.objects.get().label, 'T1')
 
 # def test_formulaattributes_dependencies_and_taskformulaattributes:
 # create 4 attributes

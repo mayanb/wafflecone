@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from django.db.models.functions import Coalesce
-from ics.v8.order_serializers import *
 from ics.v8.calculated_fields_serializers import *
+from ics.v8.serializers import *
 from rest_framework import generics
 import django_filters
 from rest_framework.filters import OrderingFilter

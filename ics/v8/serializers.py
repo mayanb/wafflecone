@@ -102,14 +102,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 # serializes only post-editable fields of task
 class EditTaskSerializer(serializers.ModelSerializer):
-	#id = serializers.IntegerField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
 	display = serializers.CharField(source='*', read_only=True)
 	process_type = serializers.IntegerField(source='process_type.id', read_only=True)
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'amount')
 
 class DeleteTaskSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -171,13 +172,13 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'amount')
 
 	def create(self, validated_data):
-		print(validated_data)
 		task = Task.objects.create(**validated_data)
 		formula_attrs = FormulaAttribute.objects.filter(product_type=task.product_type, attribute__process_type=task.process_type, is_trashed=False)
 		for formula_attr in formula_attrs:
