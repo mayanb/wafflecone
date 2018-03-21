@@ -274,18 +274,6 @@ class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializer
 
-# inputs/
-class InputList(generics.ListAPIView):
-  queryset = Input.objects.all()
-  serializer_class = NestedInputSerializer
-  filter_fields = ('task',)
-
-# inputs/[pk]/
-class InputDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Input.objects.all()
-  serializer_class = NestedInputSerializer
-  filter_fields = ('task',)
-
 
 #########################
 # PROCESS-RELATED VIEWS #

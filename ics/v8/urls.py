@@ -21,7 +21,6 @@ urlpatterns = [
     url(r'^userprofiles/increment-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileIncrementWalkthroughUpdate.as_view()),
     url(r'^userprofiles/complete-walkthrough/(?P<pk>[0-9]+)/$', views.UserProfileCompleteWalkthroughUpdate.as_view()),
 
-
     url(r'^users/create/$', views.UserProfileCreate.as_view(), name='create_userprofile'),
     url(r'^userprofiles/change-username-password/(?P<pk>[0-9]+)/$', views.UserChangeUsernamePassword.as_view()),
 
@@ -29,10 +28,8 @@ urlpatterns = [
     url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGet.as_view()),
     url(r'^teams/create/$', views.TeamCreate.as_view(), name='create_team'),
 
-
     url(r'^$', views.index, name='index'),
     
-
     url(r'^tasks/create/$', views.TaskCreate.as_view(), name='create_task'),
     url(r'^tasks/$', views.TaskList.as_view(), name='tasks'),
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view(), name='task_detail'),
@@ -41,14 +38,11 @@ urlpatterns = [
     url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
 
-
     url(r'^items/create/$', views.CreateItem.as_view()),
     url(r'^items/$', views.ItemList.as_view()),
     url(r'^items/(?P<pk>[0-9]+)/$', views.ItemDetail.as_view()),
 
     url(r'^inputs/create/$', views.CreateInput.as_view()),
-    url(r'^inputs/$', views.InputList.as_view()),
-    url(r'^inputs/(?P<pk>[0-9]+)/$', views.InputDetail.as_view()),
 
     url(r'^processes/$', views.ProcessList.as_view(), name='processes'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view()),

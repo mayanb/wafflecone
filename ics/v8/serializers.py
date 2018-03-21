@@ -216,13 +216,6 @@ class AlertInputSerializer(serializers.ModelSerializer):
 		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount', 'input_task_process_icon', 'input_task_process_name', 'input_task_product_name')
 
 
-class NestedInputSerializer(serializers.ModelSerializer):
-	input_item = NestedItemSerializer(many=False, read_only=True)
-
-	class Meta:
-		model = Input
-		fields = ('id', 'input_item', 'task')
-
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
