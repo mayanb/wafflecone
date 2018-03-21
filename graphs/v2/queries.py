@@ -1,7 +1,6 @@
 import pytz
 import datetime
-from datetime import timedelta
-from django.db import models
+from datetime import datetime
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, TruncDate
 from ics.models import *
