@@ -1,6 +1,5 @@
 from rest_framework.response import Response
 from django.db.models.functions import Coalesce
-from ics.v8.order_serializers import *
 from ics.v8.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
@@ -872,79 +871,11 @@ class AlertsMarkAsRead(generics.ListAPIView):
 # CALCULATED FIELDS RELATED VIEWS #
 ###################################
 
-class FormulaAttributeList(generics.ListAPIView):
-  queryset = FormulaAttribute.objects.filter(is_trashed=False)
-  serializer_class = FormulaAttributeSerializer
-  filter_fields = ('product_type',)
-
-  def get_queryset(self):
-    queryset = FormulaAttribute.objects.filter(is_trashed=False)
-    team = self.request.query_params.get('team', None)
-    process_type = self.request.query_params.get('process_type', None)
-
-    if team is not None:
-      queryset = queryset.filter(attribute__process_type__team_created_by=team)
-    if process_type is not None:
-      queryset = queryset.filter(attribute__process_type=process_type)
-    return queryset
-
-class FormulaAttributeGet(generics.RetrieveAPIView):
-  queryset = FormulaAttribute.objects.filter(is_trashed=False)
-  serializer_class = FormulaAttributeSerializer
-
-class FormulaAttributeDelete(generics.UpdateAPIView):
-  queryset = FormulaAttribute.objects.all()
-  serializer_class = FormulaAttributeDeleteSerializer
-
-class FormulaAttributeCreate(generics.CreateAPIView):
-  queryset = FormulaAttribute.objects.all()
-  serializer_class = FormulaAttributeCreateSerializer
-
-
-class GetDirectAttributeDependents(generics.ListAPIView):
-  queryset = Attribute.objects.filter(is_trashed=False)
-  serializer_class = AttributeSerializer
-
-  def get_queryset(self):
-    formula_attribute = self.request.query_params.get('formula_attribute', None)
-    if formula_attribute is None:
-      return Attribute.objects.none()
-    formula_attribute_object = FormulaAttribute.objects.get(pk=formula_attribute)
-
-    dependencies = FormulaDependency.objects.filter(formula_attribute=formula_attribute_object, is_trashed=False).values('dependency')
-    dependency_list = list(dependencies)
-    formatted_dependency_list = map(lambda d: d['dependency'], dependency_list)
-
-    queryset = Attribute.objects.filter(pk__in=formatted_dependency_list, is_trashed=False)
-    return queryset
-
-
-class FormulaDependencyList(generics.ListAPIView):
-  queryset = FormulaDependency.objects.filter(is_trashed=False)
-  serializer_class = FormulaDependencySerializer
-
-class TaskFormulaAttributeList(generics.ListCreateAPIView):
-  queryset = TaskFormulaAttribute.objects.all()
-  serializer_class = TaskFormulaAttributeSerializer
-
-  def get_queryset(self):
-    queryset = TaskFormulaAttribute.objects.all()
-    team = self.request.query_params.get('team', None)
-    task = self.request.query_params.get('task', None)
-
-    if team is not None:
-      queryset = queryset.filter(task__process_type__team_created_by=team)
-    if task is not None:
-      queryset = queryset.filter(task__id=task)
-    return queryset
-
-class TaskFormulaAttributeDetail(generics.RetrieveAPIView):
-  queryset = TaskAttribute.objects.all()
-  serializer_class = TaskFormulaAttributeSerializer
 
 class CreateAdjustment(generics.CreateAPIView):
   queryset = Adjustment.objects.all()
   serializer_class = AdjustmentSerializer
+
 
 class InventoryList2(generics.ListAPIView):
   pagination_class = SmallPagination
@@ -982,7 +913,7 @@ class InventoryList2(generics.ListAPIView):
       'creating_task__product_type__code',
     ).annotate(
       total_amount=Sum('amount'),
-    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')\
+    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
 
 
 class AdjustmentHistory(APIView):

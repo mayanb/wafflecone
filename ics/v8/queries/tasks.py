@@ -6,6 +6,7 @@ import datetime
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
+
 def tasks(query_params):
 	dt = datetime.datetime
 	queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
@@ -72,6 +73,7 @@ def tasks(query_params):
 					'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type',
 					'inputs__input_item__creating_task__product_type')
 
+
 def taskSearch(query_params):
 	queryset = Task.objects.filter(is_trashed=False)
 
@@ -93,6 +95,7 @@ def taskSearch(query_params):
 		.prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute', 'formula_attributes', 'items', 'inputs', 'inputs__input_item', 'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type', 'inputs__input_item__creating_task__product_type')\
 		.order_by('-updated_at')
 
+
 def simpleTaskSearch(query_params):
 	queryset = Task.objects.filter(is_trashed=False)
 
@@ -111,6 +114,7 @@ def simpleTaskSearch(query_params):
 		# queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 	return queryset\
 		.order_by('-updated_at').select_related('process_type', 'product_type')
+
 
 def taskDetail():
 	return Task.objects.filter(

@@ -1,9 +1,5 @@
-from django.conf.urls import url, include
-from rest_framework.urlpatterns import format_suffix_patterns
+from django.conf.urls import url
 from ics.v8 import views
-from django.contrib.auth import views as auth_views
-
-import oauth2client.contrib.django_util.site as django_util_site
 
 
 urlpatterns = [
@@ -88,18 +84,6 @@ urlpatterns = [
     url(r'^alerts/incomplete-goals/$', views.GetIncompleteGoals.as_view()),
     url(r'^alerts/complete-goals/$', views.GetCompleteGoals.as_view()),
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
-
-    url(r'^formula-attributes/$', views.FormulaAttributeList.as_view()),
-    url(r'^formula-attributes/(?P<pk>[0-9]+)/$', views.FormulaAttributeGet.as_view()),
-    url(r'^formula-attributes/create/$', views.FormulaAttributeCreate.as_view()),
-    url(r'^formula-attributes/delete/(?P<pk>[0-9]+)/$', views.FormulaAttributeDelete.as_view()),
-
-    url(r'^attributes/direct-dependents/$', views.GetDirectAttributeDependents.as_view()),
-
-    url(r'^formula-dependencies/$', views.FormulaDependencyList.as_view()),
-
-    url(r'^task-formula-attributes/$', views.TaskFormulaAttributeList.as_view()),
-    url(r'^task-formula-attributes/(?P<pk>[0-9]+)/$', views.TaskFormulaAttributeDetail.as_view()),
 
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
 
