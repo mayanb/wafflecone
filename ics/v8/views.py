@@ -12,8 +12,8 @@ import datetime
 from django.http import HttpResponse
 import pytz
 from django.utils import timezone
+from ics import constants
 
-dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -454,8 +454,8 @@ class ActivityList(generics.ListAPIView):
       # end = end.strip().split('-')
       # startDate = date(int(start[0]), int(start[1]), int(start[2]))
       # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = dt.strptime(start, dateformat)
-      endDate = dt.strptime(end, dateformat)
+      startDate = dt.strptime(start, constants.DATE_FORMAT)
+      endDate = dt.strptime(end, constants.DATE_FORMAT)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     sum_query = Case(
@@ -505,8 +505,8 @@ class ActivityListDetail(generics.ListAPIView):
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
-      startDate = dt.strptime(start, dateformat)
-      endDate = dt.strptime(end, dateformat)
+      startDate = dt.strptime(start, constants.DATE_FORMAT)
+      endDate = dt.strptime(end, constants.DATE_FORMAT)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     return queryset.annotate(outputs=Coalesce(Sum(sum_query), 0))

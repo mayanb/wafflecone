@@ -4,8 +4,6 @@ from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.models import *
 import datetime
 
-dateformat = "%Y-%m-%d-%H-%M-%S-%f"
-
 
 def tasks(query_params):
 	dt = datetime.datetime

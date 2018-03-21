@@ -5,12 +5,7 @@ from django.core.exceptions import ValidationError
 from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
-from model_utils import *
-import re
-import string
 from django.core.mail import send_mail
-
-easy_format = '%Y-%m-%d %H:%M'
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
