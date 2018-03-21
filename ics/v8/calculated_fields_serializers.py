@@ -1,10 +1,5 @@
-from rest_framework import serializers
-from ics.models import *
 from ics.v8.serializers import *
-from django.contrib.auth.models import User
-from uuid import uuid4
-from django.db.models import F, Sum, Max
-from datetime import date, datetime, timedelta
+from django.db.models import F
 import re
 import string
 
@@ -136,6 +131,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'is_trashed'
 		)
 
+
 # serializes the task, without nested items, inputs, or attributes
 class FlatTaskSerializer(serializers.ModelSerializer):
 	# product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
@@ -170,44 +166,10 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 		)
 
 
-class FlowTaskSerializer(serializers.ModelSerializer):
-	creating_task = serializers.IntegerField(write_only=True)
-	amount = serializers.DecimalField(max_digits=10, decimal_places=3, write_only=True)
-	new_process_type = serializers.IntegerField(write_only=True)
-	creating_product = serializers.IntegerField(write_only=True)
-	new_task = NestedTaskSerializer(source='*', read_only=True)
-	new_label = serializers.CharField(write_only=True)
-
-	class Meta:
-		model = Task
-		fields = ('new_task', 'creating_task', 'amount', 'new_process_type', 'creating_product', 'new_label')
-		# write_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		# read_only_fields = ('creating_task', 'amount', 'process_type', 'creating_product',)
-		extra_kwargs = {'creating_task': {'write_only': True}, 'amount': {'write_only': True}, 'new_process_type': {'write_only': True}, 'creating_product': {'write_only': True}, 'new_label': {'write_only': True}}
-
-
-	def create(self, validated_data):
-		print("hi1")
-		print(validated_data)
-		print("hi2")
-		creating_task = validated_data.get('creating_task')
-		amount = validated_data.get('amount')
-		new_process_type = validated_data.get('new_process_type')
-		creating_product = validated_data.get('creating_product')
-		new_label = validated_data.get('new_label')
-
-		qr_code = "plmr.io/" + str(uuid4())
-		virtual_item = Item.objects.create(is_virtual=True, creating_task_id=creating_task, item_qr=qr_code, amount=amount)
-		new_task = Task.objects.create(process_type_id=new_process_type, product_type_id=creating_product, label=new_label)
-		Input.objects.create(input_item=virtual_item, task=new_task)
-		return new_task
-
-
 class CreateTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
 	task_predicted_values = TaskFormulaAttributeSerializer(source='getTaskPredictedAttributes', read_only=True, many=True)
-
 
 	def getTaskPredictedAttributes(self, task_attribute):
 		return TaskFormulaAttribute.objects.filter(task=task_attribute.task)

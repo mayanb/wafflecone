@@ -189,10 +189,6 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
-class CreateTaskFlow(generics.CreateAPIView):
-  queryset = Task.objects.filter(is_trashed=False)
-  serializer_class = FlowTaskSerializer
-
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
