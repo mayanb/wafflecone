@@ -152,16 +152,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	def create(self, validated_data):
 		print(validated_data)
-		task = Task.objects.create(**validated_data)
-		formula_attrs = FormulaAttribute.objects.filter(product_type=task.product_type, attribute__process_type=task.process_type, is_trashed=False)
-		for formula_attr in formula_attrs:
-			predicted_val = calculateFormula(formula_attr.formula, task)
-			if (predicted_val != None):
-				TaskFormulaAttribute.objects.create(formula_attribute=formula_attr, task=task, predicted_value=predicted_val)
-			else:
-				TaskFormulaAttribute.objects.create(formula_attribute=formula_attr, task=task)
-			print("creating..........")
-		return task
+		return Task.objects.create(**validated_data)
 
 
 class NestedItemSerializer(serializers.ModelSerializer):
