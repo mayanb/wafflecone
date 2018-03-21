@@ -10,7 +10,6 @@ from ics.paginations import *
 from ics.v8.queries.tasks import *
 import datetime
 from django.http import HttpResponse
-import csv
 import pytz
 from django.utils import timezone
 
@@ -575,61 +574,6 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
 
-
-def activityCSV(request):
-  response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment; filename="logs.csv"'
-
-  easy_format = '%Y-%m-%d %H:%M'
-  dt = datetime.datetime
-
-  process = request.GET.get('process', None)
-  start = request.GET.get('start', None)
-  end = request.GET.get('end', None)
-  team = request.GET.get('team', None)
-  if not process or not start or not end or not team:
-    return response
-
-  # start = start.strip().split('-')
-  # end = end.strip().split('-')
-  # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-  # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-  startDate = dt.strptime(start, dateformat)
-  endDate = dt.strptime(end, dateformat)
-
-  fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
-  attrs = Attribute.objects.filter(process_type=process).order_by('rank')
-  attrVals = attrs.values_list('name', flat=True)
-  fields = fields + [str(x) for x in attrVals]
-
-  writer = csv.writer(response)
-  writer.writerow(fields)
-
-  tasks = Task.objects.filter(is_trashed=False, 
-    process_type__team_created_by=team, process_type=process, 
-    created_at__range=(startDate, endDate)).annotate(
-    inputcount=Count('inputs', distinct=True)).annotate(
-    outputcount=Count('items', distinct=True)).annotate(
-    first_use_date=Min('items__inputs__task__created_at'))
-
-  for t in tasks:
-    tid = t.id
-    display = str(t)
-    product_type = t.product_type.code
-    inputs = t.inputcount
-    outputs = t.outputcount
-    creation_date = t.created_at.strftime(easy_format)
-    close_date = t.updated_at.strftime(easy_format)
-    first_use_date = t.first_use_date
-    if first_use_date is not None:
-      first_use_date = first_use_date.strftime(easy_format)
-    results = [tid, display, product_type, inputs, outputs, creation_date, close_date, first_use_date]
-    vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
-    for attr in attrs:
-      results = results + [vals.get(attr.id, '')]
-    writer.writerow(results)
-
-  return response
 
 class MovementCreate(generics.CreateAPIView):
   #queryset = Movement.objects.all()
