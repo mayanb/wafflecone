@@ -6,6 +6,7 @@ from uuid import uuid4
 from django.db.models import F, Sum, Max
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
+import pytz
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -460,15 +461,16 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	def get_actual(self, goal):
 		base = date.today()
-		start = datetime.combine(base - timedelta(days=base.weekday()), datetime.min.time())
-		end = datetime.combine(base + timedelta(days=1), datetime.min.time())
+		min_time = pytz.utc.localize(datetime.min.time())
+		start = datetime.combine(base - timedelta(days=base.weekday()), min_time)
+		end = datetime.combine(base + timedelta(days=1), min_time)
 
 		if goal.timerange == 'w':
-			start = datetime.combine(base - timedelta(days=base.weekday()), datetime.min.time())
+			start = datetime.combine(base - timedelta(days=base.weekday()), min_time)
 		elif goal.timerange == 'd':
-			start = datetime.combine(base, datetime.min.time())
+			start = datetime.combine(base, min_time)
 		elif goal.timerange == 'm':
-			start = datetime.combine(base.replace(day=1), datetime.min.time())
+			start = datetime.combine(base.replace(day=1), min_time)
 
 		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
 
@@ -477,13 +479,13 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			creating_task__process_type=goal.process_type,
 			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
-			creating_task__created_at__range=(start, end),
+			#creating_task__created_at__range=(start, end),
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile')
 
 
 class GoalCreateSerializer(serializers.ModelSerializer):

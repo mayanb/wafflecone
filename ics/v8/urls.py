@@ -38,25 +38,25 @@ urlpatterns = [
     url(r'^items/$', views.ItemList.as_view()),
     url(r'^items/(?P<pk>[0-9]+)/$', views.ItemDetail.as_view()),
 
-    url(r'^inputs/create/$', views.CreateInput.as_view()),
+    url(r'^inputs/create/$', views.CreateInput.as_view(), name='create_input'),
 
-    url(r'^processes/$', views.ProcessList.as_view(), name='processes'),
-    url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view()),
+    url(r'^processes/$', views.ProcessList.as_view(), name='process_types'),
+    url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
     url(r'^processes/move/(?P<pk>[0-9]+)/$', views.ProcessMoveDetail.as_view()),
 
-    url(r'^products/$', views.ProductList.as_view(), name='products'),
-    url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view()),
+    url(r'^products/$', views.ProductList.as_view(), name='product_types'),
+    url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view(), name='product_type_detail'),
     url(r'^products/codes/$', views.ProductCodes.as_view()),
 
     url(r'^attributes/$', views.AttributeList.as_view(), name='attributes'),
-    url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view()),
-    url(r'^attributes/move/(?P<pk>[0-9]+)/$', views.ReorderAttribute.as_view()),
+    url(r'^attributes/(?P<pk>[0-9]+)/$', views.AttributeDetail.as_view(), name='attribute_detail'),
+    url(r'^attributes/move/(?P<pk>[0-9]+)/$', views.ReorderAttribute.as_view(), name='attribute_move'),
 
     url(r'^taskAttributes/$', views.TaskAttributeList.as_view()),
-    url(r'^taskAttributes/create/$', views.TaskAttributeCreate.as_view()),
+    url(r'^taskAttributes/create/$', views.TaskAttributeCreate.as_view(), name='create_task_attribute'),
     url(r'^taskAttributes/(?P<pk>[0-9]+)/$', views.TaskAttributeDetail.as_view()),
 
-    url(r'^movements/create/$', views.MovementCreate.as_view()),
+    url(r'^movements/create/$', views.MovementCreate.as_view(), name='create_movement'),
     url(r'^movements/$', views.MovementList.as_view()),
     url(r'^movements/(?P<pk>[0-9]+)/$', views.MovementReceive.as_view()),
 
@@ -67,11 +67,11 @@ urlpatterns = [
     url(r'^activity/$', views.ActivityList.as_view()),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
 
-    url(r'^goals/$', views.GoalList.as_view()),
+    url(r'^goals/$', views.GoalList.as_view(), name='goals'),
     url(r'^goals/(?P<pk>[0-9]+)/$', views.GoalGet.as_view()),
-    url(r'^goals/create/$', views.GoalCreate.as_view()),
-    url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view()),
-    url(r'^goals/move/(?P<pk>[0-9]+)/$', views.ReorderGoal.as_view()),
+    url(r'^goals/create/$', views.GoalCreate.as_view(), name='create_goal'),
+    url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view(), name='goal_edit'),
+    url(r'^goals/move/(?P<pk>[0-9]+)/$', views.ReorderGoal.as_view(), name='goal_move'),
 
     url(r'^alerts/$', views.AlertList.as_view()),
     url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),
