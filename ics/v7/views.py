@@ -375,7 +375,7 @@ class InventoryList(generics.ListAPIView):
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
   serializer_class = InventoryDetailSerializer
-  pagination_class = SmallPagination
+  pagination_class = ExtraLargePagination
 
   def get_queryset(self):
     item_query = Item.objects.filter(inputs__isnull=True)
