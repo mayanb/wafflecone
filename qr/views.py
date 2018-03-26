@@ -2,7 +2,7 @@ from django.shortcuts import render
 from uuid import uuid4
 from django.http import HttpResponse
 #from PIL import Image, ImageChops
-import qrcode
+#import qrcode
 
 def index(request):
   return render(request, 'qr/index.html')
