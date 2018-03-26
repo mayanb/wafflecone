@@ -54,7 +54,8 @@ INSTALLED_APPS = (
     'gauth',
     'graphs',
     'rest_auth',
-    #'dashboard', 
+    'raven.contrib.django.raven_compat',
+    #'dashboard',
     #'silk',
 )
 
@@ -259,3 +260,13 @@ CORS_ALLOW_HEADERS = default_headers + (
 CSRF_TRUSTED_ORIGINS = os.environ.get("WAFFLE_CORS_ORIGIN_WHITELIST", '').split(' ')
 
 INTERNAL_IPS = ['127.0.0.1', '192.168.0.119', '10.0.1.184']
+
+import os
+import raven
+
+RAVEN_CONFIG = {
+    'dsn': 'https://fe7127fd4d2f4493a8081d0897d93d07:12beb685499b453aa50a8f0db992cd7f@sentry.io/461810',
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+    'release': raven.fetch_git_sha(os.path.abspath(BASE_DIR)),
+}
