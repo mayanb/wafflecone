@@ -12,29 +12,22 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps2-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          key: deps2-{{ checksum "requirements.txt" }}
       - run:
-          name: Install Python dev deps in a virtual env
-          command: |
-            python -m virtualenv devvenv
-            source devvenv/bin/activate
-            pip install -r requirements-dev.txt
-      - run:
-          name: Install Python production deps in a virtual env
+          name: Install Python deps in a venv
           command: |
             python -m virtualenv venv
             source venv/bin/activate
             pip install -r requirements.txt
             sudo pip install boto3
       - save_cache:
-          key: deps2-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          key: deps2-{{ checksum "requirements.txt" }}
           paths:
             - ./venv
-            - ./devvenv
       - run:
           name: Run Tests
           command: |
-            source devvenv/bin/activate
+            source venv/bin/activate
             ./manage.py test
       - run:
           name: Package and Deploy Django app using Zappa
@@ -48,7 +41,6 @@ jobs:
       - run:
           name: Upload Environment Variables to AWS Lambda function
           command: |
-            source venv/bin/activate
             if [ "${CIRCLE_BRANCH}" == "staging" ]; then
               python ./transformEnvs.py staging
             elif [ "${CIRCLE_BRANCH}" == "master" ]; then
