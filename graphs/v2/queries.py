@@ -1,10 +1,10 @@
 import pytz
 import datetime
-from datetime import timedelta
-from django.db import models
+from datetime import datetime
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, TruncDate
 from ics.models import *
+import pytz
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
@@ -34,7 +34,7 @@ def get_output_by_bucket(bucket, start, end, process_type, product_types):
 	).order_by('bucket')
 
 def get_date_from_string(date):
-	return datetime.strptime(date, dateformat)
+	return pytz.utc.localize(datetime.strptime(date, dateformat))
 
 def filter_tasks(daterange=None, process_type=None, product_types=None):
 	t = Task.objects.filter(is_trashed=False)

@@ -1,33 +1,19 @@
-from rest_framework import status
 from rest_framework.response import Response
-from django.db import models
-from django.utils import timezone
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
 from django.db.models.functions import Coalesce
-from django.contrib.postgres.aggregates.general import ArrayAgg
-from ics.models import *
-from django.contrib.auth.models import User
-from ics.v7.serializers import *
-from ics.v7.order_serializers import *
-from ics.v7.calculated_fields_serializers import *
+from ics.v8.calculated_fields_serializers import *
 from rest_framework import generics
-from django.shortcuts import get_object_or_404, render
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from ics.paginations import *
-from ics.v7.queries.tasks import *
+from ics.v8.queries.tasks import *
 import datetime
-# from datetime import date, datetime, timedelta
 from django.http import HttpResponse
-import csv
 import pytz
 from django.utils import timezone
+from ics import constants
 
-dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -201,10 +187,6 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
-class CreateTaskFlow(generics.CreateAPIView):
-  queryset = Task.objects.filter(is_trashed=False)
-  serializer_class = FlowTaskSerializer
-
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
@@ -290,18 +272,6 @@ class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializer
 
-# inputs/
-class InputList(generics.ListAPIView):
-  queryset = Input.objects.all()
-  serializer_class = NestedInputSerializer
-  filter_fields = ('task',)
-
-# inputs/[pk]/
-class InputDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Input.objects.all()
-  serializer_class = NestedInputSerializer
-  filter_fields = ('task',)
-
 
 #########################
 # PROCESS-RELATED VIEWS #
@@ -376,7 +346,7 @@ class InventoryList(generics.ListAPIView):
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
   serializer_class = InventoryDetailSerializer
-  pagination_class = ExtraLargePagination
+  pagination_class = SmallPagination
 
   def get_queryset(self):
     item_query = Item.objects.filter(inputs__isnull=True)
@@ -484,8 +454,8 @@ class ActivityList(generics.ListAPIView):
       # end = end.strip().split('-')
       # startDate = date(int(start[0]), int(start[1]), int(start[2]))
       # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = dt.strptime(start, dateformat)
-      endDate = dt.strptime(end, dateformat)
+      startDate = dt.strptime(start, constants.DATE_FORMAT)
+      endDate = dt.strptime(end, constants.DATE_FORMAT)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     sum_query = Case(
@@ -535,8 +505,8 @@ class ActivityListDetail(generics.ListAPIView):
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
-      startDate = dt.strptime(start, dateformat)
-      endDate = dt.strptime(end, dateformat)
+      startDate = dt.strptime(start, constants.DATE_FORMAT)
+      endDate = dt.strptime(end, constants.DATE_FORMAT)
       queryset = queryset.filter(created_at__range=(startDate, endDate))
 
     return queryset.annotate(outputs=Coalesce(Sum(sum_query), 0))
@@ -600,106 +570,10 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
 
-class RecommendedInputsList(generics.ListCreateAPIView):
-  #queryset = RecommendedInputs.objects.all()
-  serializer_class = RecommendedInputsSerializer
-
-  def get_queryset(self):
-    team = self.request.query_params.get('team_created_by', None)
-    if team is not None:
-      return RecommendedInputs.objects.filter(process_type__team_created_by=team).filter(recommended_input__team_created_by=team)
-    return RecommendedInputs.objects.all()
-
-class RecommendedInputsDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = RecommendedInputs.objects.all()
-  serializer_class = RecommendedInputsSerializer
 
 def index(request):
   return HttpResponse("Hello, world. You're at the ics index.")
 
-def potatoes(request):
- # Create the HttpResponse object with the appropriate CSV header.
-  response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
-
-  writer = csv.writer(response)
-  writer.writerow(['id', 'melanger name', 'origin', 'start time', 'end time', 'time delta'])
-
-  pulled_melangers = Task.objects.filter(is_trashed=False, process_type__team_created_by=1, process_type__code="MP")
-  melanger_attr = Attribute.objects.filter(name__icontains="melanger", process_type__team_created_by=1, process_type__code="MS")
-
-  for pulled_melanger in pulled_melangers:
-    melange_input = pulled_melanger.inputs.first()
-    if melange_input:
-      melange_start = melange_input.input_item.creating_task
-      start_time = melange_start.created_at.strptime(easy_format)
-      end_time = pulled_melanger.created_at.strptime(easy_format)
-      delta = end_time - start_time
-      origin = pulled_melanger.product_type.code
-      melanger_name = melange_start.attribute_values.filter(attribute=melanger_attr)
-      if melanger_name.count():
-        melanger_name = melanger_name[0].value
-      else:
-        melanger_name = ""
-
-      writer.writerow([pulled_melanger.id, melanger_name, origin, start_time, end_time, delta])
-
-  return response
-
-def activityCSV(request):
-  response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment; filename="logs.csv"'
-
-  easy_format = '%Y-%m-%d %H:%M'
-  dt = datetime.datetime
-
-  process = request.GET.get('process', None)
-  start = request.GET.get('start', None)
-  end = request.GET.get('end', None)
-  team = request.GET.get('team', None)
-  if not process or not start or not end or not team:
-    return response
-
-  # start = start.strip().split('-')
-  # end = end.strip().split('-')
-  # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-  # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-  startDate = dt.strptime(start, dateformat)
-  endDate = dt.strptime(end, dateformat)
-
-  fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
-  attrs = Attribute.objects.filter(process_type=process).order_by('rank')
-  attrVals = attrs.values_list('name', flat=True)
-  fields = fields + [str(x) for x in attrVals]
-
-  writer = csv.writer(response)
-  writer.writerow(fields)
-
-  tasks = Task.objects.filter(is_trashed=False, 
-    process_type__team_created_by=team, process_type=process, 
-    created_at__range=(startDate, endDate)).annotate(
-    inputcount=Count('inputs', distinct=True)).annotate(
-    outputcount=Count('items', distinct=True)).annotate(
-    first_use_date=Min('items__inputs__task__created_at'))
-
-  for t in tasks:
-    tid = t.id
-    display = str(t)
-    product_type = t.product_type.code
-    inputs = t.inputcount
-    outputs = t.outputcount
-    creation_date = t.created_at.strftime(easy_format)
-    close_date = t.updated_at.strftime(easy_format)
-    first_use_date = t.first_use_date
-    if first_use_date is not None:
-      first_use_date = first_use_date.strftime(easy_format)
-    results = [tid, display, product_type, inputs, outputs, creation_date, close_date, first_use_date]
-    vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
-    for attr in attrs:
-      results = results + [vals.get(attr.id, '')]
-    writer.writerow(results)
-
-  return response
 
 class MovementCreate(generics.CreateAPIView):
   #queryset = Movement.objects.all()
@@ -722,186 +596,6 @@ class MovementList(generics.ListAPIView):
 class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
   queryset = Movement.objects.all()
   serializer_class = MovementReceiveSerializer
-
-  
-
-######################
-# ACCOUNT-RELATED VIEWS #
-######################
-class AccountList(generics.ListAPIView):
-  queryset = Account.objects.all()
-  serializer_class = AccountDetailSerializer
-
-  def get_queryset(self):
-    queryset = Account.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(team=team)
-    return queryset
-
-class AccountGet(generics.RetrieveAPIView):
-  queryset = Account.objects.all()
-  serializer_class = AccountDetailSerializer
- 
-class AccountCreate(generics.CreateAPIView):
-  queryset = Account.objects.all()
-  serializer_class = BasicAccountSerializer 
-
-class AccountEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Account.objects.all()
-  serializer_class = BasicAccountSerializer
-
-
-######################
-# CONTACT-RELATED VIEWS #
-######################
-class ContactList(generics.ListAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = BasicContactSerializer
-
-  def get_queryset(self):
-    queryset = Contact.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(account__team=team)
-    return queryset
-
-class ContactGet(generics.RetrieveAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = BasicContactSerializer
- 
-class ContactCreate(generics.CreateAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = EditContactSerializer
-
-class ContactEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Contact.objects.all()
-  serializer_class = EditContactSerializer
-
-######################
-# ORDER-RELATED VIEWS #
-######################
-class OrderList(generics.ListAPIView):
-  queryset = Order.objects.all()
-  serializer_class = BasicOrderSerializer
-
-  def get_queryset(self):
-    queryset = Order.objects.all()
-    team = self.request.query_params.get('team', None)
-    status = self.request.query_params.get('status', None)
-
-    if team is not None:
-      queryset = queryset.filter(ordered_by__account__team=team)
-    if status is not None:
-      queryset = queryset.filter(status=status)
-    return queryset
-
-class OrderGet(generics.RetrieveAPIView):
-  queryset = Order.objects.all()
-  serializer_class = OrderDetailSerializer
- 
-class OrderCreate(generics.CreateAPIView):
-  queryset = Order.objects.all()
-  serializer_class = EditOrderSerializer
-
-class OrderEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Order.objects.all()
-  serializer_class = EditOrderSerializer
-
-######################
-# INVENTORYUNIT-RELATED VIEWS #
-######################
-class InventoryUnitList(generics.ListAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = BasicInventoryUnitSerializer
-
-  def get_queryset(self):
-    queryset = InventoryUnit.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(process__team_created_by=team)
-    return queryset
-
-class InventoryUnitGet(generics.RetrieveAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = BasicInventoryUnitSerializer
- 
-class InventoryUnitCreate(generics.CreateAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = EditInventoryUnitSerializer
-
-class InventoryUnitEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = InventoryUnit.objects.all()
-  serializer_class = EditInventoryUnitSerializer
-
-######################
-# ORDERINVENTORYUNIT-RELATED VIEWS #
-######################
-class OrderInventoryUnitList(generics.ListAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = BasicOrderInventoryUnitSerializer
-
-  def get_queryset(self):
-    queryset = OrderInventoryUnit.objects.all()
-    team = self.request.query_params.get('team', None)
-
-    if team is not None:
-      queryset = queryset.filter(order__ordered_by__account__team=team)
-    return queryset
-
-class OrderInventoryUnitGet(generics.RetrieveAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = BasicOrderInventoryUnitSerializer
- 
-class OrderInventoryUnitCreate(generics.CreateAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = EditOrderInventoryUnitSerializer
-
-class OrderInventoryUnitEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = OrderInventoryUnit.objects.all()
-  serializer_class = EditOrderInventoryUnitSerializer
-
-
-######################
-# ORDERITEM-RELATED VIEWS #
-######################
-class OrderItemList(generics.ListAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = BasicOrderItemSerializer
-
-  def get_queryset(self):
-    queryset = OrderItem.objects.all()
-    team = self.request.query_params.get('team', None)
-    order = self.request.query_params.get('order', None)
-
-    if team is not None:
-      queryset = queryset.filter(order__ordered_by__account__team=team)
-    if order is not None:
-      queryset = queryset.filter(order=order)
-    return queryset
-
-class OrderItemGet(generics.RetrieveAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = BasicOrderItemSerializer
- 
-class OrderItemCreate(generics.CreateAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = EditOrderItemSerializer
-
-class OrderItemEdit(generics.RetrieveUpdateDestroyAPIView):
-  queryset = OrderItem.objects.all()
-  serializer_class = EditOrderItemSerializer
-
-######################
-# PACKING ORDER-RELATED VIEWS #
-######################
- 
-class CreatePackingOrder(generics.CreateAPIView):
-  queryset = Order.objects.all()
-  serializer_class = CreatePackingOrderSerializer
 
 
 
@@ -1121,79 +815,11 @@ class AlertsMarkAsRead(generics.ListAPIView):
 # CALCULATED FIELDS RELATED VIEWS #
 ###################################
 
-class FormulaAttributeList(generics.ListAPIView):
-  queryset = FormulaAttribute.objects.filter(is_trashed=False)
-  serializer_class = FormulaAttributeSerializer
-  filter_fields = ('product_type',)
-
-  def get_queryset(self):
-    queryset = FormulaAttribute.objects.filter(is_trashed=False)
-    team = self.request.query_params.get('team', None)
-    process_type = self.request.query_params.get('process_type', None)
-
-    if team is not None:
-      queryset = queryset.filter(attribute__process_type__team_created_by=team)
-    if process_type is not None:
-      queryset = queryset.filter(attribute__process_type=process_type)
-    return queryset
-
-class FormulaAttributeGet(generics.RetrieveAPIView):
-  queryset = FormulaAttribute.objects.filter(is_trashed=False)
-  serializer_class = FormulaAttributeSerializer
-
-class FormulaAttributeDelete(generics.UpdateAPIView):
-  queryset = FormulaAttribute.objects.all()
-  serializer_class = FormulaAttributeDeleteSerializer
-
-class FormulaAttributeCreate(generics.CreateAPIView):
-  queryset = FormulaAttribute.objects.all()
-  serializer_class = FormulaAttributeCreateSerializer
-
-
-class GetDirectAttributeDependents(generics.ListAPIView):
-  queryset = Attribute.objects.filter(is_trashed=False)
-  serializer_class = AttributeSerializer
-
-  def get_queryset(self):
-    formula_attribute = self.request.query_params.get('formula_attribute', None)
-    if formula_attribute is None:
-      return Attribute.objects.none()
-    formula_attribute_object = FormulaAttribute.objects.get(pk=formula_attribute)
-
-    dependencies = FormulaDependency.objects.filter(formula_attribute=formula_attribute_object, is_trashed=False).values('dependency')
-    dependency_list = list(dependencies)
-    formatted_dependency_list = map(lambda d: d['dependency'], dependency_list)
-
-    queryset = Attribute.objects.filter(pk__in=formatted_dependency_list, is_trashed=False)
-    return queryset
-
-
-class FormulaDependencyList(generics.ListAPIView):
-  queryset = FormulaDependency.objects.filter(is_trashed=False)
-  serializer_class = FormulaDependencySerializer
-
-class TaskFormulaAttributeList(generics.ListCreateAPIView):
-  queryset = TaskFormulaAttribute.objects.all()
-  serializer_class = TaskFormulaAttributeSerializer
-
-  def get_queryset(self):
-    queryset = TaskFormulaAttribute.objects.all()
-    team = self.request.query_params.get('team', None)
-    task = self.request.query_params.get('task', None)
-
-    if team is not None:
-      queryset = queryset.filter(task__process_type__team_created_by=team)
-    if task is not None:
-      queryset = queryset.filter(task__id=task)
-    return queryset
-
-class TaskFormulaAttributeDetail(generics.RetrieveAPIView):
-  queryset = TaskAttribute.objects.all()
-  serializer_class = TaskFormulaAttributeSerializer
 
 class CreateAdjustment(generics.CreateAPIView):
   queryset = Adjustment.objects.all()
   serializer_class = AdjustmentSerializer
+
 
 class InventoryList2(generics.ListAPIView):
   pagination_class = SmallPagination
@@ -1231,7 +857,7 @@ class InventoryList2(generics.ListAPIView):
       'creating_task__product_type__code',
     ).annotate(
       total_amount=Sum('amount'),
-    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')\
+    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
 
 
 class AdjustmentHistory(APIView):

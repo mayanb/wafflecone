@@ -2,6 +2,7 @@ from ics.models import *
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, AdjustmentFactory, ItemFactory, TeamFactory, InputFactory
+from django.utils import timezone
 import datetime
 import mock
 
@@ -15,7 +16,7 @@ class TestInventoriesList(APITestCase):
 		self.query_params = {
 			'team': self.process_type.team_created_by.id
 		}
-		self.past_time = datetime.datetime(2018, 1, 10)
+		self.past_time = timezone.make_aware(datetime.datetime(2018, 1, 10), timezone.utc)
 		self.task = TaskFactory(process_type=self.process_type, product_type=self.product_type)
 
 	def test_no_items(self):

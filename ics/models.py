@@ -1,16 +1,13 @@
 from __future__ import unicode_literals
-from datetime import datetime  
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.aggregates import StringAgg
-from django.db.models.signals import post_save, m2m_changed
 from django.contrib.postgres.indexes import GinIndex
-from django.dispatch import receiver
 from uuid import uuid4
 from django.db.models import Max
 import constants
+from django.utils import timezone
 
 
 
@@ -43,7 +40,7 @@ class UserProfile(models.Model):
 	team = models.ForeignKey(Team, related_name='userprofiles', on_delete=models.CASCADE, null=True)
 	account_type = models.CharField(max_length=1, choices=USERTYPES, default='a')
 	send_emails = models.BooleanField(default=True)
-	last_seen = models.DateTimeField(default=datetime.now)
+	last_seen = models.DateTimeField(default=timezone.now)
 	walkthrough = models.IntegerField(default=1)
 
 	def get_username_display(self):
@@ -66,7 +63,7 @@ class ProcessType(models.Model):
 	name = models.CharField(max_length=50)
 	code = models.CharField(max_length=20)
 	icon = models.CharField(max_length=50)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 	description = models.CharField(max_length=200, default="")
 	output_desc = models.CharField(max_length=200, default="product")
@@ -97,7 +94,7 @@ class ProcessType(models.Model):
 class ProductType(models.Model):
 	created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
 	team_created_by = models.ForeignKey(Team, related_name='products', on_delete=models.CASCADE)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 	name = models.CharField(max_length=200)
 	code = models.CharField(max_length=20)
 	description = models.CharField(max_length=200, default="")
@@ -202,7 +199,7 @@ class Task(models.Model):
 		self.refreshKeywords()
 		# update the flag_update_time if the flag is toggled
 		if self.old_is_flagged != self.is_flagged:
-			self.flag_update_time = datetime.now()
+			self.flag_update_time = timezone.now()
 		self.old_is_flagged = self.is_flagged
 		qr_code = "plmr.io/" + str(uuid4())
 		super(Task, self).save(*args, **kwargs)
@@ -226,7 +223,7 @@ class Task(models.Model):
 			# get the number of tasks with the same label from this year
 			q = ( 
 				Task.objects.filter(label=self.label)
-					.filter(created_at__startswith=str(datetime.now().year))
+					.filter(created_at__startswith=str(timezone.now().year))
 					.order_by('-label_index')
 				)
 			numItems = len(q)
@@ -511,7 +508,7 @@ class Goal(models.Model):
 	def save(self, *args, **kwargs):
 		# create the right rank
 		if self.is_trashed:
-			self.trashed_time = datetime.now()
+			self.trashed_time = timezone.now()
 
 		if self.pk is None:
 			prev_rank = Goal.objects.filter(
@@ -537,14 +534,14 @@ class GoalProductType(models.Model):
 class Account(models.Model):
 	team = models.ForeignKey(Team, related_name='accounts', on_delete=models.CASCADE)
 	name = models.CharField(max_length=200)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 	def __str__(self):
 		return self.name
 
 class Contact(models.Model):
 	account = models.ForeignKey(Account, related_name='contacts', on_delete=models.CASCADE)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 	name = models.CharField(max_length=200)
 	phone_number = models.CharField(max_length=15, null=True)
 	email = models.EmailField(max_length=70, null= True)
@@ -562,7 +559,7 @@ class Order(models.Model):
 	)
 
 	ordered_by = models.ForeignKey(Contact, related_name='orders', on_delete=models.CASCADE)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 	status = models.CharField(max_length=1, choices=ORDER_STATUS_TYPES, default='o')
 
 
@@ -571,7 +568,7 @@ class InventoryUnit(models.Model):
 	process = models.ForeignKey(ProcessType, related_name='inventory_units', on_delete=models.CASCADE)
 	product = models.ForeignKey(ProductType, related_name='inventory_units', on_delete=models.CASCADE)
 	unit_price = models.DecimalField(max_digits=10, decimal_places=2)	
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 	price_updated_at = models.DateTimeField(auto_now=True)
 
 
@@ -580,13 +577,13 @@ class OrderInventoryUnit(models.Model):
 	inventory_unit = models.ForeignKey(InventoryUnit, related_name='order_inventory_units', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
 	amount_description = models.CharField(max_length=100, default="")
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 class OrderItem(models.Model):
 	order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
 	item = models.ForeignKey(Item, related_name='order_items', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
-	created_at = models.DateTimeField(default=datetime.now, blank=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 
 ##################################
@@ -608,7 +605,7 @@ class Alert(models.Model):
 	variable_content = models.TextField(null=True)
 	userprofile = models.ForeignKey(UserProfile, related_name='alerts', on_delete=models.CASCADE)
 	is_displayed = models.BooleanField(default=True, db_index=True)
-	created_at = models.DateTimeField(default=datetime.now, blank=True, db_index=True)
+	created_at = models.DateTimeField(default=timezone.now, blank=True, db_index=True)
 
 
 

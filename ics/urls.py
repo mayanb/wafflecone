@@ -8,7 +8,9 @@ import oauth2client.contrib.django_util.site as django_util_site
 urlpatterns = [ 
     url(r'^v4/', include('ics.v4.urls')),
     url(r'^v7/', include('ics.v7.urls')),
-    #url(r'', include('ics.v1.urls'))
+    url(r'^v8/', include('ics.v8.urls')),
+  
+    url(r'', include('ics.v7.urls'))
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
