@@ -528,6 +528,8 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
 	all_product_types = serializers.BooleanField(read_only=True)
+	username_created_by = serializers.CharField(source='userprofile.get_username_display', read_only=True)
+
 
 	def get_product_types(self, goal):
 		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
@@ -563,7 +565,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'username_created_by', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicAccountSerializer(serializers.ModelSerializer):
