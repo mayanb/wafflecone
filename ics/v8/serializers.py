@@ -124,7 +124,7 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Item
-		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory')
+		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory', 'is_generic')
 
 
 class BasicInputSerializer(serializers.ModelSerializer):

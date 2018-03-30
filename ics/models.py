@@ -369,6 +369,7 @@ class Item(models.Model):
 
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
 	is_virtual = models.BooleanField(default=False, db_index=True)
+	is_generic = models.BooleanField(default=False, db_index=True)
 
 	objects = models.Manager()
 	unused_objects = UnusedManager()
