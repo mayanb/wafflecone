@@ -1,37 +1,15 @@
 from __future__ import unicode_literals
-from rest_framework import status
-from rest_framework.response import Response
-from django.db import models
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField, ExpressionWrapper, FloatField, CharField, Value as V
-from django.db.models.functions import Coalesce, Concat
-from django.forms.models import model_to_dict
-from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db.models import F, Count, Case, When, Value, Sum, DecimalField, ExpressionWrapper, FloatField, CharField, Value as V
+from django.db.models.functions import Concat
 from ics.models import *
-from django.contrib.auth.models import User
 from django.core import serializers
-from graphs.serializers import *
-from rest_framework import generics
-from django.shortcuts import get_object_or_404, render
-import django_filters
-from rest_framework.filters import OrderingFilter
-from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
-from ics.paginations import *
-import datetime
 from numpy import median, ceil
 
-from django.shortcuts import render
 import json
 
 # Create your views here.
-from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from django.conf import settings
 from rest_framework.decorators import api_view
-import requests
-import datetime
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 

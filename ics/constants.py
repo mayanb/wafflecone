@@ -13,3 +13,5 @@ ATTRIBUTE_DATA_TYPES = (
 	(TIME_TYPE, "time data"),
 	(USER_TYPE, "user data")
 )
+
+DATE_FORMAT = "%Y-%m-%d-%H-%M-%S-%f"
