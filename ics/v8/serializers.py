@@ -135,10 +135,11 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
+	unit = serializers.CharField(source='input_item.creating_task.process_type.unit', read_only=True)
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'input_item', 'task', 'task_display', 'unit', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
 
 
 # serializes all fields of task
