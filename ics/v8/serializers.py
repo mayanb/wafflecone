@@ -61,6 +61,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 	last_five_values = serializers.SerializerMethodField()
 
 	def get_last_five_values(self, attribute):
+		#need to fix in the future to return only non empty values, and very distinct vals 
 		return TaskAttribute.objects.filter(attribute=attribute.id).order_by('-updated_at').values('task').distinct().values('value')[:5]
 
 	class Meta:
