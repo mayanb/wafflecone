@@ -38,6 +38,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	attributes = serializers.SerializerMethodField()
 	created_by_name = serializers.CharField(source='created_by.username', read_only=True)
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+	last_used = serializers.DateTimeField(source='get_last_used_date', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
 	icon = serializers.CharField(read_only=True)
 	x = serializers.CharField(read_only=True)
@@ -53,7 +54,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at', 'last_used')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
