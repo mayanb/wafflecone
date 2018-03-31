@@ -58,11 +58,15 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
+	last_five_values = serializers.SerializerMethodField()
+
+	def get_last_five_values(self, attribute):
+		return TaskAttribute.objects.filter(attribute=attribute.id).order_by('-updated_at').values('task').distinct().values('value')[:5]
+
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed')
-		read_only_fields = ('id', 'process_type', 'name', 'rank', 'datatype')
-
+		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
+		read_only_fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'last_five_values')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
 	class Meta:
