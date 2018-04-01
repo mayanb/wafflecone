@@ -20,7 +20,7 @@ class TestAttributes(APITestCase):
 		self.assertEqual(old_attribute.is_trashed, False)
 		url = reverse('attribute_detail', args=[old_attribute.id])
 		data = {'is_trashed': True}
-		response = self.client.put(url, data, format='json')
+		response = self.client.patch(url, data, format='json')
 		self.assertEqual(response.status_code, 200)
 		new_attribute = Attribute.objects.get(id=old_attribute.id)
 		self.assertEqual(new_attribute.is_trashed, True)
