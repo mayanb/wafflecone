@@ -58,7 +58,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
-	last_five_values = serializers.SerializerMethodField()
+	last_five_values = serializers.SerializerMethodField(read_only=True)
 
 	def get_last_five_values(self, attribute):
 		#need to fix in the future to return only non empty values, and very distinct vals 
@@ -67,7 +67,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Attribute
 		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
-		read_only_fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'last_five_values')
+		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
 	class Meta:
