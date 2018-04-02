@@ -285,7 +285,7 @@ class ProcessList(generics.ListCreateAPIView):
   serializer_class = ProcessTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
 
-# processes/[pk]/
+# processes/[pk]/ ...where pk = 'primary key' == 'the id'
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypeWithUserSerializer
@@ -294,6 +294,28 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
+
+# processes/duplicate
+# request params: current_user, current_team, new_process_name, new_process_code, original_process_id
+class ProcessDuplicate(generics.CreateAPIView):
+  # queryset = ProcessType.objects.get(id=POST REQUEST BODY) # IS THIS EVEN NEEDED?
+  serializer_class = ProcessTypeWithUserSerializer
+
+  def post(self, request, *args, **kwargs):
+    original_process = ProcessType.objects.get(pk=request.original_process_id)
+
+    duplicate_process = original_process.duplicate()
+
+    duplicate_process.created_by = request.current_user
+    duplicate_process.team_created_by = request.current_team
+    duplicate_process.name = request.new_process_name
+    duplicate_process.code = request.new_process_code
+
+    for attribute in original_process.attribute_set:
+      duplicate_attribute = attribute.duplicate()
+      duplicate_attribute.process_type = duplicate_process.name
+
+    return self.create(duplicate_process, *args, **kwargs)
 
 
 

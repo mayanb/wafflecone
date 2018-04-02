@@ -21,7 +21,7 @@ class TestProcessTypes(APITestCase):
 			'default_amount': 425,
 			'unit': 'kg',
 		}
-		response = self.client.post(url, data, format='json')
+		response = self.client.post(url, data)
 		self.assertEqual(response.status_code, 201)
 		process_type = ProcessType.objects.get(id=response.data['id'])
 		self.assertEqual(process_type.created_by, self.user_profile.user)
@@ -32,6 +32,34 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(process_type.output_desc, 'Output Description')
 		self.assertEqual(process_type.default_amount, 425)
 		self.assertEqual(process_type.unit, 'kg')
+
+	def test_duplicate_process_type(self):
+		process_type = ProcessTypeFactory(name='old-name')
+
+		url = reverse('process_duplicate')
+		data = { # FILL IN WITH MAYA'S API
+			'created_by': self.user_profile.user.id,
+			'team_created_by': self.user_profile.team.id,
+			'name': 'process-name',
+			'code': 'process-code',
+			'description': 'Process Description',
+			'output_desc': 'Output Description',
+			'default_amount': 425,
+			'unit': 'kg',
+		}
+		response = self.client.post(url, data)
+		self.assertEqual(response.status_code, 201)
+		process_type = ProcessType.objects.get(id=response.data['id'])
+		self.assertEqual(process_type.created_by, self.user_profile.user)
+		self.assertEqual(process_type.team_created_by, self.user_profile.team)
+		self.assertEqual(process_type.name, 'process-name')
+		self.assertEqual(process_type.code, 'process-code')
+		self.assertEqual(process_type.description, 'Process Description')
+		self.assertEqual(process_type.output_desc, 'Output Description')
+		self.assertEqual(process_type.default_amount, 425)
+		self.assertEqual(process_type.unit, 'kg')
+
+		# CHECK RESPONSE BODY
 
 	def test_list_process_types(self):
 		ProcessTypeFactory(
@@ -86,3 +114,5 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(process_type.name, 'new-name')
 		self.assertEqual(process_type.code, 'new-code')
 		self.assertEqual(process_type.description, 'new-description')
+
+

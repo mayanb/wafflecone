@@ -74,6 +74,10 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 		model = ProcessType
 		fields = ('id','x','y')
 
+	class Meta:
+		model = ProcessType
+		# ?? fields would be the same as ProcessTypeWithUserSerializer (how do I reuse/know whats returned?)
+
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)

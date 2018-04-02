@@ -77,6 +77,26 @@ class ProcessType(models.Model):
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	is_trashed = models.BooleanField(default=False, db_index=True)
 
+	def duplicate(self):
+		duplicate_process = ProcessType.create()
+
+		duplicate_process.created_by = self.created_by
+		duplicate_process.team_created_by = self.team_created_by
+		duplicate_process.name = self.name
+		duplicate_process.code = self.code
+		duplicate_process.icon = self.icon
+		duplicate_process.created_at = models.DateTimeField(default=timezone.now, blank=True)
+		duplicate_process.description = self.description
+		duplicate_process.output_desc = self.output_desc
+		duplicate_process.default_amount = self.default_amount
+		duplicate_process.unit = self.unit
+		duplicate_process.x = self.x
+		duplicate_process.y = self.y
+		duplicate_process.default_amount = self.default_amount
+		duplicate_process.is_trashed = self.is_trashed
+
+		return duplicate_process
+
 	def __str__(self):
 		return self.name
 
@@ -126,6 +146,18 @@ class Attribute(models.Model):
 		default=constants.TEXT_TYPE
 	)
 	required = models.BooleanField(default=True)
+
+	def duplicate(self):
+		duplicate_attribute = Attribute.create()
+
+		duplicate_attribute.process_type = self.process_type
+		duplicate_attribute.name = self.name
+		duplicate_attribute.rank = self.rank
+		duplicate_attribute.is_trashed = self.is_trashed
+		duplicate_attribute.datatype = self.datatype
+		duplicate_attribute.required = self.required
+
+		return duplicate_attribute
 
 	def __str__(self):
 		return self.name
