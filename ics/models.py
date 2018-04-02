@@ -396,7 +396,7 @@ class Item(models.Model):
 class Input(models.Model):
 	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
-	amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
 
 
