@@ -826,7 +826,7 @@ class InventoryList2(generics.ListAPIView):
   serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
-    queryset = Item.unused_objects
+    queryset = Item.active_objects
 
     team = self.request.query_params.get('team', None)
     if team is None:
@@ -855,6 +855,7 @@ class InventoryList2(generics.ListAPIView):
       'creating_task__product_type',
       'creating_task__product_type__name',
       'creating_task__product_type__code',
+      'team_inventory'
     ).annotate(
       total_amount=Sum('amount'),
     ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')

@@ -748,20 +748,38 @@ class InventoryList2Serializer(serializers.Serializer):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
 
+		start_time = timezone.make_aware(datetime(1, 1, 1), timezone.utc)
+		start_outputs_total = 0
+
 		latest_adjustment = Adjustment.objects.all() \
 			.filter(process_type=process_type, product_type=product_type) \
 			.order_by('-created_at').first()
 
 		if latest_adjustment:
-			recent_items_total = Item.unused_objects.filter(
-				creating_task__process_type=process_type,
-				creating_task__product_type=product_type,
-				created_at__gt=latest_adjustment.created_at
-			).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-			adjusted_amount = latest_adjustment.amount + recent_items_total
-		else:
-			adjusted_amount = item_summary['total_amount']
-		return adjusted_amount
+			start_outputs_total = latest_adjustment.amount
+			start_time = latest_adjustment.created_at
+
+		items_query = Item.active_objects.filter(
+			creating_task__process_type=process_type,
+			creating_task__product_type=product_type,
+			created_at__gt=start_time,
+			team_inventory=item_summary['team_inventory']
+		)
+
+		outputs_total = start_outputs_total + (items_query.all().aggregate(total_amount=Sum('amount'))['total_amount'] or 0)
+
+		fully_used_inputs_total = items_query.all().filter(
+			inputs__isnull=False,
+			inputs__amount__isnull=True,
+		).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+
+		partially_used_inputs_total = items_query.all().filter(
+			inputs__isnull=False,
+			inputs__amount__isnull=False,
+		).aggregate(total_amount=Sum('inputs__amount'))['total_amount'] or 0
+
+		return outputs_total - fully_used_inputs_total - partially_used_inputs_total
+
 
 
 class ItemSummarySerializer(serializers.Serializer):

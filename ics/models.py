@@ -362,9 +362,9 @@ class Task(models.Model):
 		return TaskFormulaAttribute.objects.filter(task=self)
 
 
-class UnusedManager(models.Manager):
+class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
-		return super(UnusedManager, self).get_queryset().filter(inputs__isnull=True, creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
+		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
 
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
@@ -378,7 +378,7 @@ class Item(models.Model):
 	is_virtual = models.BooleanField(default=False, db_index=True)
 
 	objects = models.Manager()
-	unused_objects = UnusedManager()
+	active_objects = ActiveItemsManager()
 
 	def __str__(self):
 		return str(self.creating_task) + " - " + self.item_qr[-6:]
