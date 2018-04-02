@@ -845,7 +845,6 @@ class InventoryList2(generics.ListAPIView):
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
 
-
     return queryset.values(
       'creating_task__process_type',
       'creating_task__process_type__name',
@@ -899,7 +898,13 @@ class AdjustmentHistory(APIView):
       ), 0),
       used_amount=Coalesce(Sum(
         Case(
-          When(inputs__isnull=False, then=F('amount')),
+          When(inputs__isnull=False, then=Case(
+            When(inputs__amount__isnull=False, then=F('inputs__amount')),
+            When(inputs__amount__isnull=True, then=F('amount')),
+            default=0,
+            output_field=models.IntegerField()
+          )
+               ),
           default=0,
           output_field=models.IntegerField()
         )
