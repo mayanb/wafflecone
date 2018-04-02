@@ -881,8 +881,7 @@ class AdjustmentHistory(APIView):
     return queryset.all()
 
   def get_item_summary(self, start, end):
-    data = Item.objects.filter(
-      creating_task__is_trashed=False,
+    data = Item.active_objects.filter(
       creating_task__process_type=self.process_type,
       creating_task__product_type=self.product_type,
       team_inventory=self.team,

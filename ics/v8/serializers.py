@@ -766,17 +766,16 @@ class InventoryList2Serializer(serializers.Serializer):
 			team_inventory=item_summary['team_inventory']
 		)
 
-		outputs_total = start_outputs_total + (items_query.all().aggregate(total_amount=Sum('amount'))['total_amount'] or 0)
+		outputs_total = start_outputs_total + (
+				items_query.all().aggregate(total_amount=Sum('amount'))['total_amount'] or 0)
 
-		fully_used_inputs_total = items_query.all().filter(
-			inputs__isnull=False,
-			inputs__amount__isnull=True,
-		).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+		fully_used_inputs_total = items_query.all().exclude(inputs__isnull=True) \
+			                          .exclude(inputs__amount__isnull=False) \
+			                          .aggregate(total_amount=Sum('amount'))['total_amount'] or 0
 
-		partially_used_inputs_total = items_query.all().filter(
-			inputs__isnull=False,
-			inputs__amount__isnull=False,
-		).aggregate(total_amount=Sum('inputs__amount'))['total_amount'] or 0
+		partially_used_inputs_total = items_query.all().exclude(inputs__isnull=True) \
+			                              .exclude(inputs__amount__isnull=True) \
+			                              .aggregate(total_amount=Sum('inputs__amount'))['total_amount'] or 0
 
 		return outputs_total - fully_used_inputs_total - partially_used_inputs_total
 
