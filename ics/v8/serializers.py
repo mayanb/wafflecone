@@ -144,7 +144,7 @@ class BasicInputSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'input_item', 'amount', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
 
 
 # serializes all fields of task
