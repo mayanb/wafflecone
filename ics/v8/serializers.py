@@ -141,6 +141,7 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	class Meta:
 		model = Input
