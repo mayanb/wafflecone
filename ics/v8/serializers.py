@@ -38,6 +38,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	attributes = serializers.SerializerMethodField()
 	created_by_name = serializers.CharField(source='created_by.username', read_only=True)
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+	last_used = serializers.DateTimeField(source='get_last_used_date', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
 	icon = serializers.CharField(read_only=True)
 	x = serializers.CharField(read_only=True)
@@ -53,15 +54,20 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at', 'last_used')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
+	last_five_values = serializers.SerializerMethodField(read_only=True)
+
+	def get_last_five_values(self, attribute):
+		#need to fix in the future to return only non empty values, and very distinct vals 
+		return TaskAttribute.objects.filter(attribute=attribute.id).order_by('-updated_at').values('task').distinct().values('value')[:5]
+
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed')
-		read_only_fields = ('id', 'process_type', 'name', 'rank', 'datatype')
-
+		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
+		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
 class ProcessTypePositionSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -140,6 +146,7 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Input
 		fields = ('id', 'input_item', 'task', 'task_display', 'unit', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+
 
 
 # serializes all fields of task
