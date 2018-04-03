@@ -826,7 +826,7 @@ class InventoryList2(generics.ListAPIView):
   serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
-    queryset = Item.unused_objects
+    queryset = Item.active_objects
 
     team = self.request.query_params.get('team', None)
     if team is None:
@@ -845,7 +845,6 @@ class InventoryList2(generics.ListAPIView):
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
 
-
     return queryset.values(
       'creating_task__process_type',
       'creating_task__process_type__name',
@@ -855,6 +854,7 @@ class InventoryList2(generics.ListAPIView):
       'creating_task__product_type',
       'creating_task__product_type__name',
       'creating_task__product_type__code',
+      'team_inventory'
     ).annotate(
       total_amount=Sum('amount'),
     ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
@@ -880,8 +880,7 @@ class AdjustmentHistory(APIView):
     return queryset.all()
 
   def get_item_summary(self, start, end):
-    data = Item.objects.filter(
-      creating_task__is_trashed=False,
+    data = Item.active_objects.filter(
       creating_task__process_type=self.process_type,
       creating_task__product_type=self.product_type,
       team_inventory=self.team,
@@ -899,7 +898,13 @@ class AdjustmentHistory(APIView):
       ), 0),
       used_amount=Coalesce(Sum(
         Case(
-          When(inputs__isnull=False, then=F('amount')),
+          When(inputs__isnull=False, then=Case(
+            When(inputs__amount__isnull=False, then=F('inputs__amount')),
+            When(inputs__amount__isnull=True, then=F('amount')),
+            default=0,
+            output_field=models.IntegerField()
+          )
+               ),
           default=0,
           output_field=models.IntegerField()
         )

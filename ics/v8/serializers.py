@@ -3,7 +3,8 @@ from ics.models import *
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from uuid import uuid4
-from django.db.models import F, Sum, Max
+from django.db.models import F, Sum, Max, When, Case
+from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 import pytz
@@ -61,7 +62,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 	last_five_values = serializers.SerializerMethodField(read_only=True)
 
 	def get_last_five_values(self, attribute):
-		#need to fix in the future to return only non empty values, and very distinct vals 
+		#need to fix in the future to return only non empty values, and very distinct vals
 		return TaskAttribute.objects.filter(attribute=attribute.id).order_by('-updated_at').values('task').distinct().values('value')[:5]
 
 	class Meta:
@@ -748,20 +749,37 @@ class InventoryList2Serializer(serializers.Serializer):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
 
+		starting_total = 0
+
 		latest_adjustment = Adjustment.objects.all() \
 			.filter(process_type=process_type, product_type=product_type) \
 			.order_by('-created_at').first()
 
+		items_query = Item.active_objects.filter(
+			creating_task__process_type=process_type,
+			creating_task__product_type=product_type,
+			team_inventory=item_summary['team_inventory'],
+		)
+
 		if latest_adjustment:
-			recent_items_total = Item.unused_objects.filter(
-				creating_task__process_type=process_type,
-				creating_task__product_type=product_type,
-				created_at__gt=latest_adjustment.created_at
-			).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-			adjusted_amount = latest_adjustment.amount + recent_items_total
-		else:
-			adjusted_amount = item_summary['total_amount']
-		return adjusted_amount
+			start_time = latest_adjustment.created_at
+			items_query = items_query.filter(created_at__gt=start_time)
+			starting_total = latest_adjustment.amount
+
+		untouched_items_total = (items_query.all().filter(inputs__isnull=True).aggregate(total_amount=Sum('amount'))[
+			                'total_amount'] or 0)
+
+		partially_unused_items_total = items_query.all().aggregate(
+			total=Coalesce(Sum(
+				Case(
+					When(inputs__amount__isnull=False, then=F('amount') - F('inputs__amount')),
+					default=0,
+					output_field=models.IntegerField()
+				)
+			), 0)
+		)['total']
+
+		return starting_total + untouched_items_total + partially_unused_items_total
 
 
 class ItemSummarySerializer(serializers.Serializer):
