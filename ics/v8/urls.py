@@ -34,7 +34,7 @@ urlpatterns = [
     url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
 
-    url(r'^items/create/$', views.CreateItem.as_view()),
+    url(r'^items/create/$', views.CreateItem.as_view(), name='create_item'),
     url(r'^items/$', views.ItemList.as_view()),
     url(r'^items/(?P<pk>[0-9]+)/$', views.ItemDetail.as_view()),
 
