@@ -33,31 +33,32 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(process_type.default_amount, 425)
 		self.assertEqual(process_type.unit, 'kg')
 
-	def test_duplicate_process_type(self):
-		process_type = ProcessTypeFactory(name='old-name')
+	def test_duplicate_process_type_to_duplicate(self):
+		process_type_to_duplicate = ProcessTypeFactory(name='old-name')
 
 		url = reverse('process_duplicate')
-		data = { # FILL IN WITH MAYA'S API
+		data = {
 			'created_by': self.user_profile.user.id,
 			'team_created_by': self.user_profile.team.id,
-			'name': 'process-name',
-			'code': 'process-code',
-			'description': 'Process Description',
-			'output_desc': 'Output Description',
-			'default_amount': 425,
-			'unit': 'kg',
+			'name': 'new-process-name',
+			'code': 'new-process-code',
+			'duplicateID': process_type_to_duplicate.id,
 		}
 		response = self.client.post(url, data)
 		self.assertEqual(response.status_code, 201)
-		process_type = ProcessType.objects.get(id=response.data['id'])
-		self.assertEqual(process_type.created_by, self.user_profile.user)
-		self.assertEqual(process_type.team_created_by, self.user_profile.team)
-		self.assertEqual(process_type.name, 'process-name')
-		self.assertEqual(process_type.code, 'process-code')
-		self.assertEqual(process_type.description, 'Process Description')
-		self.assertEqual(process_type.output_desc, 'Output Description')
-		self.assertEqual(process_type.default_amount, 425)
-		self.assertEqual(process_type.unit, 'kg')
+		duplicate_process = ProcessType.objects.get(id=response.data['id'])
+		self.assertEqual(duplicate_process.created_by, self.user_profile.user)
+		self.assertEqual(duplicate_process.team_created_by, self.user_profile.team)
+		self.assertEqual(duplicate_process.name, 'new-process-name')
+		self.assertEqual(duplicate_process.code, 'new-process-code')
+		self.assertEqual(duplicate_process.description, process_type_to_duplicate.description)
+		self.assertEqual(duplicate_process.output_desc, process_type_to_duplicate.output_desc)
+		self.assertEqual(duplicate_process.default_amount, process_type_to_duplicate.default_amount)
+		self.assertEqual(duplicate_process.unit,  process_type_to_duplicate.unit)
+
+		self.assertNotEqual(duplicate_process.name, process_type_to_duplicate.name)
+		self.assertNotEqual(duplicate_process.id, process_type_to_duplicate.id)
+		self.assertNotEqual(duplicate_process.code, process_type_to_duplicate.code)
 
 		# CHECK RESPONSE BODY
 

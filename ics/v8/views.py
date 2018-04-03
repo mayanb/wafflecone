@@ -295,6 +295,7 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
   queryset = ProcessType.objects.all()
   serializer_class = ProcessTypePositionSerializer
 
+
 # processes/duplicate
 # request params: current_user, current_team, new_process_name, new_process_code, original_process_id
 class ProcessDuplicate(generics.CreateAPIView):
@@ -302,21 +303,21 @@ class ProcessDuplicate(generics.CreateAPIView):
   serializer_class = ProcessTypeWithUserSerializer
 
   def post(self, request, *args, **kwargs):
-    original_process = ProcessType.objects.get(pk=request.original_process_id)
+    process_to_duplicate = ProcessType.objects.get(pk=request.data['duplicateID'])
+    user_created_by = User.objects.get(id=request.data['created_by'])
+    duplicate_process = process_to_duplicate.duplicate(user_created_by)
 
-    duplicate_process = original_process.duplicate()
-
-    duplicate_process.created_by = request.current_user
-    duplicate_process.team_created_by = request.current_team
-    duplicate_process.name = request.new_process_name
-    duplicate_process.code = request.new_process_code
-
-    for attribute in original_process.attribute_set:
+    duplicate_process.created_by = user_created_by
+    duplicate_process.team_created_by = Team.objects.get(id=request.data['team_created_by'])
+    duplicate_process.name = request.data['name']
+    duplicate_process.code = request.data['code']
+    print process_to_duplicate.attribute_set
+    for attribute in process_to_duplicate.attribute_set.all():
       duplicate_attribute = attribute.duplicate()
-      duplicate_attribute.process_type = duplicate_process.name
+      duplicate_attribute.process_type = request.data['name']
 
+    request.data = duplicate_process
     return self.create(duplicate_process, *args, **kwargs)
-
 
 
 
