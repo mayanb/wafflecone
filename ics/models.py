@@ -83,6 +83,13 @@ class ProcessType(models.Model):
 	def getAllAttributes(self):
 		return self.attribute_set.filter(is_trashed=False)
 
+	def get_last_used_date(self):
+		last_task = Task.objects.filter(is_trashed=False, process_type=self.id).order_by('-created_at').first()
+		if last_task:
+			return last_task.created_at
+		else:
+			return None
+
 	class Meta:
 		ordering = ['x',]
 
@@ -389,6 +396,7 @@ class Item(models.Model):
 class Input(models.Model):
 	input_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inputs")
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
+	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
 
 
