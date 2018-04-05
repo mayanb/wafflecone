@@ -56,7 +56,7 @@ class TestProcessTypes(APITestCase):
 			'team_created_by': self.user_profile.team.id,
 			'name': 'new-process-name',
 			'code': 'new-process-code',
-			'duplicateID': process_type_to_duplicate.id,
+			'duplicate_id': process_type_to_duplicate.id,
 			'icon': 'new-icon',
 			'description': 'new-description',
 			'output_desc': 'new-output_desc',

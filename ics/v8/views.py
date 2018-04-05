@@ -301,7 +301,7 @@ class ProcessDuplicate(generics.CreateAPIView):
   serializer_class = ProcessTypeWithUserSerializer
 
   def post(self, request, *args, **kwargs):
-    process_to_duplicate = ProcessType.objects.get(pk=request.data.get('duplicateID'))
+    process_to_duplicate = ProcessType.objects.get(pk=request.data.get('duplicate_id'))
     duplicate_process = ProcessType.objects.create(
       created_by=User.objects.get(id=request.data.get('created_by')),
       team_created_by=Team.objects.get(id=request.data.get('team_created_by')),
