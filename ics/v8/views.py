@@ -120,10 +120,10 @@ class GoalList(generics.ListAPIView):
 class GoalGet(generics.RetrieveAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = BasicGoalSerializer
- 
+
 class GoalCreate(generics.CreateAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
-  serializer_class = GoalCreateSerializer 
+  serializer_class = GoalCreateSerializer
 
 class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
@@ -298,30 +298,28 @@ class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
 
 # processes/duplicate
 class ProcessDuplicate(generics.CreateAPIView):
-  # queryset = ProcessType.objects.get(id=POST REQUEST BODY) # IS THIS EVEN NEEDED?
   serializer_class = ProcessTypeWithUserSerializer
 
   def post(self, request, *args, **kwargs):
-    process_to_duplicate = ProcessType.objects.get(pk=request.data['duplicateID'])
-    user_created_by = User.objects.get(id=request.data['created_by'])
-    duplicate_process = process_to_duplicate.duplicate(user_created_by)
-  # instead of duplicating the process, start from scatch and add all the new info
-    duplicate_process.created_by = user_created_by
-    duplicate_process.team_created_by = Team.objects.get(id=request.data['team_created_by'])
-    duplicate_process.name = request.data['name']
-    duplicate_process.code = request.data['code']
-    print process_to_duplicate.attribute_set
-    for attribute in process_to_duplicate.attribute_set.all():
-      duplicate_attribute = attribute.duplicate()
-      duplicate_attribute.process_type = request.data['name']
-      duplicate_attribute.save()
+    process_to_duplicate = ProcessType.objects.get(pk=request.data.get('duplicateID'))
+    duplicate_process = ProcessType.objects.create(
+      created_by=User.objects.get(id=request.data.get('created_by')),
+      team_created_by=Team.objects.get(id=request.data.get('team_created_by')),
+      name=request.data.get('name'),
+      code=request.data.get('code'),
+      icon=request.data.get('icon'),
+      description=request.data.get('description'),
+      output_desc=request.data.get('output_desc'),
+      default_amount=request.data.get('default_amount'),
+      unit=request.data.get('unit'),
+      is_trashed=False,
+    )
 
-    # request.data['PROPERTY'] =
-    # request.data = duplicate_process
+    for attribute in process_to_duplicate.attribute_set.all():
+      attribute.duplicate(duplicate_process)
+
     serializer = ProcessTypeWithUserSerializer(duplicate_process)
     return Response(data=serializer.data, status=201)
-    # return self.create(duplicate_process, *args, **kwargs)
-
 
 
 ###################
@@ -350,7 +348,7 @@ class InventoryList(generics.ListAPIView):
     processes = self.request.query_params.get('processes', None)
     if processes is not None:
       processes = processes.strip().split(',')
-      queryset = queryset.filter(creating_task__process_type__in=processes) 
+      queryset = queryset.filter(creating_task__process_type__in=processes)
       return queryset.values(
         'creating_task__process_type__unit').annotate(
           count=Sum('amount')
@@ -376,13 +374,13 @@ class InventoryDetailTest2(generics.ListAPIView):
 
   def get_queryset(self):
     item_query = Item.objects.filter(inputs__isnull=True)
-    
+
     team = self.request.query_params.get('team', None)
     if team is not None:
       item_query = item_query.filter(team_inventory=team).distinct()
 
 
-    queryset = Task.objects.filter(is_trashed=False) 
+    queryset = Task.objects.filter(is_trashed=False)
 
      # filter by products
     products = self.request.query_params.get('products', None)
@@ -704,7 +702,7 @@ class GetIncompleteGoals(generics.ListAPIView):
         if (not goal.is_trashed) or (goal.is_trashed and goal.trashed_time >= end_aware):
           product_types = ProductType.objects.filter(goal_product_types__goal=goal)
           amount = Item.objects.filter(
-            creating_task__process_type=goal.process_type, 
+            creating_task__process_type=goal.process_type,
             creating_task__product_type__in=product_types,
             creating_task__is_trashed=False,
             creating_task__created_at__range=(start_aware, end_aware),
@@ -778,7 +776,7 @@ class GetCompleteGoals(generics.ListAPIView):
         if (not goal.is_trashed) or (goal.is_trashed and goal.trashed_time >= end_aware):
           product_types = ProductType.objects.filter(goal_product_types__goal=goal)
           amount = Item.objects.filter(
-            creating_task__process_type=goal.process_type, 
+            creating_task__process_type=goal.process_type,
             creating_task__product_type__in=product_types,
             creating_task__is_trashed=False,
             creating_task__created_at__range=(start_aware, end_aware),

@@ -77,24 +77,6 @@ class ProcessType(models.Model):
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	is_trashed = models.BooleanField(default=False, db_index=True)
 
-	def duplicate(self, user_created_by):
-		return ProcessType.objects.create(
-			# created by must be set manually by caller?
-			created_by=user_created_by, # user instance, not id
-			team_created_by=self.team_created_by,
-			name=self.name,
-			code=self.code,
-			icon=self.icon,
-			# created at set by Django
-			description=self.description,
-			output_desc=self.output_desc,
-			default_amount=self.default_amount,
-			unit=self.unit,
-			x=self.x,
-			y=self.y,
-			is_trashed=self.is_trashed,
-		)
-
 	def __str__(self):
 		return self.name
 
@@ -145,9 +127,9 @@ class Attribute(models.Model):
 	)
 	required = models.BooleanField(default=True)
 
-	def duplicate(self):
+	def duplicate(self, duplicate_process):
 		return Attribute.objects.create(
-			process_type=self.process_type,
+			process_type=duplicate_process,
 			name=self.name,
 			rank=self.rank,
 			is_trashed=self.is_trashed,

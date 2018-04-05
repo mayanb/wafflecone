@@ -1,6 +1,6 @@
 from ics.models import *
 from rest_framework.test import APITestCase
-from ics.tests.factories import UserProfileFactory, ProcessTypeFactory
+from ics.tests.factories import UserProfileFactory, ProcessTypeFactory, AttributeFactory
 from django.urls import reverse
 
 
@@ -8,6 +8,7 @@ class TestProcessTypes(APITestCase):
 
 	def setUp(self):
 		self.user_profile = UserProfileFactory()
+		self.user_profile_two = UserProfileFactory(id=-1)
 
 	def test_create_process_type(self):
 		url = reverse('process_types')
@@ -34,8 +35,21 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(process_type.unit, 'kg')
 
 	def test_duplicate_process_type_to_duplicate(self):
-		process_type_to_duplicate = ProcessTypeFactory(name='old-name')
-
+		process_type_to_duplicate = ProcessTypeFactory(
+			created_by=self.user_profile_two.user,
+			team_created_by=self.user_profile_two.team,
+			name='old-process-name',
+			code='old-process-code',
+			icon='old-icon',
+			description='old-description',
+			output_desc='old-output_desc',
+			default_amount=111,
+			unit='old-unit',
+			is_trashed=False,
+		)
+		num_attributes = 4
+		for i in range(num_attributes):
+			AttributeFactory(name=i, process_type=process_type_to_duplicate)
 		url = reverse('process_duplicate')
 		data = {
 			'created_by': self.user_profile.user.id,
@@ -43,24 +57,34 @@ class TestProcessTypes(APITestCase):
 			'name': 'new-process-name',
 			'code': 'new-process-code',
 			'duplicateID': process_type_to_duplicate.id,
+			'icon': 'new-icon',
+			'description': 'new-description',
+			'output_desc': 'new-output_desc',
+			'default_amount': 333,
+			'unit': 'new-unit',
+			'is_trashed': False,
 		}
 		response = self.client.post(url, data)
 		self.assertEqual(response.status_code, 201)
 		duplicate_process = ProcessType.objects.get(id=response.data['id'])
-		self.assertEqual(duplicate_process.created_by, self.user_profile.user)
-		self.assertEqual(duplicate_process.team_created_by, self.user_profile.team)
-		self.assertEqual(duplicate_process.name, 'new-process-name')
-		self.assertEqual(duplicate_process.code, 'new-process-code')
-		self.assertEqual(duplicate_process.description, process_type_to_duplicate.description)
-		self.assertEqual(duplicate_process.output_desc, process_type_to_duplicate.output_desc)
-		self.assertEqual(duplicate_process.default_amount, process_type_to_duplicate.default_amount)
-		self.assertEqual(duplicate_process.unit,  process_type_to_duplicate.unit)
 
-		self.assertNotEqual(duplicate_process.name, process_type_to_duplicate.name)
-		self.assertNotEqual(duplicate_process.id, process_type_to_duplicate.id)
-		self.assertNotEqual(duplicate_process.code, process_type_to_duplicate.code)
+		# Verify duplicate process contains all properties assigned to it via the POST request
+		self.assertEqual(data.get('created_by'), duplicate_process.created_by.id)
+		self.assertEqual(data.get('team_created_by'), duplicate_process.team_created_by.id)
+		self.assertEqual(data.get('name'), duplicate_process.name)
+		self.assertEqual(data.get('code'), duplicate_process.code)
+		self.assertEqual(data.get('icon'), duplicate_process.icon)
+		self.assertEqual(data.get('description'), duplicate_process.description)
+		self.assertEqual(data.get('output_desc'), duplicate_process.output_desc)
+		self.assertEqual(data.get('default_amount'), duplicate_process.default_amount)
+		self.assertEqual(data.get('unit'), duplicate_process.unit)
+		self.assertEqual(data.get('is_trashed'), duplicate_process.is_trashed)
 
-		# CHECK RESPONSE BODY
+		# Verify that copied attributes are the same as the process type being copied
+		old_attributes = process_type_to_duplicate.attribute_set.all()
+		new_attributes = duplicate_process.attribute_set.all()
+		for i in range(num_attributes):
+			self.assertEqual(old_attributes[i].name, new_attributes[i].name)
 
 	def test_list_process_types(self):
 		ProcessTypeFactory(
@@ -108,6 +132,7 @@ class TestProcessTypes(APITestCase):
 			'name': 'new-name',
 			'code': 'new-code',
 			'description': 'new-description',
+			'default_amount': 200
 		}
 		response = self.client.put(url, data, format='json')
 		self.assertEqual(response.status_code, 200)
