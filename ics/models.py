@@ -127,6 +127,16 @@ class Attribute(models.Model):
 	)
 	required = models.BooleanField(default=True)
 
+	def duplicate(self, duplicate_process):
+		return Attribute.objects.create(
+			process_type=duplicate_process,
+			name=self.name,
+			rank=self.rank,
+			is_trashed=self.is_trashed,
+			datatype=self.datatype,
+			required=self.required,
+		)
+
 	def __str__(self):
 		return self.name
 
@@ -286,6 +296,9 @@ class Task(models.Model):
 		root_tasks = set([self])
 		self.descendents_helper(all_descendents, root_tasks, 0)
 
+		# Remove task from its list of descendents
+		if self.id in all_descendents: all_descendents.remove(self.id)
+
 		# convert set of IDs to Queryset & return
 		return Task.objects.filter(id__in=all_descendents)
 
@@ -329,6 +342,9 @@ class Task(models.Model):
 		curr_level_tasks = set([self])
 		self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
 
+		# Remove task from its list of ancestors
+		if self.id in all_ancestors: all_ancestors.remove(self.id)
+
 		# convert set of IDs to Queryset & return
 		return Task.objects.filter(id__in=all_ancestors)
 
@@ -362,9 +378,9 @@ class Task(models.Model):
 		return TaskFormulaAttribute.objects.filter(task=self)
 
 
-class UnusedManager(models.Manager):
+class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
-		return super(UnusedManager, self).get_queryset().filter(inputs__isnull=True, creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
+		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
 
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
@@ -376,9 +392,10 @@ class Item(models.Model):
 
 	amount = models.DecimalField(default=-1, max_digits=10, decimal_places=3)
 	is_virtual = models.BooleanField(default=False, db_index=True)
+	is_generic = models.BooleanField(default=False, db_index=True)
 
 	objects = models.Manager()
-	unused_objects = UnusedManager()
+	active_objects = ActiveItemsManager()
 
 	def __str__(self):
 		return str(self.creating_task) + " - " + self.item_qr[-6:]

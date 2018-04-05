@@ -34,7 +34,7 @@ urlpatterns = [
     url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
 
-    url(r'^items/create/$', views.CreateItem.as_view()),
+    url(r'^items/create/$', views.CreateItem.as_view(), name='create_item'),
     url(r'^items/$', views.ItemList.as_view()),
     url(r'^items/(?P<pk>[0-9]+)/$', views.ItemDetail.as_view()),
 
@@ -43,6 +43,8 @@ urlpatterns = [
     url(r'^processes/$', views.ProcessList.as_view(), name='process_types'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
     url(r'^processes/move/(?P<pk>[0-9]+)/$', views.ProcessMoveDetail.as_view()),
+    url(r'^processes/duplicate/$', views.ProcessDuplicate.as_view(), name='process_duplicate'),
+
 
     url(r'^products/$', views.ProductList.as_view(), name='product_types'),
     url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view(), name='product_type_detail'),

@@ -3,7 +3,8 @@ from ics.models import *
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from uuid import uuid4
-from django.db.models import F, Sum, Max
+from django.db.models import F, Sum, Max, When, Case
+from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 import pytz
@@ -44,6 +45,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	x = serializers.CharField(read_only=True)
 	y = serializers.CharField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
+	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	def get_attributes(self, process_type):
 		return AttributeSerializer(process_type.attribute_set.filter(is_trashed=False), many=True).data
@@ -61,7 +63,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 	last_five_values = serializers.SerializerMethodField(read_only=True)
 
 	def get_last_five_values(self, attribute):
-		#need to fix in the future to return only non empty values, and very distinct vals 
+		#need to fix in the future to return only non empty values, and very distinct vals
 		return TaskAttribute.objects.filter(attribute=attribute.id).order_by('-updated_at').values('task').distinct().values('value')[:5]
 
 	class Meta:
@@ -73,7 +75,6 @@ class ProcessTypePositionSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ProcessType
 		fields = ('id','x','y')
-
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
@@ -130,7 +131,7 @@ class BasicItemSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Item
-		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory')
+		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'is_used', 'amount', 'is_virtual', 'team_inventory', 'is_generic')
 
 
 class BasicInputSerializer(serializers.ModelSerializer):
@@ -141,11 +142,12 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
-	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+	unit = serializers.CharField(source='input_item.creating_task.process_type.unit', read_only=True)
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'amount', 'task', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'input_item', 'task', 'amount', 'task_display', 'unit', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+
 
 
 # serializes all fields of task
@@ -748,20 +750,37 @@ class InventoryList2Serializer(serializers.Serializer):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
 
+		starting_total = 0
+
 		latest_adjustment = Adjustment.objects.all() \
 			.filter(process_type=process_type, product_type=product_type) \
 			.order_by('-created_at').first()
 
+		items_query = Item.active_objects.filter(
+			creating_task__process_type=process_type,
+			creating_task__product_type=product_type,
+			team_inventory=item_summary['team_inventory'],
+		)
+
 		if latest_adjustment:
-			recent_items_total = Item.unused_objects.filter(
-				creating_task__process_type=process_type,
-				creating_task__product_type=product_type,
-				created_at__gt=latest_adjustment.created_at
-			).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-			adjusted_amount = latest_adjustment.amount + recent_items_total
-		else:
-			adjusted_amount = item_summary['total_amount']
-		return adjusted_amount
+			start_time = latest_adjustment.created_at
+			items_query = items_query.filter(created_at__gt=start_time)
+			starting_total = latest_adjustment.amount
+
+		untouched_items_total = (items_query.all().filter(inputs__isnull=True).aggregate(total_amount=Sum('amount'))[
+			                'total_amount'] or 0)
+
+		partially_unused_items_total = items_query.all().aggregate(
+			total=Coalesce(Sum(
+				Case(
+					When(inputs__amount__isnull=False, then=F('amount') - F('inputs__amount')),
+					default=0,
+					output_field=models.IntegerField()
+				)
+			), 0)
+		)['total']
+
+		return starting_total + untouched_items_total + partially_unused_items_total
 
 
 class ItemSummarySerializer(serializers.Serializer):
