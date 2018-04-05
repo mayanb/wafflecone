@@ -296,6 +296,9 @@ class Task(models.Model):
 		root_tasks = set([self])
 		self.descendents_helper(all_descendents, root_tasks, 0)
 
+		# Remove task from its list of descendents
+		if self.id in all_descendents: all_descendents.remove(self.id)
+
 		# convert set of IDs to Queryset & return
 		return Task.objects.filter(id__in=all_descendents)
 
@@ -338,6 +341,9 @@ class Task(models.Model):
 		all_ancestors = set([self.id])
 		curr_level_tasks = set([self])
 		self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
+
+		# Remove task from its list of ancestors
+		if self.id in all_ancestors: all_ancestors.remove(self.id)
 
 		# convert set of IDs to Queryset & return
 		return Task.objects.filter(id__in=all_ancestors)
