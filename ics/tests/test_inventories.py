@@ -2,6 +2,7 @@ from ics.models import *
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, AdjustmentFactory, ItemFactory, TeamFactory, InputFactory
+from django.utils import timezone
 import datetime
 import mock
 
@@ -11,11 +12,11 @@ class TestInventoriesList(APITestCase):
 	def setUp(self):
 		self.process_type = ProcessTypeFactory(name='process-name', code='process-code', unit='process-unit')
 		self.product_type = ProductTypeFactory(name='product-name', code='product-code')
-		self.url = reverse('inventories')
+		self.url = '/ics/v8/inventories/'
 		self.query_params = {
 			'team': self.process_type.team_created_by.id
 		}
-		self.past_time = datetime.datetime(2018, 1, 10)
+		self.past_time = timezone.make_aware(datetime.datetime(2018, 1, 10), timezone.utc)
 		self.task = TaskFactory(process_type=self.process_type, product_type=self.product_type)
 
 	def test_no_items(self):
@@ -107,11 +108,32 @@ class TestInventoriesList(APITestCase):
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(len(response.data['results']), 1)
 
-	def test_exclude_used_items(self):
+	def test_used_items(self):
 		item = ItemFactory(creating_task=self.task, amount=3)
 		InputFactory(input_item=item)
 		response = self.client.get(self.url, self.query_params, format='json')
-		self.assertEqual(len(response.data['results']), 0)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], 0)
+
+	def test_input_with_amount(self):
+		item = ItemFactory(creating_task=self.task, amount=32)
+		InputFactory(input_item=item, amount=8)
+		response = self.client.get(self.url, self.query_params, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], 24)
+
+	def test_moved_item(self):
+		other_team = TeamFactory(name='other-team')
+		this_team_item = ItemFactory(creating_task=self.task, amount=9)
+		other_team_item = ItemFactory(creating_task=self.task, amount=32)
+		other_team_item.team_inventory = other_team
+		other_team_item.save()
+		response = self.client.get(self.url, self.query_params, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], 9)
 
 	def test_exlude_items_with_deleted_tasks(self):
 		deleted_task = TaskFactory(process_type=self.process_type, product_type=self.product_type, is_trashed=True)

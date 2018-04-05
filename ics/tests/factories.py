@@ -14,20 +14,21 @@ class UserFactory(factory.django.DjangoModelFactory):
 	username = factory.LazyAttribute(lambda o: 'user_' + o.team_name)
 
 
-class UserProfileFactory(factory.django.DjangoModelFactory):
-	class Meta:
-		model = ics.models.UserProfile
-		django_get_or_create = ('user',)
-
-	user = factory.SubFactory(UserFactory)
-
-
 class TeamFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Team
 		django_get_or_create = ('name',)
 
 	name = 'team1'
+
+
+class UserProfileFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.UserProfile
+		django_get_or_create = ('user',)
+
+	user = factory.SubFactory(UserFactory)
+	team = factory.SubFactory(TeamFactory)
 
 
 class ProcessTypeFactory(factory.django.DjangoModelFactory):
@@ -52,17 +53,9 @@ class TaskFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Task
 
-	@classmethod
-	def _create(cls, target_class, *args, **kwargs):
-		created_at = kwargs.pop('created_at', None)
-		obj = super(TaskFactory, cls)._create(target_class, *args, **kwargs)
-		if created_at is not None:
-			obj.created_at = created_at
-			obj.save()
-		return obj
-
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
+
 
 class ItemFactory(factory.django.DjangoModelFactory):
 	class Meta:
@@ -78,6 +71,7 @@ class InputFactory(factory.django.DjangoModelFactory):
 
 	task = factory.SubFactory(TaskFactory)
 
+
 class AdjustmentFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Adjustment
@@ -86,8 +80,30 @@ class AdjustmentFactory(factory.django.DjangoModelFactory):
 	process_type = factory.SubFactory(ProcessTypeFactory)
 	product_type = factory.SubFactory(ProductTypeFactory)
 
+
 class AttributeFactory(factory.django.DjangoModelFactory):
 	class Meta:
 		model = ics.models.Attribute
 
+	process_type = factory.SubFactory(ProcessTypeFactory)
+
+
+class GoalFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.Goal
+
+	userprofile = factory.SubFactory(UserProfileFactory)
+	process_type = factory.SubFactory(ProcessTypeFactory)
+
+
+class GoalProductTypeFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.GoalProductType
+
+	goal = factory.SubFactory(GoalFactory)
+	product_type = factory.SubFactory(ProductTypeFactory)
+
+
+class GoalWithProductTypeFactory(GoalFactory):
+	associated_goal = factory.RelatedFactory(GoalProductTypeFactory, 'goal')
 

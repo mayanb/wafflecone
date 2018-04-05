@@ -25,6 +25,7 @@ import datetime
 from django.http import HttpResponse
 import csv
 import pytz
+from django.utils import timezone
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
@@ -119,13 +120,10 @@ class GoalList(generics.ListAPIView):
   def get_queryset(self):
     queryset = Goal.objects.filter(is_trashed=False)
     team = self.request.query_params.get('team', None)
-    userprofile = self.request.query_params.get('userprofile', None)
     timerange = self.request.query_params.get('timerange', None)
 
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
-    if userprofile is not None:
-      queryset = queryset.filter(userprofile=userprofile)
     if (timerange is not None) and (timerange == 'w' or timerange == 'd' or timerange == 'm'):
       queryset = queryset.filter(timerange=timerange)
     return queryset.select_related('process_type').prefetch_related('product_types')
@@ -375,7 +373,7 @@ class InventoryList(generics.ListAPIView):
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
   serializer_class = InventoryDetailSerializer
-  pagination_class = SmallPagination
+  pagination_class = ExtraLargePagination
 
   def get_queryset(self):
     item_query = Item.objects.filter(inputs__isnull=True)
@@ -1286,8 +1284,8 @@ class AdjustmentHistory(APIView):
 
     objects = []
 
-    BEGINNING_OF_TIME = datetime.datetime(1, 1, 1)
-    END_OF_TIME = datetime.datetime(3000, 1, 1)
+    BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)
+    END_OF_TIME = timezone.make_aware(datetime.datetime(3000, 1, 1), timezone.utc)
 
     end_date = END_OF_TIME
 

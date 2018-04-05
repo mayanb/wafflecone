@@ -5,20 +5,21 @@ from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFact
 	TeamFactory, InputFactory
 import datetime
 import mock
+from django.utils import timezone
 
 
-class TestInventoriesList(APITestCase):
+class TestAdjustmentHistory(APITestCase):
 
 	def setUp(self):
 		self.process_type = ProcessTypeFactory(name='process-name', code='process-code', unit='process-unit')
 		self.product_type = ProductTypeFactory(name='product-name', code='product-code')
-		self.url = reverse('adjustment-history')
+		self.url = '/ics/v8/adjustment-history/'
 		self.query_params = {
 			'team': self.process_type.team_created_by.id,
 			'process_type': self.process_type.id,
 			'product_type': self.product_type.id,
 		}
-		self.past_time = datetime.datetime(2018, 1, 10)
+		self.past_time = timezone.make_aware(datetime.datetime(2018, 1, 10), timezone.utc)
 		self.task = TaskFactory(process_type=self.process_type, product_type=self.product_type)
 
 	def test_no_items(self):
@@ -74,7 +75,7 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(len(response.data), 3)
 		history = response.data[1]
 		self.assertEqual(history['type'], 'adjustment')
-		self.assertEqual(history['date'].replace(tzinfo=None), self.past_time)
+		self.assertEqual(history['date'], self.past_time)
 		self.assertEqual(float(history['data']['amount']), 37)
 
 	def test_items(self):
@@ -103,6 +104,20 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(item_summary['data']['created_amount'], 27)
 		self.assertEqual(item_summary['data']['used_count'], 1)
 		self.assertEqual(item_summary['data']['used_amount'], 9)
+
+
+	def test_partial_inputs(self):
+		partially_used_item = ItemFactory(creating_task=self.task, amount=39)
+		InputFactory(input_item=partially_used_item, amount=7)
+		response = self.client.get(self.url, self.query_params, format='json')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data), 1)
+		item_summary = response.data[0]
+		self.assertEqual(item_summary['type'], 'item_summary')
+		self.assertEqual(item_summary['data']['created_count'], 1)
+		self.assertEqual(item_summary['data']['created_amount'], 39)
+		self.assertEqual(item_summary['data']['used_count'], 1)
+		self.assertEqual(item_summary['data']['used_amount'], 7)
 
 
 	def test_adjustments_and_items(self):
