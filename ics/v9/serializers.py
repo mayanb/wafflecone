@@ -8,6 +8,7 @@ from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 import pytz
+import re
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -52,7 +53,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_",1)[1]
+		return re.sub('_\w+$', '', username)
 
 	class Meta:
 		model = ProcessType
@@ -81,7 +82,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_", 1)[1]
+		return re.sub('_\w+$', '', username)
 
 	class Meta:
 		model = ProductType
