@@ -285,6 +285,29 @@ class Task(models.Model):
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
 
+	def descendants_raw_query(id):
+		return """ WITH RECURSIVE descendants AS (
+	    (SELECT task.id, input.task_id as parent_id
+			FROM ics_task task
+		    JOIN ics_item item
+		      ON item.creating_task_id = task.id
+		    JOIN ics_input input
+		    ON  input.input_item_id = item.id 
+			WHERE task.id = 11777 AND task.is_trashed = false)
+		    UNION ALL
+		    SELECT ct.id, cin.task_id as parent_id
+		    FROM ics_task ct
+		    JOIN ics_item cit
+		      ON cit.creating_task_id = ct.id
+		    JOIN ics_input cin
+		      ON cin.input_item_id = cit.id
+		    JOIN descendants p ON p.parent_id = ct.id
+		    WHERE ct.is_trashed = false
+		  )
+		 SELECT distinct parent_id, id
+		 FROM descendants
+		 WHERE parent_id <> 11777"""
+
 	
 	def descendents(self):
 		"""
@@ -292,12 +315,7 @@ class Task(models.Model):
 		----
 		descendents = task.descendents()
 		"""
-		all_descendents = set([self.id])
-		root_tasks = set([self])
-		self.descendents_helper(all_descendents, root_tasks, 0)
-
-		# Remove task from its list of descendents
-		if self.id in all_descendents: all_descendents.remove(self.id)
+		#descendant_ids = Task.objects.
 
 		# convert set of IDs to Queryset & return
 		return Task.objects.filter(id__in=all_descendents)
