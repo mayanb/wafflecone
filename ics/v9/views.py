@@ -1,13 +1,13 @@
 from rest_framework.response import Response
 from django.db.models.functions import Coalesce
-from ics.v8.calculated_fields_serializers import *
+from ics.v9.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
-from ics.v8.queries.tasks import *
+from ics.v9.queries.tasks import *
 import datetime
 from django.http import HttpResponse
 import pytz

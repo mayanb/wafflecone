@@ -1,4 +1,4 @@
-from ics.v8.serializers import *
+from ics.v9.serializers import *
 from django.db.models import F
 
 
