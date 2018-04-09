@@ -14,6 +14,11 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
 
+	ancestor_is_flagged = serializers.SerializerMethodField()
+
+	def get_ancestor_is_flagged(self, task):
+		return task.ancestors().filter(is_flagged=True).count() > 0
+
 	def getInputUnit(self, task):
 		input = task.inputs.first()
 		if input is not None:
@@ -47,7 +52,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'inputs',
 			'attribute_values',
 			'display',
-			'is_trashed'
+			'is_trashed',
+			'ancestor_is_flagged',
 		)
 
 

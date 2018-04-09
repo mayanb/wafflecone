@@ -377,7 +377,6 @@ class Task(models.Model):
 	def getAllPredictedAttributes(self):
 		return TaskFormulaAttribute.objects.filter(task=self)
 
-
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
 		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
