@@ -285,7 +285,7 @@ class Task(models.Model):
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
 
-	def descendants_raw_query(id):
+	def descendants_raw_query():
 		return """ WITH RECURSIVE descendants AS (
 	    (SELECT task.id, input.task_id as parent_id
 			FROM ics_task task
@@ -293,7 +293,7 @@ class Task(models.Model):
 		      ON item.creating_task_id = task.id
 		    JOIN ics_input input
 		    ON  input.input_item_id = item.id 
-			WHERE task.id = 11777 AND task.is_trashed = false)
+			WHERE task.id = %s AND task.is_trashed = false)
 		    UNION ALL
 		    SELECT ct.id, cin.task_id as parent_id
 		    FROM ics_task ct
@@ -306,7 +306,7 @@ class Task(models.Model):
 		  )
 		 SELECT distinct parent_id, id
 		 FROM descendants
-		 WHERE parent_id <> 11777"""
+		 WHERE parent_id <> %s"""
 
 	
 	def descendents(self):
@@ -315,39 +315,8 @@ class Task(models.Model):
 		----
 		descendents = task.descendents()
 		"""
-		#descendant_ids = Task.objects.
-
-		# convert set of IDs to Queryset & return
-		return Task.objects.filter(id__in=all_descendents)
-
-	def descendents_helper(self, all_descendents, curr_level_tasks, depth):
-		"""
-		Recursive helper function for descendents(). Recursively travels through the
-		graph of trees to update all_descendents to contain the IDs of descendent tasks.
-		
-		Keyword arguments:
-		all_descendents  -- set of already found descendent IDs
-		curr_level_tasks -- set of descendent IDs at the current depth of traversal
-		depth            -- integer depth of traversal
-		----
-		(see descendents() for usage)
-		"""
-		new_level_tasks = set()
-
-		# get all the items that were created by a task in curr_level_tasks
-		child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
-
-		# get all the tasks these items were input into
-		child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
-
-		for i in child_task_rel:
-			t = i.task
-			if t.id not in all_descendents:
-				new_level_tasks.add(i.task)
-				all_descendents.add(i.task.id)
-
-		if new_level_tasks:
-			self.descendents_helper(all_descendents, new_level_tasks, depth+1)
+		descendant_ids = Task.objects.raw(self.descendants_raw_query(), [str(self.id)])
+		return Task.objects.filter(id__in=descendant_ids)
 
 
 	def ancestors(self):
