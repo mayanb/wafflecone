@@ -308,7 +308,6 @@ class ProcessDuplicate(generics.CreateAPIView):
       name=request.data.get('name'),
       code=request.data.get('code'),
       icon=request.data.get('icon'),
-      description=request.data.get('description', ""),
       output_desc=request.data.get('output_desc'),
       default_amount=request.data.get('default_amount'),
       unit=request.data.get('unit'),
