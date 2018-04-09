@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 import json
+import csv
 
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
@@ -18,6 +19,7 @@ from django.core import serializers
 from django.core.mail import send_mail
 
 dateformat = "%Y-%m-%d-%H-%M-%S-%f"
+readable_dateformat = '%Y-%m-%d'
 REFRESH_URL = 'https://accounts.google.com/o/oauth2/token'
 
 # @csrf_exempt
@@ -209,3 +211,27 @@ def post_spreadsheet(google, title, data):
   r3 = google.post(titleURL, json.dumps(updateTitleBody))
   body3 = json.loads(r3.content)
   return r3
+
+
+@api_view(['POST'])
+def create_csv_spreadsheet(request):
+  user_id = request.POST.get('user_id')
+  user_profile = UserProfile.objects.get(user=user_id)
+  team = user_profile.team.id
+  process = request.POST.get('process', None)
+  start = request.POST.get('start', None)
+  end = request.POST.get('end', None)
+  data = activityArray(process, start, end, team)
+  title = str(ProcessType.objects.get(pk=process).name) + " " + convert_to_readable_time(start) + " to " + convert_to_readable_time(end)
+  
+  response = HttpResponse(content_type='text/csv')
+  response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+  writer = csv.writer(response)
+  for row in data:
+    writer.writerow(row)
+  return response
+
+def convert_to_readable_time(time):
+  arr = str(time).split('-')
+  return '-'.join(arr[0:3])
+

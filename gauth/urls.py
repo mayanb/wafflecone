@@ -12,7 +12,9 @@ urlpatterns = [
     #url(r'^token-saver/$', views.token_saver, name='a'),
     url(r'^clear-token/$', views.clearToken, name='b'),
     #url(r'^send-email/$', views.sendEmail),
-    url(r'^test/$', views.test)
+    url(r'^test/$', views.test),
+
+    url(r'^create-csv/$', views.create_csv_spreadsheet, name='a')
 
 
 
