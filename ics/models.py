@@ -321,7 +321,7 @@ class Task(models.Model):
 			    ON item.id = input.input_item_id
 			    JOIN ics_task task
 			     ON task.id = item.creating_task_id
-			    WHERE input.task_id = %s
+			    WHERE input.task_id = %s AND task.is_trashed = false
 			  UNION ALL
 			    SELECT cin.input_item_id as child_input_id, ct.id as child_task_id
 			    FROM ics_input cin
@@ -329,7 +329,9 @@ class Task(models.Model):
 			    ON cit.id = cin.input_item_id
 			    JOIN ics_task ct
 			     ON ct.id = cit.creating_task_id
-			    JOIN descendants d on d.child_task_id = cin.task_id)
+			    JOIN descendants d on d.child_task_id = cin.task_id
+			    WHERE ct.is_trashed = false
+			    )
 			SELECT distinct child_task_id
 			 FROM descendants
 			 WHERE child_task_id <> %s""", [str(self.id), str(self.id)])

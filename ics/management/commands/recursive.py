@@ -8,6 +8,6 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **options):
 		curr = Task.objects.get(pk=11777)
-		descendants = Task.objects.filter(id__in=curr.descendants_raw_query())
+		descendants = Task.objects.filter(id__in=curr.ancestors_raw_query())
 		for desc in descendants:
 			self.stdout.write(str(desc))
