@@ -12,15 +12,14 @@ class TestTaskAttributes(APITestCase):
 
 	def test_create_input(self):
 		url = reverse('create_task_attribute')
-		print url
-		# data = {
-		# 	'task': self.task.id,
-		# 	'attribute': self.attribute.id,
-		# 	'value': 498
-		# }
+		data = {
+			'task': self.task.id,
+		 	'attribute': self.attribute.id,
+		 	'value': '498'
+		 }
 		response = self.client.post(url, data, format='json')
-		# self.assertEqual(response.status_code, 201)
-		# task_attribute = TaskAttribute.objects.get(id=response.data['id'])
-		# self.assertEqual(task_attribute.task, self.task)
-		# self.assertEqual(task_attribute.attribute, self.attribute)
-		# #self.assertEqual(task_attribute.value, 498)
+		self.assertEqual(response.status_code, 201)
+		task_attribute = TaskAttribute.objects.get(id=response.data['id'])
+		self.assertEqual(task_attribute.task, self.task)
+		self.assertEqual(task_attribute.attribute, self.attribute)
+		self.assertEqual(task_attribute.value, '498')
