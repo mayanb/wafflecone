@@ -1,4 +1,4 @@
-from ics.v8.serializers import *
+from ics.v9.serializers import *
 from django.db.models import F
 
 
@@ -13,6 +13,10 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	process_type = ProcessTypeWithUserSerializer(many=False, read_only=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
+	ancestor_is_flagged = serializers.SerializerMethodField()
+
+	def get_ancestor_is_flagged(self, task):
+		return task.ancestors().filter(is_flagged=True).count() > 0
 
 	def getInputUnit(self, task):
 		input = task.inputs.first()
@@ -37,7 +41,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'label', 
 			'input_unit', 
 			'is_open', 
-			'is_flagged', 
+			'is_flagged',
+			'ancestor_is_flagged', 
 			'flag_update_time', 
 			'created_at', 
 			'updated_at', 

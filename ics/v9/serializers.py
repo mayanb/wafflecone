@@ -115,9 +115,14 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	process_type = serializers.IntegerField(source='process_type.id', read_only=True)
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
+	ancestor_is_flagged = serializers.SerializerMethodField()
+
+	def get_ancestor_is_flagged(self, task):
+		return task.ancestors().filter(is_flagged=True).count() > 0
+
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
+		fields = ('id', 'is_open', 'ancestor_is_flagged', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
 
 
 class DeleteTaskSerializer(serializers.ModelSerializer):
@@ -155,10 +160,14 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
+	ancestor_is_flagged = serializers.SerializerMethodField()
+
+	def get_ancestor_is_flagged(self, task):
+		return task.ancestors().filter(is_flagged=True).count() > 0
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
+		fields = ('id', 'ancestor_is_flagged', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		print(validated_data)
