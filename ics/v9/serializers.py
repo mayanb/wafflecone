@@ -8,6 +8,7 @@ from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 import pytz
+import re
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -52,7 +53,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_",1)[1]
+		return re.sub('_\w+$', '', username)
 
 	class Meta:
 		model = ProcessType
@@ -81,7 +82,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_", 1)[1]
+		return re.sub('_\w+$', '', username)
 
 	class Meta:
 		model = ProductType
@@ -147,11 +148,10 @@ class BasicInputSerializer(serializers.ModelSerializer):
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
-	unit = serializers.CharField(source='input_item.creating_task.process_type.unit', read_only=True)
 
 	class Meta:
 		model = Input
-		fields = ('id', 'input_item', 'task', 'amount', 'task_display', 'unit', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
+		fields = ('id', 'input_item', 'task', 'amount', 'task_display', 'input_task', 'input_task_display', 'input_qr', 'input_task_n', 'input_item_virtual', 'input_item_amount')
 
 
 

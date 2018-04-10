@@ -596,4 +596,25 @@ class Alert(models.Model):
 	created_at = models.DateTimeField(default=timezone.now, blank=True, db_index=True)
 
 
+##################################
+#                                #
+#    POLYMER RECIPE MODELS   	   #
+#                                #
+##################################
 
+class Recipe(models.Model):
+	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
+	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
+	instructions = models.TextField()
+
+class Ingredient(models.Model):
+	recipe = models.ForeignKey(Recipe, related_name="recipes", on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+	amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+
+class TaskIngredient(models.Model):
+	scaled_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+	actual_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE)
