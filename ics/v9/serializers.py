@@ -57,7 +57,8 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at', 'last_used')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used')
+
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -488,7 +489,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			creating_task__process_type=goal.process_type,
 			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
-			creating_task__created_at__range=(start, end),
+			#creating_task__created_at__range=(start, end),
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
 
