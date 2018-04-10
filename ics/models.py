@@ -64,7 +64,7 @@ class ProcessType(models.Model):
 	code = models.CharField(max_length=20)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=timezone.now, blank=True)
-
+	description = models.CharField(max_length=1, default="", blank=True)
 	output_desc = models.CharField(max_length=200, default="product")
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
