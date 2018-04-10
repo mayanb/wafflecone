@@ -10,8 +10,8 @@ urlpatterns = [
     url(r'^v7/', include('ics.v7.urls')),
     url(r'^v8/', include('ics.v8.urls')),
     url(r'^v9/', include('ics.v9.urls')),
-  
-    url(r'', include('ics.v7.urls'))
+
+    url(r'', include('ics.v9.urls'))
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
