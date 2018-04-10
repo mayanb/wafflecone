@@ -311,7 +311,7 @@ class Task(models.Model):
 
 	
 	def descendants(self):
-		return Task.objects.filter(id__in=curr.raw_query())
+		return Task.objects.filter(id__in=self.descendants_raw_query())
 
 	def ancestors_raw_query(self):
 		return RawSQL("""WITH RECURSIVE descendants AS (
@@ -338,7 +338,7 @@ class Task(models.Model):
 
 
 	def ancestors(self):
-		return Task.objects.filter(id__in=curr.ancestors_raw_query())
+		return Task.objects.filter(id__in=self.ancestors_raw_query())
 
 
 class ActiveItemsManager(models.Manager):
