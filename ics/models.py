@@ -8,6 +8,7 @@ from uuid import uuid4
 from django.db.models import Max
 import constants
 from django.utils import timezone
+from django.db.models.expressions import RawSQL
 
 
 
@@ -285,8 +286,8 @@ class Task(models.Model):
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
 
-	def descendants_raw_query():
-		return """ WITH RECURSIVE descendants AS (
+	def descendants_raw_query(self):
+		return RawSQL(""" WITH RECURSIVE descendants AS (
 	    (SELECT task.id, input.task_id as parent_id
 			FROM ics_task task
 		    JOIN ics_item item
@@ -304,65 +305,38 @@ class Task(models.Model):
 		    JOIN descendants p ON p.parent_id = ct.id
 		    WHERE ct.is_trashed = false
 		  )
-		 SELECT distinct parent_id, id
+		 SELECT distinct parent_id
 		 FROM descendants
-		 WHERE parent_id <> %s"""
+		 WHERE parent_id <> %s""", [str(self.id), str(self.id)])
 
 	
-	def descendents(self):
-		"""
-		Finds all the descendent tasks of this task and returns them as a Queryset
-		----
-		descendents = task.descendents()
-		"""
-		descendant_ids = Task.objects.raw(self.descendants_raw_query(), [str(self.id)])
-		return Task.objects.filter(id__in=descendant_ids)
+	def descendants(self):
+		return Task.objects.filter(id__in=curr.raw_query())
+
+	def ancestors_raw_query(self):
+		return RawSQL("""WITH RECURSIVE descendants AS (
+			SELECT input.input_item_id as child_input_id, task.id as child_task_id
+			    FROM ics_input input
+			    JOIN ics_item item
+			    ON item.id = input.input_item_id
+			    JOIN ics_task task
+			     ON task.id = item.creating_task_id
+			    WHERE input.task_id = %s
+			  UNION ALL
+			    SELECT cin.input_item_id as child_input_id, ct.id as child_task_id
+			    FROM ics_input cin
+			    JOIN ics_item cit
+			    ON cit.id = cin.input_item_id
+			    JOIN ics_task ct
+			     ON ct.id = cit.creating_task_id
+			    JOIN descendants d on d.child_task_id = cin.task_id)
+			SELECT distinct child_task_id
+			 FROM descendants
+			 WHERE child_task_id <> %s""", [str(self.id), str(self.id)])
 
 
 	def ancestors(self):
-		"""
-		Finds all the ancestor tasks of this task and returns them as a Queryset
-		----
-		ancestors = task.ancestors()
-		"""
-		all_ancestors = set([self.id])
-		curr_level_tasks = set([self])
-		self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
-
-		# Remove task from its list of ancestors
-		if self.id in all_ancestors: all_ancestors.remove(self.id)
-
-		# convert set of IDs to Queryset & return
-		return Task.objects.filter(id__in=all_ancestors)
-
-	def ancestors_helper(self, all_ancestors, curr_level_tasks, depth):
-		"""
-		Recursive helper function for ancestors(). Recursively travels through the
-		graph of trees to update all_ancestors to contain the IDs of ancestor tasks.
-
-		Keyword arguments: 
-		all_ancestors    -- set of already found ancestor IDs
-		curr_level_tasks -- set of ancestor IDs at the current depth of traversal
-		depth            -- integer depth of traversal
-		----
-		(see ancestors() for usage)
-		"""
-		new_level_tasks = set()
-
-		# get all tasks where any of its items were used as inputs into a task 
-		# that is in curr_level_tasks
-		parent_tasks = Task.objects.filter(items__inputs__task__in=curr_level_tasks)
-
-		for t in parent_tasks:
-			if t.id not in all_ancestors:
-				new_level_tasks.add(t)
-				all_ancestors.add(t.id)
-
-		if new_level_tasks:
-			self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
-
-	def getAllPredictedAttributes(self):
-		return TaskFormulaAttribute.objects.filter(task=self)
+		return Task.objects.filter(id__in=curr.ancestors_raw_query())
 
 
 class ActiveItemsManager(models.Manager):
