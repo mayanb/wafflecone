@@ -59,6 +59,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used')
 
 
+
 class AttributeDetailSerializer(serializers.ModelSerializer):
 	last_five_values = serializers.SerializerMethodField(read_only=True)
 
