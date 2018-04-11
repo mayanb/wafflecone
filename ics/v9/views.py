@@ -916,7 +916,7 @@ class AdjustmentHistory(APIView):
         Case(
           When(inputs__isnull=False, then=1),
           default=0,
-          output_field=models.IntegerField()
+          output_field=models.DecimalField()
         )
       ), 0),
       used_amount=Coalesce(Sum(
@@ -925,11 +925,11 @@ class AdjustmentHistory(APIView):
             When(inputs__amount__isnull=False, then=F('inputs__amount')),
             When(inputs__amount__isnull=True, then=F('amount')),
             default=0,
-            output_field=models.IntegerField()
+            output_field=models.DecimalField()
           )
                ),
           default=0,
-          output_field=models.IntegerField()
+          output_field=models.DecimalField()
         )
       ), 0),
     )
