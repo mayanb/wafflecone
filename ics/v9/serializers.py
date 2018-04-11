@@ -7,6 +7,7 @@ from django.db.models import F, Sum, Max, When, Case
 from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
+from ics.utilities import *
 import pytz
 import re
 
@@ -166,8 +167,6 @@ class BasicInputSerializerWithoutAmount(serializers.ModelSerializer):
 	def create(self, validated_data):
 		# can fix this when we remove the amount field from inputs later
 		new_input = Input.objects.create(**validated_data)
-		new_input.amount = 0
-		new_input.save()
 		# if there isn't already a taskIngredient for this input's creating task, then make a new one
 		input_creating_product = new_input.input_item.creating_task.product_type
 		input_creating_process = new_input.input_item.creating_task.process_type
@@ -221,7 +220,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 		# get all the recipes with the same product type and process type as the task
 		# for all the ingredients in all of these recipes, create a taskingredient with the correct scaled_amount
 		new_task = Task.objects.create(**validated_data)
-		qr_code = "dandel.li/ics/" + str(uuid4())
+		qr_code = generateQR()
 		new_item = Item.objects.create(creating_task=new_task, item_qr=qr_code, amount=actual_batch_size, is_generic=True)
 		ingredients = Ingredient.objects.filter(recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)
 		default_batch_size = new_task.process_type.default_amount
