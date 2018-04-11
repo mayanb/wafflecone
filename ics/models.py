@@ -57,6 +57,13 @@ class UserProfile(models.Model):
 #                          #
 ############################
 
+class ProcessTypeManager(models.Manager):
+	def with_documents(self):
+		vector = SearchVector('name') + \
+		SearchVector('code') + \
+		SearchVector('output_desc')
+		return self.get_queryset().annotate(document=vector)
+
 
 class ProcessType(models.Model):
 	created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
@@ -70,15 +77,40 @@ class ProcessType(models.Model):
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
 
-
 	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)
 	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	is_trashed = models.BooleanField(default=False, db_index=True)
+	keywords = models.CharField(max_length=200, blank=True)
+	search = SearchVectorField(null=True)
+
+	objects = ProcessTypeManager()
+
+	class Meta:
+		indexes = [
+			GinIndex(fields=['search'])
+		]
+		ordering = ['x',]
+
 
 	def __str__(self):
 		return self.name
+
+	def save(self, *args, **kwargs):
+		self.refreshKeywords()
+		super(ProcessType, self).save(*args, **kwargs)
+		if 'update_fields' not in kwargs or 'search' not in kwargs['update_fields']:
+			instance = self._meta.default_manager.with_documents().filter(pk=self.pk)[0]
+			instance.search = instance.document
+			instance.save(update_fields=['search'])
+
+	def refreshKeywords(self):
+		self.keywords = " ".join([
+			self.code, 
+			self.name, 
+			self.output_desc,
+		])[:200]
 
 	def getAllAttributes(self):
 		return self.attribute_set.filter(is_trashed=False)
@@ -90,13 +122,12 @@ class ProcessType(models.Model):
 		else:
 			return None
 
-	class Meta:
-		ordering = ['x',]
-
-
-
-
-
+class ProductTypeManager(models.Manager):
+	def with_documents(self):
+		vector = SearchVector('name') + \
+		SearchVector('code') + \
+		SearchVector('description')
+		return self.get_queryset().annotate(document=vector)
 
 class ProductType(models.Model):
 	created_by = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
@@ -106,14 +137,33 @@ class ProductType(models.Model):
 	code = models.CharField(max_length=20)
 	description = models.CharField(max_length=200, default="")
 	is_trashed = models.BooleanField(default=False, db_index=True)
+	keywords = models.CharField(max_length=200, blank=True)
+	search = SearchVectorField(null=True)
+
+	objects = ProductTypeManager()
+
+	class Meta:
+		indexes = [
+			GinIndex(fields=['search'])
+		]
 
 	def __str__(self):
 		return self.name
 
+	def save(self, *args, **kwargs):
+		self.refreshKeywords()
+		super(ProductType, self).save(*args, **kwargs)
+		if 'update_fields' not in kwargs or 'search' not in kwargs['update_fields']:
+			instance = self._meta.default_manager.with_documents().filter(pk=self.pk)[0]
+			instance.search = instance.document
+			instance.save(update_fields=['search'])
 
-
-
-
+	def refreshKeywords(self):
+		self.keywords = " ".join([
+			self.code, 
+			self.name, 
+			self.description, 
+		])[:200]
 
 class Attribute(models.Model):
 	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
@@ -338,7 +388,6 @@ class Task(models.Model):
 
 	def ancestors(self):
 		return Task.objects.filter(id__in=self.ancestors_raw_query())
-
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):

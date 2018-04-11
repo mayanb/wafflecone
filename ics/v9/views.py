@@ -954,4 +954,3 @@ class AdjustmentHistory(APIView):
     objects.append(self.get_item_summary(BEGINNING_OF_TIME, end_date))
 
     return Response(objects)
-
