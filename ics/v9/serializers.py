@@ -58,7 +58,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
 
 
@@ -88,7 +88,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
@@ -195,10 +195,9 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
 
-
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -232,7 +231,6 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 			scaled_amount = actual_batch_size*ingredient.amount/default_batch_size
 			TaskIngredient.objects.create(task=new_task, ingredient=ingredient, scaled_amount=scaled_amount)
 		return new_task
-
 
 
 class NestedItemSerializer(serializers.ModelSerializer):
@@ -915,4 +913,3 @@ class BasicTaskIngredientSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = TaskIngredient
 		fields = ('id', 'ingredient', 'ingredient_id', 'task', 'scaled_amount', 'actual_amount')
-

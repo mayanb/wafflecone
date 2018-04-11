@@ -1049,5 +1049,3 @@ class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskIngredient.objects.all()\
       .select_related('ingredient')
   serializer_class = BasicTaskIngredientSerializer
-
-

@@ -97,13 +97,6 @@ urlpatterns = [
 
     url(r'^adjustment-history/$', views.AdjustmentHistory.as_view(), name='adjustment-history'),
 
-    url(r'^recipes/$', views.RecipeList.as_view(), name='recipes'),
-    url(r'^recipes/(?P<pk>[0-9]+)/$', views.RecipeDetail.as_view(), name='recipe_detail'),
-    url(r'^ingredients/$', views.IngredientList.as_view(), name='ingredients'),
-    url(r'^ingredients/(?P<pk>[0-9]+)/$', views.IngredientDetail.as_view(), name='ingredient_detail'),
-    url(r'^taskIngredients/$', views.TaskIngredientList.as_view(), name='task_ingredients'),
-    url(r'^taskIngredients/(?P<pk>[0-9]+)/$', views.TaskIngredientDetail.as_view(), name='task_ingredient_detail'),
-
 
 ]
 
