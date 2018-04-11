@@ -27,6 +27,8 @@ urlpatterns = [
     url(r'^$', views.index, name='index'),
     
     url(r'^tasks/create/$', views.TaskCreate.as_view(), name='create_task'),
+    url(r'^tasks/create-with-output/$', views.TaskCreateWithOutput.as_view()),
+
     url(r'^tasks/$', views.TaskList.as_view(), name='tasks'),
     url(r'^tasks/(?P<pk>[0-9]+)/$', views.TaskDetail.as_view(), name='task_detail'),
     url(r'^tasks/edit/(?P<pk>[0-9]+)/$', views.TaskEdit.as_view()),
@@ -39,6 +41,8 @@ urlpatterns = [
     url(r'^items/(?P<pk>[0-9]+)/$', views.ItemDetail.as_view()),
 
     url(r'^inputs/create/$', views.CreateInput.as_view(), name='create_input'),
+    url(r'^inputs/create-without-amount/$', views.CreateInputWithoutAmount.as_view()),
+
 
     url(r'^processes/$', views.ProcessList.as_view(), name='process_types'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
