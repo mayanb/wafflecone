@@ -8,6 +8,7 @@ from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 import pytz
+import re
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -52,11 +53,12 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_",1)[1]
+		return re.sub('_\w+$', '', username)
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'description', 'created_at', 'last_used')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used')
+
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -81,7 +83,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	def get_username(self, product):
 		username = product.created_by.username
-		return username.split("_", 1)[1]
+		return re.sub('_\w+$', '', username)
 
 	class Meta:
 		model = ProductType
@@ -115,14 +117,9 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	process_type = serializers.IntegerField(source='process_type.id', read_only=True)
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
-	ancestor_is_flagged = serializers.SerializerMethodField()
-
-	def get_ancestor_is_flagged(self, task):
-		return task.ancestors().filter(is_flagged=True).count() > 0
-
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'ancestor_is_flagged')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
 
 
 class DeleteTaskSerializer(serializers.ModelSerializer):
@@ -159,15 +156,10 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
-	ancestor_is_flagged = serializers.SerializerMethodField()
-
-	def get_ancestor_is_flagged(self, task):
-		return task.ancestors().filter(is_flagged=True).count() > 0
-
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'ancestor_is_flagged')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		print(validated_data)
@@ -497,7 +489,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			creating_task__process_type=goal.process_type,
 			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
-			creating_task__created_at__range=(start, end),
+			#creating_task__created_at__range=(start, end),
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
 

@@ -8,6 +8,7 @@ from uuid import uuid4
 from django.db.models import Max
 import constants
 from django.utils import timezone
+from django.db.models.expressions import RawSQL
 
 
 
@@ -64,8 +65,7 @@ class ProcessType(models.Model):
 	code = models.CharField(max_length=20)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=timezone.now, blank=True)
-
-	description = models.CharField(max_length=200, default="")
+	description = models.CharField(max_length=1, default="", blank=True)
 	output_desc = models.CharField(max_length=200, default="product")
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
@@ -285,97 +285,59 @@ class Task(models.Model):
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
 
+	def descendants_raw_query(self):
+		return RawSQL(""" WITH RECURSIVE descendants AS (
+	    (SELECT task.id, input.task_id as parent_id
+			FROM ics_task task
+		    JOIN ics_item item
+		      ON item.creating_task_id = task.id
+		    JOIN ics_input input
+		    ON  input.input_item_id = item.id 
+			WHERE task.id = %s AND task.is_trashed = false)
+		    UNION ALL
+		    SELECT ct.id, cin.task_id as parent_id
+		    FROM ics_task ct
+		    JOIN ics_item cit
+		      ON cit.creating_task_id = ct.id
+		    JOIN ics_input cin
+		      ON cin.input_item_id = cit.id
+		    JOIN descendants p ON p.parent_id = ct.id
+		    WHERE ct.is_trashed = false
+		  )
+		 SELECT distinct parent_id
+		 FROM descendants
+		 WHERE parent_id <> %s""", [str(self.id), str(self.id)])
+
 	
-	def descendents(self):
-		"""
-		Finds all the descendent tasks of this task and returns them as a Queryset
-		----
-		descendents = task.descendents()
-		"""
-		all_descendents = set([self.id])
-		root_tasks = set([self])
-		self.descendents_helper(all_descendents, root_tasks, 0)
+	def descendants(self):
+		return Task.objects.filter(id__in=self.descendants_raw_query())
 
-		# Remove task from its list of descendents
-		if self.id in all_descendents: all_descendents.remove(self.id)
-
-		# convert set of IDs to Queryset & return
-		return Task.objects.filter(id__in=all_descendents)
-
-	def descendents_helper(self, all_descendents, curr_level_tasks, depth):
-		"""
-		Recursive helper function for descendents(). Recursively travels through the
-		graph of trees to update all_descendents to contain the IDs of descendent tasks.
-		
-		Keyword arguments:
-		all_descendents  -- set of already found descendent IDs
-		curr_level_tasks -- set of descendent IDs at the current depth of traversal
-		depth            -- integer depth of traversal
-		----
-		(see descendents() for usage)
-		"""
-		new_level_tasks = set()
-
-		# get all the items that were created by a task in curr_level_tasks
-		child_items = Item.objects.filter(creating_task__in=curr_level_tasks)
-
-		# get all the tasks these items were input into
-		child_task_rel = Input.objects.filter(input_item__in=child_items).select_related()
-
-		for i in child_task_rel:
-			t = i.task
-			if t.id not in all_descendents:
-				new_level_tasks.add(i.task)
-				all_descendents.add(i.task.id)
-
-		if new_level_tasks:
-			self.descendents_helper(all_descendents, new_level_tasks, depth+1)
+	def ancestors_raw_query(self):
+		return RawSQL("""WITH RECURSIVE descendants AS (
+			SELECT input.input_item_id as child_input_id, task.id as child_task_id
+			    FROM ics_input input
+			    JOIN ics_item item
+			    ON item.id = input.input_item_id
+			    JOIN ics_task task
+			     ON task.id = item.creating_task_id
+			    WHERE input.task_id = %s AND task.is_trashed = false
+			  UNION ALL
+			    SELECT cin.input_item_id as child_input_id, ct.id as child_task_id
+			    FROM ics_input cin
+			    JOIN ics_item cit
+			    ON cit.id = cin.input_item_id
+			    JOIN ics_task ct
+			     ON ct.id = cit.creating_task_id
+			    JOIN descendants d on d.child_task_id = cin.task_id
+			    WHERE ct.is_trashed = false
+			    )
+			SELECT distinct child_task_id
+			 FROM descendants
+			 WHERE child_task_id <> %s""", [str(self.id), str(self.id)])
 
 
 	def ancestors(self):
-		"""
-		Finds all the ancestor tasks of this task and returns them as a Queryset
-		----
-		ancestors = task.ancestors()
-		"""
-		all_ancestors = set([self.id])
-		curr_level_tasks = set([self])
-		self.ancestors_helper(all_ancestors, curr_level_tasks, 0)
-
-		# Remove task from its list of ancestors
-		if self.id in all_ancestors: all_ancestors.remove(self.id)
-
-		# convert set of IDs to Queryset & return
-		return Task.objects.filter(id__in=all_ancestors)
-
-	def ancestors_helper(self, all_ancestors, curr_level_tasks, depth):
-		"""
-		Recursive helper function for ancestors(). Recursively travels through the
-		graph of trees to update all_ancestors to contain the IDs of ancestor tasks.
-
-		Keyword arguments: 
-		all_ancestors    -- set of already found ancestor IDs
-		curr_level_tasks -- set of ancestor IDs at the current depth of traversal
-		depth            -- integer depth of traversal
-		----
-		(see ancestors() for usage)
-		"""
-		new_level_tasks = set()
-
-		# get all tasks where any of its items were used as inputs into a task 
-		# that is in curr_level_tasks
-		parent_tasks = Task.objects.filter(items__inputs__task__in=curr_level_tasks)
-
-		for t in parent_tasks:
-			if t.id not in all_ancestors:
-				new_level_tasks.add(t)
-				all_ancestors.add(t.id)
-
-		if new_level_tasks:
-			self.ancestors_helper(all_ancestors, new_level_tasks, depth+1)
-
-	def getAllPredictedAttributes(self):
-		return TaskFormulaAttribute.objects.filter(task=self)
+		return Task.objects.filter(id__in=self.ancestors_raw_query())
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
@@ -632,4 +594,25 @@ class Alert(models.Model):
 	created_at = models.DateTimeField(default=timezone.now, blank=True, db_index=True)
 
 
+##################################
+#                                #
+#    POLYMER RECIPE MODELS   	   #
+#                                #
+##################################
 
+class Recipe(models.Model):
+	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
+	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
+	instructions = models.TextField()
+
+class Ingredient(models.Model):
+	recipe = models.ForeignKey(Recipe, related_name="recipes", on_delete=models.CASCADE)
+	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
+	amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+
+class TaskIngredient(models.Model):
+	scaled_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+	actual_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE)

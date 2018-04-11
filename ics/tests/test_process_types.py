@@ -17,7 +17,6 @@ class TestProcessTypes(APITestCase):
 			'team_created_by': self.user_profile.team.id,
 			'name': 'process-name',
 			'code': 'process-code',
-			'description': 'Process Description',
 			'output_desc': 'Output Description',
 			'default_amount': 425,
 			'unit': 'kg',
@@ -29,7 +28,6 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(process_type.team_created_by, self.user_profile.team)
 		self.assertEqual(process_type.name, 'process-name')
 		self.assertEqual(process_type.code, 'process-code')
-		self.assertEqual(process_type.description, 'Process Description')
 		self.assertEqual(process_type.output_desc, 'Output Description')
 		self.assertEqual(process_type.default_amount, 425)
 		self.assertEqual(process_type.unit, 'kg')
@@ -41,7 +39,6 @@ class TestProcessTypes(APITestCase):
 			name='old-process-name',
 			code='old-process-code',
 			icon='old-icon',
-			description='old-description',
 			output_desc='old-output_desc',
 			default_amount=111,
 			unit='old-unit',
@@ -58,7 +55,6 @@ class TestProcessTypes(APITestCase):
 			'code': 'new-process-code',
 			'duplicate_id': process_type_to_duplicate.id,
 			'icon': 'new-icon',
-			'description': 'new-description',
 			'output_desc': 'new-output_desc',
 			'default_amount': 333,
 			'unit': 'new-unit',
@@ -74,7 +70,6 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(data.get('name'), duplicate_process.name)
 		self.assertEqual(data.get('code'), duplicate_process.code)
 		self.assertEqual(data.get('icon'), duplicate_process.icon)
-		self.assertEqual(data.get('description'), duplicate_process.description)
 		self.assertEqual(data.get('output_desc'), duplicate_process.output_desc)
 		self.assertEqual(data.get('default_amount'), duplicate_process.default_amount)
 		self.assertEqual(data.get('unit'), duplicate_process.unit)
@@ -92,7 +87,6 @@ class TestProcessTypes(APITestCase):
 			team_created_by=self.user_profile.team,
 			name='process-name',
 			code='process-code',
-			description='Process Description',
 			output_desc='Output Description',
 			default_amount=425,
 			unit='kg',
@@ -107,7 +101,6 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(process_type['team_created_by'], self.user_profile.team.id)
 		self.assertEqual(process_type['name'], 'process-name')
 		self.assertEqual(process_type['code'], 'process-code')
-		self.assertEqual(process_type['description'], 'Process Description')
 		self.assertEqual(process_type['output_desc'], 'Output Description')
 		# self.assertEqual(process_type['default_amount'], 425)
 		self.assertEqual(process_type['unit'], 'kg')
@@ -131,7 +124,6 @@ class TestProcessTypes(APITestCase):
 			'team_created_by': process_type.team_created_by.id,
 			'name': 'new-name',
 			'code': 'new-code',
-			'description': 'new-description',
 			'default_amount': 200
 		}
 		response = self.client.put(url, data, format='json')
@@ -139,6 +131,5 @@ class TestProcessTypes(APITestCase):
 		process_type = ProcessType.objects.get(id=process_type.id)
 		self.assertEqual(process_type.name, 'new-name')
 		self.assertEqual(process_type.code, 'new-code')
-		self.assertEqual(process_type.description, 'new-description')
 
 
