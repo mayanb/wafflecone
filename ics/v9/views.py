@@ -9,7 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
 from ics.v9.queries.tasks import *
 import datetime
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 import pytz
 from django.utils import timezone
 from ics import constants
@@ -134,12 +134,14 @@ class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 ######################
 
 class UserList(generics.ListAPIView):
-  queryset = User.objects.all()
+  queryset = User.objects.all()\
+    .prefetch_related('processes', 'products')
   serializer_class = UserSerializer
 
 # users/[pk]/
 class UserGet(generics.RetrieveAPIView):
-  queryset = User.objects.all()
+  queryset = User.objects.all()\
+    .prefetch_related('processes', 'products')
   serializer_class = UserSerializer
 
 ######################
@@ -147,7 +149,8 @@ class UserGet(generics.RetrieveAPIView):
 ######################
 # teams/
 class TeamList(generics.ListAPIView):
-  queryset = Team.objects.all()
+  queryset = Team.objects.all()\
+    .prefetch_related('processes', 'products', 'userprofiles')
   serializer_class = TeamSerializer
 
   def get_queryset(self):
@@ -155,16 +158,19 @@ class TeamList(generics.ListAPIView):
     team = self.request.query_params.get('team_name', None)
     if team is not None:
       queryset = queryset.filter(name=team)
-    return queryset
+    return queryset\
+      .prefetch_related('processes', 'products', 'userprofiles')
 
 # teams/[pk]/
 class TeamGet(generics.RetrieveAPIView):
-  queryset = Team.objects.all()
+  queryset = Team.objects.all()\
+    .prefetch_related('processes', 'products', 'userprofiles')
   serializer_class = TeamSerializer
 
 # teams/create/
 class TeamCreate(generics.CreateAPIView):
-  queryset = Team.objects.all()
+  queryset = Team.objects.all()\
+    .prefetch_related('processes', 'products', 'userprofiles')
   serializer_class = TeamSerializer
 
 ######################
@@ -181,6 +187,10 @@ class TaskFilter(django_filters.rest_framework.FilterSet):
 class TaskCreate(generics.CreateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = BasicTaskSerializer
+
+class TaskCreateWithOutput(generics.CreateAPIView):
+  queryset = Task.objects.filter(is_trashed=False)
+  serializer_class = BasicTaskSerializerWithOutput
 
 # tasks/edit/[pk]
 class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
@@ -201,7 +211,9 @@ class TaskSearch(generics.ListAPIView):
   ordering_fields = ('created_at', 'updated_at')
 
   def get_queryset(self):
-    return taskSearch(self.request.query_params)
+    return taskSearch(self.request.query_params)\
+      .select_related('product_type', 'process_type')\
+      .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
 
 # tasks/simple/
 class SimpleTaskSearch(generics.ListAPIView):
@@ -224,7 +236,9 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
-    return tasks(self.request.query_params)
+    return tasks(self.request.query_params)\
+      .select_related('product_type', 'process_type')\
+      .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('team_inventory', None )
@@ -232,7 +246,9 @@ class TaskList(generics.ListAPIView):
 
 # tasks/[pk]/
 class TaskDetail(generics.RetrieveAPIView):
-  queryset = taskDetail()
+  queryset = taskDetail()\
+    .select_related('product_type', 'process_type')\
+    .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
   serializer_class = NestedTaskSerializer
 
 
@@ -272,6 +288,10 @@ class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializer
 
+class CreateInputWithoutAmount(generics.ListCreateAPIView):
+  queryset = Input.objects.all()
+  serializer_class = BasicInputSerializerWithoutAmount
+
 
 #########################
 # PROCESS-RELATED VIEWS #
@@ -287,12 +307,16 @@ class ProcessList(generics.ListCreateAPIView):
 
 # processes/[pk]/ ...where pk = 'primary key' == 'the id'
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = ProcessType.objects.all()
+  queryset = ProcessType.objects.all()\
+    .select_related('created_by', 'team_created_by')\
+    .prefetch_related('attribute_set')
   serializer_class = ProcessTypeWithUserSerializer
 
 # processes/move/[pk]
 class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
-  queryset = ProcessType.objects.all()
+  queryset = ProcessType.objects.all()\
+    .select_related('created_by', 'team_created_by')\
+    .prefetch_related('attribute_set')
   serializer_class = ProcessTypePositionSerializer
 
 
@@ -626,7 +650,9 @@ class MovementReceive(generics.RetrieveUpdateDestroyAPIView):
 # ALERTS-RELATED VIEWS #
 ######################
 class GetRecentlyFlaggedTasks(generics.ListAPIView):
-  queryset = Task.objects.filter(is_flagged=True)
+  queryset = Task.objects.filter(is_flagged=True)\
+    .select_related('product_type', 'process_type')\
+    .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
   serializer_class = NestedTaskSerializer
 
   def get_queryset(self):
@@ -639,10 +665,14 @@ class GetRecentlyFlaggedTasks(generics.ListAPIView):
     endDate = dt.today() + timedelta(days=1)
     startDate = dt.today() - timedelta(days=2)
     queryset = queryset.filter(flag_update_time__date__range=(startDate, endDate))
-    return queryset
+    return queryset\
+      .select_related('product_type', 'process_type')\
+      .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
 
 class GetRecentlyUnflaggedTasks(generics.ListAPIView):
-  queryset = Task.objects.filter(is_flagged=False)
+  queryset = Task.objects.filter(is_flagged=False)\
+    .select_related('product_type', 'process_type')\
+    .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
   serializer_class = NestedTaskSerializer
 
   def get_queryset(self):
@@ -655,7 +685,9 @@ class GetRecentlyUnflaggedTasks(generics.ListAPIView):
     endDate = dt.today() + timedelta(days=1)
     startDate = dt.today() - timedelta(days=2)
     queryset = queryset.filter(flag_update_time__date__range=(startDate, endDate))
-    return queryset
+    return queryset\
+      .select_related('product_type', 'process_type')\
+      .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
 
 class GetIncompleteGoals(generics.ListAPIView):
   queryset = Goal.objects.all()
@@ -954,3 +986,66 @@ class AdjustmentHistory(APIView):
     objects.append(self.get_item_summary(BEGINNING_OF_TIME, end_date))
 
     return Response(objects)
+
+
+###################################
+# RECIPES RELATED VIEWS #
+###################################
+
+class RecipeList(generics.ListCreateAPIView):
+  queryset = Recipe.objects.all()\
+      .select_related('product_type', 'process_type')\
+      .prefetch_related('ingredients')
+  serializer_class = RecipeSerializer
+  filter_fields = ('product_type', 'process_type', 'id')
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return Recipe.objects.filter(product_type__team_created_by=team)\
+        .select_related('product_type', 'process_type')\
+        .prefetch_related('ingredients')
+    return HttpResponseForbidden()
+
+
+class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Recipe.objects.all()\
+      .select_related('product_type', 'process_type')\
+      .prefetch_related('ingredients')
+  serializer_class = RecipeSerializer
+
+class IngredientList(generics.ListCreateAPIView):
+  queryset = Ingredient.objects.all()\
+      .select_related('product_type', 'process_type', 'recipe')
+  serializer_class = IngredientSerializer
+  filter_fields = ('product_type', 'process_type', 'id', 'recipe')
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return Ingredient.objects.filter(product_type__team_created_by=team)\
+        .select_related('product_type', 'process_type', 'recipe')
+    return HttpResponseForbidden()
+
+class IngredientDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Ingredient.objects.all()\
+      .select_related('product_type', 'process_type', 'recipe')
+  serializer_class = IngredientSerializer
+
+class TaskIngredientList(generics.ListCreateAPIView):
+  queryset = TaskIngredient.objects.all()\
+      .select_related('ingredient')
+  serializer_class = BasicTaskIngredientSerializer
+  filter_fields = ('task', 'ingredient', 'id')
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return TaskIngredient.objects.filter(task__product_type__team_created_by=team)\
+        .select_related('ingredient')
+    return HttpResponseForbidden()
+
+class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = TaskIngredient.objects.all()\
+      .select_related('ingredient')
+  serializer_class = BasicTaskIngredientSerializer
