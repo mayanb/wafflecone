@@ -955,3 +955,53 @@ class AdjustmentHistory(APIView):
 
     return Response(objects)
 
+
+###################################
+# RECIPES RELATED VIEWS #
+###################################
+
+class RecipeList(generics.ListCreateAPIView):
+  queryset = Recipe.objects.all()
+  serializer_class = RecipeSerializer
+  filter_fields = ('product_type', 'process_type', 'id')
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return Recipe.objects.filter(product_type__team_created_by=team)
+    return Recipe.objects.all()
+
+class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Recipe.objects.all()
+  serializer_class = RecipeSerializer
+
+class IngredientList(generics.ListCreateAPIView):
+  queryset = Ingredient.objects.all()
+  serializer_class = IngredientSerializer
+  filter_fields = ('product_type', 'process_type', 'id', 'recipe')
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return Ingredient.objects.filter(product_type__team_created_by=team)
+    return Ingredient.objects.all()
+
+class IngredientDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Ingredient.objects.all()
+  serializer_class = IngredientSerializer
+
+class TaskIngredientList(generics.ListCreateAPIView):
+  queryset = TaskIngredient.objects.all()
+  serializer_class = TaskIngredientSerializer
+  filter_fields = ('task', 'ingredient', 'id')
+
+  def get_queryset(self):
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      return TaskIngredient.objects.filter(task__product_type__team_created_by=team)
+    return TaskIngredient.objects.all()
+
+class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = TaskIngredient.objects.all()
+  serializer_class = TaskIngredientSerializer
+
