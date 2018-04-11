@@ -156,27 +156,14 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
-	task_ingredients = serializers.SerializerMethodField()
-
-	def get_task_ingredients(self, task):
-		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=true, read_only=True).data
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		print(validated_data)
-		# get all the recipes with the same product type and process type as the task
-		# for all the ingredients in all of these recipes, create a taskingredient with the correct scaled_amount
-		new_task = Task.objects.create(**validated_data)
-		ingredients = Ingredient.objects.filter(recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)
-		default_batch_size = new_task.process_type.default_amount
-		actual_task_size = new_task.items.annotate(total_output=Sum('amount')).total_amount
-		for ingredient in ingredients:
-			scaled_amount = actual_task_size*ingredient.amount/default_batch_size
-			TaskIngredient.objects.create(task=new_task, ingredient=ingredient, scaled_amount=scaled_amount)
-		return new_task
+		return Task.objects.create(**validated_data)
 
 
 class NestedItemSerializer(serializers.ModelSerializer):
@@ -825,54 +812,3 @@ class AdjustmentHistorySerializer(serializers.Serializer):
 
 	def get_data(self, obj):
 		return AdjustmentSerializer(obj).data
-
-class IngredientSerializer(serializers.ModelSerializer):
-	process_type = ProcessTypeWithUserSerializer(read_only=True)
-	process_type_id = serializers.PrimaryKeyRelatedField(source='process_type', queryset=ProcessType.objects.all(), write_only=True)
-	product_type = ProductTypeWithUserSerializer(read_only=True)
-	product_type_id = serializers.PrimaryKeyRelatedField(source='product_type', queryset=ProductType.objects.all(), write_only=True)
-	amount = serializers.DecimalField(max_digits=10, decimal_places=3)
-	recipe_id = serializers.PrimaryKeyRelatedField(source='recipe', queryset=Recipe.objects.all())
-
-	class Meta:
-		model = Ingredient
-		fields = ('id', 'product_type', 'process_type', 'process_type_id', 'product_type_id', 'amount', 'recipe_id')
-
-
-
-class RecipeSerializer(serializers.ModelSerializer):
-	process_type = ProcessTypeWithUserSerializer(read_only=True)
-	process_type_id = serializers.PrimaryKeyRelatedField(source='process_type', queryset=ProcessType.objects.all(), write_only=True)
-	product_type = ProductTypeWithUserSerializer(read_only=True)
-	product_type_id = serializers.PrimaryKeyRelatedField(source='product_type', queryset=ProductType.objects.all(), write_only=True)
-	ingredients = serializers.SerializerMethodField(read_only=True)
-
-	def get_ingredients(self, recipe):
-		return IngredientSerializer(Ingredient.objects.filter(recipe=recipe), many=True).data
-
-	class Meta:
-		model = Recipe
-		fields = ('id', 'instructions', 'product_type', 'process_type', 'process_type_id', 'product_type_id', 'ingredients')
-
-
-class TaskIngredientSerializer(serializers.ModelSerializer):
-	ingredient = IngredientSerializer(read_only=True)
-	ingredient_id = serializers.PrimaryKeyRelatedField(source='ingredient', queryset=Ingredient.objects.all(), write_only=True)
-	task = BasicTaskSerializer(read_only=True)
-	task_id = serializers.PrimaryKeyRelatedField(source='task', queryset=Task.objects.all(), write_only=True)
-
-	class Meta:
-		model = TaskIngredient
-		fields = ('id', 'ingredient', 'ingredient_id', 'task', 'task_id', 'scaled_amount', 'actual_amount')
-
-class BasicTaskIngredientSerializer(serializers.ModelSerializer):
-	ingredient = IngredientSerializer(read_only=True)
-	ingredient_id = serializers.PrimaryKeyRelatedField(source='ingredient', queryset=Ingredient.objects.all(), write_only=True)
-
-	class Meta:
-		model = TaskIngredient
-		fields = ('id', 'ingredient', 'ingredient_id', 'task')
-
-
-
-
