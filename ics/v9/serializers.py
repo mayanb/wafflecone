@@ -839,7 +839,7 @@ class InventoryList2Serializer(serializers.Serializer):
 				Case(
 					When(inputs__amount__isnull=False, then=F('amount') - F('inputs__amount')),
 					default=0,
-					output_field=models.IntegerField()
+					output_field=models.DecimalField()
 				)
 			), 0)
 		)['total']

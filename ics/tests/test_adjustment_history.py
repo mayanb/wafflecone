@@ -6,6 +6,7 @@ from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFact
 import datetime
 import mock
 from django.utils import timezone
+from decimal import Decimal
 
 
 class TestAdjustmentHistory(APITestCase):
@@ -13,7 +14,7 @@ class TestAdjustmentHistory(APITestCase):
 	def setUp(self):
 		self.process_type = ProcessTypeFactory(name='process-name', code='process-code', unit='process-unit')
 		self.product_type = ProductTypeFactory(name='product-name', code='product-code')
-		self.url = '/ics/v8/adjustment-history/'
+		self.url = reverse('adjustment-history')
 		self.query_params = {
 			'team': self.process_type.team_created_by.id,
 			'process_type': self.process_type.id,
@@ -68,7 +69,7 @@ class TestAdjustmentHistory(APITestCase):
 			adjustment = AdjustmentFactory(
 				process_type=self.process_type,
 				product_type=self.product_type,
-				amount=37,
+				amount=37.3,
 			)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
@@ -76,24 +77,24 @@ class TestAdjustmentHistory(APITestCase):
 		history = response.data[1]
 		self.assertEqual(history['type'], 'adjustment')
 		self.assertEqual(history['date'], self.past_time)
-		self.assertEqual(float(history['data']['amount']), 37)
+		self.assertEqual(history['data']['amount'], Decimal('37.300'))
 
 	def test_items(self):
-		ItemFactory(creating_task=self.task, amount=18)
-		ItemFactory(creating_task=self.task, amount=9)
+		ItemFactory(creating_task=self.task, amount=18.2)
+		ItemFactory(creating_task=self.task, amount=9.4)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 1)
 		item_summary = response.data[0]
 		self.assertEqual(item_summary['type'], 'item_summary')
 		self.assertEqual(item_summary['data']['created_count'], 2)
-		self.assertEqual(item_summary['data']['created_amount'], 27)
+		self.assertEqual(item_summary['data']['created_amount'], Decimal('27.600'))
 		self.assertEqual(item_summary['data']['used_count'], 0)
 		self.assertEqual(item_summary['data']['used_amount'], 0)
 
 	def test_used_items(self):
-		ItemFactory(creating_task=self.task, amount=18)
-		used_item = ItemFactory(creating_task=self.task, amount=9)
+		ItemFactory(creating_task=self.task, amount=18.2)
+		used_item = ItemFactory(creating_task=self.task, amount=9.4)
 		InputFactory(input_item=used_item)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
@@ -101,47 +102,47 @@ class TestAdjustmentHistory(APITestCase):
 		item_summary = response.data[0]
 		self.assertEqual(item_summary['type'], 'item_summary')
 		self.assertEqual(item_summary['data']['created_count'], 2)
-		self.assertEqual(item_summary['data']['created_amount'], 27)
+		self.assertEqual(item_summary['data']['created_amount'], Decimal('27.600'))
 		self.assertEqual(item_summary['data']['used_count'], 1)
-		self.assertEqual(item_summary['data']['used_amount'], 9)
+		self.assertEqual(item_summary['data']['used_amount'], Decimal('9.400'))
 
 
 	def test_partial_inputs(self):
-		partially_used_item = ItemFactory(creating_task=self.task, amount=39)
-		InputFactory(input_item=partially_used_item, amount=7)
+		partially_used_item = ItemFactory(creating_task=self.task, amount=39.3)
+		InputFactory(input_item=partially_used_item, amount=7.8)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 1)
 		item_summary = response.data[0]
 		self.assertEqual(item_summary['type'], 'item_summary')
 		self.assertEqual(item_summary['data']['created_count'], 1)
-		self.assertEqual(item_summary['data']['created_amount'], 39)
+		self.assertEqual(item_summary['data']['created_amount'], Decimal('39.300'))
 		self.assertEqual(item_summary['data']['used_count'], 1)
-		self.assertEqual(item_summary['data']['used_amount'], 7)
+		self.assertEqual(item_summary['data']['used_amount'], Decimal('7.800'))
 
 
 	def test_adjustments_and_items(self):
-		ItemFactory(creating_task=self.task, amount=11)
+		ItemFactory(creating_task=self.task, amount=11.1)
 		AdjustmentFactory(
 			process_type=self.process_type,
 			product_type=self.product_type,
-			amount=22,
+			amount=22.4,
 		)
-		ItemFactory(creating_task=self.task, amount=33)
+		ItemFactory(creating_task=self.task, amount=33.9)
 		AdjustmentFactory(
 			process_type=self.process_type,
 			product_type=self.product_type,
-			amount=44,
+			amount=44.6,
 		)
-		ItemFactory(creating_task=self.task, amount=55)
+		ItemFactory(creating_task=self.task, amount=55.5)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 5)
-		self.assertEqual(float(response.data[0]['data']['created_amount']), 55)
-		self.assertEqual(float(response.data[1]['data']['amount']), 44)
-		self.assertEqual(float(response.data[2]['data']['created_amount']), 33)
-		self.assertEqual(float(response.data[3]['data']['amount']), 22)
-		self.assertEqual(float(response.data[4]['data']['created_amount']), 11)
+		self.assertEqual(response.data[0]['data']['created_amount'], Decimal('55.500'))
+		self.assertEqual(response.data[1]['data']['amount'], Decimal('44.600'))
+		self.assertEqual(response.data[2]['data']['created_amount'], Decimal('33.900'))
+		self.assertEqual(response.data[3]['data']['amount'], Decimal('22.400'))
+		self.assertEqual(response.data[4]['data']['created_amount'], Decimal('11.100'))
 
 	def test_other_items(self):
 		wrong_process_task = TaskFactory(process_type=ProcessTypeFactory(), product_type=self.product_type)
