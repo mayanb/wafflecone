@@ -57,7 +57,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
 
 
@@ -87,7 +87,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
