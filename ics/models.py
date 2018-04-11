@@ -606,7 +606,7 @@ class Recipe(models.Model):
 	instructions = models.TextField()
 
 class Ingredient(models.Model):
-	recipe = models.ForeignKey(Recipe, related_name="recipes", on_delete=models.CASCADE)
+	recipe = models.ForeignKey(Recipe, related_name="recipes", on_delete=models.CASCADE, null=True)
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE)
 	amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)

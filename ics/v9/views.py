@@ -182,6 +182,10 @@ class TaskCreate(generics.CreateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = BasicTaskSerializer
 
+class TaskCreateWithOutput(generics.CreateAPIView):
+  queryset = Task.objects.filter(is_trashed=False)
+  serializer_class = BasicTaskSerializerWithOutput
+
 # tasks/edit/[pk]
 class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
@@ -271,6 +275,10 @@ class ItemDetail(generics.RetrieveUpdateDestroyAPIView):
 class CreateInput(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializer
+
+class CreateInputWithoutAmount(generics.ListCreateAPIView):
+  queryset = Input.objects.all()
+  serializer_class = BasicInputSerializerWithoutAmount
 
 
 #########################
@@ -992,7 +1000,7 @@ class IngredientDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class TaskIngredientList(generics.ListCreateAPIView):
   queryset = TaskIngredient.objects.all()
-  serializer_class = TaskIngredientSerializer
+  serializer_class = BasicTaskIngredientSerializer
   filter_fields = ('task', 'ingredient', 'id')
 
   def get_queryset(self):
@@ -1003,5 +1011,6 @@ class TaskIngredientList(generics.ListCreateAPIView):
 
 class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskIngredient.objects.all()
-  serializer_class = TaskIngredientSerializer
+  serializer_class = BasicTaskIngredientSerializer
+
 
