@@ -29,7 +29,7 @@ def tasks(query_params):
 
 	parent = query_params.get('parent', None)
 	if parent is not None:
-		queryset = Task.objects.get(pk=parent).descendents()
+		queryset = Task.objects.get(pk=parent).descendants()
 
 	child = query_params.get('child', None)
 	if child is not None:
