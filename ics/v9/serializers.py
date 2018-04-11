@@ -171,7 +171,11 @@ class BasicInputSerializerWithoutAmount(serializers.ModelSerializer):
 		input_creating_product = new_input.input_item.creating_task.product_type
 		input_creating_process = new_input.input_item.creating_task.process_type
 		if TaskIngredient.objects.filter(task=new_input.task, ingredient__product_type=input_creating_product, ingredient__process_type=input_creating_process).count() == 0:
-			new_ing = Ingredient.objects.create(recipe=None, product_type=input_creating_product, process_type=input_creating_process, amount=0)
+			ing_query = Ingredient.objects.filter(product_type=input_creating_product, process_type=input_creating_process)
+			if(ing_query.count() == 0):
+				new_ing = Ingredient.objects.create(recipe=None, product_type=input_creating_product, process_type=input_creating_process, amount=0)
+			else:
+				new_ing = ing_query[0]
 			TaskIngredient.objects.create(ingredient=new_ing, task=new_input.task, actual_amount=input_creating_process.default_amount)
 		return new_input
 
