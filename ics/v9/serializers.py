@@ -190,10 +190,6 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
-	task_ingredients = serializers.SerializerMethodField()
-
-	def get_task_ingredients(self, task):
-		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
 
 	class Meta:
 		model = Task
