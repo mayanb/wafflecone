@@ -14,6 +14,12 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
 
+	task_ingredients = serializers.SerializerMethodField()
+
+	def get_task_ingredients(self, task):
+		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
+
+
 	def getInputUnit(self, task):
 		input = task.inputs.first()
 		if input is not None:
@@ -47,7 +53,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'inputs',
 			'attribute_values',
 			'display',
-			'is_trashed'
+			'is_trashed',
+			'task_ingredients'
 		)
 
 
