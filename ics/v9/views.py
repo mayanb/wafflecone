@@ -292,6 +292,12 @@ class CreateInputWithoutAmount(generics.ListCreateAPIView):
   queryset = Input.objects.all()
   serializer_class = BasicInputSerializerWithoutAmount
 
+# inputs/[pk]/
+class InputDetail(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Input.objects.all()
+  serializer_class = BasicInputSerializer
+  filter_fields = ('task',)
+
 
 #########################
 # PROCESS-RELATED VIEWS #
