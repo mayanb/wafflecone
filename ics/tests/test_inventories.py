@@ -5,6 +5,7 @@ from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFact
 from django.utils import timezone
 import datetime
 import mock
+from decimal import Decimal
 
 
 class TestInventoriesList(APITestCase):
@@ -12,7 +13,7 @@ class TestInventoriesList(APITestCase):
 	def setUp(self):
 		self.process_type = ProcessTypeFactory(name='process-name', code='process-code', unit='process-unit')
 		self.product_type = ProductTypeFactory(name='product-name', code='product-code')
-		self.url = '/ics/v8/inventories/'
+		self.url = reverse('inventories')
 		self.query_params = {
 			'team': self.process_type.team_created_by.id
 		}
@@ -25,8 +26,8 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(len(response.data['results']), 0)
 
 	def test_items_only(self):
-		ItemFactory(creating_task=self.task, amount=18)
-		ItemFactory(creating_task=self.task, amount=3)
+		ItemFactory(creating_task=self.task, amount=18.1)
+		ItemFactory(creating_task=self.task, amount=3.2)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data['results']), 1)
@@ -38,43 +39,43 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(item['product_id'], str(self.product_type.id))
 		self.assertEqual(item['product_name'], 'product-name')
 		self.assertEqual(item['product_code'], 'product-code')
-		self.assertEqual(item['adjusted_amount'], 21)
+		self.assertEqual(item['adjusted_amount'], Decimal('21.300'))
 
 	def test_adjustment(self):
 		with mock.patch('django.utils.timezone.now') as mock_now:
 			mock_now.return_value = self.past_time
-			ItemFactory(creating_task=self.task, amount=18)
-			ItemFactory(creating_task=self.task, amount=3)
+			ItemFactory(creating_task=self.task, amount=18.1)
+			ItemFactory(creating_task=self.task, amount=3.2)
 		adjustment = AdjustmentFactory(
 			process_type=self.process_type,
 			product_type=self.product_type,
-			amount=37,
+			amount=37.9,
 		)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data['results']), 1)
-		self.assertEqual(response.data['results'][0]['adjusted_amount'], 37)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], Decimal('37.900'))
 
 	def test_multiple_adjustments(self):
 		with mock.patch('django.utils.timezone.now') as mock_now:
 			mock_now.return_value = self.past_time
-			ItemFactory(creating_task=self.task, amount=18)
-			ItemFactory(creating_task=self.task, amount=3)
+			ItemFactory(creating_task=self.task, amount=18.1)
+			ItemFactory(creating_task=self.task, amount=3.2)
 			past_adjustment = AdjustmentFactory(
 				process_type=self.process_type,
 				product_type=self.product_type,
-				amount=37,
+				amount=37.9,
 			)
 
-		presnt_adjustment = AdjustmentFactory(
+		present_adjustment = AdjustmentFactory(
 			process_type=self.process_type,
 			product_type=self.product_type,
-			amount=932,
+			amount=932.7,
 		)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data['results']), 1)
-		self.assertEqual(response.data['results'][0]['adjusted_amount'], 932)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], Decimal('932.700'))
 
 	def test_items_after_adjustment(self):
 		with mock.patch('django.utils.timezone.now') as mock_now:
@@ -82,14 +83,14 @@ class TestInventoriesList(APITestCase):
 			adjustment = AdjustmentFactory(
 				process_type=self.process_type,
 				product_type=self.product_type,
-				amount=45,
+				amount=45.6,
 			)
-		ItemFactory(creating_task=self.task, amount=3)
-		ItemFactory(creating_task=self.task, amount=19)
+		ItemFactory(creating_task=self.task, amount=3.1)
+		ItemFactory(creating_task=self.task, amount=19.2)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data['results']), 1)
-		self.assertEqual(response.data['results'][0]['adjusted_amount'], 67)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], Decimal('67.900'))
 
 	def test_no_team_error(self):
 		response = self.client.get(self.url, format='json')
@@ -117,12 +118,12 @@ class TestInventoriesList(APITestCase):
 		self.assertEqual(response.data['results'][0]['adjusted_amount'], 0)
 
 	def test_input_with_amount(self):
-		item = ItemFactory(creating_task=self.task, amount=32)
-		InputFactory(input_item=item, amount=8)
+		item = ItemFactory(creating_task=self.task, amount=32.4)
+		InputFactory(input_item=item, amount=8.1)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data['results']), 1)
-		self.assertEqual(response.data['results'][0]['adjusted_amount'], 24)
+		self.assertEqual(response.data['results'][0]['adjusted_amount'], Decimal('24.300'))
 
 	def test_moved_item(self):
 		other_team = TeamFactory(name='other-team')
