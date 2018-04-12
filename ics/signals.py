@@ -2,6 +2,7 @@ from ics.models import *
 from django.db.models.signals import post_save
 from django.core.signals import request_finished
 from django.dispatch import receiver
+from zappa.async import task
 
 @receiver(post_save, sender=ProcessType)
 def processtype_changed(sender, instance, **kwargs):
@@ -26,6 +27,7 @@ def my_callback(sender, **kwargs):
 	print("request finished")
 
 
+@task
 def helper(sender, instance, **kwargs):
 	for task in instance.tasks.with_documents().distinct():
 		task.search = task.document
