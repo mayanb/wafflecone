@@ -118,9 +118,10 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	process_type = serializers.IntegerField(source='process_type.id', read_only=True)
 	product_type = serializers.IntegerField(source='product_type.id', read_only=True)
+	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
 
 
 class DeleteTaskSerializer(serializers.ModelSerializer):
@@ -190,10 +191,11 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 	display = serializers.CharField(source='*', read_only=True)
 	items = BasicItemSerializer(many=True, read_only=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
+	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -205,6 +207,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	inputs = BasicInputSerializer(many=True, read_only=True)
 	task_ingredients = serializers.SerializerMethodField()
 	batch_size = serializers.DecimalField(max_digits=10, decimal_places=3, write_only=True, required=True)
+	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
@@ -212,7 +215,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')

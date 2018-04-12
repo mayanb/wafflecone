@@ -238,6 +238,10 @@ class Task(models.Model):
 	updated_at = models.DateTimeField(auto_now=True, db_index=True)
 	is_flagged = models.BooleanField(default=False, db_index=True)
 	flag_update_time = models.DateTimeField(default='2017-01-01 23:25:26.835087+00:00')
+	old_is_flagged = models.BooleanField(default=False)
+	was_flag_changed = models.BooleanField(default=False)
+	# all our signals are getting triggered twice for some reason so the num_flagged_ancestors is incremented and decremented by 2
+	num_flagged_ancestors = models.IntegerField(default=0)
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
@@ -253,7 +257,6 @@ class Task(models.Model):
 		super(Task, self).__init__(*args, **kwargs)
 		self.old_is_flagged = self.is_flagged
 
-
 	def __str__(self):
 		if self.custom_display:
 			return self.custom_display
@@ -267,16 +270,17 @@ class Task(models.Model):
 		# update the flag_update_time if the flag is toggled
 		if self.old_is_flagged != self.is_flagged:
 			self.flag_update_time = timezone.now()
-		self.old_is_flagged = self.is_flagged
-		qr_code = "plmr.io/" + str(uuid4())
+			self.was_flag_changed = True
+		else:
+			self.was_flag_changed = False
+
 		super(Task, self).save(*args, **kwargs)
+		self.old_is_flagged = self.is_flagged
+		
 		if 'update_fields' not in kwargs or 'search' not in kwargs['update_fields']:
 			instance = self._meta.default_manager.with_documents().filter(pk=self.pk)[0]
 			instance.search = instance.document
 			instance.save(update_fields=['search'])
-		# if self.pk is None:
-		#     newVirtualItem = Item(is_virtual=True, creating_task=self, item_qr=qr_code)
-		#     newVirtualItem.save()
 
 	def setLabelAndDisplay(self):
 		"""

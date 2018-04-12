@@ -15,6 +15,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	total_amount = serializers.CharField(read_only=True)
 
 	task_ingredients = serializers.SerializerMethodField()
+	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
@@ -54,7 +55,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'attribute_values',
 			'display',
 			'is_trashed',
-			'task_ingredients'
+			'task_ingredients',
+			'num_flagged_ancestors'
 		)
 
 
@@ -68,6 +70,7 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name')
 	process_id = serializers.IntegerField(source='process_type.id')
 	process_icon = serializers.CharField(source='process_type.icon')
+	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 
 	class Meta:
 		model = Task
@@ -88,7 +91,8 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'product_id',
 			'process_name',
 			'process_id',
-			'process_icon'
+			'process_icon',
+			'num_flagged_ancestors'
 		)
 
 

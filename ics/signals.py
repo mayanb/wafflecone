@@ -17,3 +17,8 @@ def producttype_changed(sender, instance, **kwargs):
 def taskattribute_changed(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.task.id }
 	update_task_search_vector(**kwargs)
+
+@receiver(post_save, sender=Task)
+def task_changed(sender, instance, **kwargs):
+	kwargs = { 'pk' : instance.id }
+	update_task_descendents_flag_number(**kwargs)
