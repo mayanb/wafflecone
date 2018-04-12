@@ -6,7 +6,7 @@ from zappa.async import task
 
 @receiver(post_save, sender=ProcessType)
 def processtype_changed(sender, instance, **kwargs):
-	helper(sender, instance, **kwargs)
+	helper(instance.id)
 
 
 @receiver(post_save, sender=ProductType)
@@ -28,7 +28,9 @@ def my_callback(sender, **kwargs):
 
 
 @task
-def helper(sender, instance, **kwargs):
-	for task in instance.tasks.with_documents().distinct():
+def helper(proc):
+	print('hello')
+	tasks = Task.objects.with_documents().filter(process_type__id=proc)
+	for task in tasks.distinct():
 		task.search = task.document
 		task.save(update_fields=['search'])
