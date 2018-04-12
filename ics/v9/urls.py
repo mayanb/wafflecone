@@ -42,7 +42,7 @@ urlpatterns = [
 
     url(r'^inputs/create/$', views.CreateInput.as_view(), name='create_input'),
     url(r'^inputs/create-without-amount/$', views.CreateInputWithoutAmount.as_view()),
-
+    url(r'^inputs/(?P<pk>[0-9]+)/$', views.InputDetail.as_view()),
 
     url(r'^processes/$', views.ProcessList.as_view(), name='process_types'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
