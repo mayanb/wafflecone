@@ -524,7 +524,7 @@ class TeamSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Team
 		fields = ('id', 'name', 'users', 'products', 'processes')
-
+# 
 
 class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
@@ -555,7 +555,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			creating_task__process_type=goal.process_type,
 			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
-			#creating_task__created_at__range=(start, end),
+			creating_task__created_at__range=(start, end),
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
 
