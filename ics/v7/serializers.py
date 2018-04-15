@@ -9,7 +9,6 @@ from model_utils import *
 import re
 import string
 from django.core.mail import send_mail
-# from ics.v7.calculated_fields_serializers import TaskFormulaAttributeSerializer
 
 easy_format = '%Y-%m-%d %H:%M'
 

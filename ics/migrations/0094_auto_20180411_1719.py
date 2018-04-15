@@ -10,7 +10,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ics', '0094_auto_20180411_0419'),
+        ('ics', '0093_processtype_description'),
     ]
 
     operations = [
