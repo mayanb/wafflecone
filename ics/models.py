@@ -660,6 +660,10 @@ class Recipe(models.Model):
 	instructions = models.TextField(null=True)
 	is_trashed = models.BooleanField(default=False)
 
+	class Meta:
+		unique_together = ('product_type', 'process_type', 'is_trashed')
+
+
 class Ingredient(models.Model):
 	recipe = models.ForeignKey(Recipe, related_name="ingredients", on_delete=models.CASCADE, null=True)
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
