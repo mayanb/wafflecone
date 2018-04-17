@@ -999,7 +999,7 @@ class AdjustmentHistory(APIView):
 ###################################
 
 class RecipeList(generics.ListCreateAPIView):
-  queryset = Recipe.objects.all()\
+  queryset = Recipe.objects.filter(is_trashed=False)\
       .select_related('product_type', 'process_type')\
       .prefetch_related('ingredients')
   serializer_class = RecipeSerializer
@@ -1008,14 +1008,14 @@ class RecipeList(generics.ListCreateAPIView):
   def get_queryset(self):
     team = self.request.query_params.get('team', None)
     if team is not None:
-      return Recipe.objects.filter(product_type__team_created_by=team)\
+      return Recipe.objects.filter(product_type__team_created_by=team, is_trashed=False)\
         .select_related('product_type', 'process_type')\
         .prefetch_related('ingredients')
     return HttpResponseForbidden()
 
 
 class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Recipe.objects.all()\
+  queryset = Recipe.objects.filter(is_trashed=False)\
       .select_related('product_type', 'process_type')\
       .prefetch_related('ingredients')
   serializer_class = RecipeSerializer
