@@ -657,7 +657,7 @@ class Alert(models.Model):
 class Recipe(models.Model):
 	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
 	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
-	instructions = models.TextField()
+	instructions = models.TextField(null=True)
 	is_trashed = models.BooleanField(default=False)
 
 class Ingredient(models.Model):
