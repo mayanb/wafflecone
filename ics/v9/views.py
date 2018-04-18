@@ -13,7 +13,8 @@ from django.http import HttpResponse, HttpResponseForbidden
 import pytz
 from django.utils import timezone
 from ics import constants
-
+import json
+from rest_framework.decorators import api_view
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -992,7 +993,7 @@ class AdjustmentHistory(APIView):
 ###################################
 
 class RecipeList(generics.ListCreateAPIView):
-  queryset = Recipe.objects.all()\
+  queryset = Recipe.objects.filter(is_trashed=False)\
       .select_related('product_type', 'process_type')\
       .prefetch_related('ingredients')
   serializer_class = RecipeSerializer
@@ -1001,14 +1002,14 @@ class RecipeList(generics.ListCreateAPIView):
   def get_queryset(self):
     team = self.request.query_params.get('team', None)
     if team is not None:
-      return Recipe.objects.filter(product_type__team_created_by=team)\
+      return Recipe.objects.filter(product_type__team_created_by=team, is_trashed=False)\
         .select_related('product_type', 'process_type')\
         .prefetch_related('ingredients')
     return HttpResponseForbidden()
 
 
 class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Recipe.objects.all()\
+  queryset = Recipe.objects.filter(is_trashed=False)\
       .select_related('product_type', 'process_type')\
       .prefetch_related('ingredients')
   serializer_class = RecipeSerializer
@@ -1048,3 +1049,22 @@ class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskIngredient.objects.all()\
       .select_related('ingredient')
   serializer_class = BasicTaskIngredientSerializer
+
+
+@api_view(['POST'])
+def ingredient_bulk_create(request):
+  created_ingredients = []
+  recipe =  request.POST.get('recipe')
+  recipe = Recipe.objects.get(pk=recipe)
+  ingredients =  request.POST.get('ingredients')
+  ingredients = json.loads((ingredients).decode("utf-8") )
+  for ingredient in ingredients:
+    product_type = ProductType.objects.get(pk=ingredient['product_type'])
+    process_type = ProcessType.objects.get(pk=ingredient['process_type'])
+    amount = ingredient['amount']
+    ing = Ingredient.objects.create(recipe=recipe, product_type=product_type, process_type=process_type, amount=amount)
+    created_ingredients.append(ing.id)
+  results = Ingredient.objects.filter(id__in=created_ingredients)
+  output_serializer = IngredientSerializer(results, many=True)
+  return Response(output_serializer.data)
+

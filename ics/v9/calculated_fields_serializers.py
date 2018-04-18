@@ -16,6 +16,17 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
 	task_ingredients = serializers.SerializerMethodField()
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
+	recipe_instructions = serializers.SerializerMethodField()
+
+	def get_recipe_instructions(self, task):
+		task_ingredients = task.task_ingredients
+		if task_ingredients.count() > 0:
+			task_ing = task_ingredients.first()
+			recipe_id = task_ing.ingredient.recipe.id
+			recipe = Recipe.objects.filter(id__in=[recipe_id])
+			if recipe.count() > 0:
+				return recipe[0].instructions
+		return None
 
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
@@ -56,7 +67,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'display',
 			'is_trashed',
 			'task_ingredients',
-			'num_flagged_ancestors'
+			'num_flagged_ancestors',
+			'recipe_instructions'
 		)
 
 

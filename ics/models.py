@@ -657,7 +657,12 @@ class Alert(models.Model):
 class Recipe(models.Model):
 	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
 	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
-	instructions = models.TextField()
+	instructions = models.TextField(null=True)
+	is_trashed = models.BooleanField(default=False, db_index=True)
+
+	# class Meta:
+	# 	unique_together = ('product_type', 'process_type', 'is_trashed')
+
 
 class Ingredient(models.Model):
 	recipe = models.ForeignKey(Recipe, related_name="ingredients", on_delete=models.CASCADE, null=True)
