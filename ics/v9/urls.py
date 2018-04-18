@@ -46,7 +46,6 @@ urlpatterns = [
 
     url(r'^processes/$', views.ProcessList.as_view(), name='process_types'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
-    url(r'^processes/move/(?P<pk>[0-9]+)/$', views.ProcessMoveDetail.as_view()),
     url(r'^processes/duplicate/$', views.ProcessDuplicate.as_view(), name='process_duplicate'),
 
 

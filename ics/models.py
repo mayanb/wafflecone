@@ -72,13 +72,13 @@ class ProcessType(models.Model):
 	code = models.CharField(max_length=20)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=timezone.now, blank=True)
-	description = models.CharField(max_length=1, default="", blank=True)
+	description = models.CharField(max_length=1, default="", blank=True)  # SCHEDULED FOR DELETION
 	output_desc = models.CharField(max_length=200, default="product")
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
 
-	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)
-	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)  # SCHEDULED FOR DELETION
+	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)  # SCHEDULED FOR DELETION
 
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	is_trashed = models.BooleanField(default=False, db_index=True)

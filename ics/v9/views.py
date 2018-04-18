@@ -318,13 +318,6 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
     .prefetch_related('attribute_set')
   serializer_class = ProcessTypeWithUserSerializer
 
-# processes/move/[pk]
-class ProcessMoveDetail(generics.RetrieveUpdateAPIView):
-  queryset = ProcessType.objects.all()\
-    .select_related('created_by', 'team_created_by')\
-    .prefetch_related('attribute_set')
-  serializer_class = ProcessTypePositionSerializer
-
 
 # processes/duplicate
 class ProcessDuplicate(generics.CreateAPIView):
