@@ -107,11 +107,9 @@ def simpleTaskSearch(query_params):
 		queryset = queryset.filter(Q(keywords__icontains=label))
 	elif label is not None:
 		query = SearchQuery(label)
-		# queryset.annotate(rank=SearchRank(F('search'), query)).filter(search=query).order_by('-rank')
 		queryset = queryset.filter(Q(search=query) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
-		# queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label) | Q(items__item_qr__icontains=label))
 	return queryset\
-		.order_by('-updated_at').select_related('process_type', 'product_type')
+		.order_by('-updated_at').select_related('process_type', 'product_type').prefetch_related('items')
 
 
 def taskDetail():

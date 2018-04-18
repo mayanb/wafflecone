@@ -62,14 +62,11 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
 # serializes the task, without nested items, inputs, or attributes
 class FlatTaskSerializer(serializers.ModelSerializer):
-	# product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
+	items = BasicItemSerializer(many=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
-	product_name = serializers.CharField(source='product_type.name')
-	product_id = serializers.IntegerField(source='product_type.id')
-	process_name = serializers.CharField(source='process_type.name')
-	process_id = serializers.IntegerField(source='process_type.id')
-	process_icon = serializers.CharField(source='process_type.icon')
+	product_type = ProductTypeSerializer(many=False, read_only=True)
+	process_type = ProcessTypeSerializer(many=False, read_only=True)
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 
 	class Meta:
@@ -86,12 +83,10 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'label_index', 
 			'custom_display',
 			'display',
+			'items',
 			'is_trashed',
-			'product_name',
-			'product_id',
-			'process_name',
-			'process_id',
-			'process_icon',
+			'process_type',
+			'product_type',
 			'num_flagged_ancestors'
 		)
 

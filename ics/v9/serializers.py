@@ -44,8 +44,6 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	last_used = serializers.DateTimeField(source='get_last_used_date', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
 	icon = serializers.CharField(read_only=True)
-	x = serializers.CharField(read_only=True)
-	y = serializers.CharField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
@@ -58,8 +56,15 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
+
+class ProcessTypeSerializer(serializers.ModelSerializer):
+	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+
+	class Meta:
+		model = ProcessType
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -74,10 +79,6 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
 		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
-class ProcessTypePositionSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = ProcessType
-		fields = ('id','x','y')
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
@@ -94,7 +95,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 class ProductTypeSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description', 'search')
 
 
 class ProductCodeSerializer(serializers.ModelSerializer):
