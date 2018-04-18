@@ -1073,5 +1073,5 @@ def ingredient_bulk_create(request):
     created_ingredients.append(ing.id)
   results = Ingredient.objects.filter(id__in=created_ingredients)
   output_serializer = IngredientSerializer(results, many=True)
-  data = output_serializer.data[:]
-  return Response(data)
+  return Response(output_serializer.data)
+
