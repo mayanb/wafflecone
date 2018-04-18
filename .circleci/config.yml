@@ -12,17 +12,17 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps3-{{ checksum "requirements.txt" }}
+          key: deps4-{{ checksum "requirements.txt" }}
       - run:
           name: Install Python deps in a venv
           command: |
             python -m virtualenv venv
-            sudo pip install pip==9.0.3
+            sudo pip install virtualenv --upgrade
             source venv/bin/activate
             pip install -r requirements.txt
             sudo pip install boto3
       - save_cache:
-          key: deps3-{{ checksum "requirements.txt" }}
+          key: deps4-{{ checksum "requirements.txt" }}
           paths:
             - ./venv
       - run:
