@@ -17,7 +17,7 @@ jobs:
           name: Install Python deps in a venv
           command: |
             python -m virtualenv venv
-            pip install pip==9.0.3
+            sudo pip install pip==9.0.3
             source venv/bin/activate
             pip install -r requirements.txt
             sudo pip install boto3
