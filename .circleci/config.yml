@@ -12,7 +12,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps2-{{ checksum "requirements.txt" }}
+          key: deps3-{{ checksum "requirements.txt" }}
       - run:
           name: Install Python deps in a venv
           command: |
@@ -22,7 +22,7 @@ jobs:
             pip install -r requirements.txt
             sudo pip install boto3
       - save_cache:
-          key: deps2-{{ checksum "requirements.txt" }}
+          key: deps3-{{ checksum "requirements.txt" }}
           paths:
             - ./venv
       - run:
