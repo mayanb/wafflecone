@@ -660,8 +660,8 @@ class Recipe(models.Model):
 	instructions = models.TextField(null=True)
 	is_trashed = models.BooleanField(default=False)
 
-	class Meta:
-		unique_together = ('product_type', 'process_type', 'is_trashed')
+	# class Meta:
+	# 	unique_together = ('product_type', 'process_type', 'is_trashed')
 
 
 class Ingredient(models.Model):
