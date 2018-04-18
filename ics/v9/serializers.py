@@ -209,6 +209,17 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	task_ingredients = serializers.SerializerMethodField()
 	batch_size = serializers.DecimalField(max_digits=10, decimal_places=3, write_only=True, required=True)
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
+	recipe_instructions = serializers.SerializerMethodField()
+
+	def get_recipe_instructions(self, task):
+		task_ingredients = task.task_ingredients
+		if task_ingredients.count() > 0:
+			task_ing = task_ingredients.first()
+			recipe_id = task_ing.ingredient.recipe.id
+			recipe = Recipe.objects.filter(id__in=[recipe_id])
+			if recipe.count() > 0:
+				return recipe[0].instructions
+		return None
 
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
@@ -216,7 +227,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')
