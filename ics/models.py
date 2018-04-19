@@ -438,7 +438,8 @@ class Input(models.Model):
 		if similar_inputs.count() <= 1:
 			task_ings = TaskIngredient.objects.filter(task=self.task, 
 				ingredient__product_type=self.input_item.creating_task.product_type, 
-				ingredient__process_type=self.input_item.creating_task.process_type)
+				ingredient__process_type=self.input_item.creating_task.process_type, \
+				ingredient__recipe=None)
 			if task_ings.count() > 0:
 				if task_ings[0].ingredient:
 					if not task_ings[0].ingredient.recipe:
