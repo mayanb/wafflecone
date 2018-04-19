@@ -9,7 +9,8 @@ from django.db.models import Max
 import constants
 from django.utils import timezone
 from django.db.models.expressions import RawSQL
-
+from django.db.models import F
+# from ics.async_actions import *
 
 
 
@@ -431,7 +432,11 @@ class Input(models.Model):
 	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
 	def delete(self):
-		print self.input_item.creating_task.process_type
+		# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
+		if self.input_item.creating_task.is_flagged:
+			Task.objects.filter(id__in=[self.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors')-2)
+
+		# if the input is the only one for a taskingredient without a recipe, delete the taskingredient
 		similar_inputs = Input.objects.filter(task=self.task, \
 			input_item__creating_task__product_type=self.input_item.creating_task.product_type, \
 			input_item__creating_task__process_type=self.input_item.creating_task.process_type)
