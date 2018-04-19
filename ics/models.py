@@ -430,7 +430,20 @@ class Input(models.Model):
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
-
+	def delete(self):
+		print self.input_item.creating_task.process_type
+		similar_inputs = Input.objects.filter(task=self.task, \
+			input_item__creating_task__product_type=self.input_item.creating_task.product_type, \
+			input_item__creating_task__process_type=self.input_item.creating_task.process_type)
+		if similar_inputs.count() <= 1:
+			task_ings = TaskIngredient.objects.filter(task=self.task, 
+				ingredient__product_type=self.input_item.creating_task.product_type, 
+				ingredient__process_type=self.input_item.creating_task.process_type)
+			if task_ings.count() > 0:
+				if task_ings[0].ingredient:
+					if not task_ings[0].ingredient.recipe:
+						task_ings.delete()
+		super(Input, self).delete()
 
 class FormulaAttribute(models.Model):
 	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
