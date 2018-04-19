@@ -671,7 +671,7 @@ class Ingredient(models.Model):
 	amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
 
 class TaskIngredient(models.Model):
-	scaled_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
-	actual_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+	scaled_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)
