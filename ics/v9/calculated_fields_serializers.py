@@ -22,10 +22,12 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 		task_ingredients = task.task_ingredients
 		if task_ingredients.count() > 0:
 			task_ing = task_ingredients.first()
-			recipe_id = task_ing.ingredient.recipe.id
-			recipe = Recipe.objects.filter(id__in=[recipe_id])
-			if recipe.count() > 0:
-				return recipe[0].instructions
+			rec = task_ing.ingredient.recipe
+			if rec:
+				recipe_id = rec.id
+				recipe = Recipe.objects.filter(id__in=[recipe_id])
+				if recipe.count() > 0:
+					return recipe[0].instructions
 		return None
 
 	def get_task_ingredients(self, task):
