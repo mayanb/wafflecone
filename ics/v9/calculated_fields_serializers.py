@@ -125,3 +125,11 @@ class CreateTaskAttributeSerializer(serializers.ModelSerializer):
 		new_task_attribute = TaskAttribute.objects.create(attribute=attribute_obj, task=task_obj, value=value)
 		return new_task_attribute
 
+
+class NestedItemSerializer(serializers.ModelSerializer):
+	creating_task = FlatTaskSerializer(many=False, read_only=True)
+
+	class Meta:
+		model = Item
+		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual', 'team_inventory')
+		read_only_fields = ('id', 'item_qr', 'creating_task', 'inventory', 'team_inventory')

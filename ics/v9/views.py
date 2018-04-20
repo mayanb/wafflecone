@@ -267,7 +267,9 @@ class CreateItem(generics.ListCreateAPIView):
 
 # items/
 class ItemList(generics.ListAPIView):
-  queryset = Item.objects.all()
+  queryset = Item.objects.all()\
+    .select_related('creating_task', 'creating_task__process_type', 'creating_task__product_type')\
+    .prefetch_related('creating_task__items')
   serializer_class = NestedItemSerializer
   filter_fields = ('item_qr', 'creating_task')
 
