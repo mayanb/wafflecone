@@ -464,8 +464,8 @@ def sendEmail(userprofile_id):
         fail_silently=False,
         html_message=html_message,
     )
-  except SMTPException:
-    print ('EXCEPTION: send_mail failed to reach: %s' % email)
+  except SMTPException as e:
+    print ('send_mail failed: ', e)
 
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
