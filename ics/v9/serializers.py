@@ -245,16 +245,6 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 		return new_task
 
 
-class NestedItemSerializer(serializers.ModelSerializer):
-	creating_task = BasicTaskSerializer(many=False, read_only=True)
-	#inventory = serializers.CharField(source='getInventory')
-
-	class Meta:
-		model = Item
-		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual', 'team_inventory')
-		read_only_fields = ('id', 'item_qr', 'creating_task', 'inventory', 'team_inventory')
-
-
 class AlertInputSerializer(serializers.ModelSerializer):
 	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
 	input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
