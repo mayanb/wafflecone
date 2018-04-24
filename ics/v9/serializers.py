@@ -839,9 +839,9 @@ class InventoryList2Serializer(serializers.Serializer):
 
 		created_amount = items_query.aggregate(total=Sum('amount'))['total'] or 0
 
-		used_amount = Ingredient.objects\
-			.filter(process_type=process_type, product_type=product_type)\
-			.aggregate(total=Sum('task_ingredients__actual_amount'))['total'] or 0
+		used_amount = TaskIngredient.objects\
+			.filter(ingredient__process_type=process_type, ingredient__product_type=product_type, team_inventory=item_summary['team_inventory'])\
+			.aggregate(total=Sum('actual_amount'))['total'] or 0
 
 		return starting_amount + created_amount - used_amount
 
