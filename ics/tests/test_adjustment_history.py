@@ -2,7 +2,7 @@ from ics.models import *
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, AdjustmentFactory, ItemFactory, \
-	TeamFactory, InputFactory
+	TeamFactory, IngredientFactory, TaskIngredientFactory
 import datetime
 import mock
 from django.utils import timezone
@@ -29,9 +29,7 @@ class TestAdjustmentHistory(APITestCase):
 		self.assertEqual(len(response.data), 1)
 		item_summary = response.data[0]
 		self.assertEqual(item_summary['type'], 'item_summary')
-		self.assertEqual(item_summary['data']['created_count'], 0)
 		self.assertEqual(item_summary['data']['created_amount'], 0)
-		self.assertEqual(item_summary['data']['used_count'], 0)
 		self.assertEqual(item_summary['data']['used_amount'], 0)
 
 	def test_no_team_error(self):
@@ -87,37 +85,20 @@ class TestAdjustmentHistory(APITestCase):
 		self.assertEqual(len(response.data), 1)
 		item_summary = response.data[0]
 		self.assertEqual(item_summary['type'], 'item_summary')
-		self.assertEqual(item_summary['data']['created_count'], 2)
 		self.assertEqual(item_summary['data']['created_amount'], Decimal('27.600'))
-		self.assertEqual(item_summary['data']['used_count'], 0)
 		self.assertEqual(item_summary['data']['used_amount'], 0)
-
-	def test_used_items(self):
-		ItemFactory(creating_task=self.task, amount=18.2)
-		used_item = ItemFactory(creating_task=self.task, amount=9.4)
-		InputFactory(input_item=used_item)
-		response = self.client.get(self.url, self.query_params, format='json')
-		self.assertEqual(response.status_code, 200)
-		self.assertEqual(len(response.data), 1)
-		item_summary = response.data[0]
-		self.assertEqual(item_summary['type'], 'item_summary')
-		self.assertEqual(item_summary['data']['created_count'], 2)
-		self.assertEqual(item_summary['data']['created_amount'], Decimal('27.600'))
-		self.assertEqual(item_summary['data']['used_count'], 1)
-		self.assertEqual(item_summary['data']['used_amount'], Decimal('9.400'))
 
 
 	def test_partial_inputs(self):
 		partially_used_item = ItemFactory(creating_task=self.task, amount=39.3)
-		InputFactory(input_item=partially_used_item, amount=7.8)
+		ingredient = IngredientFactory(process_type=self.process_type, product_type=self.product_type)
+		task_ingredient = TaskIngredientFactory(actual_amount=7.8, ingredient=ingredient)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 1)
 		item_summary = response.data[0]
 		self.assertEqual(item_summary['type'], 'item_summary')
-		self.assertEqual(item_summary['data']['created_count'], 1)
 		self.assertEqual(item_summary['data']['created_amount'], Decimal('39.300'))
-		self.assertEqual(item_summary['data']['used_count'], 1)
 		self.assertEqual(item_summary['data']['used_amount'], Decimal('7.800'))
 
 
@@ -157,4 +138,3 @@ class TestAdjustmentHistory(APITestCase):
 		other_team_item.save()
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(len(response.data), 1)
-		self.assertEqual(response.data[0]['data']['created_count'], 0)

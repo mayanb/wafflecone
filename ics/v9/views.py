@@ -943,30 +943,15 @@ class AdjustmentHistory(APIView):
       team_inventory=self.team,
       created_at__range=(start, end)
     ) \
-      .aggregate(
-      created_count=Count('amount'),
-      created_amount=Coalesce(Sum('amount'), 0),
-      used_count=Coalesce(Sum(
-        Case(
-          When(inputs__isnull=False, then=1),
-          default=0,
-          output_field=models.DecimalField()
-        )
-      ), 0),
-      used_amount=Coalesce(Sum(
-        Case(
-          When(inputs__isnull=False, then=Case(
-            When(inputs__amount__isnull=False, then=F('inputs__amount')),
-            When(inputs__amount__isnull=True, then=F('amount')),
-            default=0,
-            output_field=models.DecimalField()
-          )
-               ),
-          default=0,
-          output_field=models.DecimalField()
-        )
-      ), 0),
-    )
+      .aggregate(created_amount=Coalesce(Sum('amount'), 0))
+
+    data['used_amount'] = TaskIngredient.objects \
+                    .filter(ingredient__process_type=self.process_type,
+                            ingredient__product_type=self.product_type,
+                            task__created_at__range=(start, end)
+                            ) \
+                    .aggregate(total=Sum('actual_amount'))['total'] or 0
+
     return ItemSummarySerializer(data, context={'date': end}).data
 
   def get(self, request):

@@ -820,7 +820,7 @@ class InventoryList2Serializer(serializers.Serializer):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
 
-		starting_total = 0
+		starting_amount = 0
 
 		latest_adjustment = Adjustment.objects.all() \
 			.filter(process_type=process_type, product_type=product_type) \
@@ -835,22 +835,15 @@ class InventoryList2Serializer(serializers.Serializer):
 		if latest_adjustment:
 			start_time = latest_adjustment.created_at
 			items_query = items_query.filter(created_at__gt=start_time)
-			starting_total = latest_adjustment.amount
+			starting_amount = latest_adjustment.amount
 
-		untouched_items_total = (items_query.all().filter(inputs__isnull=True).aggregate(total_amount=Sum('amount'))[
-			                'total_amount'] or 0)
+		created_amount = items_query.aggregate(total=Sum('amount'))['total'] or 0
 
-		partially_unused_items_total = items_query.all().aggregate(
-			total=Coalesce(Sum(
-				Case(
-					When(inputs__amount__isnull=False, then=F('amount') - F('inputs__amount')),
-					default=0,
-					output_field=models.DecimalField()
-				)
-			), 0)
-		)['total']
+		used_amount = Ingredient.objects\
+			.filter(process_type=process_type, product_type=product_type)\
+			.aggregate(total=Sum('task_ingredients__actual_amount'))['total'] or 0
 
-		return starting_total + untouched_items_total + partially_unused_items_total
+		return starting_amount + created_amount - used_amount
 
 
 class ItemSummarySerializer(serializers.Serializer):

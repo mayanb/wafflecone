@@ -1,7 +1,8 @@
 from ics.models import *
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, AdjustmentFactory, ItemFactory, TeamFactory, InputFactory
+from ics.tests.factories import ProcessTypeFactory, ProductTypeFactory, TaskFactory, AdjustmentFactory, ItemFactory, \
+	TeamFactory, IngredientFactory, TaskIngredientFactory
 from django.utils import timezone
 import datetime
 import mock
@@ -109,17 +110,10 @@ class TestInventoriesList(APITestCase):
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(len(response.data['results']), 1)
 
-	def test_used_items(self):
-		item = ItemFactory(creating_task=self.task, amount=3)
-		InputFactory(input_item=item)
-		response = self.client.get(self.url, self.query_params, format='json')
-		self.assertEqual(response.status_code, 200)
-		self.assertEqual(len(response.data['results']), 1)
-		self.assertEqual(response.data['results'][0]['adjusted_amount'], 0)
-
 	def test_input_with_amount(self):
 		item = ItemFactory(creating_task=self.task, amount=32.4)
-		InputFactory(input_item=item, amount=8.1)
+		ingredient = IngredientFactory(process_type=self.process_type, product_type=self.product_type)
+		task_ingredient = TaskIngredientFactory(actual_amount=8.1, ingredient=ingredient)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data['results']), 1)
