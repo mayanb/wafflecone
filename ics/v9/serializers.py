@@ -10,6 +10,7 @@ from django.core.mail import send_mail
 from ics.utilities import *
 import pytz
 import re
+from queries.inventory import inventory_amounts
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -819,31 +820,19 @@ class InventoryList2Serializer(serializers.Serializer):
 	def get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
-
+		start_time = None
 		starting_amount = 0
 
 		latest_adjustment = Adjustment.objects.all() \
 			.filter(process_type=process_type, product_type=product_type) \
 			.order_by('-created_at').first()
 
-		items_query = Item.active_objects.filter(
-			creating_task__process_type=process_type,
-			creating_task__product_type=product_type,
-			team_inventory=item_summary['team_inventory'],
-		)
-
 		if latest_adjustment:
 			start_time = latest_adjustment.created_at
-			items_query = items_query.filter(created_at__gt=start_time)
 			starting_amount = latest_adjustment.amount
 
-		created_amount = items_query.aggregate(total=Sum('amount'))['total'] or 0
-
-		used_amount = TaskIngredient.objects\
-			.filter(ingredient__process_type=process_type, ingredient__product_type=product_type, team_inventory=item_summary['team_inventory'])\
-			.aggregate(total=Sum('actual_amount'))['total'] or 0
-
-		return starting_amount + created_amount - used_amount
+		data = inventory_amounts(process_type, product_type, item_summary['team_inventory'], start_time, None)
+		return starting_amount + data['created_amount'] - data['used_amount']
 
 
 class ItemSummarySerializer(serializers.Serializer):
