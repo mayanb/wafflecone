@@ -24,7 +24,7 @@ def filter_results(queryset, query_params):
 	queryset = queryset.filter(is_trashed=False)
 	team = query_params.get('team', None)
 	if team is not None:
-		queryset = queryset.filter(process_type__team_created_by=team)
+		queryset = queryset.filter(team_created_by=team)
 
 	f = query_params.get('filter', None)
 	if f is not None:
