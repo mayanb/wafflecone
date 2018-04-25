@@ -440,15 +440,21 @@ class Input(models.Model):
 		similar_inputs = Input.objects.filter(task=self.task, \
 			input_item__creating_task__product_type=self.input_item.creating_task.product_type, \
 			input_item__creating_task__process_type=self.input_item.creating_task.process_type)
+		task_ings = TaskIngredient.objects.filter(task=self.task, \
+			ingredient__product_type=self.input_item.creating_task.product_type, \
+			ingredient__process_type=self.input_item.creating_task.process_type)
+		task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
+		task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
 		if similar_inputs.count() <= 1:
-			task_ings = TaskIngredient.objects.filter(task=self.task, 
-				ingredient__product_type=self.input_item.creating_task.product_type, 
-				ingredient__process_type=self.input_item.creating_task.process_type, \
-				ingredient__recipe=None)
-			if task_ings.count() > 0:
-				if task_ings[0].ingredient:
-					if not task_ings[0].ingredient.recipe:
-						task_ings.delete()
+			if task_ings_without_recipe.count() > 0:
+				if task_ings_without_recipe[0].ingredient:
+					if not task_ings_without_recipe[0].ingredient.recipe:
+						task_ings_without_recipe.delete()
+			if task_ings_with_recipe.count > 0:
+				task_ings_with_recipe.update(actual_amount=0)
+		else:
+			task_ings_without_recipe.update(actual_amount=F('actual_amount')-self.input_item.amount)
+
 		super(Input, self).delete()
 
 class FormulaAttribute(models.Model):

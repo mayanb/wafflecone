@@ -181,7 +181,8 @@ class BasicInputSerializerWithoutAmount(serializers.ModelSerializer):
 				new_ing = ing_query[0]
 			TaskIngredient.objects.create(ingredient=new_ing, task=new_input.task, actual_amount=new_input.input_item.amount)
 		else:
-			matching_task_ings.update(actual_amount=F('actual_amount') + new_input.input_item.amount)
+			matching_task_ings.exclude(ingredient__recipe=None).update(actual_amount=F('scaled_amount'))
+			matching_task_ings.filter(ingredient__recipe=None).update(actual_amount=F('actual_amount')+new_input.input_item.amount)
 		return new_input
 
 	class Meta:
