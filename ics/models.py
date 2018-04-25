@@ -693,5 +693,13 @@ class Ingredient(models.Model):
 class TaskIngredient(models.Model):
 	scaled_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="task_ingredients")
+	team_inventory = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="task_ingredients", null=True)
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)
+
+	def save(self, *args, **kwargs):
+		if self.pk is None:
+			self.team_inventory = self.task.process_type.team_created_by
+
+		super(TaskIngredient, self).save(*args, **kwargs)
+

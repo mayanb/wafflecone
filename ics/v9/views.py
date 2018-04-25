@@ -15,6 +15,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
+from queries.inventory import inventory_amounts
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -937,55 +938,22 @@ class AdjustmentHistory(APIView):
     return queryset.all()
 
   def get_item_summary(self, start, end):
-    data = Item.active_objects.filter(
-      creating_task__process_type=self.process_type,
-      creating_task__product_type=self.product_type,
-      team_inventory=self.team,
-      created_at__range=(start, end)
-    ) \
-      .aggregate(
-      created_count=Count('amount'),
-      created_amount=Coalesce(Sum('amount'), 0),
-      used_count=Coalesce(Sum(
-        Case(
-          When(inputs__isnull=False, then=1),
-          default=0,
-          output_field=models.DecimalField()
-        )
-      ), 0),
-      used_amount=Coalesce(Sum(
-        Case(
-          When(inputs__isnull=False, then=Case(
-            When(inputs__amount__isnull=False, then=F('inputs__amount')),
-            When(inputs__amount__isnull=True, then=F('amount')),
-            default=0,
-            output_field=models.DecimalField()
-          )
-               ),
-          default=0,
-          output_field=models.DecimalField()
-        )
-      ), 0),
-    )
+    data = inventory_amounts(self.process_type, self.product_type, self.team, start, end)
+
     return ItemSummarySerializer(data, context={'date': end}).data
 
   def get(self, request):
     self.set_params()
     adjustments = self.get_adjustments()
-
     objects = []
-
-    BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)
-    END_OF_TIME = timezone.make_aware(datetime.datetime(3000, 1, 1), timezone.utc)
-
-    end_date = END_OF_TIME
+    end_date = None
 
     for adjustment in adjustments:
       objects.append(self.get_item_summary(adjustment.created_at, end_date))
       objects.append(AdjustmentHistorySerializer(adjustment).data)
       end_date = adjustment.created_at
 
-    objects.append(self.get_item_summary(BEGINNING_OF_TIME, end_date))
+    objects.append(self.get_item_summary(None, end_date))
 
     return Response(objects)
 

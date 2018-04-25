@@ -107,3 +107,18 @@ class GoalProductTypeFactory(factory.django.DjangoModelFactory):
 class GoalWithProductTypeFactory(GoalFactory):
 	associated_goal = factory.RelatedFactory(GoalProductTypeFactory, 'goal')
 
+
+class IngredientFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.Ingredient
+
+	process_type = factory.SubFactory(ProcessTypeFactory)
+	product_type = factory.SubFactory(ProductTypeFactory)
+
+
+class TaskIngredientFactory(factory.django.DjangoModelFactory):
+	class Meta:
+		model = ics.models.TaskIngredient
+
+	ingredient = factory.SubFactory(IngredientFactory)
+	task = factory.SubFactory(TaskFactory)
