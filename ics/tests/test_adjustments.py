@@ -14,7 +14,8 @@ class TestAdjustments(APITestCase):
 			'userprofile': userprofile.id,
 			'process_type': process_type.id,
 			'product_type': product_type.id,
-			'amount': 175
+			'amount': 175,
+			'explanation': 'test-explanation'
 		}
 		url = reverse('adjustments')
 		self.assertEqual(Adjustment.objects.count(), 0)
@@ -27,4 +28,5 @@ class TestAdjustments(APITestCase):
 		self.assertEqual(adjustment.process_type.id, process_type.id)
 		self.assertEqual(adjustment.product_type.id, product_type.id)
 		self.assertEqual(adjustment.amount, 175)
+		self.assertEqual(adjustment.explanation, 'test-explanation')
 

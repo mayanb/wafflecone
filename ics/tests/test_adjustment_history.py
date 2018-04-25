@@ -70,6 +70,7 @@ class TestAdjustmentHistory(APITestCase):
 				process_type=self.process_type,
 				product_type=self.product_type,
 				amount=37.3,
+				explanation='test-adjustment'
 			)
 		response = self.client.get(self.url, self.query_params, format='json')
 		self.assertEqual(response.status_code, 200)
@@ -78,6 +79,7 @@ class TestAdjustmentHistory(APITestCase):
 		self.assertEqual(history['type'], 'adjustment')
 		self.assertEqual(history['date'], self.past_time)
 		self.assertEqual(history['data']['amount'], Decimal('37.300'))
+		self.assertEqual(history['data']['explanation'], 'test-adjustment')
 
 	def test_items(self):
 		ItemFactory(creating_task=self.task, amount=18.2)

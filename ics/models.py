@@ -526,6 +526,7 @@ class Adjustment(models.Model):
 	process_type = models.ForeignKey(ProcessType, related_name='adjustments', on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, null=True, related_name='adjustments', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	explanation = models.CharField(max_length=200, blank=True)
 
 
 
