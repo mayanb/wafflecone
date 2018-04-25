@@ -802,7 +802,7 @@ class AdjustmentSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Adjustment
-		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount')
+		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount', 'explanation')
 
 
 class InventoryList2Serializer(serializers.Serializer):
