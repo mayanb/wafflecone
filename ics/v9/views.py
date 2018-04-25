@@ -880,7 +880,7 @@ class CreateAdjustment(generics.CreateAPIView):
 
 
 class InventoryList2(generics.ListAPIView):
-  pagination_class = ExtraLargePagination
+  pagination_class = SmallPagination
   serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
