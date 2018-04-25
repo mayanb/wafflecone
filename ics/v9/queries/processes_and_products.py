@@ -28,6 +28,5 @@ def filter_results(queryset, query_params):
 
 	f = query_params.get('filter', None)
 	if f is not None:
-		print(f)
 		queryset = queryset.filter(Q(search=SearchQuery(f)) | Q(name__istartswith=f) | Q(code__istartswith=f))
 	return queryset
