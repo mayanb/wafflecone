@@ -20,9 +20,10 @@ class Command(BaseCommand):
 			if amount is None:
 				amount = input.input_item.amount/input.count
 
-			task_ing_params = { 'task': input.task, 'ingredient': ing, 'team_inventory': input.input_item.team_inventory }
+			task_ing_params = { 'task': input.task, 'ingredient': ing }
 			task_ing, created = TaskIngredient.objects.get_or_create(**task_ing_params)
 			task_ing.actual_amount = task_ing.actual_amount + amount
+			task_ing.team_inventory = input.input_item.team_inventory
 			task_ing.save()
 
 		# verify things somehow afterwards??
