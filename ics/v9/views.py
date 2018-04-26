@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
 from ics.v9.queries.tasks import *
+from ics.v9.queries.processes_and_products import *
 import datetime
 from django.http import HttpResponse, HttpResponseForbidden
 import pytz
@@ -308,11 +309,11 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # processes/
 class ProcessList(generics.ListCreateAPIView):
-  queryset = ProcessType.objects.filter(is_trashed=False)\
-    .select_related('created_by', 'team_created_by')\
-    .prefetch_related('attribute_set')
   serializer_class = ProcessTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
+
+  def get_queryset(self):
+    return process_search(self.request.query_params)
 
 # processes/[pk]/ ...where pk = 'primary key' == 'the id'
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -572,10 +573,12 @@ class ProductCodes(generics.ListAPIView):
 
 
 class ProductList(generics.ListCreateAPIView):
-  queryset = ProductType.objects.filter(is_trashed=False).annotate(last_used=Max('task__created_at'))\
-    .select_related('created_by')
+  queryset = ProductType.objects.filter(is_trashed=False)
   serializer_class = ProductTypeWithUserSerializer
   filter_fields = ('created_by', 'team_created_by', 'id')
+
+  def get_queryset(self):
+    return product_search(self.request.query_params)
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)\
