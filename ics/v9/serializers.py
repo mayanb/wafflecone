@@ -830,8 +830,8 @@ class InventoryList2Serializer(serializers.Serializer):
 
 		starting_total = 0
 
-		latest_adjustment = Adjustment.objects.all() \
-			.filter(process_type=process_type, product_type=product_type) \
+		latest_adjustment = Adjustment.objects \
+			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
 			.order_by('-created_at').first()
 
 		items_query = Item.active_objects.exclude(creating_task__process_type__code__in=['SH','D']).filter(
@@ -866,8 +866,8 @@ class InventoryList2Serializer(serializers.Serializer):
 		start_time = None
 		starting_amount = 0
 
-		latest_adjustment = Adjustment.objects.all() \
-			.filter(process_type=process_type, product_type=product_type) \
+		latest_adjustment = Adjustment.objects \
+			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
 			.order_by('-created_at').first()
 
 		if latest_adjustment:

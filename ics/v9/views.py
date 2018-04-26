@@ -936,7 +936,8 @@ class AdjustmentHistory(APIView):
       raise serializers.ValidationError('Request must include "product_type" query param')
 
   def get_adjustments(self):
-    queryset = Adjustment.objects.filter(process_type=self.process_type, product_type=self.product_type)\
+    queryset = Adjustment.objects\
+      .filter(process_type=self.process_type, product_type=self.product_type, userprofile__team=self.team)\
       .order_by('-created_at')
     return queryset.all()
 

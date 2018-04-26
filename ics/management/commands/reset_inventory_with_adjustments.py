@@ -35,7 +35,7 @@ class Command(BaseCommand):
 				if new != old:
 					adjustment_count[team.name] += 1
 					Adjustment.objects.create(
-						userprofile=UserProfile.objects.get(pk=1), #Should set to user with a generic name that won't be deleted
+						userprofile=team.userprofiles.first(), #Should set to user with a generic name that won't be deleted
 						process_type=ProcessType.objects.get(pk=item_summary['creating_task__process_type']),
 						product_type=ProductType.objects.get(pk=item_summary['creating_task__product_type']),
 						amount=old,
