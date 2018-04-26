@@ -16,6 +16,19 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 
 	task_ingredients = serializers.SerializerMethodField()
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
+	recipe_instructions = serializers.SerializerMethodField()
+
+	def get_recipe_instructions(self, task):
+		task_ingredients = task.task_ingredients
+		if task_ingredients.count() > 0:
+			task_ing = task_ingredients.first()
+			rec = task_ing.ingredient.recipe
+			if rec:
+				recipe_id = rec.id
+				recipe = Recipe.objects.filter(id__in=[recipe_id])
+				if recipe.count() > 0:
+					return recipe[0].instructions
+		return None
 
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
@@ -56,20 +69,18 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'display',
 			'is_trashed',
 			'task_ingredients',
-			'num_flagged_ancestors'
+			'num_flagged_ancestors',
+			'recipe_instructions'
 		)
 
 
 # serializes the task, without nested items, inputs, or attributes
 class FlatTaskSerializer(serializers.ModelSerializer):
-	# product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
+	items = BasicItemSerializer(many=True)
 	display = serializers.CharField(source='*')
 	total_amount = serializers.CharField(read_only=True)
-	product_name = serializers.CharField(source='product_type.name')
-	product_id = serializers.IntegerField(source='product_type.id')
-	process_name = serializers.CharField(source='process_type.name')
-	process_id = serializers.IntegerField(source='process_type.id')
-	process_icon = serializers.CharField(source='process_type.icon')
+	product_type = ProductTypeSerializer(many=False, read_only=True)
+	process_type = ProcessTypeSerializer(many=False, read_only=True)
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 
 	class Meta:
@@ -86,12 +97,10 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'label_index', 
 			'custom_display',
 			'display',
+			'items',
 			'is_trashed',
-			'product_name',
-			'product_id',
-			'process_name',
-			'process_id',
-			'process_icon',
+			'process_type',
+			'product_type',
 			'num_flagged_ancestors'
 		)
 
@@ -116,3 +125,11 @@ class CreateTaskAttributeSerializer(serializers.ModelSerializer):
 		new_task_attribute = TaskAttribute.objects.create(attribute=attribute_obj, task=task_obj, value=value)
 		return new_task_attribute
 
+
+class NestedItemSerializer(serializers.ModelSerializer):
+	creating_task = FlatTaskSerializer(many=False, read_only=True)
+
+	class Meta:
+		model = Item
+		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual', 'team_inventory')
+		read_only_fields = ('id', 'item_qr', 'creating_task', 'inventory', 'team_inventory')

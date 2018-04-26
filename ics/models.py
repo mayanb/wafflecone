@@ -9,7 +9,8 @@ from django.db.models import Max
 import constants
 from django.utils import timezone
 from django.db.models.expressions import RawSQL
-
+from django.db.models import F
+# from ics.async_actions import *
 
 
 
@@ -72,13 +73,13 @@ class ProcessType(models.Model):
 	code = models.CharField(max_length=20)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=timezone.now, blank=True)
-	description = models.CharField(max_length=1, default="", blank=True)
+	description = models.CharField(max_length=1, default="", blank=True)  # SCHEDULED FOR DELETION
 	output_desc = models.CharField(max_length=200, default="product")
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	unit = models.CharField(max_length=20, default="container")
 
-	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)
-	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	x = models.DecimalField(default=0, max_digits=10, decimal_places=3, db_index=True)  # SCHEDULED FOR DELETION
+	y = models.DecimalField(default=0, max_digits=10, decimal_places=3)  # SCHEDULED FOR DELETION
 
 	default_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	is_trashed = models.BooleanField(default=False, db_index=True)
@@ -430,7 +431,33 @@ class Input(models.Model):
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
+	def delete(self):
+		# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
+		if self.input_item.creating_task.is_flagged or self.input_item.creating_task.num_flagged_ancestors > 0:
+			Task.objects.filter(id__in=[self.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors')-2)
+		
+		similar_inputs = Input.objects.filter(task=self.task, \
+			input_item__creating_task__product_type=self.input_item.creating_task.product_type, \
+			input_item__creating_task__process_type=self.input_item.creating_task.process_type)
+		task_ings = TaskIngredient.objects.filter(task=self.task, \
+			ingredient__product_type=self.input_item.creating_task.product_type, \
+			ingredient__process_type=self.input_item.creating_task.process_type)
+		task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
+		task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
+		if similar_inputs.count() <= 1:
+			# if the input is the only one left for a taskingredient without a recipe, delete the taskingredient
+			if task_ings_without_recipe.count() > 0:
+				if task_ings_without_recipe[0].ingredient:
+					if not task_ings_without_recipe[0].ingredient.recipe:
+						task_ings_without_recipe.delete()
+			# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
+			if task_ings_with_recipe.count > 0:
+				task_ings_with_recipe.update(actual_amount=0)
+		else:
+			# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
+			task_ings_without_recipe.update(actual_amount=F('actual_amount')-self.input_item.amount)
 
+		super(Input, self).delete()
 
 class FormulaAttribute(models.Model):
 	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
@@ -507,6 +534,7 @@ class Adjustment(models.Model):
 	process_type = models.ForeignKey(ProcessType, related_name='adjustments', on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, null=True, related_name='adjustments', on_delete=models.CASCADE)
 	amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	explanation = models.CharField(max_length=200, blank=True)
 
 
 
@@ -657,7 +685,12 @@ class Alert(models.Model):
 class Recipe(models.Model):
 	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
 	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
-	instructions = models.TextField()
+	instructions = models.TextField(null=True)
+	is_trashed = models.BooleanField(default=False, db_index=True)
+
+	# class Meta:
+	# 	unique_together = ('product_type', 'process_type', 'is_trashed')
+
 
 class Ingredient(models.Model):
 	recipe = models.ForeignKey(Recipe, related_name="ingredients", on_delete=models.CASCADE, null=True)
@@ -666,7 +699,7 @@ class Ingredient(models.Model):
 	amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
 
 class TaskIngredient(models.Model):
-	scaled_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
-	actual_amount = models.DecimalField(default=1, max_digits=10, decimal_places=3)
+	scaled_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
+	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)

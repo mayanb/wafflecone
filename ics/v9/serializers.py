@@ -2,6 +2,7 @@ from rest_framework import serializers
 from ics.models import *
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from smtplib import SMTPException
 from uuid import uuid4
 from django.db.models import F, Sum, Max, When, Case
 from django.db.models.functions import Coalesce
@@ -44,8 +45,6 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	last_used = serializers.DateTimeField(source='get_last_used_date', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
 	icon = serializers.CharField(read_only=True)
-	x = serializers.CharField(read_only=True)
-	y = serializers.CharField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
@@ -58,8 +57,15 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'x', 'y', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
+
+class ProcessTypeSerializer(serializers.ModelSerializer):
+	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+
+	class Meta:
+		model = ProcessType
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -74,10 +80,6 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
 		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
-class ProcessTypePositionSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = ProcessType
-		fields = ('id','x','y')
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
@@ -94,7 +96,7 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 class ProductTypeSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description', 'search')
 
 
 class ProductCodeSerializer(serializers.ModelSerializer):
@@ -168,16 +170,23 @@ class BasicInputSerializerWithoutAmount(serializers.ModelSerializer):
 	def create(self, validated_data):
 		# can fix this when we remove the amount field from inputs later
 		new_input = Input.objects.create(**validated_data)
-		# if there isn't already a taskIngredient for this input's creating task, then make a new one
 		input_creating_product = new_input.input_item.creating_task.product_type
 		input_creating_process = new_input.input_item.creating_task.process_type
-		if TaskIngredient.objects.filter(task=new_input.task, ingredient__product_type=input_creating_product, ingredient__process_type=input_creating_process).count() == 0:
-			ing_query = Ingredient.objects.filter(product_type=input_creating_product, process_type=input_creating_process)
+		matching_task_ings = TaskIngredient.objects.filter(task=new_input.task, ingredient__product_type=input_creating_product, ingredient__process_type=input_creating_process)
+		if matching_task_ings.count() == 0:
+			# if there isn't already a taskIngredient and ingredient for this input's creating task, then make a new one
+			ing_query = Ingredient.objects.filter(product_type=input_creating_product, process_type=input_creating_process, recipe=None)
 			if(ing_query.count() == 0):
 				new_ing = Ingredient.objects.create(recipe=None, product_type=input_creating_product, process_type=input_creating_process, amount=0)
 			else:
 				new_ing = ing_query[0]
-			TaskIngredient.objects.create(ingredient=new_ing, task=new_input.task, actual_amount=input_creating_process.default_amount)
+			TaskIngredient.objects.create(ingredient=new_ing, task=new_input.task, actual_amount=new_input.input_item.amount)
+		else:
+			# when creating an input, if there is already a corresponding task ingredient
+			# if the task ingredient has a recipe, set the ingredient's actual_amount to its scaled_amount
+			matching_task_ings.exclude(ingredient__recipe=None).update(actual_amount=F('scaled_amount'))
+			# if the task ingredient doesn't have a recipe, add the new input's amount to the actual_amount
+			matching_task_ings.filter(ingredient__recipe=None).update(actual_amount=F('actual_amount')+new_input.input_item.amount)
 		return new_input
 
 	class Meta:
@@ -208,6 +217,17 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	task_ingredients = serializers.SerializerMethodField()
 	batch_size = serializers.DecimalField(max_digits=10, decimal_places=3, write_only=True, required=True)
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
+	recipe_instructions = serializers.SerializerMethodField()
+
+	def get_recipe_instructions(self, task):
+		task_ingredients = task.task_ingredients
+		if task_ingredients.count() > 0:
+			task_ing = task_ingredients.first()
+			recipe_id = task_ing.ingredient.recipe.id
+			recipe = Recipe.objects.filter(id__in=[recipe_id])
+			if recipe.count() > 0:
+				return recipe[0].instructions
+		return None
 
 	def get_task_ingredients(self, task):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
@@ -215,7 +235,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')
@@ -224,22 +244,12 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 		new_task = Task.objects.create(**validated_data)
 		qr_code = generateQR()
 		new_item = Item.objects.create(creating_task=new_task, item_qr=qr_code, amount=actual_batch_size, is_generic=True)
-		ingredients = Ingredient.objects.filter(recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)
+		ingredients = Ingredient.objects.filter(recipe__is_trashed=False, recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)
 		default_batch_size = new_task.process_type.default_amount
 		for ingredient in ingredients:
 			scaled_amount = actual_batch_size*ingredient.amount/default_batch_size
 			TaskIngredient.objects.create(task=new_task, ingredient=ingredient, scaled_amount=scaled_amount)
 		return new_task
-
-
-class NestedItemSerializer(serializers.ModelSerializer):
-	creating_task = BasicTaskSerializer(many=False, read_only=True)
-	#inventory = serializers.CharField(source='getInventory')
-
-	class Meta:
-		model = Item
-		fields = ('id', 'item_qr', 'creating_task', 'inventory', 'amount', 'is_virtual', 'team_inventory')
-		read_only_fields = ('id', 'item_qr', 'creating_task', 'inventory', 'team_inventory')
 
 
 class AlertInputSerializer(serializers.ModelSerializer):
@@ -450,8 +460,8 @@ def sendEmail(userprofile_id):
         fail_silently=False,
         html_message=html_message,
     )
-  except SMTPException:
-    print('ugh')
+  except SMTPException as e:
+    print('send_mail failed: ', e)
 
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
@@ -799,7 +809,7 @@ class AdjustmentSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Adjustment
-		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount')
+		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount', 'explanation')
 
 
 class InventoryList2Serializer(serializers.Serializer):
@@ -897,13 +907,17 @@ class RecipeSerializer(serializers.ModelSerializer):
 	product_type = ProductTypeWithUserSerializer(read_only=True)
 	product_type_id = serializers.PrimaryKeyRelatedField(source='product_type', queryset=ProductType.objects.all(), write_only=True)
 	ingredients = serializers.SerializerMethodField(read_only=True)
+	has_task_ingredients = serializers.SerializerMethodField(read_only=True)
+
+	def get_has_task_ingredients(self, recipe):
+		return TaskIngredient.objects.filter(ingredient__recipe=recipe).count() > 0
 
 	def get_ingredients(self, recipe):
 		return IngredientSerializer(Ingredient.objects.filter(recipe=recipe), many=True).data
 
 	class Meta:
 		model = Recipe
-		fields = ('id', 'instructions', 'product_type', 'process_type', 'process_type_id', 'product_type_id', 'ingredients')
+		fields = ('id', 'instructions', 'product_type', 'process_type', 'process_type_id', 'product_type_id', 'ingredients', 'is_trashed', 'has_task_ingredients')
 
 class BasicTaskIngredientSerializer(serializers.ModelSerializer):
 	ingredient = IngredientSerializer(read_only=True)

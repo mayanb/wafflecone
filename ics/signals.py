@@ -1,5 +1,5 @@
 from ics.models import *
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from ics.async_actions import *
 
@@ -22,3 +22,9 @@ def taskattribute_changed(sender, instance, **kwargs):
 def task_changed(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.id }
 	update_task_descendents_flag_number(**kwargs)
+
+# this signal only gets called once whereas all the others get called twice
+@receiver(post_delete, sender=Input)
+def input_deleted(sender, instance, **kwargs):
+	kwargs = { 'pk' : instance.task.id }
+	unflag_task_descendants(**kwargs)
