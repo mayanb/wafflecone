@@ -435,8 +435,7 @@ class Input(models.Model):
 		# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
 		if self.input_item.creating_task.is_flagged or self.input_item.creating_task.num_flagged_ancestors > 0:
 			Task.objects.filter(id__in=[self.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors')-2)
-
-		# if the input is the only one for a taskingredient without a recipe, delete the taskingredient
+		
 		similar_inputs = Input.objects.filter(task=self.task, \
 			input_item__creating_task__product_type=self.input_item.creating_task.product_type, \
 			input_item__creating_task__process_type=self.input_item.creating_task.process_type)
@@ -446,13 +445,16 @@ class Input(models.Model):
 		task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
 		task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
 		if similar_inputs.count() <= 1:
+			# if the input is the only one left for a taskingredient without a recipe, delete the taskingredient
 			if task_ings_without_recipe.count() > 0:
 				if task_ings_without_recipe[0].ingredient:
 					if not task_ings_without_recipe[0].ingredient.recipe:
 						task_ings_without_recipe.delete()
+			# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
 			if task_ings_with_recipe.count > 0:
 				task_ings_with_recipe.update(actual_amount=0)
 		else:
+			# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
 			task_ings_without_recipe.update(actual_amount=F('actual_amount')-self.input_item.amount)
 
 		super(Input, self).delete()
