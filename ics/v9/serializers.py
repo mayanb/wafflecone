@@ -2,6 +2,7 @@ from rest_framework import serializers
 from ics.models import *
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from smtplib import SMTPException
 from uuid import uuid4
 from django.db.models import F, Sum, Max, When, Case
 from django.db.models.functions import Coalesce
@@ -453,8 +454,8 @@ def sendEmail(userprofile_id):
         fail_silently=False,
         html_message=html_message,
     )
-  except SMTPException:
-    print('ugh')
+  except SMTPException as e:
+    print('send_mail failed: ', e)
 
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
