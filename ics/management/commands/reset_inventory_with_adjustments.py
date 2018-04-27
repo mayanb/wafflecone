@@ -5,7 +5,7 @@ from ics.v9.serializers import InventoryList2Serializer
 
 
 class Command(BaseCommand):
-	help = 'Backfills every previous task to have task ingredients.'
+	help = 'Adds an adjustment to any inventory value that was changed by the switch to TaskIngredients.'
 
 	def handle(self, *args, **options):
 		adjustment_count = {}
