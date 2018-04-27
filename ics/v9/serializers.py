@@ -221,13 +221,8 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	recipe_instructions = serializers.SerializerMethodField()
 
 	def get_recipe_instructions(self, task):
-		task_ingredients = task.task_ingredients
-		if task_ingredients.count() > 0:
-			task_ing = task_ingredients.first()
-			recipe_id = task_ing.ingredient.recipe.id
-			recipe = Recipe.objects.filter(id__in=[recipe_id])
-			if recipe.count() > 0:
-				return recipe[0].instructions
+		if task.recipe:
+			return task.recipe.instructions
 		return None
 
 	def get_task_ingredients(self, task):
@@ -243,6 +238,10 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 		# get all the recipes with the same product type and process type as the task
 		# for all the ingredients in all of these recipes, create a taskingredient with the correct scaled_amount
 		new_task = Task.objects.create(**validated_data)
+		recipes = Recipe.objects.filter(is_trashed=False, product_type=new_task.product_type, process_type=new_task.process_type)
+		if recipes.count() > 0:
+			new_task.recipe=recipes[0]
+			new_task.save()
 		qr_code = generateQR()
 		new_item = Item.objects.create(creating_task=new_task, item_qr=qr_code, amount=actual_batch_size, is_generic=True)
 		ingredients = Ingredient.objects.filter(recipe__is_trashed=False, recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)

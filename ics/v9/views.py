@@ -303,6 +303,14 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = BasicInputSerializer
   filter_fields = ('task',)
 
+  def delete(self, request, pk, **kwargs):
+    input = self.get_object()
+    task = input.task
+    input.delete()
+    task_ingredients = TaskIngredient.objects.filter(task=task)
+    serialized_task_ingredients = BasicTaskIngredientSerializer(task_ingredients, many=True, read_only=True).data
+    return Response({'input_task_ingredients': serialized_task_ingredients})
+
 
 #########################
 # PROCESS-RELATED VIEWS #
