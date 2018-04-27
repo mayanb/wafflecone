@@ -19,15 +19,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	recipe_instructions = serializers.SerializerMethodField()
 
 	def get_recipe_instructions(self, task):
-		task_ingredients = task.task_ingredients
-		if task_ingredients.count() > 0:
-			task_ing = task_ingredients.first()
-			rec = task_ing.ingredient.recipe
-			if rec:
-				recipe_id = rec.id
-				recipe = Recipe.objects.filter(id__in=[recipe_id])
-				if recipe.count() > 0:
-					return recipe[0].instructions
+		if task.recipe:
+			return task.recipe.instructions
 		return None
 
 	def get_task_ingredients(self, task):
