@@ -11,7 +11,7 @@ from django.core.mail import send_mail
 from ics.utilities import *
 import pytz
 import re
-from ics.v9.queries.inventory import inventory_amounts, inventory_created_amount, inventory_used_amount
+from ics.v9.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -845,8 +845,8 @@ class InventoryList2Serializer(serializers.Serializer):
 			items_query = items_query.filter(created_at__gt=start_time)
 			starting_total = latest_adjustment.amount
 
-		created_amount = inventory_created_amount(items_query)
-		used_amount = inventory_used_amount(items_query)
+		created_amount = old_inventory_created_amount(items_query)
+		used_amount = old_inventory_used_amount(items_query)
 
 		return starting_total + created_amount - used_amount
 
