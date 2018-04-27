@@ -16,7 +16,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
-from queries.inventory import inventory_amounts
+from ics.v9.queries.inventory import inventory_amounts, inventory_created_amount, inventory_used_amount
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
