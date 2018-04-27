@@ -16,6 +16,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
+from ics.v9.queries.inventory import inventory_created_amount, inventory_used_amount
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -940,15 +941,14 @@ class AdjustmentHistory(APIView):
     return queryset.all()
 
   def get_item_summary(self, start, end):
-    data = Item.active_objects.filter(
+    items_query = Item.active_objects.filter(
       creating_task__process_type=self.process_type,
       creating_task__product_type=self.product_type,
       team_inventory=self.team,
       created_at__range=(start, end)
-    ) \
-      .aggregate(
+    )
+    data = items_query.aggregate(
       created_count=Count('amount'),
-      created_amount=Coalesce(Sum('amount'), 0),
       used_count=Coalesce(Sum(
         Case(
           When(inputs__isnull=False, then=1),
@@ -956,20 +956,9 @@ class AdjustmentHistory(APIView):
           output_field=models.DecimalField()
         )
       ), 0),
-      used_amount=Coalesce(Sum(
-        Case(
-          When(inputs__isnull=False, then=Case(
-            When(inputs__amount__isnull=False, then=F('inputs__amount')),
-            When(inputs__amount__isnull=True, then=F('amount')),
-            default=0,
-            output_field=models.DecimalField()
-          )
-               ),
-          default=0,
-          output_field=models.DecimalField()
-        )
-      ), 0),
     )
+    data['created_amount'] = inventory_created_amount(items_query)
+    data['used_amount'] = inventory_used_amount(items_query)
     return ItemSummarySerializer(data, context={'date': end}).data
 
   def get(self, request):
