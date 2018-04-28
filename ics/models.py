@@ -401,7 +401,7 @@ class Task(models.Model):
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
-		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
+		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False)
 
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
@@ -696,5 +696,5 @@ class Ingredient(models.Model):
 class TaskIngredient(models.Model):
 	scaled_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="task_ingredients")
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)

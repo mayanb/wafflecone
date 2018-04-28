@@ -11,7 +11,7 @@ from django.core.mail import send_mail
 from ics.utilities import *
 import pytz
 import re
-from ics.v9.queries.inventory import inventory_created_amount, inventory_used_amount
+from ics.v9.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -823,17 +823,17 @@ class InventoryList2Serializer(serializers.Serializer):
 	product_code = serializers.CharField(source='creating_task__product_type__code')
 	adjusted_amount = serializers.SerializerMethodField(source='get_adjusted_amount')
 
-	def get_adjusted_amount(self, item_summary):
+	def old_get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
 
 		starting_total = 0
 
-		latest_adjustment = Adjustment.objects.all() \
-			.filter(process_type=process_type, product_type=product_type) \
+		latest_adjustment = Adjustment.objects \
+			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
 			.order_by('-created_at').first()
 
-		items_query = Item.active_objects.filter(
+		items_query = Item.active_objects.exclude(creating_task__process_type__code__in=['SH','D']).filter(
 			creating_task__process_type=process_type,
 			creating_task__product_type=product_type,
 			team_inventory=item_summary['team_inventory'],
@@ -844,10 +844,27 @@ class InventoryList2Serializer(serializers.Serializer):
 			items_query = items_query.filter(created_at__gt=start_time)
 			starting_total = latest_adjustment.amount
 
-		created_amount = inventory_created_amount(items_query)
-		used_amount = inventory_used_amount(items_query)
+		created_amount = old_inventory_created_amount(items_query)
+		used_amount = old_inventory_used_amount(items_query)
 
 		return starting_total + created_amount - used_amount
+
+	def get_adjusted_amount(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_type = item_summary['creating_task__product_type']
+		start_time = None
+		starting_amount = 0
+
+		latest_adjustment = Adjustment.objects \
+			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
+			.order_by('-created_at').first()
+
+		if latest_adjustment:
+			start_time = latest_adjustment.created_at
+			starting_amount = latest_adjustment.amount
+
+		data = inventory_amounts(process_type, product_type, start_time, None)
+		return starting_amount + data['created_amount'] - data['used_amount']
 
 
 class ItemSummarySerializer(serializers.Serializer):
