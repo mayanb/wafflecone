@@ -204,7 +204,11 @@ class Attribute(models.Model):
 		super(Attribute, self).save(*args, **kwargs)
 
 
-
+class Recipe(models.Model):
+	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
+	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
+	instructions = models.TextField(null=True)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 
 class TaskManager(models.Manager):
 	def with_documents(self):
@@ -227,6 +231,7 @@ class TaskManager(models.Manager):
 
 
 class Task(models.Model):
+	recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="tasks", null=True)
 	process_type = models.ForeignKey(ProcessType, on_delete=models.CASCADE, related_name="tasks")
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	label = models.CharField(max_length=50, db_index=True)  
@@ -396,7 +401,7 @@ class Task(models.Model):
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
-		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False).exclude(creating_task__process_type__code__in=['SH','D'])
+		return super(ActiveItemsManager, self).get_queryset().filter(creating_task__is_trashed=False)
 
 class Item(models.Model):
 	item_qr = models.CharField(max_length=100, unique=True)
@@ -682,16 +687,6 @@ class Alert(models.Model):
 #                                #
 ##################################
 
-class Recipe(models.Model):
-	product_type = models.ForeignKey(ProductType, related_name="recipes", on_delete=models.CASCADE)
-	process_type = models.ForeignKey(ProcessType, related_name="recipes", on_delete=models.CASCADE)
-	instructions = models.TextField(null=True)
-	is_trashed = models.BooleanField(default=False, db_index=True)
-
-	# class Meta:
-	# 	unique_together = ('product_type', 'process_type', 'is_trashed')
-
-
 class Ingredient(models.Model):
 	recipe = models.ForeignKey(Recipe, related_name="ingredients", on_delete=models.CASCADE, null=True)
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
@@ -701,5 +696,5 @@ class Ingredient(models.Model):
 class TaskIngredient(models.Model):
 	scaled_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
-	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="task_ingredients")
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)
