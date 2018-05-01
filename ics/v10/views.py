@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from django.db.models.functions import Coalesce
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.v10.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
@@ -531,16 +532,23 @@ class ActivityList(generics.ListAPIView):
     if label is not None:
       queryset = queryset.filter(Q(keywords__icontains=label))
 
-    return queryset.values(
+    aggregate_products = self.request.query_params.get('aggregate_products', None)
+    queryset_values = [
       'process_type',
       'process_type__name',
       'process_type__code',
       'process_type__unit',
       'process_type__icon',
-      'product_type',
-      'product_type__name',
-      'product_type__code',
-    ).annotate(
+    ]
+
+    #Unless aggregate product param is true, return a separate row for each product type
+    if not aggregate_products or aggregate_products.lower() != 'true':
+      queryset_values.append('product_type')
+
+    return queryset.values(*queryset_values).annotate(
+      product_type_ids=ArrayAgg('product_type'),
+      product_type_names=ArrayAgg('product_type__name'),
+      product_type_codes=ArrayAgg('product_type__code'),
       runs=Count('id', distinct=True)
     ).annotate(amount=Coalesce(Sum('items__amount'), 0))
 

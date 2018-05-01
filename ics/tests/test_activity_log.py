@@ -24,7 +24,7 @@ class TestActivityLog(APITestCase):
 	def test_activity_list(self):
 		process_type = ProcessTypeFactory(icon='someicon.png', name='process-type-name', code='ptc', unit='kg')
 		task1 = TaskFactory(process_type=process_type)
-		task2 = TaskFactory()
+		task2 = TaskFactory(process_type=process_type)
 		ItemFactory(creating_task=task1, amount=29.7)
 		response = self.client.get(self.url, self.query_params)
 		self.assertEqual(response.status_code, 200)
@@ -116,3 +116,26 @@ class TestActivityLog(APITestCase):
 		response = self.client.get(self.url, query_params)
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 1)
+
+	def test_aggregate_products(self):
+		process_type = ProcessTypeFactory()
+		product_type1 = ProductTypeFactory()
+		product_type2 = ProductTypeFactory()
+		task1 = TaskFactory(process_type=process_type, product_type=product_type1)
+		ItemFactory(creating_task=task1, amount=2.3)
+		task2 = TaskFactory(process_type=process_type, product_type=product_type2)
+		ItemFactory(creating_task=task2, amount=4.1)
+		query_params = {'team': self.team.id, 'aggregate_products': 'true'}
+		response = self.client.get(self.url, query_params)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data), 1)
+		row = response.data[0]
+		self.assertEqual(row['process_type']['id'], task1.process_type.id)
+		self.assertEqual(row['process_type']['name'], process_type.name)
+		self.assertEqual(row['process_type']['code'], process_type.code)
+		self.assertEqual(row['process_type']['unit'], process_type.unit)
+		self.assertEqual(row['process_type']['icon'], process_type.icon)
+		self.assertEqual(len(row['product_types']), 2)
+		result_products = [row['product_types'][0]['id'], row['product_types'][1]['id']]
+		self.assertEqual(sorted(result_products), sorted([product_type1.id, product_type2.id]))
+		self.assertEqual(row['amount'], Decimal('6.4'))

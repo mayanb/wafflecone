@@ -390,11 +390,10 @@ class ActivityListSerializer(serializers.ModelSerializer):
 	def get_product_types(self, activity):
 		return [
 			{
-				'id': activity['product_type'],
-				'name': activity['product_type__name'],
-				'code': activity['product_type__code'],
-			}
-		]
+				'id': activity['product_type_ids'][i],
+				'name': activity['product_type_names'][i],
+				'code': activity['product_type_codes'][i],
+			} for i in range(len(activity['product_type_ids']))]
 
 	class Meta:
 		model = Task
