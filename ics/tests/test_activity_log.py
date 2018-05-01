@@ -22,7 +22,8 @@ class TestActivityLog(APITestCase):
 		self.assertEqual(response.data[0], 'Request must include "team" query param')
 
 	def test_activity_list(self):
-		task1 = TaskFactory()
+		process_type = ProcessTypeFactory(icon='someicon.png', name='process-type-name', code='ptc', unit='kg')
+		task1 = TaskFactory(process_type=process_type)
 		task2 = TaskFactory()
 		ItemFactory(creating_task=task1, amount=29.7)
 		response = self.client.get(self.url, self.query_params)
@@ -30,7 +31,11 @@ class TestActivityLog(APITestCase):
 		self.assertEqual(len(response.data), 2)
 		row = response.data[0]
 		self.assertEqual(row['runs'], 1)
-		self.assertEqual(row['process_type']['id'], task1.process_type.id)
+		self.assertEqual(row['process_type']['id'], process_type.id)
+		self.assertEqual(row['process_type']['name'], process_type.name)
+		self.assertEqual(row['process_type']['code'], process_type.code)
+		self.assertEqual(row['process_type']['unit'], process_type.unit)
+		self.assertEqual(row['process_type']['icon'], process_type.icon)
 		self.assertEqual(len(row['product_types']), 1)
 		self.assertEqual(row['product_types'][0]['id'], task1.product_type.id)
 		self.assertEqual(row['amount'], Decimal('29.700'))

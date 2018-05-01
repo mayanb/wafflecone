@@ -536,6 +536,7 @@ class ActivityList(generics.ListAPIView):
       'process_type__name',
       'process_type__code',
       'process_type__unit',
+      'process_type__icon',
       'product_type',
       'product_type__name',
       'product_type__code',
