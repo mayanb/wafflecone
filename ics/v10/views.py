@@ -514,7 +514,7 @@ class ActivityList(generics.ListAPIView):
       queryset = queryset.filter(created_at__range=(start_date, end_date))
 
     flagged = self.request.query_params.get('flagged', None)
-    if flagged == 'true':
+    if flagged and flagged.lower() == 'true':
       queryset = queryset.filter(is_flagged=True)
 
     product_types = self.request.query_params.get('product_types', None)
