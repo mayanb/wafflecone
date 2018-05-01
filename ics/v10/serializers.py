@@ -373,19 +373,31 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 
 
 class ActivityListSerializer(serializers.ModelSerializer):
-	process_id=serializers.CharField(source='process_type', read_only=True)
-	process_name=serializers.CharField(source='process_type__name', read_only=True)
-	process_code = serializers.CharField(source='process_type__code', read_only=True)
-	process_unit=serializers.CharField(source='process_type__unit', read_only=True)
-	product_id=serializers.CharField(source='product_type', read_only=True)
-	product_code=serializers.CharField(source='product_type__code', read_only=True)
-	runs=serializers.CharField(read_only=True)
-	outputs=serializers.CharField(read_only=True)
-	flagged=serializers.CharField(read_only=True)
+	process_type = serializers.SerializerMethodField()
+	product_types = serializers.SerializerMethodField()
+	runs = serializers.IntegerField()
+	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+
+	def get_process_type(self, activity):
+		return {
+			'id': activity['process_type'],
+			'name': activity['process_type__name'],
+			'code': activity['process_type__code'],
+			'unit': activity['process_type__unit'],
+		}
+
+	def get_product_types(self, activity):
+		return [
+			{
+				'id': activity['product_type'],
+				'name': activity['product_type__name'],
+				'code': activity['product_type__code'],
+			}
+		]
 
 	class Meta:
-		model=Task
-		fields = ('runs', 'outputs', 'flagged', 'process_id', 'process_name', 'process_unit', 'product_id', 'product_code', 'process_code')
+		model = Task
+		fields = ('runs', 'amount', 'process_type', 'product_types')
 
 
 class ActivityListDetailSerializer(serializers.ModelSerializer):

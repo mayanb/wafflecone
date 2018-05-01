@@ -498,41 +498,50 @@ class ActivityList(generics.ListAPIView):
   serializer_class = ActivityListSerializer
 
   def get_queryset(self):
-    dt = datetime.datetime
-    queryset = Task.objects.filter(is_trashed=False)
-
     team = self.request.query_params.get('team', None)
-    if team is not None:
-      queryset = queryset.filter(process_type__team_created_by=team)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team)\
+      .select_related('process_type', 'product_type')
 
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
+      dt = datetime.datetime
+      start_date = pytz.utc.localize(dt.strptime(start, constants.DATE_FORMAT))
+      end_date = pytz.utc.localize(dt.strptime(end, constants.DATE_FORMAT))
+      queryset = queryset.filter(created_at__range=(start_date, end_date))
 
-      # start = start.strip().split('-')
-      # end = end.strip().split('-')
-      # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-      # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = dt.strptime(start, constants.DATE_FORMAT)
-      endDate = dt.strptime(end, constants.DATE_FORMAT)
-      queryset = queryset.filter(created_at__range=(startDate, endDate))
+    flagged = self.request.query_params.get('flagged', None)
+    if flagged == 'true':
+      queryset = queryset.filter(is_flagged=True)
 
-    sum_query = Case(
-                  When(items__is_virtual=True, then=Value(0)),
-                  default=F('items__amount'),
-                  output_field=DecimalField()
-                )
+    product_types = self.request.query_params.get('product_types', None)
+    if product_types is not None:
+      product_ids = product_types.strip().split(',')
+      queryset = queryset.filter(product_type__in=product_ids)
 
-    # separate by process type
+    process_types = self.request.query_params.get('process_types', None)
+    if process_types is not None:
+      process_ids = process_types.strip().split(',')
+      queryset = queryset.filter(process_type__in=process_ids)
+
+    label = self.request.query_params.get('label', None)
+    if label is not None:
+      queryset = queryset.filter(Q(keywords__icontains=label))
+
     return queryset.values(
       'process_type',
-      'product_type',
       'process_type__name',
       'process_type__code',
+      'process_type__unit',
+      'product_type',
+      'product_type__name',
       'product_type__code',
-      'process_type__unit').annotate(
+    ).annotate(
       runs=Count('id', distinct=True)
-    ).annotate(outputs=Coalesce(Sum(sum_query), 0))
+    ).annotate(amount=Coalesce(Sum('items__amount'), 0))
 
 # activity/detail/
 class ActivityListDetail(generics.ListAPIView):

@@ -69,7 +69,7 @@ urlpatterns = [
     url(r'^inventory/detail/$', views.InventoryDetail.as_view()),
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
 
-    url(r'^activity/$', views.ActivityList.as_view()),
+    url(r'^activity/$', views.ActivityList.as_view(), name='activity_log'),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
 
     url(r'^goals/$', views.GoalList.as_view(), name='goals'),
