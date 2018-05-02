@@ -24,21 +24,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 		return None
 
 	def get_task_ingredients(self, task):
-		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
-
-
-	def getInputUnit(self, task):
-		input = task.inputs.first()
-		if input is not None:
-			return input.input_item.creating_task.process_type.unit
-		else: 
-			return ''
-
-	def getItems(self, task):
-		if self.context.get('team_inventory', None) is not None:
-			return BasicItemSerializer(task.items.all().filter(inputs__isnull=True), many=True).data
-		else:
-			return BasicItemSerializer(task.items.all().annotate(is_used=F('inputs__task')), many=True).data
+		return BasicTaskIngredientSerializer(task.task_ingredients, many=True, read_only=True).data
 
 	class Meta:
 		model = Task
