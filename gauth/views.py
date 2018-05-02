@@ -78,39 +78,44 @@ def update_userprofile_token(user_profile, token):
 # @csrf_exempt
 @api_view(['POST'])
 def clearToken(request):
-  # received_json_data = json.loads(request.body.decode("utf-8"))
   user_id = request.POST.get('user_id')
-  # user_id = received_json_data["user_id"]
   user_profile = UserProfile.objects.get(user=user_id)
   user_profile.gauth_access_token = ""
   user_profile.gauth_email = ""
-  # # user_profile.gauth_refresh_token = token['refresh_token']
-  # # user_profile.expires_in = ""
-  # # user_profile.expires_at = ""
   user_profile.save()
   response = HttpResponse(serializers.serialize('json', [user_profile]))
   return response;
 
-def activityArray(process, start, end, team):
+def activityArray(params):
   easy_format = '%Y-%m-%d %H:%M'
   dt = datetime.datetime
-  if not process or not start or not end or not team:
+  if not params['process'] or not params['start'] or not params['end'] or not params['team']:
     return [[]]
 
-  startDate = dt.strptime(start, dateformat)
-  endDate = dt.strptime(end, dateformat)
+  startDate = dt.strptime(params['start'], dateformat)
+  endDate = dt.strptime(params['end'], dateformat)
 
   data = [];
 
   fields = ['id', 'display', 'product type', 'inputs', 'batch size', 'creation date', 'updated date', 'first use date']
-  attrs = Attribute.objects.filter(process_type=process).order_by('rank')
+  attrs = Attribute.objects.filter(process_type=params['process']).order_by('rank')
   attrVals = attrs.values_list('name', flat=True)
   fields = fields + [str(x) for x in attrVals]
   data.append(fields)
 
-  tasks = Task.objects.filter(is_trashed=False,
-    process_type__team_created_by=team, process_type=process, 
-    created_at__range=(startDate, endDate)).annotate(
+  product_type_ids = params['products'].split(',')
+  queryset = Task.objects.filter(is_trashed=False,
+    process_type__team_created_by=params['team'], process_type=params['process'],
+    product_type__in=product_type_ids, created_at__range=(startDate, endDate))
+
+
+  if 'label' in params:
+    queryset = queryset.filter(Q(keywords__icontains=params['label']))
+
+  if 'flagged' in params and params['flagged'].lower() == 'true':
+    queryset = queryset.filter(is_flagged=True)
+
+  tasks = queryset.annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
     first_use_date=Min('items__inputs__task__created_at'))
 
@@ -119,7 +124,7 @@ def activityArray(process, start, end, team):
     display = str(t)
     product_type = t.product_type.code
     inputs = t.inputcount
-    batch_size = t.items[0].amount if len(t.items) else 0
+    batch_size = t.items.first().amount if t.items.count() else 'N/A'
     creation_date = t.created_at.strftime(easy_format)
     updated_date = t.updated_at.strftime(easy_format)
     first_use_date = t.first_use_date
@@ -138,9 +143,9 @@ def activityArray(process, start, end, team):
 
 @api_view(['POST'])
 def createSpreadsheet(request):
+  params = dict(request.POST.items())
   user_id = request.POST.get('user_id')
   user_profile = UserProfile.objects.get(user=user_id)
-  team = user_profile.team.id
   process = request.POST.get('process', None)
   start = request.POST.get('start', None)
   end = request.POST.get('end', None)
@@ -173,7 +178,7 @@ def createSpreadsheet(request):
 
   # get the spreadsheet data
   title = str(ProcessType.objects.get(pk=process).name) + " " + str(start) + " to " + str(end)
-  data = activityArray(process, start, end, team)  
+  data = activityArray(params)
 
   # post the spreadsheet to google & return happily
   r = post_spreadsheet(google, title, data)
@@ -211,15 +216,9 @@ def post_spreadsheet(google, title, data):
 
 @api_view(['POST'])
 def create_csv_spreadsheet(request):
-  user_id = request.POST.get('user_id')
-  user_profile = UserProfile.objects.get(user=user_id)
-  team = user_profile.team.id
-  process = request.POST.get('process', None)
-  start = request.POST.get('start', None)
-  end = request.POST.get('end', None)
-  data = activityArray(process, start, end, team)
-  title = str(ProcessType.objects.get(pk=process).name) + " " + convert_to_readable_time(start) + " to " + convert_to_readable_time(end)
-  
+  params = dict(request.POST.items())
+  data = activityArray(params)
+
   response = HttpResponse(content_type='text/csv')
   response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
   writer = csv.writer(response)
