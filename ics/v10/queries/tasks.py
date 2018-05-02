@@ -49,6 +49,10 @@ def tasks(query_params):
 		products = products.strip().split(',')
 		queryset = queryset.filter(product_type__in=products)
 
+	flagged = query_params.get('flagged', None)
+	if flagged and flagged.lower() == 'true':
+		queryset = queryset.filter(is_flagged=True)
+
 	# filter according to date creation, based on parameters
 	start = query_params.get('start', None)
 	end = query_params.get('end', None)
