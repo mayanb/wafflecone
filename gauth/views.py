@@ -102,20 +102,16 @@ def activityArray(process, start, end, team):
 
   data = [];
 
-  fields = ['id', 'display', 'product type', 'inputs', 'outputs', 'creation date', 'close date', 'first use date']
+  fields = ['id', 'display', 'product type', 'inputs', 'batch size', 'creation date', 'updated date', 'first use date']
   attrs = Attribute.objects.filter(process_type=process).order_by('rank')
   attrVals = attrs.values_list('name', flat=True)
   fields = fields + [str(x) for x in attrVals]
   data.append(fields)
 
-  # writer = csv.writer(response)
-  # writer.writerow(fields)
-
-  tasks = Task.objects.filter(is_trashed=False, 
+  tasks = Task.objects.filter(is_trashed=False,
     process_type__team_created_by=team, process_type=process, 
     created_at__range=(startDate, endDate)).annotate(
     inputcount=Count('inputs', distinct=True)).annotate(
-    outputcount=Count('items', distinct=True)).annotate(
     first_use_date=Min('items__inputs__task__created_at'))
 
   for t in tasks:
@@ -123,13 +119,13 @@ def activityArray(process, start, end, team):
     display = str(t)
     product_type = t.product_type.code
     inputs = t.inputcount
-    outputs = t.outputcount
+    batch_size = t.items[0].amount if len(t.items) else 0
     creation_date = t.created_at.strftime(easy_format)
-    close_date = t.updated_at.strftime(easy_format)
+    updated_date = t.updated_at.strftime(easy_format)
     first_use_date = t.first_use_date
     if first_use_date is not None:
       first_use_date = first_use_date.strftime(easy_format)
-    results = [tid, display, product_type, inputs, outputs, creation_date, close_date, first_use_date]
+    results = [tid, display, product_type, inputs, batch_size, creation_date, updated_date, first_use_date]
     vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
     for attr in attrs:
       results = results + [vals.get(attr.id, '')]
