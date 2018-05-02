@@ -69,11 +69,12 @@ def tasks(query_params):
 	queryset = queryset.annotate(input_unit=Subquery(i.values('input_item__creating_task__process_type__unit')[:1]))
 	return queryset \
 		.select_related('process_type', 'product_type', 'process_type__created_by', 'product_type__created_by',
-						'process_type__team_created_by', 'product_type__team_created_by') \
+						'process_type__team_created_by', 'product_type__team_created_by', 'recipe') \
 		.prefetch_related('process_type__attribute_set', 'attribute_values', 'attribute_values__attribute',
 					'items', 'inputs', 'inputs__input_item',
 					'inputs__input_item__creating_task', 'inputs__input_item__creating_task__process_type',
-					'inputs__input_item__creating_task__product_type')
+					'inputs__input_item__creating_task__product_type', 'task_ingredients',
+					      'task_ingredients__ingredient')
 
 
 def taskSearch(query_params):
