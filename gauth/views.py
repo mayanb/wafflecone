@@ -96,7 +96,7 @@ def single_process_array(process, params):
 
   data = [];
 
-  fields = ['id', 'display', 'product type', 'inputs', 'batch size', 'creation date', 'updated date', 'first use date']
+  fields = ['id', 'display', 'product type', 'inputs', 'batch size', 'creation date', 'last edited date', 'first use date']
   attrs = Attribute.objects.filter(process_type=process).order_by('rank')
   attrVals = attrs.values_list('name', flat=True)
   fields = fields + [str(x) for x in attrVals]
@@ -126,11 +126,11 @@ def single_process_array(process, params):
     inputs = t.inputcount
     batch_size = t.items.aggregate(Sum('amount'))['amount__sum']
     creation_date = t.created_at.strftime(easy_format)
-    updated_date = t.updated_at.strftime(easy_format)
+    last_edited_date = t.updated_at.strftime(easy_format)
     first_use_date = t.first_use_date
     if first_use_date is not None:
       first_use_date = first_use_date.strftime(easy_format)
-    results = [tid, display, product_type, inputs, batch_size, creation_date, updated_date, first_use_date]
+    results = [tid, display, product_type, inputs, batch_size, creation_date, last_edited_date, first_use_date]
     vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
     for attr in attrs:
       results = results + [vals.get(attr.id, '')]
