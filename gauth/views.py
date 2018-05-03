@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render
 import csv
 
-# Create your views here.
-from django.views.decorators.csrf import csrf_exempt
 from ics.models import *
 from django.http import HttpResponse
 from requests_oauthlib import OAuth2Session, TokenUpdated
@@ -13,9 +10,9 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 import requests
 import datetime
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
+from django.db.models import Q, Count, Min
 from django.core import serializers
-from django.core.mail import send_mail
+from django.contrib.postgres.search import SearchQuery
 
 #Use simplejson to handle serializing Decimal objects
 import simplejson as json
@@ -111,8 +108,9 @@ def single_process_array(process, params):
     product_type__in=product_type_ids, created_at__range=(startDate, endDate))
 
 
-  if 'label' in params:
-    queryset = queryset.filter(Q(keywords__icontains=params['label']))
+  label = params['label']
+  if label:
+    queryset = queryset.filter(Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
   if 'flagged' in params and params['flagged'].lower() == 'true':
     queryset = queryset.filter(is_flagged=True)
