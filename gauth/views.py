@@ -130,12 +130,13 @@ def single_process_array(process, params):
     product_type = t.product_type.code
     inputs = t.inputcount
     batch_size = t.items.aggregate(Sum('amount'))['amount__sum']
+    formatted_batch_size = "%g" % (batch_size) if batch_size else 'N/A'
     creation_date = t.created_at.strftime(easy_format)
     last_edited_date = t.updated_at.strftime(easy_format)
     first_use_date = t.first_use_date
     if first_use_date is not None:
       first_use_date = first_use_date.strftime(easy_format)
-    results = [tid, display, product_type, inputs, batch_size, creation_date, last_edited_date, first_use_date]
+    results = [tid, display, product_type, inputs, formatted_batch_size, creation_date, last_edited_date, first_use_date]
     vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
     for attr in attrs:
       results = results + [vals.get(attr.id, '')]
