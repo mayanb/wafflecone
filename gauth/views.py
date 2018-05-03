@@ -133,7 +133,7 @@ def single_process_array(process, params):
     product_type = t.product_type.code
     inputs = t.inputcount
     batch_size = t.items.aggregate(Sum('amount'))['amount__sum']
-    formatted_batch_size = "%g" % (batch_size) if batch_size else 'N/A'
+    formatted_batch_size = int(batch_size) if batch_size % 1 == 0 else batch_size
     creation_date = t.created_at.astimezone(timezone).strftime(easy_format)
     last_edited_date = t.updated_at.astimezone(timezone).strftime(easy_format)
     first_use_date = t.first_use_date
