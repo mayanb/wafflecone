@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view
 import requests
 import datetime
 from django.db.models import Q, Count, Min, Sum
+from django.db.models.functions import Coalesce
 from django.core import serializers
 from django.contrib.postgres.search import SearchQuery
 import pytz
@@ -132,7 +133,7 @@ def single_process_array(process, params):
     display = str(t)
     product_type = t.product_type.code
     inputs = t.inputcount
-    batch_size = t.items.aggregate(Sum('amount'))['amount__sum']
+    batch_size = t.items.aggregate(amount=Coalesce(Sum('amount'), 0))['amount']
     formatted_batch_size = int(batch_size) if batch_size % 1 == 0 else batch_size
     creation_date = t.created_at.astimezone(timezone).strftime(easy_format)
     last_edited_date = t.updated_at.astimezone(timezone).strftime(easy_format)
