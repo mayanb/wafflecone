@@ -8,6 +8,7 @@ from uuid import uuid4
 from django.db.models import Max
 import constants
 from django.utils import timezone
+import pytz
 from django.db.models.expressions import RawSQL
 from django.db.models import F
 # from ics.async_actions import *
@@ -21,6 +22,7 @@ class InviteCode(models.Model):
 
 class Team(models.Model):
 	name = models.CharField(max_length=50, unique=True)
+	timezone = models.CharField(max_length=50, default=pytz.timezone('US/Pacific').zone)
 
 	def __str__(self):
 		return self.name

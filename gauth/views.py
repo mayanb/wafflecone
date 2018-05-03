@@ -13,6 +13,7 @@ import datetime
 from django.db.models import Q, Count, Min, Sum
 from django.core import serializers
 from django.contrib.postgres.search import SearchQuery
+import pytz
 
 #Use simplejson to handle serializing Decimal objects
 import simplejson as json
@@ -124,6 +125,8 @@ def single_process_array(process, params):
     inputcount=Count('inputs', distinct=True)).annotate(
     first_use_date=Min('items__inputs__task__created_at'))
 
+  timezone = pytz.timezone(Team.objects.get(pk=params['team']).timezone)
+
   for t in tasks:
     tid = t.id
     display = str(t)
@@ -131,11 +134,11 @@ def single_process_array(process, params):
     inputs = t.inputcount
     batch_size = t.items.aggregate(Sum('amount'))['amount__sum']
     formatted_batch_size = "%g" % (batch_size) if batch_size else 'N/A'
-    creation_date = t.created_at.strftime(easy_format)
-    last_edited_date = t.updated_at.strftime(easy_format)
+    creation_date = t.created_at.astimezone(timezone).strftime(easy_format)
+    last_edited_date = t.updated_at.astimezone(timezone).strftime(easy_format)
     first_use_date = t.first_use_date
     if first_use_date is not None:
-      first_use_date = first_use_date.strftime(easy_format)
+      first_use_date = first_use_date.astimezone(timezone).strftime(easy_format)
     results = [tid, display, product_type, inputs, formatted_batch_size, creation_date, last_edited_date, first_use_date]
     vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
     for attr in attrs:
