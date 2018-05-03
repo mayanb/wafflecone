@@ -102,6 +102,11 @@ def single_process_array(process, params):
   fields = fields + [str(x) for x in attrVals]
   data.append(fields)
 
+  #Backwards compatibility code - can remove later
+  if 'products' not in params:
+    params['products'] = ','.join(map(lambda p: str(p.id), ProductType.objects.all()))
+  #End of backwards compatibility code
+
   product_type_ids = params['products'].split(',')
   queryset = Task.objects.filter(is_trashed=False,
     process_type__team_created_by=params['team'], process_type=process,
@@ -160,6 +165,13 @@ def createSpreadsheet(request):
     'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
     'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET
   }
+
+  #Backwards compatibility code - can remove later
+  if 'process' in params and not processes:
+	  processes = params['process']
+	  params['processes'] = processes
+  #End of backwards compatibility code
+
 
   # try to authenticate or refresh the token
   try:
@@ -244,6 +256,12 @@ def post_spreadsheet(google, title, params):
 @api_view(['POST'])
 def create_csv_spreadsheet(request):
   params = dict(request.POST.items())
+
+  #Backwards compatibility code - can remove later
+  if 'process' in params and 'processes' not in params:
+    params['processes'] = params['process']
+  #End of backwards compatibility code
+
   response = HttpResponse(content_type='text/csv')
   response['Content-Disposition'] = 'attachment;'
   writer = csv.writer(response)
