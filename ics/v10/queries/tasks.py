@@ -23,7 +23,7 @@ def tasks(query_params):
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
 	if label is not None and dashboard is not None:
-		queryset = queryset.filter(Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+		queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 	elif label is not None:
 		queryset = queryset.filter(Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 

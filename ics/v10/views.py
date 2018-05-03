@@ -530,7 +530,7 @@ class ActivityList(generics.ListAPIView):
 
     label = self.request.query_params.get('label', None)
     if label is not None:
-      queryset = queryset.filter(Q(keywords__icontains=label))
+      queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
     aggregate_products = self.request.query_params.get('aggregate_products', None)
     queryset_values = [

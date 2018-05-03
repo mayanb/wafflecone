@@ -116,7 +116,7 @@ def single_process_array(process, params):
 
   if 'label' in params:
     label = params['label']
-    queryset = queryset.filter(Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+    queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
   if 'flagged' in params and params['flagged'].lower() == 'true':
     queryset = queryset.filter(is_flagged=True)
