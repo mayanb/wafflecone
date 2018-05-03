@@ -92,6 +92,7 @@ rsa==3.4.2
 s3transfer==0.1.11
 semver==2.7.8
 shutilwhich==1.1.0
+simplejson==3.14.0
 six==1.11.0
 social-auth-app-django==1.2.0
 social-auth-core==1.4.0
