@@ -190,7 +190,7 @@ def post_spreadsheet(google, title, params):
   body = json.loads(r1.content)
   spreadsheetID = body["spreadsheetId"]
 
-  processes = ProcessType.objects.filter(id__in=params['processes'].split(',')).all()
+  processes = ProcessType.objects.filter(id__in=params['processes'].split(','))
 
   update_body = {
     "requests": [{
@@ -245,7 +245,7 @@ def post_spreadsheet(google, title, params):
 def create_csv_spreadsheet(request):
   params = dict(request.POST.items())
   response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+  response['Content-Disposition'] = 'attachment;'
   writer = csv.writer(response)
 
   for i, process in enumerate(params['processes'].split(',')):
