@@ -10,7 +10,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 import requests
 import datetime
-from django.db.models import Q, Count, Min
+from django.db.models import Q, Count, Min, Sum
 from django.core import serializers
 from django.contrib.postgres.search import SearchQuery
 
@@ -108,8 +108,8 @@ def single_process_array(process, params):
     product_type__in=product_type_ids, created_at__range=(startDate, endDate))
 
 
-  label = params['label']
-  if label:
+  if 'label' in params:
+    label = params['label']
     queryset = queryset.filter(Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
   if 'flagged' in params and params['flagged'].lower() == 'true':
@@ -124,7 +124,7 @@ def single_process_array(process, params):
     display = str(t)
     product_type = t.product_type.code
     inputs = t.inputcount
-    batch_size = t.items.first().amount if t.items.count() else 'N/A'
+    batch_size = t.items.aggregate(Sum('amount'))['amount__sum']
     creation_date = t.created_at.strftime(easy_format)
     updated_date = t.updated_at.strftime(easy_format)
     first_use_date = t.first_use_date
