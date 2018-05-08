@@ -1,5 +1,4 @@
 from rest_framework.response import Response
-from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.v10.calculated_fields_serializers import *
 from rest_framework import generics
@@ -976,7 +975,7 @@ class AdjustmentHistory(APIView):
     self.set_params()
     adjustments = self.get_adjustments()
     objects = []
-    end_date = None
+    end_date = constants.END_OF_TIME
 
     for adjustment in adjustments:
       objects.append(self.get_item_summary(adjustment.created_at, end_date))
