@@ -1,10 +1,7 @@
 from ics.models import *
 from django.db.models.functions import Coalesce
-from django.db.models import Sum, Case, When
-import datetime
-
-BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)
-END_OF_TIME = timezone.make_aware(datetime.datetime(3000, 1, 1), timezone.utc)
+from django.db.models import Sum
+from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
 
 
 def inventory_amounts(process_type, product_type, start, end):
