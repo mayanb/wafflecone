@@ -241,8 +241,10 @@ class TaskNameExists(generics.ListAPIView):
         return "-".join([task.label, str(task.label_index)])
       return task.label
 
+    team_id = self.request.query_params.get('team_created_by', None)
     new_name = self.request.query_params.get('name', None)
-    queryset = Task.objects.filter(is_trashed=False)
+
+    queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id)
     for task in queryset:
       if new_name == get_task_display(task):
         return Response({'name_exists': True})
