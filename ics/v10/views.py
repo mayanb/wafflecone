@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Concat
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.v10.calculated_fields_serializers import *
 from rest_framework import generics
@@ -243,12 +243,12 @@ class TaskNameExists(generics.ListAPIView):
 
     team_id = self.request.query_params.get('team_created_by', None)
     new_name = self.request.query_params.get('name', None)
-
-    queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id)
-    for task in queryset:
-      if new_name == get_task_display(task):
-        return Response({'name_exists': True})
-    return Response({'name_exists': False })
+    num_matching_names = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id) \
+      .annotate(name=Case(When(label_index=0, then=F('label')), default=Concat(F('label'), Value('-'), F('label_index')), output_field=models.CharField())) \
+      .filter(Q(name=new_name) | Q(custom_display=new_name)).count()
+    # queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id)
+    name_exists = False if num_matching_names == 0 else True
+    return Response({'name_exists': name_exists})
 
 # tasks/
 class TaskList(generics.ListAPIView):
