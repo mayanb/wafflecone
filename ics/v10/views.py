@@ -1,4 +1,5 @@
 from rest_framework.response import Response
+from django.db.models.functions import Coalesce, Concat
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.v10.calculated_fields_serializers import *
 from rest_framework import generics
@@ -200,6 +201,23 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
+  # NOTE: function designed ONLY for patching task names
+  # Receives a task name "custom_display" param, responds with True if it already exists (else False)
+  def patch(self, request, pk):
+    team_id = self.request.query_params.get('team_created_by', None)
+    new_name = self.request.query_params.get('custom_display', None)
+    if new_name is None:
+      return Response(status=400, data={'error': 'Bad request. Must have a custom_display parameter in PATCH name request'})
+
+    num_matching_names = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id) \
+      .annotate(name=Case(When(label_index=0, then=F('label')), default=Concat(F('label'), Value('-'), F('label_index')), output_field=models.CharField())) \
+      .filter(Q(name=new_name) | Q(custom_display=new_name)).count()
+    name_already_exists = False if num_matching_names == 0 else True
+
+    if not name_already_exists:
+      Task.objects.filter(pk=pk).update(custom_display=new_name)
+    return Response({'name_already_exists': name_already_exists})
+
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
@@ -228,7 +246,6 @@ class SimpleTaskSearch(generics.ListAPIView):
 
   def get_queryset(self):
     return simpleTaskSearch(self.request.query_params)
-
 
 # tasks/
 class TaskList(generics.ListAPIView):
