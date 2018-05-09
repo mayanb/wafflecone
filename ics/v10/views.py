@@ -213,10 +213,8 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
       .annotate(name=Case(When(label_index=0, then=F('label')), default=Concat(F('label'), Value('-'), F('label_index')), output_field=models.CharField())) \
       .filter(Q(name=new_name) | Q(custom_display=new_name)).count()
     name_already_exists = False if num_matching_names == 0 else True
-    print(new_name)
+
     if not name_already_exists:
-      print('Saving new name. Pk:')
-      print(str(pk))
       Task.objects.filter(pk=pk).update(custom_display=new_name)
     return Response({'name_already_exists': name_already_exists})
 
