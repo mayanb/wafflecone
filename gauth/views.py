@@ -99,9 +99,8 @@ def single_process_array(process, params):
   data = [];
 
   fields = ['id', 'display', 'product type', 'inputs', 'batch size', 'creation date', 'last edited date', 'first use date']
-  attrs = Attribute.objects.filter(process_type=process).order_by('rank')
-  attrVals = attrs.values_list('name', flat=True)
-  fields = fields + [str(x) for x in attrVals]
+  attrs = Attribute.objects.filter(process_type=process).order_by('is_trashed', 'rank')
+  fields = fields + [x.name + ' (Inactive)' if x.is_trashed else x.name for x in attrs]
   data.append(fields)
 
   #Backwards compatibility code - can remove later
