@@ -231,22 +231,15 @@ class SimpleTaskSearch(generics.ListAPIView):
     return simpleTaskSearch(self.request.query_params)
 
 # tasks/name-exists/${name}
-# Receives a task name "name" param, responds with True if it already exists (else False)
-class TaskNameExists(generics.ListAPIView):
+# Receives a task name "new_name" param, responds with True if it already exists (else False)
+class TaskNameExists(APIView):
   def get(self, request):
-    def get_task_display(task):
-      if task.custom_display:
-        return task.custom_display
-      if task.label_index > 0:
-        return "-".join([task.label, str(task.label_index)])
-      return task.label
-
     team_id = self.request.query_params.get('team_created_by', None)
     new_name = self.request.query_params.get('name', None)
+
     num_matching_names = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id) \
       .annotate(name=Case(When(label_index=0, then=F('label')), default=Concat(F('label'), Value('-'), F('label_index')), output_field=models.CharField())) \
       .filter(Q(name=new_name) | Q(custom_display=new_name)).count()
-    # queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id)
     name_exists = False if num_matching_names == 0 else True
     return Response({'name_exists': name_exists})
 
