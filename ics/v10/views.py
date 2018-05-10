@@ -929,7 +929,7 @@ class InventoryList2(generics.ListAPIView):
   serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
-    queryset = Item.active_objects
+    queryset = Item.active_objects.filter(creating_task__is_trashed=False)
 
     team = self.request.query_params.get('team', None)
     if team is None:

@@ -14,14 +14,16 @@ def inventory_amounts(process_type, product_type, start, end):
 	created_amount = Item.active_objects.filter(
 		creating_task__process_type=process_type,
 		creating_task__product_type=product_type,
-		created_at__range=(start, end)
+		created_at__range=(start, end),
+		creating_task__is_trashed=False
 	) \
 		.aggregate(amount=Coalesce(Sum('amount'), 0))['amount']
 
 	used_amount = TaskIngredient.objects \
 		.filter(ingredient__process_type=process_type,
 	            ingredient__product_type=product_type,
-	            task__created_at__range=(start, end)
+	            task__created_at__range=(start, end),
+	            task__is_trashed=False
 	            ) \
 		.aggregate(amount=Coalesce(Sum('actual_amount'), 0))['amount']
 
