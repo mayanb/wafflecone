@@ -45,7 +45,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
 	last_used = serializers.DateTimeField(source='get_last_used_date', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
-	icon = serializers.CharField(read_only=True)
+	icon = serializers.CharField()
 	created_at = serializers.DateTimeField(read_only=True)
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
