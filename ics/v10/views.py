@@ -319,6 +319,7 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 # processes/
 class ProcessList(generics.ListCreateAPIView):
   serializer_class = ProcessTypeWithUserSerializer
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_fields = ('created_by', 'team_created_by', 'id')
 
   def get_queryset(self):
@@ -601,6 +602,7 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)
   serializer_class = ProductTypeWithUserSerializer
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_fields = ('created_by', 'team_created_by', 'id')
 
   def get_queryset(self):
