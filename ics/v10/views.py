@@ -325,6 +325,19 @@ class ProcessList(generics.ListCreateAPIView):
   def get_queryset(self):
     return process_search(self.request.query_params)
 
+  def get(self, request):
+    queryset = self.filter_queryset(self.get_queryset())
+    serializer = self.serializer_class(queryset, many=True)
+    ordering = request.query_params.get('ordering', '')
+    reverse = ordering[0:1] == '-'
+    field = ordering[1:] if reverse else ordering
+    if field == 'last_used':
+      data = sorted(serializer.data, key=lambda p: p['last_used'], reverse=reverse)
+    else:
+      data = serializer.data
+    return Response(data)
+
+
 # processes/[pk]/ ...where pk = 'primary key' == 'the id'
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProcessType.objects.all()\
