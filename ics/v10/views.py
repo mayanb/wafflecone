@@ -336,10 +336,24 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 # processes/
 class ProcessList(generics.ListCreateAPIView):
   serializer_class = ProcessTypeWithUserSerializer
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_fields = ('created_by', 'team_created_by', 'id')
 
   def get_queryset(self):
     return process_search(self.request.query_params)
+
+  def get(self, request):
+    queryset = self.filter_queryset(self.get_queryset())
+    serializer = self.serializer_class(queryset, many=True)
+    ordering = request.query_params.get('ordering', '')
+    reverse = ordering[0:1] == '-'
+    field = ordering[1:] if reverse else ordering
+    if field == 'last_used':
+      data = sorted(serializer.data, key=lambda p: p['last_used'], reverse=reverse)
+    else:
+      data = serializer.data
+    return Response(data)
+
 
 # processes/[pk]/ ...where pk = 'primary key' == 'the id'
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -549,6 +563,9 @@ class ActivityList(generics.ListAPIView):
       queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
 
     aggregate_products = self.request.query_params.get('aggregate_products', None)
+
+    ordering = self.request.query_params.get('ordering', 'process_type__name')
+
     queryset_values = [
       'process_type',
       'process_type__name',
@@ -561,12 +578,14 @@ class ActivityList(generics.ListAPIView):
     if not aggregate_products or aggregate_products.lower() != 'true':
       queryset_values.append('product_type')
 
-    return queryset.values(*queryset_values).annotate(
+    return queryset.values(*queryset_values) \
+      .annotate(
       product_type_ids=ArrayAgg('product_type'),
       product_type_names=ArrayAgg('product_type__name'),
       product_type_codes=ArrayAgg('product_type__code'),
       runs=Count('id', distinct=True)
-    ).annotate(amount=Coalesce(Sum('items__amount'), 0))
+    ).annotate(amount=Coalesce(Sum('items__amount'), 0)) \
+      .order_by(ordering)
 
 # activity/detail/
 class ActivityListDetail(generics.ListAPIView):
@@ -618,6 +637,7 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)
   serializer_class = ProductTypeWithUserSerializer
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_fields = ('created_by', 'team_created_by', 'id')
 
   def get_queryset(self):
