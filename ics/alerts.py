@@ -2,7 +2,6 @@ from ics.models import *
 from zappa.async import task
 from django.db.models import F, Sum, Q
 from datetime import datetime, timedelta
-from django.utils import timezone
 from ics.utilities import last_week_range, last_month_range
 
 # Use simplejson to handle serializing Decimal objects
@@ -43,12 +42,7 @@ def check_flagged_tasks_alerts(task):
 	if is_local():
 		return
 
-	# flag_update_time default value is string, but afterwards is set to a timezone aware datetime object
-	if isinstance(task.flag_update_time, basestring):
-		return
-
-	now = timezone.now()
-	if now - timedelta(minutes=5) >= task.flag_update_time:
+	if not task.was_flag_changed:
 		return
 
 	team = task.process_type.team_created_by
@@ -73,6 +67,13 @@ def check_goals_alerts(task):
 
 	team = task.process_type.team_created_by
 	queryset = Goal.objects.filter(userprofile__team=team)
+
+	if queryset.filter(
+			process_type=task.process_type.id,
+			product_types__id=task.product_type.id,
+			is_trashed=False,
+	).count() == 0:
+		return
 
 	complete_goals = []
 	incomplete_goals = []
@@ -101,13 +102,16 @@ def check_goals_alerts(task):
 
 
 @task
-def check_anomalous_inputs_alerts(task):
+def check_anomalous_inputs_alerts(input):
 	if is_local():
 		return
 
-	team = task.process_type.team_created_by
+	team = input.task.process_type.team_created_by
 
 	if not is_dandelion(team):
+		return
+
+	if input.task.product_type == input.input_item.creating_task.product_type:
 		return
 
 	# for each input, if any of the items' creating tasks have a different product type from the input task
@@ -117,7 +121,7 @@ def check_anomalous_inputs_alerts(task):
 		task__process_type__team_created_by=team,
 		task__is_trashed=False,
 		input_item__creating_task__is_trashed=False,
-		input_item__created_at__date__range=(start_date, end_date)
+		task__created_at__date__range=(start_date, end_date)
 	) \
 		.exclude(Q(input_item__creating_task__product_type__id=F('task__product_type__id'))) \
 		.select_related('task', 'task__process_type', 'task__process_type', 'input_item', 'input_item__creating_task')
