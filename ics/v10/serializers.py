@@ -252,13 +252,13 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 
 
 class AlertInputSerializer(serializers.ModelSerializer):
-	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
-	input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
-	input_task_process_icon = serializers.CharField(source='input_item.creating_task.process_type.icon', read_only=True)
-	input_task_process_name = serializers.CharField(source='input_item.creating_task.process_type.name', read_only=True)
-	input_task_product_name = serializers.CharField(source='input_item.creating_task.product_type.name', read_only=True)
+	input_task_display = serializers.CharField(source='task', read_only=True)
+	input_task = serializers.CharField(source='task.id', read_only=True)
+	input_task_process_icon = serializers.CharField(source='task.process_type.icon', read_only=True)
+	input_task_process_name = serializers.CharField(source='task.process_type.name', read_only=True)
+	input_task_product_name = serializers.CharField(source='task.product_type.name', read_only=True)
 	input_qr = serializers.CharField(source='input_item.item_qr', read_only=True)
-	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
+	input_task_n = EditTaskSerializer(source='task', read_only=True)
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
