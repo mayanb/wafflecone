@@ -27,7 +27,7 @@ def task_changed(sender, instance, **kwargs):
 	if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
 		check_flagged_tasks_alerts(instance)
 		check_goals_alerts(instance)
-		check_anomolous_inputs_alerts(instance)
+		check_anomalous_inputs_alerts(instance)
 
 # this signal only gets called once whereas all the others get called twice
 @receiver(post_delete, sender=Input)
@@ -41,5 +41,5 @@ def item_changed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, **kwargs):
-	check_anomolous_inputs_alerts(instance.task)
+	check_anomalous_inputs_alerts(instance.task)
 

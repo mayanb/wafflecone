@@ -34,6 +34,10 @@ def is_local():
 	return 'WAFFLE_ENVIRONMENT' not in os.environ or os.environ['WAFFLE_ENVIRONMENT'] not in ['staging', 'production']
 
 
+def is_dandelion(team):
+	return team.id in [1, 2]
+
+
 @task
 def check_flagged_tasks_alerts(task):
 	if is_local():
@@ -97,13 +101,16 @@ def check_goals_alerts(task):
 
 
 @task
-def check_anomolous_inputs_alerts(task):
+def check_anomalous_inputs_alerts(task):
 	if is_local():
 		return
 
-	# for each input, if any of the items' creating tasks have a different product type from the input task
 	team = task.process_type.team_created_by
 
+	if not is_dandelion(team):
+		return
+
+	# for each input, if any of the items' creating tasks have a different product type from the input task
 	end_date = datetime.today() + timedelta(days=1)
 	start_date = datetime.today() - timedelta(days=5)
 	queryset = Input.objects.filter(
