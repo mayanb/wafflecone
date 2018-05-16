@@ -30,15 +30,20 @@ def create_alerts(team, objects, serializer, alert_type):
 	Alert.objects.bulk_create(alerts)
 
 
+def is_local():
+	return 'WAFFLE_ENVIRONMENT' not in os.environ or os.environ['WAFFLE_ENVIRONMENT'] not in ['staging', 'production']
+
+
 @task
 def check_flagged_tasks_alerts(task):
-	print os.environ
-	now = timezone.now()
+	if is_local():
+		return
 
 	# flag_update_time default value is string, but afterwards is set to a timezone aware datetime object
 	if isinstance(task.flag_update_time, basestring):
 		return
 
+	now = timezone.now()
 	if now - timedelta(minutes=5) >= task.flag_update_time:
 		return
 
@@ -59,6 +64,9 @@ def check_flagged_tasks_alerts(task):
 
 @task
 def check_goals_alerts(task):
+	if is_local():
+		return
+
 	team = task.process_type.team_created_by
 	queryset = Goal.objects.filter(userprofile__team=team)
 
@@ -90,6 +98,9 @@ def check_goals_alerts(task):
 
 @task
 def check_anomolous_inputs_alerts(task):
+	if is_local():
+		return
+
 	# for each input, if any of the items' creating tasks have a different product type from the input task
 	team = task.process_type.team_created_by
 
