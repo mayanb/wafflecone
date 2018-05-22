@@ -553,6 +553,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
+	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
 
 	def get_product_types(self, goal):
@@ -584,7 +585,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile')
 
 
 class GoalCreateSerializer(serializers.ModelSerializer):
