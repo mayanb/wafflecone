@@ -1,17 +1,11 @@
-import pytz
-import datetime
-from datetime import datetime
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, TruncDate
 from ics.models import *
 import pytz
 
-dateformat = "%Y-%m-%d-%H-%M-%S-%f"
 
 def get_output_by_bucket(bucket, start, end, process_type, product_types):
 	tz = pytz.timezone('America/Los_Angeles')
-	startDate = get_date_from_string(start)
-	endDate = get_date_from_string(end)
 
 	bucketFilter = None
 	if bucket == 'month':
@@ -20,7 +14,7 @@ def get_output_by_bucket(bucket, start, end, process_type, product_types):
 		bucketFilter = TruncDate('created_at', tzinfo=tz)
 
 	t = filter_tasks(
-		daterange=(startDate, endDate), 
+		daterange=(start, end),
 		process_type=process_type, 
 		product_types=product_types
 	)
@@ -32,9 +26,6 @@ def get_output_by_bucket(bucket, start, end, process_type, product_types):
 	).annotate(
 		num_tasks=Count('id', distinct=True)
 	).order_by('bucket')
-
-def get_date_from_string(date):
-	return pytz.utc.localize(datetime.strptime(date, dateformat))
 
 def filter_tasks(daterange=None, process_type=None, product_types=None):
 	t = Task.objects.filter(is_trashed=False)

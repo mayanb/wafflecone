@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import csv
 
 from ics.models import *
+from graphs.v2.queries import get_output_by_bucket
 from django.http import HttpResponse
 from requests_oauthlib import OAuth2Session, TokenUpdated
 from django.conf import settings
@@ -34,6 +35,7 @@ def test(request):
   print(r.status_code, r.reason)
   return HttpResponse(r);
 
+
 def createAuthURL(request):
   user_id = request.GET.get('user_id')
   user_profile = UserProfile.objects.get(user=user_id)
@@ -41,6 +43,7 @@ def createAuthURL(request):
   authorization_url, state = oauth.authorization_url( 'https://accounts.google.com/o/oauth2/auth', access_type="offline", prompt="consent")
   response = HttpResponse(authorization_url, content_type="text/plain")
   return response
+
 
 # @csrf_exempt
 @api_view(['POST'])
@@ -70,11 +73,13 @@ def createAuthToken(request):
   response = HttpResponse(json.dumps({"token": token['access_token'], "email": google_user_email}), content_type="text/plain")
   return response;
 
+
 def update_userprofile_token(user_profile, token):
   user_profile.gauth_access_token = token['access_token']
   user_profile.gauth_refresh_token = token['refresh_token']
   user_profile.expires_in = token['expires_in']
   user_profile.expires_at = token['expires_at']
+
 
 # @csrf_exempt
 @api_view(['POST'])
@@ -85,7 +90,99 @@ def clearToken(request):
   user_profile.gauth_email = ""
   user_profile.save()
   response = HttpResponse(serializers.serialize('json', [user_profile]))
-  return response;
+  return response
+
+
+def create_spreadsheet_response(sheets, spreadsheet_title, user_id):
+  user_profile = UserProfile.objects.get(user=user_id)
+  token = {
+    'access_token': user_profile.gauth_access_token,
+    'refresh_token': user_profile.gauth_refresh_token,
+    'token_type':  'Bearer',
+    'expires_at': user_profile.expires_at,
+    'expires_in': user_profile.expires_in
+  }
+  extra = {
+    'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+    'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET
+  }
+
+  # try to authenticate or refresh the token
+  try:
+    google = OAuth2Session(
+      settings.GOOGLE_OAUTH2_CLIENT_ID,
+      token=token,
+      auto_refresh_url=REFRESH_URL,
+      auto_refresh_kwargs=extra,
+      scope=settings.GOOGLEAUTH_SCOPE
+    )
+    # do a random call to force the oauth2session to try to authenticate
+    google_user_data = google.get('https://www.googleapis.com/plus/v1/people/me')
+  except TokenUpdated as e:
+    update_userprofile_token(user_profile, e.token)
+    user_profile.save()
+
+  r1 = google.post('https://sheets.googleapis.com/v4/spreadsheets')
+  body = json.loads(r1.content)
+  spreadsheetID = body["spreadsheetId"]
+
+  update_body = {
+    "requests": [{
+      "updateSpreadsheetProperties": {
+        "properties": {"title": spreadsheet_title},
+        "fields": "title"
+      },
+    },
+      {
+        "updateSheetProperties": {
+          "properties": {
+            "sheetId": 0,
+            "title": sheets[0]['title']
+          },
+          "fields": "title"
+        }
+      }]
+  }
+
+  for sheet in sheets[1:]:
+    update_body['requests'].append({
+      "addSheet": {
+        "properties": {
+          "title": sheet['title'],
+        }
+      },
+    })
+
+  sheets_url = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + ':batchUpdate'
+  r2 = google.post(sheets_url, json.dumps(update_body))
+
+  values_body = {
+    "valueInputOption": "RAW",
+    "data": [
+    ]
+  }
+
+  for sheet in sheets:
+    values_body['data'].append(
+      {
+        "range": sheet['title'] + "!A1",
+        "values": sheet['data']
+      }
+    )
+
+  values_url = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + '/values:batchUpdate'
+  r3 = google.post(values_url, json.dumps(values_body))
+  return HttpResponse(r3, content_type='application/json')
+
+
+def create_csv_response(rows):
+  response = HttpResponse(content_type='text/csv')
+  response['Content-Disposition'] = 'attachment;'
+  writer = csv.writer(response)
+  for row in rows:
+    writer.writerow([unicode(s).encode("utf-8") for s in row])
+  return response
+
 
 def single_process_array(process, params):
   easy_format = '%Y-%m-%d %H:%M'
@@ -110,8 +207,8 @@ def single_process_array(process, params):
 
   product_type_ids = params['products'].split(',')
   queryset = Task.objects.filter(is_trashed=False,
-    process_type__team_created_by=params['team'], process_type=process,
-    product_type__in=product_type_ids, created_at__range=(startDate, endDate))
+                                 process_type__team_created_by=params['team'], process_type=process,
+                                 product_type__in=product_type_ids, created_at__range=(startDate, endDate))
 
 
   if 'label' in params:
@@ -148,142 +245,82 @@ def single_process_array(process, params):
 
   return data
 
-
-
-@api_view(['POST'])
-def createSpreadsheet(request):
-  params = dict(request.POST.items())
-  user_id = request.POST.get('user_id')
-  user_profile = UserProfile.objects.get(user=user_id)
-  processes = request.POST.get('processes', None)
-  start = request.POST.get('start', None)
-  end = request.POST.get('end', None)
-  token = {
-    'access_token': user_profile.gauth_access_token,
-    'refresh_token': user_profile.gauth_refresh_token,
-    'token_type':  'Bearer',
-    'expires_at': user_profile.expires_at,
-    'expires_in': user_profile.expires_in
-  }
-  extra = {
-    'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
-    'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET
-  }
-
-  #Backwards compatibility code - can remove later
-  if 'process' in params and not processes:
-	  processes = params['process']
-	  params['processes'] = processes
-  #End of backwards compatibility code
-
-
-  # try to authenticate or refresh the token
-  try:
-    google = OAuth2Session(
-      settings.GOOGLE_OAUTH2_CLIENT_ID,
-      token=token,
-      auto_refresh_url=REFRESH_URL,
-      auto_refresh_kwargs=extra,
-      scope=settings.GOOGLEAUTH_SCOPE
-    )
-    # do a random call to force the oauth2session to try to authenticate
-    google_user_data = google.get('https://www.googleapis.com/plus/v1/people/me')
-  except TokenUpdated as e:
-    update_userprofile_token(user_profile, e.token)
-    user_profile.save()
-
-  # get the spreadsheet data
-  label = str(ProcessType.objects.get(pk=processes[0]).name) if len(processes) == 1 else 'Runs'
-  title = label + " " + convert_to_readable_time(start) + " to " + convert_to_readable_time(end)
-
-  # post the spreadsheet to google & return happily
-  r = post_spreadsheet(google, title, params)
-  return HttpResponse(r, content_type='application/json')
-
-
-def post_spreadsheet(google, title, params):
-  r1 = google.post('https://sheets.googleapis.com/v4/spreadsheets')
-  body = json.loads(r1.content)
-  spreadsheetID = body["spreadsheetId"]
-
-  processes = ProcessType.objects.filter(id__in=params['processes'].split(','))
-
-  update_body = {
-    "requests": [{
-      "updateSpreadsheetProperties": {
-        "properties": {"title": title},
-        "fields": "title"
-      },
-    },
-      {
-        "updateSheetProperties": {
-          "properties": {
-            "sheetId": 0,
-            "title": processes[0].name
-          },
-          "fields": "title"
-        }
-      }]
-  }
-
-  for process in processes[1:]:
-    update_body['requests'].append({
-      "addSheet": {
-        "properties": {
-          "title": process.name,
-        }
-      },
-    })
-
-  sheets_url = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + ':batchUpdate'
-  r2 = google.post(sheets_url, json.dumps(update_body))
-
-  values_body = {
-    "valueInputOption": "RAW",
-    "data": [
-    ]
-  }
-
-  for process in processes:
-    values_body['data'].append(
-      {
-        "range": process.name + "!A1",
-        "values": single_process_array(process.id, params)
-      }
-    )
-
-  values_url = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetID + '/values:batchUpdate'
-  r3 = google.post(values_url, json.dumps(values_body))
-  return r3
-
-
-@api_view(['POST'])
-def create_csv_spreadsheet(request):
-  params = dict(request.POST.items())
-
-  #Backwards compatibility code - can remove later
-  if 'process' in params and 'processes' not in params:
-    params['processes'] = params['process']
-  #End of backwards compatibility code
-
-  response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment;'
-  writer = csv.writer(response)
-
-  for i, process in enumerate(params['processes'].split(',')):
-    process_name = ProcessType.objects.get(pk=process).name
-    writer.writerow(['Process: ' + process_name])
-    data = single_process_array(process, params)
-    for row in data:
-      writer.writerow([unicode(s).encode("utf-8") for s in row])
-
-    if (i + 1) < len(params['processes']):
-      writer.writerow(['\n'])
-
-  return response
-
-
 def convert_to_readable_time(time):
   arr = str(time).split('-')
   return '-'.join(arr[0:3])
+
+@api_view(['POST'])
+def activity_spreadsheet(request):
+  params = dict(request.POST.items())
+  processes = ProcessType.objects.filter(id__in=params['processes'].split(','))
+  label = processes[0].name if len(processes) == 1 else 'Runs'
+  spreadsheet_title = label + " " + convert_to_readable_time(params['start']) + " to " + convert_to_readable_time(
+    params['end'])
+
+  def build_sheet(process):
+    return {
+      'title': process.name,
+      'data': single_process_array(process.id, params),
+    }
+  sheets = map(build_sheet, processes)
+  return create_spreadsheet_response(sheets, spreadsheet_title, params['user_id'])
+
+@api_view(['POST'])
+def activity_csv(request):
+  params = dict(request.POST.items())
+  rows = []
+  for i, process in enumerate(params['processes'].split(',')):
+    process_name = ProcessType.objects.get(pk=process).name
+    rows.append(['Process: ' + process_name])
+    rows.extend(single_process_array(process, params))
+
+    if (i + 1) < len(params['processes']):
+      rows.append(['\n'])
+
+  return create_csv_response(rows)
+
+def get_trends(bucket, start, process_type, product_types):
+  end = datetime.date.today() + datetime.timedelta(days=1)
+  return map(lambda d: [d['bucket'].strftime('%Y-%m-%d'), d['num_tasks'], d['total_amount']],
+             get_output_by_bucket(bucket, start, end, process_type, product_types))
+
+def get_trends_data(process_type, product_types):
+  last_year = datetime.date.today() - datetime.timedelta(days=365)
+  last_week = datetime.date.today() - datetime.timedelta(days=7)
+  first_of_month = datetime.date.today().replace(day=1)
+  return [
+    {
+      'title': 'Produced Each Month',
+      'data': get_trends('month', last_year, process_type, product_types)
+    },
+    {
+      'title': 'Produced This Week',
+      'data': get_trends('day', last_week, process_type, product_types)
+    },
+    {
+      'title': 'Produced This Month',
+      'data': get_trends('day', first_of_month, process_type, product_types)
+    },
+  ]
+
+@api_view(['POST'])
+def trends_spreadsheet(request):
+  params = dict(request.POST.items())
+  product_types = params['products'] or None
+  spreadsheet_title = 'Recent Trends'
+  sheets = get_trends_data(params['process'], product_types)
+  return create_spreadsheet_response(sheets, spreadsheet_title, params['user_id'])
+
+@api_view(['POST'])
+def trends_csv(request):
+  params = dict(request.POST.items())
+  product_types = params['products'] or None
+
+  csv_data = get_trends_data(params['process'], product_types)
+  rows = []
+  rows.extend([[csv_data[0]['title']]] + csv_data[0]['data'] + [['\n']])
+  rows.extend([[csv_data[1]['title']]] + csv_data[1]['data'] + [['\n']])
+  rows.extend([[csv_data[2]['title']]] + csv_data[2]['data'])
+  return create_csv_response(rows)
+
 
