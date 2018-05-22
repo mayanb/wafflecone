@@ -549,6 +549,47 @@ class TeamSerializer(serializers.ModelSerializer):
 		fields = ('id', 'name', 'users', 'products', 'processes')
 # 
 
+class BasicPinSerializer(serializers.ModelSerializer):
+	process_name = serializers.CharField(source='process_type.name', read_only=True)
+	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
+	product_code = serializers.SerializerMethodField('get_product_types')
+	input_products = serializers.CharField(write_only=True, required=False)
+
+	def get_product_types(self, goal):
+		return ProductTypeSerializer(goal.product_types, many=True).data
+
+	def create(self, validated_data):
+		userprofile = validated_data.get('userprofile', '')
+		inputprods = validated_data.get('input_products', '')
+		pin_product_types = None
+
+		pin = Pin.objects.create(
+			userprofile=validated_data.get('userprofile', ''),
+			process_type=validated_data.get('process_type', ''),
+			all_product_types=(inputprods == "ALL")
+		)
+
+		# if we didn't mean to put all product types in this pin:
+		if (inputprods and inputprods != "ALL"):
+			pin_product_types = inputprods.strip().split(',')
+
+		# if we did mean to put all product types in this pin:
+		if not pin_product_types:
+			team = UserProfile.objects.get(pk=userprofile.id).team
+			pin_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+			pin_product_types = []
+			for pp in pin_product_types_objects:
+				pin_product_types.append(pp.id)
+
+		for gp in pin_product_types:
+			PinProductType.objects.create(product_type=ProductType.objects.get(pk=gp), pin=pin)
+		return pin
+
+	class Meta:
+		model = Pin
+		fields = ('id', 'all_product_types', 'input_products', 'process_type', 'process_name', 'process_unit', 'product_code', 'is_trashed', 'userprofile', 'created_at')
+		extra_kwargs = {'input_products': {'write_only': True} }
+
 class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)

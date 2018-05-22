@@ -134,6 +134,29 @@ class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = BasicGoalSerializer
 
 ######################
+# PIN-RELATED VIEWS #
+######################
+class PinList(generics.ListAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+  def get_queryset(self):
+    queryset = Pin.objects.filter(is_trashed=False)
+    team = self.request.query_params.get('team', None)
+
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+    return queryset
+
+class PinCreate(generics.CreateAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+class PinRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+######################
 # USER-RELATED VIEWS #
 ######################
 

@@ -78,6 +78,10 @@ urlpatterns = [
     url(r'^goals/edit/(?P<pk>[0-9]+)/$', views.GoalRetrieveUpdateDestroy.as_view(), name='goal_edit'),
     url(r'^goals/move/(?P<pk>[0-9]+)/$', views.ReorderGoal.as_view(), name='goal_move'),
 
+    url(r'^pins/$', views.PinList.as_view(), name='pins'),
+    url(r'^pins/create/$', views.PinCreate.as_view(), name='create_pin'),
+    url(r'^pins/edit/(?P<pk>[0-9]+)/$', views.PinRetrieveUpdateDestroy.as_view(), name='pin_edit'),
+
     url(r'^alerts/$', views.AlertList.as_view()),
     url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),
     url(r'^alerts/create/$', views.AlertCreate.as_view()),
