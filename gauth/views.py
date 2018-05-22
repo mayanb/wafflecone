@@ -281,8 +281,10 @@ def activity_csv(request):
 
 def get_trends(bucket, start, process_type, product_types):
   end = datetime.date.today() + datetime.timedelta(days=1)
-  return map(lambda d: [d['bucket'].strftime('%Y-%m-%d'), d['num_tasks'], d['total_amount']],
-             get_output_by_bucket(bucket, start, end, process_type, product_types))
+  rows = [['Time Period', 'Number of Tasks', 'Total Amount']]
+  rows.extend(map(lambda d: [d['bucket'].strftime('%Y-%m-%d'), d['num_tasks'], d['total_amount']],
+             get_output_by_bucket(bucket, start, end, process_type, product_types)))
+  return rows
 
 def get_trends_data(process_type, product_types):
   last_year = datetime.date.today() - datetime.timedelta(days=365)
