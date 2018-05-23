@@ -559,30 +559,19 @@ class BasicPinSerializer(serializers.ModelSerializer):
 		return ProductTypeSerializer(goal.product_types, many=True).data
 
 	def create(self, validated_data):
-		userprofile = validated_data.get('userprofile', '')
-		inputprods = validated_data.get('input_products', '')
-		pin_product_types = None
+		product_types = validated_data.get('input_products', '')
 
 		pin = Pin.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
 			process_type=validated_data.get('process_type', ''),
-			all_product_types=(inputprods == "ALL")
+			all_product_types=(product_types == "ALL"),
 		)
 
-		# if we didn't mean to put all product types in this pin:
-		if (inputprods and inputprods != "ALL"):
-			pin_product_types = inputprods.strip().split(',')
+		if product_types != 'ALL':
+			for product_type in product_types.split(','):
+				pin.product_types.add(product_type)
+			pin.save()
 
-		# if we did mean to put all product types in this pin:
-		if not pin_product_types:
-			team = UserProfile.objects.get(pk=userprofile.id).team
-			pin_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
-			pin_product_types = []
-			for pp in pin_product_types_objects:
-				pin_product_types.append(pp.id)
-
-		for gp in pin_product_types:
-			PinProductType.objects.create(product_type=ProductType.objects.get(pk=gp), pin=pin)
 		return pin
 
 	class Meta:
@@ -596,7 +585,14 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
-	userprofile_name = serializers.CharField(source='userprofile.user.username', read_only=True)
+	userprofile_name = serializers.SerializerMethodField()
+
+	def get_userprofile_name(self, goal):
+		user = goal.userprofile.user
+		if user.first_name and user.last_name:
+			return user.first_name + ' ' + user.last_name[0] + '.'
+		else:
+			return user.username.split('_')[0]
 
 	def get_product_types(self, goal):
 		return ProductTypeSerializer(goal.product_types, many=True).data
@@ -637,8 +633,15 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	product_code = serializers.SerializerMethodField('get_product_types')
 	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
-	userprofile_name = serializers.CharField(source='userprofile.user.username', read_only=True)
+	userprofile_name = serializers.SerializerMethodField()
 	all_product_types = serializers.BooleanField(read_only=True)
+
+	def get_userprofile_name(self, goal):
+		user = goal.userprofile.user
+		if user.first_name and user.last_name:
+			return user.first_name + ' ' + user.last_name[0] + '.'
+		else:
+			return user.username.split('_')[0]
 
 	def get_product_types(self, goal):
 		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data

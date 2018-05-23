@@ -604,15 +604,10 @@ class GoalProductType(models.Model):
 class Pin(models.Model):
 	userprofile = models.ForeignKey(UserProfile, related_name="pins", on_delete=models.CASCADE, default=1)
 	process_type = models.ForeignKey(ProcessType, related_name='pins', on_delete=models.CASCADE)
-	product_types = models.ManyToManyField(ProductType, through='PinProductType')
+	product_types = models.ManyToManyField(ProductType)
 	is_trashed = models.BooleanField(default=False, db_index=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	all_product_types = models.BooleanField(default=False)
-
-
-class PinProductType(models.Model):
-	pin = models.ForeignKey(Pin, related_name="pin_product_types", on_delete=models.CASCADE)
-	product_type = models.ForeignKey(ProductType, related_name="pin_product_types", on_delete=models.CASCADE)
 
 ##################################
 #                                #
