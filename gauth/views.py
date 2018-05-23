@@ -200,11 +200,6 @@ def single_process_array(process, params):
   fields = fields + [x.name + ' (Inactive)' if x.is_trashed else x.name for x in attrs]
   data.append(fields)
 
-  #Backwards compatibility code - can remove later
-  if 'products' not in params:
-    params['products'] = ','.join(map(lambda p: str(p.id), ProductType.objects.filter(team_created_by=params['team']).all()))
-  #End of backwards compatibility code
-
   product_type_ids = params['products'].split(',')
   queryset = Task.objects.filter(is_trashed=False,
                                  process_type__team_created_by=params['team'], process_type=process,
