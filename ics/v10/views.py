@@ -119,7 +119,7 @@ class GoalList(generics.ListAPIView):
       queryset = queryset.filter(userprofile=userprofile)
     if (timerange is not None) and (timerange == 'w' or timerange == 'd' or timerange == 'm'):
       queryset = queryset.filter(timerange=timerange)
-    return queryset.select_related('process_type').prefetch_related('product_types')
+    return queryset.select_related('process_type', 'userprofile', 'userprofile__user').prefetch_related('product_types')
 
 class GoalGet(generics.RetrieveAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
