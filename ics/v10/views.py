@@ -146,7 +146,7 @@ class PinList(generics.ListAPIView):
 
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
-    return queryset
+    return queryset.select_related('process_type').prefetch_related('product_types')
 
 class PinCreate(generics.CreateAPIView):
   queryset = Pin.objects.filter(is_trashed=False)
