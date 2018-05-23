@@ -553,6 +553,7 @@ class BasicPinSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
+	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	input_products = serializers.CharField(write_only=True, required=False)
 
 	def get_product_types(self, goal):
@@ -576,7 +577,7 @@ class BasicPinSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Pin
-		fields = ('id', 'all_product_types', 'input_products', 'process_type', 'process_name', 'process_unit', 'product_code', 'is_trashed', 'userprofile', 'created_at')
+		fields = ('id', 'all_product_types', 'input_products', 'process_type', 'process_name', 'process_unit', 'product_code', 'is_trashed', 'userprofile', 'created_at', 'process_icon')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 class BasicGoalSerializer(serializers.ModelSerializer):
