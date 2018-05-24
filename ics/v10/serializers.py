@@ -612,6 +612,8 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			start = datetime.combine(base.replace(day=1), min_time)
 
 		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
+		if goal.all_product_types:
+			product_types = ProductType.objects.filter(team_created_by=goal.userprofile.team)
 
 		#TODO Optimize "actual" calculation into fewer queries
 		return Item.objects.filter(
@@ -665,12 +667,12 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 			goal_product_types = inputprods.strip().split(',')
 
 		# if we did mean to put all product types in this goal:	
-		if not goal_product_types:
-			team = UserProfile.objects.get(pk=userprofile.id).team
-			goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
-			goal_product_types = []
-			for gp in goal_product_types_objects:
-				goal_product_types.append(gp.id)
+		# if not goal_product_types:
+		# 	team = UserProfile.objects.get(pk=userprofile.id).team
+		# 	goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+		# 	goal_product_types = []
+		# 	for gp in goal_product_types_objects:
+		# 		goal_product_types.append(gp.id)
 
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
