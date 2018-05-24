@@ -652,7 +652,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
 		inputprods = validated_data.get('input_products', '')
-		goal_product_types = None
+		goal_product_types = []
 
 		goal = Goal.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
