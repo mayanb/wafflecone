@@ -16,6 +16,7 @@ from django.db.models.functions import Coalesce
 from django.core import serializers
 from django.contrib.postgres.search import SearchQuery
 import pytz
+import inflect
 
 #Use simplejson to handle serializing Decimal objects
 import simplejson as json
@@ -276,14 +277,21 @@ def activity_csv(request):
 
 def get_trends(bucket, start, process_type, product_types):
   end = datetime.date.today() + datetime.timedelta(days=1)
-  rows = [['Time Period', 'Number of Tasks', 'Total Amount']]
+  unit = ProcessType.objects.get(pk=process_type).unit
+  p = inflect.engine()
+  formatted_unit = p.plural(unit)
+  if(p.singular_noun(unit)):
+    formatted_unit = unit
+  total_amount_str = 'Total Amount (' + formatted_unit + ')'
+
+  rows = [['Time Period', 'Number of Tasks', total_amount_str]]
   rows.extend(map(lambda d: [d['bucket'].strftime('%Y-%m-%d'), d['num_tasks'], d['total_amount']],
              get_output_by_bucket(bucket, start, end, process_type, product_types)))
   return rows
 
 def get_trends_data(process_type, product_types):
   last_year = datetime.date.today() - datetime.timedelta(days=365)
-  last_week = datetime.date.today() - datetime.timedelta(days=7)
+  last_week = datetime.date.today() - datetime.timedelta(days=datetime.date.today().isoweekday()%7)
   first_of_month = datetime.date.today().replace(day=1)
   return [
     {
