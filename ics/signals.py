@@ -27,8 +27,8 @@ def task_changed(sender, instance, **kwargs):
 	# if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
 	# 	check_flagged_tasks_alerts(instance)
 
-@receiver(post_delete, sender=Task)
-def task_deleted(sender, instance, **kwargs):
+# @receiver(post_delete, sender=Task)
+# def task_deleted(sender, instance, **kwargs):
 	# check_flagged_tasks_alerts(instance)
 	# check_goals_alerts(instance)
 
@@ -39,11 +39,11 @@ def input_deleted(sender, instance, **kwargs):
 	unflag_task_descendants(**kwargs)
 	# check_anomalous_inputs_alerts(instance)
 
-@receiver(post_save, sender=Item)
-def item_changed(sender, instance, **kwargs):
+# @receiver(post_save, sender=Item)
+# def item_changed(sender, instance, **kwargs):
 	# check_goals_alerts(instance.creating_task)
 
-@receiver(post_save, sender=Input)
-def input_changed(sender, instance, **kwargs):
+# @receiver(post_save, sender=Input)
+# def input_changed(sender, instance, **kwargs):
 	# check_anomalous_inputs_alerts(instance)
 
