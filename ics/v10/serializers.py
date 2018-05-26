@@ -245,6 +245,8 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 		new_item = Item.objects.create(creating_task=new_task, item_qr=qr_code, amount=actual_batch_size, is_generic=True)
 		ingredients = Ingredient.objects.filter(recipe__is_trashed=False, recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)
 		default_batch_size = new_task.process_type.default_amount
+		if default_batch_size == 0:
+			default_batch_size = 1
 		for ingredient in ingredients:
 			scaled_amount = actual_batch_size*ingredient.amount/default_batch_size
 			TaskIngredient.objects.create(task=new_task, ingredient=ingredient, scaled_amount=scaled_amount)
