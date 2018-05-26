@@ -21,7 +21,8 @@ def taskattribute_changed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Task)
 def task_changed(sender, instance, **kwargs):
-	update_task_descendents_flag_number(pk=instance.id)
+	kwargs = { 'pk' : instance.id }
+	update_task_descendents_flag_number(**kwargs)
 
 	#Don't create duplicate alerts after updating task search field
 	# if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
