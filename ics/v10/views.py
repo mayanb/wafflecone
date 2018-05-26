@@ -119,7 +119,7 @@ class GoalList(generics.ListAPIView):
       queryset = queryset.filter(userprofile=userprofile)
     if (timerange is not None) and (timerange == 'w' or timerange == 'd' or timerange == 'm'):
       queryset = queryset.filter(timerange=timerange)
-    return queryset.select_related('process_type').prefetch_related('product_types')
+    return queryset.select_related('process_type', 'userprofile', 'userprofile__user').prefetch_related('product_types')
 
 class GoalGet(generics.RetrieveAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
@@ -132,6 +132,29 @@ class GoalCreate(generics.CreateAPIView):
 class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = BasicGoalSerializer
+
+######################
+# PIN-RELATED VIEWS #
+######################
+class PinList(generics.ListAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+  def get_queryset(self):
+    queryset = Pin.objects.filter(is_trashed=False)
+    team = self.request.query_params.get('team', None)
+
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+    return queryset.select_related('process_type').prefetch_related('product_types')
+
+class PinCreate(generics.CreateAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+class PinRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
 
 ######################
 # USER-RELATED VIEWS #

@@ -549,12 +549,51 @@ class TeamSerializer(serializers.ModelSerializer):
 		fields = ('id', 'name', 'users', 'products', 'processes')
 # 
 
+class BasicPinSerializer(serializers.ModelSerializer):
+	process_name = serializers.CharField(source='process_type.name', read_only=True)
+	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
+	product_code = serializers.SerializerMethodField('get_product_types')
+	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
+	input_products = serializers.CharField(write_only=True, required=False)
+
+	def get_product_types(self, goal):
+		return ProductTypeSerializer(goal.product_types, many=True).data
+
+	def create(self, validated_data):
+		product_types = validated_data.get('input_products', '')
+
+		pin = Pin.objects.create(
+			userprofile=validated_data.get('userprofile', ''),
+			process_type=validated_data.get('process_type', ''),
+			all_product_types=(product_types == "ALL"),
+		)
+
+		if product_types != 'ALL':
+			for product_type in product_types.split(','):
+				pin.product_types.add(product_type)
+			pin.save()
+
+		return pin
+
+	class Meta:
+		model = Pin
+		fields = ('id', 'all_product_types', 'input_products', 'process_type', 'process_name', 'process_unit', 'product_code', 'is_trashed', 'userprofile', 'created_at', 'process_icon')
+		extra_kwargs = {'input_products': {'write_only': True} }
+
 class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
+	userprofile_name = serializers.SerializerMethodField()
+
+	def get_userprofile_name(self, goal):
+		user = goal.userprofile.user
+		if user.first_name and user.last_name:
+			return user.first_name + ' ' + user.last_name[0] + '.'
+		else:
+			return user.username.split('_')[0]
 
 	def get_product_types(self, goal):
 		return ProductTypeSerializer(goal.product_types, many=True).data
@@ -573,6 +612,8 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			start = datetime.combine(base.replace(day=1), min_time)
 
 		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
+		if goal.all_product_types:
+			product_types = ProductType.objects.filter(team_created_by=goal.userprofile.team)
 
 		#TODO Optimize "actual" calculation into fewer queries
 		return Item.objects.filter(
@@ -585,7 +626,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'userprofile')
 
 
 class GoalCreateSerializer(serializers.ModelSerializer):
@@ -595,7 +636,15 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	product_code = serializers.SerializerMethodField('get_product_types')
 	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
+	userprofile_name = serializers.SerializerMethodField()
 	all_product_types = serializers.BooleanField(read_only=True)
+
+	def get_userprofile_name(self, goal):
+		user = goal.userprofile.user
+		if user.first_name and user.last_name:
+			return user.first_name + ' ' + user.last_name[0] + '.'
+		else:
+			return user.username.split('_')[0]
 
 	def get_product_types(self, goal):
 		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
@@ -603,7 +652,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
 		inputprods = validated_data.get('input_products', '')
-		goal_product_types = None
+		goal_product_types = []
 
 		goal = Goal.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
@@ -618,12 +667,12 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 			goal_product_types = inputprods.strip().split(',')
 
 		# if we did mean to put all product types in this goal:	
-		if not goal_product_types:
-			team = UserProfile.objects.get(pk=userprofile.id).team
-			goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
-			goal_product_types = []
-			for gp in goal_product_types_objects:
-				goal_product_types.append(gp.id)
+		# if not goal_product_types:
+		# 	team = UserProfile.objects.get(pk=userprofile.id).team
+		# 	goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+		# 	goal_product_types = []
+		# 	for gp in goal_product_types_objects:
+		# 		goal_product_types.append(gp.id)
 
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
@@ -631,7 +680,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'created_at')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 

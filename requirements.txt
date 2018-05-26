@@ -46,6 +46,7 @@ gunicorn==19.7.1
 hjson==3.0.0
 httplib2==0.10.3
 idna==2.6
+inflect==0.3.1
 ipaddress==1.0.18
 jmespath==0.9.3
 jsonpickle==0.9.5
