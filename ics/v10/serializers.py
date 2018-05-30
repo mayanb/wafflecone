@@ -386,6 +386,7 @@ class ActivityListSerializer(serializers.ModelSerializer):
 			'code': activity['process_type__code'],
 			'unit': activity['process_type__unit'],
 			'icon': activity['process_type__icon'],
+			'is_trashed': activity['process_type__is_trashed'],
 		}
 
 	def get_product_types(self, activity):
