@@ -595,6 +595,7 @@ class ActivityList(generics.ListAPIView):
       'process_type__code',
       'process_type__unit',
       'process_type__icon',
+      'process_type__is_trashed',
     ]
 
     #Unless aggregate product param is true, return a separate row for each product type
