@@ -39,7 +39,7 @@ def task_deleted(sender, instance, **kwargs):
 def input_deleted(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.task.id }
 	unflag_task_descendants(**kwargs)
-	kwargs2 = { 'pk' : instance.id }
+	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs2)
 
 @receiver(post_save, sender=Item)
@@ -49,6 +49,6 @@ def item_changed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, **kwargs):
-	kwargs = { 'pk' : instance.id }
+	kwargs = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs)
 
