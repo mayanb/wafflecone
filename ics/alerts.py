@@ -114,23 +114,20 @@ def check_goals_alerts(**kwargs):
 def check_anomalous_inputs_alerts(**kwargs):
 	if is_local():
 		return
-
-	inputs = Input.objects.filter(**kwargs).distinct()
-	if inputs.count() == 0:
-		return
-	inp = inputs[0]
-
-	team = inp.task.process_type.team_created_by
-
+	taskID = kwargs['taskID']
+	creatingTaskID = kwargs['creatingTaskID']
+	task = Task.objects.get(pk=taskID)
+	creatingTask = Task.objects.get(pk=creatingTaskID)
+	team = task.product_type.team_created_by
 	if not is_dandelion(team):
 		return
-
-	if inp.task.product_type == inp.input_item.creating_task.product_type:
+	if task.product_type == creatingTask.product_type:
 		return
 
 	# for each input, if any of the items' creating tasks have a different product type from the input task
 	end_date = datetime.today() + timedelta(days=1)
-	start_date = datetime.today() - timedelta(days=5)
+	start_date = datetime.today() - timedelta(days=14)
+
 	queryset = Input.objects.filter(
 		task__process_type__team_created_by=team,
 		task__is_trashed=False,
