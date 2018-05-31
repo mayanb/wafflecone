@@ -600,6 +600,15 @@ class GoalProductType(models.Model):
 	goal = models.ForeignKey(Goal, related_name="goal_product_types", on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, related_name="goal_product_types", on_delete=models.CASCADE)
 
+
+class Pin(models.Model):
+	userprofile = models.ForeignKey(UserProfile, related_name="pins", on_delete=models.CASCADE, default=1)
+	process_type = models.ForeignKey(ProcessType, related_name='pins', on_delete=models.CASCADE)
+	product_types = models.ManyToManyField(ProductType)
+	is_trashed = models.BooleanField(default=False, db_index=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	all_product_types = models.BooleanField(default=False)
+
 ##################################
 #                                #
 #    POLYMER SECOENDARY MODELS   #

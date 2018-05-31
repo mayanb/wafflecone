@@ -15,6 +15,7 @@ class TestProcessTypes(APITestCase):
 		data = {
 			'created_by': self.user_profile.user.id,
 			'team_created_by': self.user_profile.team.id,
+			'icon': 'process-icon.png',
 			'name': 'process-name',
 			'code': 'process-code',
 			'output_desc': 'Output Description',
@@ -120,16 +121,20 @@ class TestProcessTypes(APITestCase):
 		process_type = ProcessTypeFactory(name='old-name')
 		url = reverse('process_type_detail', args=[process_type.id])
 		data = {
-			'created_by': process_type.created_by.id,
-			'team_created_by': process_type.team_created_by.id,
-			'name': 'new-name',
-			'code': 'new-code',
-			'default_amount': 200
+			'created_by': self.user_profile.user.id,
+			'team_created_by': self.user_profile.team.id,
+			'name': 'new-process-name',
+			'code': 'new-process-code',
+			'icon': 'new-icon',
+			'output_desc': 'new-output_desc',
+			'default_amount': 333,
+			'unit': 'new-unit',
+			'is_trashed': False,
 		}
 		response = self.client.put(url, data, format='json')
 		self.assertEqual(response.status_code, 200)
 		process_type = ProcessType.objects.get(id=process_type.id)
-		self.assertEqual(process_type.name, 'new-name')
-		self.assertEqual(process_type.code, 'new-code')
+		self.assertEqual(process_type.name, 'new-process-name')
+		self.assertEqual(process_type.code, 'new-process-code')
 
 
