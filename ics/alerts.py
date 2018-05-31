@@ -38,9 +38,13 @@ def is_dandelion(team):
 
 
 @task
-def check_flagged_tasks_alerts(task):
+def check_flagged_tasks_alerts(**kwargs):
 	if is_local():
 		return
+	tasks = Task.objects.filter(**kwargs).distinct()
+	if tasks.count() == 0:
+		return
+	task = tasks[0]
 
 	if not task.was_flag_changed:
 		return
@@ -61,9 +65,14 @@ def check_flagged_tasks_alerts(task):
 
 
 @task
-def check_goals_alerts(task):
+def check_goals_alerts(**kwargs):
 	if is_local():
 		return
+
+	tasks = Task.objects.filter(**kwargs).distinct()
+	if tasks.count() == 0:
+		return
+	task = tasks[0]
 
 	team = task.process_type.team_created_by
 	queryset = Goal.objects.filter(userprofile__team=team)
@@ -102,16 +111,21 @@ def check_goals_alerts(task):
 
 
 @task
-def check_anomalous_inputs_alerts(input):
+def check_anomalous_inputs_alerts(**kwargs):
 	if is_local():
 		return
 
-	team = input.task.process_type.team_created_by
+	inputs = Input.objects.filter(**kwargs).distinct()
+	if inputs.count() == 0:
+		return
+	inp = inputs[0]
+
+	team = inp.task.process_type.team_created_by
 
 	if not is_dandelion(team):
 		return
 
-	if input.task.product_type == input.input_item.creating_task.product_type:
+	if inp.task.product_type == inp.input_item.creating_task.product_type:
 		return
 
 	# for each input, if any of the items' creating tasks have a different product type from the input task
