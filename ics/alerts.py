@@ -136,5 +136,4 @@ def check_anomalous_inputs_alerts(**kwargs):
 	) \
 		.exclude(Q(input_item__creating_task__product_type__id=F('task__product_type__id'))) \
 		.select_related('task', 'task__process_type', 'task__process_type', 'input_item', 'input_item__creating_task')
-	print(queryset.count())
 	create_alerts(team, queryset.all(), AlertInputSerializer, 'ai')
