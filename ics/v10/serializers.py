@@ -5,14 +5,16 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from smtplib import SMTPException
 from uuid import uuid4
-from django.db.models import F, Sum, Max, When, Case
+from django.db.models import F, Q, Sum, Max, When, Case
 from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 from ics.utilities import *
+import operator
 import pytz
 import re
 from ics.v10.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -658,6 +660,29 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		inputprods = validated_data.get('input_products', '')
 		goal_product_types = []
 
+		# if we didn't mean to put all product types in this goal:
+		if (inputprods and inputprods != "ALL"):
+			goal_product_types = inputprods.strip().split(',')
+
+		# REJECT DUPLICATE GOALS:
+		# Filter for duplicates using all properties except Product Types
+		possible_duplicates = Goal.objects.filter(
+												 timerange=validated_data.get('timerange', ''),
+												 process_type=validated_data.get('process_type', ''),
+												 # all_product_types=(inputprods == "ALL"),
+												 team=validated_data.get('team', '')
+		)
+
+		# Filter for duplicate Product Types
+		annotated_possible_duplicates = possible_duplicates.annotate(arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id')).values_list('id','arr')
+		clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
+		query = reduce(operator.or_, clauses)
+		num_duplicates = annotated_possible_duplicates.filter(query).count()
+		if num_duplicates is not 0:
+			print('%d duplicates.' % num_duplicates)
+			raise serializers.ValidationError({'process_type': 'A goal already exists for this Time Frame, Product Type, and Process Type(s) combination'})
+
+		# All Clear: go ahead and create the goal
 		goal = Goal.objects.create(
 			userprofile=validated_data.get('userprofile', ''),
 			process_type=validated_data.get('process_type', ''),
@@ -666,27 +691,10 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 			all_product_types=(inputprods == "ALL")
 		)
 
-		# if we didn't mean to put all product types in this goal:
-		if (inputprods and inputprods != "ALL"):
-			goal_product_types = inputprods.strip().split(',')
-
-		# if we did mean to put all product types in this goal:	
-		# if not goal_product_types:
-		# 	team = UserProfile.objects.get(pk=userprofile.id).team
-		# 	goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
-		# 	goal_product_types = []
-		# 	for gp in goal_product_types_objects:
-		# 		goal_product_types.append(gp.id)
-
+		# Create many-to-many relationships between Goal and Product Types
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 
-		possibleDuplicates = Goal.objects.filter(is_trashed=False, timerange=validated_data.get('timerange', ''), process_type=validated_data.get('process_type', ''), all_product_types=(inputprods == "ALL"), team=validated_data.get('team', ''))
-		# WHERE I'M STUCK: I'm unsure how to efficiently/DJANGO-esquely check if there are any other goals with all the same process_types
-		for g in possibleDuplicates:
-			print (g)
-			# for product_type in g.product_types:
-			# 	print (product_type)
 		return goal
 
 	class Meta:
