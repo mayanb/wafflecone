@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from ics.models import *
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -679,12 +680,27 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
+
+		possibleDuplicates = Goal.objects.filter(is_trashed=False, timerange=validated_data.get('timerange', ''), process_type=validated_data.get('process_type', ''), all_product_types=(inputprods == "ALL"), team=validated_data.get('team', ''))
+		# WHERE I'M STUCK: I'm unsure how to efficiently/DJANGO-esquely check if there are any other goals with all the same process_types
+		for g in possibleDuplicates:
+			print (g)
+			# for product_type in g.product_types:
+			# 	print (product_type)
 		return goal
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'created_at')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'team', 'created_at')
 		extra_kwargs = {'input_products': {'write_only': True} }
+		# validators = [
+		# 	UniqueTogetherValidator(
+		# 		queryset=Goal.objects.filter(is_trashed=False),
+		# 		fields=('timerange', 'process_type', 'team'),
+		# 		# fields=('timerange', 'all_product_types', 'process_type', 'product_types''),
+		# 		message='Whoops! That goal already exists.'
+		# 	)
+		# ]
 
 
 def reorder(instance, validated_data, dataset):
