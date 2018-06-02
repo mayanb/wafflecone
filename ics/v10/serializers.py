@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from ics.models import *
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -699,7 +698,6 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		# Create many-to-many relationships between Goal and Product Types
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
-
 		return goal
 
 	class Meta:
