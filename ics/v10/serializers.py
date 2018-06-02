@@ -658,36 +658,42 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 	def create(self, validated_data):
 		userprofile = validated_data.get('userprofile', '')
 		inputprods = validated_data.get('input_products', '')
+		process_type = validated_data.get('process_type', '')
+		goals_goal = validated_data.get('goal', '')
+		timerange = validated_data.get('timerange', '')
+		all_product_types = (inputprods == "ALL")
 		goal_product_types = []
 
 		# if we didn't mean to put all product types in this goal:
-		if (inputprods and inputprods != "ALL"):
+		if (inputprods and not all_product_types):
 			goal_product_types = inputprods.strip().split(',')
 
 		# REJECT DUPLICATE GOALS:
 		# Filter for duplicates using all properties except Product Types
 		possible_duplicates = Goal.objects.filter(is_trashed=False,
-												 timerange=validated_data.get('timerange', ''),
-												 process_type=validated_data.get('process_type', ''),
+												 timerange=timerange,
+												 process_type=process_type,
 												 userprofile__team=userprofile.team
 		)
 
 		# Filter for duplicate Product Types
-		annotated_possible_duplicates = possible_duplicates.annotate(arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id')).values_list('id','arr')
-		clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
-		query = reduce(operator.or_, clauses)
-		num_duplicates = annotated_possible_duplicates.filter(query).count()
+		product_clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
+		has_all_products = reduce(operator.or_, product_clauses)
+		annotated_possible_duplicates = possible_duplicates.annotate(
+			arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id')
+		) \
+			.values_list('id', 'arr')
+		num_duplicates = annotated_possible_duplicates.filter(has_all_products).count()
 		if num_duplicates is not 0:
-			print('%d duplicates.' % num_duplicates)
 			raise serializers.ValidationError({'process_type': 'A goal already exists for this Time Frame, Product Type, and Process Type(s) combination'})
 
 		# All Clear: go ahead and create the goal
 		goal = Goal.objects.create(
 			userprofile=userprofile,
-			process_type=validated_data.get('process_type', ''),
-			goal=validated_data.get('goal', ''),
-			timerange=validated_data.get('timerange', ''),
-			all_product_types=(inputprods == "ALL")
+			process_type=process_type,
+			goal=goals_goal,
+			timerange=timerange,
+			all_product_types=all_product_types
 		)
 
 		# Create many-to-many relationships between Goal and Product Types
@@ -700,14 +706,6 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		model = Goal
 		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'created_at')
 		extra_kwargs = {'input_products': {'write_only': True} }
-		# validators = [
-		# 	UniqueTogetherValidator(
-		# 		queryset=Goal.objects.filter(is_trashed=False),
-		# 		fields=('timerange', 'process_type', 'team'),
-		# 		# fields=('timerange', 'all_product_types', 'process_type', 'product_types''),
-		# 		message='Whoops! That goal already exists.'
-		# 	)
-		# ]
 
 
 def reorder(instance, validated_data, dataset):
