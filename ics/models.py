@@ -569,7 +569,6 @@ class Goal(models.Model):
 	)
 
 	userprofile = models.ForeignKey(UserProfile, related_name="goals", on_delete=models.CASCADE, default=1)
-	team = models.ForeignKey(Team, related_name="goals", on_delete=models.CASCADE, default=1)
 	process_type = models.ForeignKey(ProcessType, related_name='goals', on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, null=True, related_name='goals', on_delete=models.CASCADE)
 	product_types = models.ManyToManyField(ProductType, through='GoalProductType')

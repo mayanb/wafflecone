@@ -666,11 +666,10 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 		# REJECT DUPLICATE GOALS:
 		# Filter for duplicates using all properties except Product Types
-		possible_duplicates = Goal.objects.filter(
+		possible_duplicates = Goal.objects.filter(is_trashed=False,
 												 timerange=validated_data.get('timerange', ''),
 												 process_type=validated_data.get('process_type', ''),
-												 # all_product_types=(inputprods == "ALL"),
-												 team=validated_data.get('team', '')
+												 userprofile__team=userprofile.team
 		)
 
 		# Filter for duplicate Product Types
@@ -684,7 +683,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 		# All Clear: go ahead and create the goal
 		goal = Goal.objects.create(
-			userprofile=validated_data.get('userprofile', ''),
+			userprofile=userprofile,
 			process_type=validated_data.get('process_type', ''),
 			goal=validated_data.get('goal', ''),
 			timerange=validated_data.get('timerange', ''),
@@ -699,7 +698,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'team', 'created_at')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'created_at')
 		extra_kwargs = {'input_products': {'write_only': True} }
 		# validators = [
 		# 	UniqueTogetherValidator(
