@@ -655,6 +655,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
+		validation_error_msg = {'process_type': 'A goal already exists for this Time Frame, Product Type, and Process Type(s) combination'}
 		userprofile = validated_data.get('userprofile', '')
 		inputprods = validated_data.get('input_products', '')
 		process_type = validated_data.get('process_type', '')
@@ -667,26 +668,35 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		if (inputprods and not all_product_types):
 			goal_product_types = inputprods.strip().split(',')
 
-		# REJECT DUPLICATE GOALS:
+		# 1. Reject Duplicate Goal (if needed):
 		# Filter for duplicates using all properties except Product Types
-		possible_duplicates = Goal.objects.filter(is_trashed=False,
-												 timerange=timerange,
-												 process_type=process_type,
-												 userprofile__team=userprofile.team
+		possible_duplicates = Goal.objects.filter(
+			is_trashed=False,
+			all_product_types=all_product_types,
+			timerange=timerange,
+			process_type=process_type,
+			userprofile__team=userprofile.team
 		)
 
 		# Filter for duplicate Product Types
-		product_clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
-		has_all_products = reduce(operator.or_, product_clauses)
-		annotated_possible_duplicates = possible_duplicates.annotate(
-			arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id')
-		) \
-			.values_list('id', 'arr')
-		num_duplicates = annotated_possible_duplicates.filter(has_all_products).count()
-		if num_duplicates is not 0:
-			raise serializers.ValidationError({'process_type': 'A goal already exists for this Time Frame, Product Type, and Process Type(s) combination'})
+		# Check all_product_types duplicates
+		if all_product_types:
+			if possible_duplicates.count() is not 0:
+				raise serializers.ValidationError(validation_error_msg)
+		else: # we need to check product_ids
+			product_clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
+			has_all_products = reduce(operator.or_, product_clauses)
+			annotated_possible_duplicates = possible_duplicates.annotate(
+				arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id')
+			) \
+				.values_list('arr', flat=True)
+			duplicates = annotated_possible_duplicates.filter(has_all_products)
+			for duplicate in duplicates.all():
+				# Prevent [1,2] from matching [1,2,3]:
+				if len(duplicate) == len(goal_product_types):
+					raise serializers.ValidationError(validation_error_msg)
 
-		# All Clear: go ahead and create the goal
+		# 2. All Clear: Create Goal
 		goal = Goal.objects.create(
 			userprofile=userprofile,
 			process_type=process_type,
