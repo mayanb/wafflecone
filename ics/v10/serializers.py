@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from smtplib import SMTPException
 from uuid import uuid4
-from django.db.models import F, Q, Sum, Max, When, Case
+from django.db.models import F, Q, Sum, Max, When, Case, Count
 from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
@@ -679,22 +679,19 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		)
 
 		# Filter for duplicate Product Types
-		# Check all_product_types duplicates
-		if all_product_types:
-			if possible_duplicates.count() is not 0:
-				raise serializers.ValidationError(validation_error_msg)
-		else: # we need to check product_ids
+		if not all_product_types: # we need to check product_ids
 			product_clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
 			has_all_products = reduce(operator.or_, product_clauses)
 			annotated_possible_duplicates = possible_duplicates.annotate(
-				arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id')
+				arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id'),
+				count=Count('goal_product_types__product_type__id')
 			) \
-				.values_list('arr', flat=True)
-			duplicates = annotated_possible_duplicates.filter(has_all_products)
-			for duplicate in duplicates.all():
-				# Prevent [1,2] from matching [1,2,3]:
-				if len(duplicate) == len(goal_product_types):
-					raise serializers.ValidationError(validation_error_msg)
+				.values_list('id', 'arr', 'count')
+			# Count prevents [1,2] from matching [1,2,3]:
+			possible_duplicates = annotated_possible_duplicates.filter(has_all_products).filter(count=len(goal_product_types))
+
+		if possible_duplicates.count() is not 0:
+			raise serializers.ValidationError(validation_error_msg)
 
 		# 2. All Clear: Create Goal
 		goal = Goal.objects.create(
