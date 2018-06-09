@@ -21,7 +21,7 @@ urlpatterns = [
     url(r'^userprofiles/change-username-password/(?P<pk>[0-9]+)/$', views.UserChangeUsernamePassword.as_view()),
 
     url(r'^teams/$', views.TeamList.as_view()),
-    url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGet.as_view()),
+    url(r'^teams/(?P<pk>[0-9]+)/$', views.TeamGetAndEdit.as_view()),
     url(r'^teams/create/$', views.TeamCreate.as_view(), name='create_team'),
 
     url(r'^$', views.index, name='index'),

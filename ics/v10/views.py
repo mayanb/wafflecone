@@ -189,7 +189,7 @@ class TeamList(generics.ListAPIView):
       .prefetch_related('processes', 'products', 'userprofiles')
 
 # teams/[pk]/
-class TeamGet(generics.RetrieveAPIView):
+class TeamGetAndEdit(generics.RetrieveUpdateAPIView):
   queryset = Team.objects.all()\
     .prefetch_related('processes', 'products', 'userprofiles')
   serializer_class = TeamSerializer

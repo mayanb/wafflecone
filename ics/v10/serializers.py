@@ -453,10 +453,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 	first_name = serializers.CharField(source='user.first_name')
 	last_name = serializers.CharField(source='user.last_name')
 	walkthrough = serializers.IntegerField(read_only=True)
+	task_label_type = serializers.IntegerField(source='team.task_label_type')
 
 	class Meta:
 		model = UserProfile
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type')
 
 
 def sendEmail(userprofile_id):
@@ -551,7 +552,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes')
+		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type')
 # 
 
 class BasicPinSerializer(serializers.ModelSerializer):
