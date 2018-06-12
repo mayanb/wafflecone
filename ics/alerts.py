@@ -38,9 +38,13 @@ def is_dandelion(team):
 
 
 @task
-def check_flagged_tasks_alerts(task):
+def check_flagged_tasks_alerts(**kwargs):
 	if is_local():
 		return
+	tasks = Task.objects.filter(**kwargs).distinct()
+	if tasks.count() == 0:
+		return
+	task = tasks[0]
 
 	if not task.was_flag_changed:
 		return
@@ -61,9 +65,14 @@ def check_flagged_tasks_alerts(task):
 
 
 @task
-def check_goals_alerts(task):
+def check_goals_alerts(**kwargs):
 	if is_local():
 		return
+
+	tasks = Task.objects.filter(**kwargs).distinct()
+	if tasks.count() == 0:
+		return
+	task = tasks[0]
 
 	team = task.process_type.team_created_by
 	queryset = Goal.objects.filter(userprofile__team=team)
@@ -102,21 +111,23 @@ def check_goals_alerts(task):
 
 
 @task
-def check_anomalous_inputs_alerts(input):
+def check_anomalous_inputs_alerts(**kwargs):
 	if is_local():
 		return
-
-	team = input.task.process_type.team_created_by
-
+	taskID = kwargs['taskID']
+	creatingTaskID = kwargs['creatingTaskID']
+	task = Task.objects.get(pk=taskID)
+	creatingTask = Task.objects.get(pk=creatingTaskID)
+	team = task.product_type.team_created_by
 	if not is_dandelion(team):
 		return
-
-	if input.task.product_type == input.input_item.creating_task.product_type:
+	if task.product_type == creatingTask.product_type:
 		return
 
 	# for each input, if any of the items' creating tasks have a different product type from the input task
 	end_date = datetime.today() + timedelta(days=1)
-	start_date = datetime.today() - timedelta(days=5)
+	start_date = datetime.today() - timedelta(days=14)
+
 	queryset = Input.objects.filter(
 		task__process_type__team_created_by=team,
 		task__is_trashed=False,

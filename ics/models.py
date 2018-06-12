@@ -23,6 +23,7 @@ class InviteCode(models.Model):
 class Team(models.Model):
 	name = models.CharField(max_length=50, unique=True)
 	timezone = models.CharField(max_length=50, default=pytz.timezone('US/Pacific').zone)
+	task_label_type = models.IntegerField(default=0)
 
 	def __str__(self):
 		return self.name

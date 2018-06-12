@@ -4,14 +4,16 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from smtplib import SMTPException
 from uuid import uuid4
-from django.db.models import F, Sum, Max, When, Case
+from django.db.models import F, Q, Sum, Max, When, Case, Count
 from django.db.models.functions import Coalesce
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 from ics.utilities import *
+import operator
 import pytz
 import re
 from ics.v10.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -451,10 +453,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 	first_name = serializers.CharField(source='user.first_name')
 	last_name = serializers.CharField(source='user.last_name')
 	walkthrough = serializers.IntegerField(read_only=True)
+	task_label_type = serializers.IntegerField(source='team.task_label_type')
 
 	class Meta:
 		model = UserProfile
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type')
 
 
 def sendEmail(userprofile_id):
@@ -549,7 +552,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes')
+		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type')
 # 
 
 class BasicPinSerializer(serializers.ModelSerializer):
@@ -653,30 +656,54 @@ class GoalCreateSerializer(serializers.ModelSerializer):
 		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
+		validation_error_msg = {'process_type': 'A goal already exists for this Time Frame, Product Type, and Process Type(s) combination'}
 		userprofile = validated_data.get('userprofile', '')
 		inputprods = validated_data.get('input_products', '')
+		process_type = validated_data.get('process_type', '')
+		goals_goal = validated_data.get('goal', '')
+		timerange = validated_data.get('timerange', '')
+		all_product_types = (inputprods == "ALL")
 		goal_product_types = []
 
-		goal = Goal.objects.create(
-			userprofile=validated_data.get('userprofile', ''),
-			process_type=validated_data.get('process_type', ''),
-			goal=validated_data.get('goal', ''),
-			timerange=validated_data.get('timerange', ''),
-			all_product_types=(inputprods == "ALL")
-		)
-
 		# if we didn't mean to put all product types in this goal:
-		if (inputprods and inputprods != "ALL"):
+		if (inputprods and not all_product_types):
 			goal_product_types = inputprods.strip().split(',')
 
-		# if we did mean to put all product types in this goal:	
-		# if not goal_product_types:
-		# 	team = UserProfile.objects.get(pk=userprofile.id).team
-		# 	goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
-		# 	goal_product_types = []
-		# 	for gp in goal_product_types_objects:
-		# 		goal_product_types.append(gp.id)
+		# 1. Reject Duplicate Goal (if needed):
+		# Filter for duplicates using all properties except Product Types
+		possible_duplicates = Goal.objects.filter(
+			is_trashed=False,
+			all_product_types=all_product_types,
+			timerange=timerange,
+			process_type=process_type,
+			userprofile__team=userprofile.team
+		)
 
+		# Filter for duplicate Product Types
+		if not all_product_types: # we need to check product_ids
+			product_clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
+			has_all_products = reduce(operator.or_, product_clauses)
+			annotated_possible_duplicates = possible_duplicates.annotate(
+				arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id'),
+				count=Count('goal_product_types__product_type__id')
+			) \
+				.values_list('id', 'arr', 'count')
+			# Count prevents [1,2] from matching [1,2,3]:
+			possible_duplicates = annotated_possible_duplicates.filter(has_all_products).filter(count=len(goal_product_types))
+
+		if possible_duplicates.count() is not 0:
+			raise serializers.ValidationError(validation_error_msg)
+
+		# 2. All Clear: Create Goal
+		goal = Goal.objects.create(
+			userprofile=userprofile,
+			process_type=process_type,
+			goal=goals_goal,
+			timerange=timerange,
+			all_product_types=all_product_types
+		)
+
+		# Create many-to-many relationships between Goal and Product Types
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 		return goal
