@@ -1,15 +1,15 @@
 from rest_framework.response import Response
 from django.db.models.functions import Coalesce, Concat
 from django.contrib.postgres.aggregates.general import ArrayAgg
-from ics.v10.calculated_fields_serializers import *
+from ics.v11.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
-from ics.v10.queries.tasks import *
-from ics.v10.queries.processes_and_products import *
+from ics.v11.queries.tasks import *
+from ics.v11.queries.processes_and_products import *
 import datetime
 from django.http import HttpResponse, HttpResponseForbidden
 import pytz
@@ -17,7 +17,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v10.queries.inventory import inventory_amounts
+from ics.v11.queries.inventory import inventory_amounts
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)

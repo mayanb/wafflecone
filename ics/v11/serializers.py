@@ -12,7 +12,7 @@ from ics.utilities import *
 import operator
 import pytz
 import re
-from ics.v10.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
@@ -552,7 +552,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type')
+		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
 # 
 
 class BasicPinSerializer(serializers.ModelSerializer):
