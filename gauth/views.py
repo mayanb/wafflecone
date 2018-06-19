@@ -186,7 +186,6 @@ def create_csv_response(rows):
 
 
 def single_process_array(process, params):
-  easy_format = '%Y-%m-%d %H:%M'
   dt = datetime.datetime
   if not process or not params['start'] or not params['end'] or not params['team']:
     return [[]]
@@ -219,6 +218,11 @@ def single_process_array(process, params):
     first_use_date=Min('items__inputs__task__created_at'))
 
   timezone = pytz.timezone(Team.objects.get(pk=params['team']).timezone)
+  time_format = 'n'
+  if(time_format == 'm'):
+    easy_format = '%Y-%m-%d %H:%M %p'
+  else:
+    easy_format = '%Y-%m-%d %I:%M %p'
 
   for t in tasks:
     tid = t.id
