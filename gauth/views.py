@@ -218,11 +218,12 @@ def single_process_array(process, params):
     first_use_date=Min('items__inputs__task__created_at'))
 
   timezone = pytz.timezone(Team.objects.get(pk=params['team']).timezone)
-  time_format = 'n'
-  if(time_format == 'm'):
-    easy_format = '%Y-%m-%d %H:%M %p'
-  else:
+
+  # pass time_format in params
+  if(params['time_format'] == 'n'):
     easy_format = '%Y-%m-%d %I:%M %p'
+  else:
+    easy_format = '%Y-%m-%d %H:%M %p'
 
   for t in tasks:
     tid = t.id
