@@ -279,7 +279,7 @@ class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent')
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent', 'updated_at')
 
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
