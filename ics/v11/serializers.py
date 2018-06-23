@@ -553,7 +553,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
+		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type')
   
 
 class BasicPinSerializer(serializers.ModelSerializer):

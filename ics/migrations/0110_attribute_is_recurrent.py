@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ics', '0110_team_time_format'),
+        ('ics', '0109_team_task_label_type'),
     ]
 
     operations = [
