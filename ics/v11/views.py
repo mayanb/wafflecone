@@ -700,6 +700,12 @@ class TaskAttributeList(generics.ListCreateAPIView):
   serializer_class = BasicTaskAttributeSerializer
   filter_class = TaskAttributeFilter
 
+  
+class TaskAttributeCreate(generics.CreateAPIView):
+  queryset = TaskAttribute.objects.all()
+  serializer_class = CreateTaskAttributeSerializer
+
+
 class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = NestedTaskAttributeSerializer
