@@ -21,9 +21,15 @@ class InviteCode(models.Model):
 	is_used = models.BooleanField(default=False, db_index=True)
 
 class Team(models.Model):
+	TIME_FORMATS = (
+		('m', 'military'),
+		('n', 'normal')
+	)
+
 	name = models.CharField(max_length=50, unique=True)
 	timezone = models.CharField(max_length=50, default=pytz.timezone('US/Pacific').zone)
 	task_label_type = models.IntegerField(default=0)
+	time_format = models.CharField(max_length=1, choices=TIME_FORMATS, default='n')
 
 	def __str__(self):
 		return self.name
