@@ -695,14 +695,10 @@ class TaskAttributeFilter(django_filters.rest_framework.FilterSet):
         model = TaskAttribute
         fields = ['task', 'attribute']
 
-class TaskAttributeList(generics.ListAPIView):
+class TaskAttributeList(generics.ListCreateAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = BasicTaskAttributeSerializer
   filter_class = TaskAttributeFilter
-
-class TaskAttributeCreate(generics.CreateAPIView):
-  queryset = TaskAttribute.objects.all()
-  serializer_class = CreateTaskAttributeSerializer
 
 
 class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):

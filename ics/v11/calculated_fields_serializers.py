@@ -84,27 +84,6 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 		)
 
 
-class CreateTaskAttributeSerializer(serializers.ModelSerializer):
-	att_name = serializers.CharField(source='attribute.name', read_only=True)
-	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
-
-	class Meta:
-		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
-
-	def create(self, validated_data):
-		print(validated_data)
-		attribute = validated_data.get('attribute')
-		task = validated_data.get('task')
-		value = validated_data.get('value')
-
-		# create the TaskAttribute object and set its value
-		attribute_obj = attribute
-		task_obj = task
-		new_task_attribute = TaskAttribute.objects.create(attribute=attribute_obj, task=task_obj, value=value)
-		return new_task_attribute
-
-
 class NestedItemSerializer(serializers.ModelSerializer):
 	creating_task = FlatTaskSerializer(many=False, read_only=True)
 

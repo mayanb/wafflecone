@@ -38,7 +38,7 @@ class AttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype')
+		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype', 'is_recurrent')
 
 
 class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
@@ -79,7 +79,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
+		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values', 'is_recurrent')
 		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
 
@@ -275,10 +275,11 @@ class AlertInputSerializer(serializers.ModelSerializer):
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
+	is_recurrent = serializers.CharField(source='attribute.is_recurrent', read_only=True)
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent', 'updated_at')
 
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):

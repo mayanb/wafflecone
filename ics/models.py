@@ -186,6 +186,7 @@ class Attribute(models.Model):
 		default=constants.TEXT_TYPE
 	)
 	required = models.BooleanField(default=True)
+	is_recurrent = models.BooleanField(default=False)
 
 	def duplicate(self, duplicate_process):
 		return Attribute.objects.create(
