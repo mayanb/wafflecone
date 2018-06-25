@@ -188,7 +188,7 @@ class Attribute(models.Model):
 	required = models.BooleanField(default=True)
 
 	def duplicate(self, duplicate_process):
-		return Attribute.objects.create(
+		attr = Attribute.objects.create(
 			process_type=duplicate_process,
 			name=self.name,
 			rank=self.rank,
@@ -196,6 +196,9 @@ class Attribute(models.Model):
 			datatype=self.datatype,
 			required=self.required,
 		)
+		attr.rank = self.rank
+		attr.save()
+		return attr
 
 	def __str__(self):
 		return self.name
