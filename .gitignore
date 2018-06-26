@@ -10,3 +10,4 @@ dump.sql
 local-env
 .pytest_cache
 
+local-env.sh
