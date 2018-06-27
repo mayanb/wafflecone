@@ -542,6 +542,7 @@ class TeamSerializer(serializers.ModelSerializer):
 	processes = serializers.SerializerMethodField('getProcesses')
 	products = serializers.SerializerMethodField('getProducts')
 	users = UserProfileSerializer(source='userprofiles', many=True, read_only=True)
+	
 
 	def getProcesses(self, team):
 		return ProcessTypeWithUserSerializer(team.processes.filter(is_trashed=False), many=True).data
@@ -552,7 +553,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type')
+		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
 # 
 
 class BasicPinSerializer(serializers.ModelSerializer):
