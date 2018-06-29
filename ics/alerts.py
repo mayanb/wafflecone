@@ -8,8 +8,8 @@ from ics.utilities import last_week_range, last_month_range
 import simplejson as json
 import os
 
-from ics.v10.calculated_fields_serializers import FlatTaskSerializer
-from ics.v10.serializers import BasicGoalSerializer, AlertInputSerializer
+from ics.v11.calculated_fields_serializers import FlatTaskSerializer
+from ics.v11.serializers import BasicGoalSerializer, AlertInputSerializer
 
 
 def create_alerts(team, objects, serializer, alert_type):
@@ -93,13 +93,16 @@ def check_goals_alerts(**kwargs):
 		if (goal.is_trashed and goal.trashed_time < end) or goal.created_at > start:
 			continue
 
-		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
-		amount = Item.objects.filter(
+		query = Item.objects.filter(
 			creating_task__process_type=goal.process_type,
-			creating_task__product_type__in=product_types,
 			creating_task__is_trashed=False,
 			creating_task__created_at__range=(start, end),
-		).aggregate(amount_sum=Sum('amount'))['amount_sum']
+		)
+		if not goal.all_product_types:
+				product_types = ProductType.objects.filter(goal_product_types__goal=goal)
+				query = query.filter(creating_task__product_type__in=product_types)
+
+		amount = query.aggregate(amount_sum=Sum('amount'))['amount_sum']
 
 		if amount >= goal.goal:
 			complete_goals.append(goal)

@@ -31,7 +31,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SECRET_KEY = os.environ.get("WAFFLE_DJANGO_SECRET_KEY", '1234')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get("WAFFLE_DEBUG")
 
 
 # Application definition
@@ -128,6 +128,9 @@ if 'test' in sys.argv:
 
 #DATABASES['default'] =  dj_database_url.config()
 
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
+
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -147,7 +150,7 @@ JWT_AUTH = {
     'JWT_REFRESH_EXPIRATION_DELTA' : datetime.timedelta(days=21),
 }
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'ics.v7.serializers.UserDetailSerializer',
+    'USER_DETAILS_SERIALIZER': 'ics.v11.serializers.UserDetailSerializer',
 }
 
 # Password validation
@@ -177,10 +180,6 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-
-# Update database configuration with $DATABASE_URL.
-db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
