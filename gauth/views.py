@@ -17,6 +17,8 @@ from django.core import serializers
 from django.contrib.postgres.search import SearchQuery
 import pytz
 import inflect
+import ics.constants
+from django.utils import dateparse
 
 #Use simplejson to handle serializing Decimal objects
 import simplejson as json
@@ -218,12 +220,11 @@ def single_process_array(process, params):
     first_use_date=Min('items__inputs__task__created_at'))
 
   timezone = pytz.timezone(Team.objects.get(pk=params['team']).timezone)
-
-  # pass time_format in params
-  if(params['time_format'] == 'n'):
+  time_format_type = Team.objects.get(pk=params['team']).time_format
+  
+  easy_format = '%Y-%m-%d %H:%M'
+  if time_format_type == 'n':
     easy_format = '%Y-%m-%d %I:%M %p'
-  else:
-    easy_format = '%Y-%m-%d %H:%M %p'
 
   for t in tasks:
     tid = t.id
@@ -240,11 +241,16 @@ def single_process_array(process, params):
     results = [tid, display, product_type, inputs, formatted_batch_size, creation_date, last_edited_date, first_use_date]
     vals = dict(TaskAttribute.objects.filter(task=t).values_list('attribute__id', 'value'))
     for attr in attrs:
-      results = results + [vals.get(attr.id, '')]
-    # writer.writerow(results)
+      new_val = vals.get(attr.id, '')
+      if attr.datatype == constants.TIME_TYPE:
+        is_valid = dateparse.parse_datetime(new_val)
+        if(is_valid):
+          new_val = is_valid.astimezone(timezone).strftime(easy_format)
+      results = results + [new_val]
     data.append(results)
 
   return data
+
 
 def convert_to_readable_time(time):
   arr = str(time).split('-')
