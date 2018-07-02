@@ -25,4 +25,4 @@ class TestTaskDetail(APITestCase):
 		AttributeFactory(process_type=self.process_type, is_trashed=True)
 		response = self.client.get(self.url, format='json')
 		self.assertEqual(response.status_code, 200)
-		self.assertEqual(len(response.data['process_type']['attributes']), 0)
+		self.assertEqual(len(response.data['process_type']['attributes']), 1)
