@@ -187,17 +187,32 @@ def create_csv_response(rows):
   return response
 
 
-# single_process_array helper method
+# ** single_process_array helper methods **
+
+# Returns dict of {attribute_id: (value, created_at), ...}
 def get_task_attributes_dict(task_attributes):
   vals = {}
   for ta in task_attributes:
     ta_id = ta[0]
-    # Store last 2 values of tuple (id, value, created_at)
-    if vals.get(ta_id, False):
-      vals[ta_id].append(ta[-2:])
-    else:
-      vals[ta_id] = [ta[-2:]]
+    vals.setdefault(ta_id, []).append(ta[-2:])
   return vals
+
+def get_formatted_value(value_and_date_created, attr, easy_format, timezone):
+  formatted_value = value_and_date_created[0]
+  created_at = value_and_date_created[1].astimezone(timezone).strftime(easy_format)
+  # Handle Time
+  if attr.datatype == constants.TIME_TYPE:
+    is_valid = dateparse.parse_datetime(formatted_value)
+    if (is_valid):
+      formatted_value = is_valid.astimezone(timezone).strftime(easy_format)
+  # Handle Yes/No Booleans
+  elif attr.datatype == constants.BOOLEAN_TYPE:
+    formatted_value = 'Yes' if formatted_value == 'true' else 'No'
+
+  if attr.is_recurrent:
+    return '%s [%s]' % (str(formatted_value), created_at)
+  else:
+    return str(formatted_value)
 
 def single_process_array(process, params):
   dt = datetime.datetime
@@ -238,23 +253,6 @@ def single_process_array(process, params):
   if time_format_type == 'n':
     easy_format = '%Y-%m-%d %I:%M %p'
 
-  def get_formatted_value(value_and_date_created, attr, easy_format):
-    formatted_value = value_and_date_created[0]
-    created_at = value_and_date_created[1].astimezone(timezone).strftime(easy_format)
-    # Handle Time
-    if attr.datatype == constants.TIME_TYPE:
-      is_valid = dateparse.parse_datetime(formatted_value)
-      if (is_valid):
-        formatted_value = is_valid.astimezone(timezone).strftime(easy_format)
-    # Handle Yes/No Booleans
-    elif attr.datatype == constants.BOOLEAN_TYPE:
-      formatted_value = 'Yes' if formatted_value == 'true' else 'No'
-
-    if attr.is_recurrent:
-      return '%s [%s]' % (str(formatted_value), created_at)
-    else:
-      return str(formatted_value)
-
   for t in tasks:
     tid = t.id
     display = str(t)
@@ -272,16 +270,13 @@ def single_process_array(process, params):
     values = get_task_attributes_dict(task_attributes)
 
     for attr in attrs:
+      attr_values = values.get(attr.id, [])
       value = ''
-      attr_values = values.get(attr.id, False)
-      if not attr_values:
-        value = ''
-      elif (attr.is_recurrent):
-        value = ', '.join(get_formatted_value(value_and_date_created, attr, easy_format) for value_and_date_created in attr_values)
-          # get_recurrent_attribute_values_string(attr_values, easy_format)
-      else:
-        # Values sorted old-new due to TaskAttribute.objects.filter(task=t).order_by('created_at').
-        value = get_formatted_value(attr_values[-1], attr, easy_format)
+      if (attr.is_recurrent):
+        value = ', '.join(get_formatted_value(value_and_date_created, attr, easy_format, timezone) for value_and_date_created in attr_values)
+      elif len(attr_values) > 0:
+        # Values sorted old-to-new due to TaskAttribute.objects.filter(task=t).order_by('created_at').
+        value = get_formatted_value(attr_values[-1], attr, easy_format, timezone)
 
       results = results + [value]
     data.append(results)
