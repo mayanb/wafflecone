@@ -1,6 +1,6 @@
 from ics.models import *
 from django.db.models.functions import Coalesce
-from django.db.models import Sum, Case, When
+from django.db.models import Sum
 import datetime
 
 BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)

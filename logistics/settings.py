@@ -47,7 +47,6 @@ INSTALLED_APPS = (
     'rest_framework_docs',
     'rest_framework',
     'ics',
-    'qr',
     'cogs',
     'basic',
     'django_filters',

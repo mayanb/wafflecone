@@ -1,5 +1,4 @@
 from basic.v11.serializers import *
-from django.db.models import F
 
 
 # serializes all fields of the task, with nested items, inputs, and attributes

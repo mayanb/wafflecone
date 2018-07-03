@@ -17,7 +17,6 @@ from django.core import serializers
 from django.contrib.postgres.search import SearchQuery
 import pytz
 import inflect
-import ics.constants
 from django.utils import dateparse
 
 #Use simplejson to handle serializing Decimal objects
