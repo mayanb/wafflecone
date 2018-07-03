@@ -186,14 +186,17 @@ def create_csv_response(rows):
     writer.writerow([unicode(s).encode("utf-8") for s in row])
   return response
 
+
+# single_process_array helper method
 def get_task_attributes_dict(task_attributes):
   vals = {}
   for ta in task_attributes:
     ta_id = ta[0]
-    if vals.get(ta_id, []):
-      vals[ta_id].append(ta[1])
+    # Store last 2 values of tuple (id, value, created_at)
+    if vals.get(ta_id, False):
+      vals[ta_id].append(ta[-2:])
     else:
-      vals[ta_id] = [ta[1]]
+      vals[ta_id] = [ta[-2:]]
   return vals
 
 def single_process_array(process, params):
@@ -235,6 +238,23 @@ def single_process_array(process, params):
   if time_format_type == 'n':
     easy_format = '%Y-%m-%d %I:%M %p'
 
+  def get_formatted_value(value_and_date_created, attr, easy_format):
+    formatted_value = value_and_date_created[0]
+    created_at = value_and_date_created[1].astimezone(timezone).strftime(easy_format)
+    # Handle Time
+    if attr.datatype == constants.TIME_TYPE:
+      is_valid = dateparse.parse_datetime(formatted_value)
+      if (is_valid):
+        formatted_value = is_valid.astimezone(timezone).strftime(easy_format)
+    # Handle Yes/No Booleans
+    elif attr.datatype == constants.BOOLEAN_TYPE:
+      formatted_value = 'Yes' if formatted_value == 'true' else 'No'
+
+    if attr.is_recurrent:
+      return '%s [%s]' % (str(formatted_value), created_at)
+    else:
+      return str(formatted_value)
+
   for t in tasks:
     tid = t.id
     display = str(t)
@@ -248,28 +268,19 @@ def single_process_array(process, params):
     if first_use_date is not None:
       first_use_date = first_use_date.astimezone(timezone).strftime(easy_format)
     results = [tid, display, product_type, inputs, formatted_batch_size, creation_date, last_edited_date, first_use_date]
-    task_attributes = TaskAttribute.objects.filter(task=t).order_by('created_at').values_list('attribute__id', 'value')
+    task_attributes = TaskAttribute.objects.filter(task=t).order_by('created_at').values_list('attribute__id', 'value', 'created_at')
     values = get_task_attributes_dict(task_attributes)
 
-    def get_formatted_value(new_val, attr, easy_format):
-      formatted_value = new_val
-      if attr.datatype == constants.TIME_TYPE:
-        is_valid = dateparse.parse_datetime(formatted_value)
-        if (is_valid):
-          formatted_value = is_valid.astimezone(timezone).strftime(easy_format)
-      elif attr.datatype == constants.BOOLEAN_TYPE:
-        formatted_value = 'Yes' if formatted_value == 'true' else 'No'
-      return str(formatted_value)
-
     for attr in attrs:
-      value = None
-      attr_values = values.get(attr.id, None)
+      value = ''
+      attr_values = values.get(attr.id, False)
       if not attr_values:
         value = ''
       elif (attr.is_recurrent):
-        value = ', '.join(get_formatted_value(new_val, attr, easy_format) for new_val in attr_values)
+        value = ', '.join(get_formatted_value(value_and_date_created, attr, easy_format) for value_and_date_created in attr_values)
+          # get_recurrent_attribute_values_string(attr_values, easy_format)
       else:
-        # Values sorted old-new due to TaskAttribute.objects.filter(task=t).order_by('created_at')
+        # Values sorted old-new due to TaskAttribute.objects.filter(task=t).order_by('created_at').
         value = get_formatted_value(attr_values[-1], attr, easy_format)
 
       results = results + [value]
