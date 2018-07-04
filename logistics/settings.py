@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'ics',
     'qr',
+    'cogs',
     'django_filters',
     'storages',
     'corsheaders',

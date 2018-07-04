@@ -38,7 +38,7 @@ class AttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype', 'is_recurrent')
+		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype', 'is_recurrent', 'is_trashed')
 
 
 class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
@@ -51,7 +51,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	def get_attributes(self, process_type):
-		return AttributeSerializer(process_type.attribute_set.filter(is_trashed=False).order_by('rank'), many=True).data
+		return AttributeSerializer(process_type.attribute_set.order_by('rank'), many=True).data
 
 	def get_username(self, product):
 		username = product.created_by.username
@@ -279,7 +279,7 @@ class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent', 'updated_at')
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent', 'updated_at', 'created_at')
 
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
@@ -287,7 +287,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value')
+		fields = ('id', 'attribute', 'task', 'value', 'created_at')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
