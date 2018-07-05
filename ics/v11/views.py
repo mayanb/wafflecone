@@ -18,6 +18,10 @@ from ics import constants
 import json
 from rest_framework.decorators import api_view
 from ics.v11.queries.inventory import inventory_amounts
+from django.conf import settings
+import uuid
+import boto3
+import os
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -294,8 +298,40 @@ class TaskDetail(generics.RetrieveAPIView):
     .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
   serializer_class = NestedTaskSerializer
 
+# files/
+class FileList(generics.ListCreateAPIView):
+  filter_fields = ('task',)
+  queryset = TaskFile.objects.all()
+  serializer_class = TaskFileSerializer
 
+  def post(self, request, *args, **kwargs):
+    file_binary = request.FILES.get('file_binary')
+    original_filename =  file_binary.name
+    environment = os.environ['WAFFLE_ENVIRONMENT']
+    team_id = request.data.get('team')
+    _, file_ext = os.path.splitext(original_filename)
+    file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
+    client = boto3.client('s3', 
+      region_name='us-west-1',
+	    aws_access_key_id=os.environ['AWS_S3_ACCESS_KEY_ID'],
+      aws_secret_access_key=os.environ['AWS_S3_SECRET_ACCESS_KEY']
+      )
+    obj = client.put_object(
+      Body=file_binary, 
+      Key=file_path, 
+      Bucket='customeruploads',
+      ContentDisposition='attachment; filename="' + original_filename + '"'
+      )
+    link = "https://s3-us-west-1.amazonaws.com/customeruploads/" + file_path
 
+    task_id = request.data.get('task')
+    new_file = TaskFile.objects.create(
+      url=link, 
+      name=original_filename, 
+      task=Task.objects.get(id=task_id)
+      )
+    serializer = TaskFileSerializer(new_file)
+    return Response(data=serializer.data, status=201)
 
 
 ######################
