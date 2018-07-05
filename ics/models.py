@@ -496,6 +496,7 @@ class TaskAttribute(models.Model):
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attribute_values")
 	value = models.CharField(max_length=104, blank=True)
 	updated_at = models.DateTimeField(auto_now=True)
+	created_at = models.DateTimeField(default=timezone.now)
 
 	def getTaskPredictedAttributes(self):
 		return TaskFormulaAttribute.objects.filter(task=self.task)

@@ -418,6 +418,7 @@ class ActivityListDetailSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='userprofile.team.name')
 	team = serializers.CharField(source='userprofile.team.id', read_only=True)
+	time_format = serializers.CharField(source='userprofile.team.time_format', read_only=True)
 	account_type = serializers.CharField(source='userprofile.account_type', read_only=True)
 	profile_id = serializers.CharField(source='userprofile.id')
 	user_id = serializers.CharField(source='userprofile.user.id')
@@ -434,7 +435,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
+		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'time_format')
 
 
 class UserProfileEditSerializer(serializers.ModelSerializer):
@@ -446,6 +447,7 @@ class UserProfileEditSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name', read_only=True)
 	team = serializers.CharField(source='team.id', read_only=True)
+	time_format = serializers.CharField(source='team.time_format', read_only=True)
 	profile_id = serializers.CharField(source='id', read_only=True)
 	user_id = serializers.CharField(source='user.id', read_only=True)
 	username = serializers.CharField(source='user.username', read_only=True)
@@ -457,7 +459,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserProfile
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type', 'time_format')
 
 
 def sendEmail(userprofile_id):
@@ -552,7 +554,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type')
+		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
 # 
 
 class BasicPinSerializer(serializers.ModelSerializer):
