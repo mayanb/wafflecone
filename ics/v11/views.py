@@ -298,6 +298,10 @@ class TaskDetail(generics.RetrieveAPIView):
     .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
   serializer_class = NestedTaskSerializer
 
+
+def dump(obj):
+  for attr in dir(obj):
+    print("obj.%s = %r" % (attr, getattr(obj, attr)))
 # files/
 class FileList(generics.ListCreateAPIView):
   filter_fields = ('task',)
@@ -305,25 +309,28 @@ class FileList(generics.ListCreateAPIView):
   serializer_class = TaskFileSerializer
 
   def post(self, request, *args, **kwargs):
+    client = boto3.client('s3', 
+      region_name=settings.AWS_S3_FILE_UPLOAD_REGION,
+	    aws_access_key_id=settings.AWS_S3_ACCESS_KEY_ID,
+      aws_secret_access_key=settings.AWS_S3_SECRET_ACCESS_KEY
+      )
+
     file_binary = request.FILES.get('file_binary')
     original_filename =  file_binary.name
-    environment = os.environ['WAFFLE_ENVIRONMENT']
+    environment = settings.WAFFLE_ENVIRONMENT
     team_id = request.data.get('team')
     _, file_ext = os.path.splitext(original_filename)
     file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
-    client = boto3.client('s3', 
-      region_name='us-west-1',
-	    aws_access_key_id=os.environ['AWS_S3_ACCESS_KEY_ID'],
-      aws_secret_access_key=os.environ['AWS_S3_SECRET_ACCESS_KEY']
-      )
+    bucket = settings.AWS_S3_FILE_UPLOAD_BUCKET
     obj = client.put_object(
       Body=file_binary, 
       Key=file_path, 
-      Bucket='customeruploads',
+      Bucket=bucket,
       ContentDisposition='attachment; filename="' + original_filename + '"'
       )
-    link = "https://s3-us-west-1.amazonaws.com/customeruploads/" + file_path
 
+    host = settings.AWS_S3_HOST
+    link = host + '/' + bucket + '/' + file_path
     task_id = request.data.get('task')
     new_file = TaskFile.objects.create(
       url=link, 
