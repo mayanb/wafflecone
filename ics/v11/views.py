@@ -318,7 +318,11 @@ class FileList(generics.ListCreateAPIView):
     file_binary = request.FILES.get('file_binary')
     original_filename =  file_binary.name
     environment = settings.WAFFLE_ENVIRONMENT
-    team_id = request.data.get('team')
+
+    team_id = self.request.data.get('team', None)
+    if team_id is None:
+      raise serializers.ValidationError('Request must include "team" data')
+      
     _, file_ext = os.path.splitext(original_filename)
     file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
     bucket = settings.AWS_S3_FILE_UPLOAD_BUCKET
