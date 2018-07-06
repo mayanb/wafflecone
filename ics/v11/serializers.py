@@ -67,7 +67,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search', 'category')
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
