@@ -401,7 +401,7 @@ class ProcessDuplicate(generics.CreateAPIView):
       output_desc=request.data.get('output_desc'),
       default_amount=request.data.get('default_amount'),
       unit=request.data.get('unit'),
-      # category=request.data.get('category'),
+      category=request.data.get('category'),
       is_trashed=False,
     )
 
