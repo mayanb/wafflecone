@@ -389,6 +389,7 @@ class ActivityListSerializer(serializers.ModelSerializer):
 			'code': activity['process_type__code'],
 			'unit': activity['process_type__unit'],
 			'icon': activity['process_type__icon'],
+			'category': activity['process_type__category'],
 			'is_trashed': activity['process_type__is_trashed'],
 		}
 
