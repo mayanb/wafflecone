@@ -76,10 +76,12 @@ class ProcessTypeManager(models.Manager):
 
 
 class ProcessType(models.Model):
+
 	created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
 	team_created_by = models.ForeignKey(Team, related_name='processes', on_delete=models.CASCADE)
 	name = models.CharField(max_length=50)
 	code = models.CharField(max_length=20)
+	category = models.CharField(max_length=50, choices=constants.CATEGORIES, default=constants.WIP)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=timezone.now, blank=True)
 	description = models.CharField(max_length=1, default="", blank=True)  # SCHEDULED FOR DELETION
