@@ -16,6 +16,16 @@ ATTRIBUTE_DATA_TYPES = (
 	(USER_TYPE, "user data")
 )
 
+WIP = "wip"
+FG = "fg"
+RM = "rm"
+
+CATEGORIES = (
+    (WIP, "work_in_progress"),
+    (FG, "finished_goods"),
+    (RM, "raw_materials")
+)
+
 DATE_FORMAT = "%Y-%m-%d-%H-%M-%S-%f"
 BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)
 END_OF_TIME = timezone.make_aware(datetime.datetime(3000, 1, 1), timezone.utc)
