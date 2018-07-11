@@ -32,6 +32,7 @@ SECRET_KEY = os.environ.get("WAFFLE_DJANGO_SECRET_KEY", '1234')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("WAFFLE_DEBUG")
+WAFFLE_ENVIRONMENT = os.environ.get("WAFFLE_ENVIRONMENT")
 
 
 # Application definition
@@ -208,6 +209,11 @@ STATICFILES_DIRS = (
 AWS_STORAGE_BUCKET_NAME = os.environ.get("WAFFLE_S3_BUCKET_NAME", '')
 AWS_ACCESS_KEY_ID = os.environ.get("WAFFLE_AWS_ACCESS", '')
 AWS_SECRET_ACCESS_KEY = os.environ.get("WAFFLE_AWS_SECRET", '')
+
+AWS_S3_ACCESS_KEY_ID = os.environ.get("WAFFLE_AWS_S3_ACCESS_KEY_ID", '')
+AWS_S3_SECRET_ACCESS_KEY = os.environ.get("WAFFLE_AWS_S3_SECRET_ACCESS_KEY", '')
+AWS_S3_FILE_UPLOAD_REGION = os.environ.get("WAFFLE_AWS_S3_FILE_UPLOAD_REGION", '')
+AWS_S3_FILE_UPLOAD_BUCKET = os.environ.get("WAFFLE_AWS_S3_FILE_UPLOAD_BUCKET", '')
 
  # Tell django-storages that when coming up with the URL for an item in S3 storage, keep
     # it simple - just use this domain plus the path. (If this isn't set, things get complicated).
