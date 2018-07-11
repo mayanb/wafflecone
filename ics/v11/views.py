@@ -629,6 +629,12 @@ class ActivityList(generics.ListAPIView):
       process_ids = process_types.strip().split(',')
       queryset = queryset.filter(process_type__in=process_ids)
 
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      process_ids = ProcessType.objects.filter(category__in=category_codes)
+      queryset = queryset.filter(process_type__in=process_ids)
+
     label = self.request.query_params.get('label', None)
     if label is not None:
       queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
