@@ -44,6 +44,7 @@ class TestProcessTypes(APITestCase):
 			default_amount=111,
 			unit='old-unit',
 			is_trashed=False,
+			category='wip'
 		)
 		num_attributes = 4
 		for i in range(num_attributes):
@@ -60,6 +61,7 @@ class TestProcessTypes(APITestCase):
 			'default_amount': 333,
 			'unit': 'new-unit',
 			'is_trashed': False,
+			'category':'wip',
 		}
 		response = self.client.post(url, data)
 		self.assertEqual(response.status_code, 201)
@@ -75,6 +77,7 @@ class TestProcessTypes(APITestCase):
 		self.assertEqual(data.get('default_amount'), duplicate_process.default_amount)
 		self.assertEqual(data.get('unit'), duplicate_process.unit)
 		self.assertEqual(data.get('is_trashed'), duplicate_process.is_trashed)
+		self.assertEqual(data.get('category'), duplicate_process.category)
 
 		# Verify that copied attributes are the same as the process type being copied
 		old_attributes = process_type_to_duplicate.attribute_set.all()

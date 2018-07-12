@@ -16,6 +16,7 @@ jobs:
       - run:
           name: Install Python deps in a venv
           command: |
+            sudo pip install --force-reinstall pip==9.0.1    
             sudo pip install virtualenv --upgrade
             python -m virtualenv venv
             source venv/bin/activate
@@ -33,7 +34,9 @@ jobs:
       - run:
           name: Package and Deploy Django app using Zappa
           command: |
+            sudo pip install --force-reinstall pip==9.0.1 
             source venv/bin/activate
+            pip install --force-reinstall pip==9.0.1
             if [ "${CIRCLE_BRANCH}" == "staging" ]; then
               zappa update staging
             elif [ "${CIRCLE_BRANCH}" == "master" ]; then
