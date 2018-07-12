@@ -13,7 +13,6 @@ from django.db.models import F
 # from ics.async_actions import *
 
 
-
 # AUTH MODELS
 class InviteCode(models.Model):
 	invite_code = models.CharField(max_length=100, unique=True, db_index=True)
@@ -75,10 +74,12 @@ class ProcessTypeManager(models.Manager):
 
 
 class ProcessType(models.Model):
+
 	created_by = models.ForeignKey(User, related_name='processes', on_delete=models.CASCADE)
 	team_created_by = models.ForeignKey(Team, related_name='processes', on_delete=models.CASCADE)
 	name = models.CharField(max_length=50)
 	code = models.CharField(max_length=20)
+	category = models.CharField(max_length=50, choices=constants.CATEGORIES, default=constants.WIP)
 	icon = models.CharField(max_length=50)
 	created_at = models.DateTimeField(default=timezone.now, blank=True)
 	description = models.CharField(max_length=1, default="", blank=True)  # SCHEDULED FOR DELETION
@@ -410,6 +411,11 @@ class Task(models.Model):
 
 	def ancestors(self):
 		return Task.objects.filter(id__in=self.ancestors_raw_query())
+
+class TaskFile(models.Model):
+	url = models.CharField(max_length=150, unique=True)
+	name = models.CharField(max_length=100)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):

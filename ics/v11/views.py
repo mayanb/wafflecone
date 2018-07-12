@@ -17,6 +17,10 @@ from ics import constants
 import json
 from rest_framework.decorators import api_view
 from ics.v11.queries.inventory import inventory_amounts
+from django.conf import settings
+import uuid
+import boto3
+import os
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -294,7 +298,50 @@ class TaskDetail(generics.RetrieveAPIView):
   serializer_class = NestedTaskSerializer
 
 
+def dump(obj):
+  for attr in dir(obj):
+    print("obj.%s = %r" % (attr, getattr(obj, attr)))
+# files/
+class FileList(generics.ListCreateAPIView):
+  filter_fields = ('task',)
+  queryset = TaskFile.objects.all()
+  serializer_class = TaskFileSerializer
 
+  def post(self, request, *args, **kwargs):
+    client = boto3.client('s3', 
+      region_name=settings.AWS_S3_FILE_UPLOAD_REGION,
+	    aws_access_key_id=settings.AWS_S3_ACCESS_KEY_ID,
+      aws_secret_access_key=settings.AWS_S3_SECRET_ACCESS_KEY
+      )
+
+    file_binary = request.FILES.get('file_binary')
+    original_filename =  file_binary.name
+    environment = settings.WAFFLE_ENVIRONMENT
+
+    team_id = self.request.data.get('team', None)
+    if team_id is None:
+      raise serializers.ValidationError('Request must include "team" data')
+      
+    _, file_ext = os.path.splitext(original_filename)
+    file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
+    bucket = settings.AWS_S3_FILE_UPLOAD_BUCKET
+    obj = client.put_object(
+      Body=file_binary, 
+      Key=file_path, 
+      Bucket=bucket,
+      ContentDisposition='attachment; filename="' + original_filename + '"'
+      )
+
+    host = settings.AWS_S3_HOST
+    link = host + '/' + bucket + '/' + file_path
+    task_id = request.data.get('task')
+    new_file = TaskFile.objects.create(
+      url=link, 
+      name=original_filename, 
+      task=Task.objects.get(id=task_id)
+      )
+    serializer = TaskFileSerializer(new_file)
+    return Response(data=serializer.data, status=201)
 
 
 ######################
@@ -400,6 +447,7 @@ class ProcessDuplicate(generics.CreateAPIView):
       output_desc=request.data.get('output_desc'),
       default_amount=request.data.get('default_amount'),
       unit=request.data.get('unit'),
+      category=request.data.get('category'),
       is_trashed=False,
     )
 
@@ -580,6 +628,12 @@ class ActivityList(generics.ListAPIView):
       process_ids = process_types.strip().split(',')
       queryset = queryset.filter(process_type__in=process_ids)
 
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      process_ids = ProcessType.objects.filter(category__in=category_codes)
+      queryset = queryset.filter(process_type__in=process_ids)
+
     label = self.request.query_params.get('label', None)
     if label is not None:
       queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
@@ -595,6 +649,7 @@ class ActivityList(generics.ListAPIView):
       'process_type__unit',
       'process_type__icon',
       'process_type__is_trashed',
+      'process_type__category',
     ]
 
     #Unless aggregate product param is true, return a separate row for each product type
