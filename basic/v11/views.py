@@ -1,21 +1,22 @@
 from rest_framework.response import Response
-from django.db.models.functions import Coalesce
-from ics.v9.calculated_fields_serializers import *
+from django.db.models.functions import Coalesce, Concat
+from django.contrib.postgres.aggregates.general import ArrayAgg
+from basic.v11.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from ics.paginations import *
-from ics.v9.queries.tasks import *
-from ics.v9.queries.processes_and_products import *
+from basic.paginations import *
+from basic.v11.queries.tasks import *
+from basic.v11.queries.processes_and_products import *
 import datetime
 from django.http import HttpResponse, HttpResponseForbidden
 import pytz
-from ics import constants
+from basic import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v9.queries.inventory import inventory_amounts
+from basic.v11.queries.inventory import inventory_amounts
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -117,7 +118,7 @@ class GoalList(generics.ListAPIView):
       queryset = queryset.filter(userprofile=userprofile)
     if (timerange is not None) and (timerange == 'w' or timerange == 'd' or timerange == 'm'):
       queryset = queryset.filter(timerange=timerange)
-    return queryset.select_related('process_type').prefetch_related('product_types')
+    return queryset.select_related('process_type', 'userprofile', 'userprofile__user').prefetch_related('product_types')
 
 class GoalGet(generics.RetrieveAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
@@ -130,6 +131,29 @@ class GoalCreate(generics.CreateAPIView):
 class GoalRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Goal.objects.filter(is_trashed=False)
   serializer_class = BasicGoalSerializer
+
+######################
+# PIN-RELATED VIEWS #
+######################
+class PinList(generics.ListAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+  def get_queryset(self):
+    queryset = Pin.objects.filter(is_trashed=False)
+    team = self.request.query_params.get('team', None)
+
+    if team is not None:
+      queryset = queryset.filter(process_type__team_created_by=team)
+    return queryset.select_related('process_type').prefetch_related('product_types')
+
+class PinCreate(generics.CreateAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
+class PinRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Pin.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
 
 ######################
 # USER-RELATED VIEWS #
@@ -164,7 +188,7 @@ class TeamList(generics.ListAPIView):
       .prefetch_related('processes', 'products', 'userprofiles')
 
 # teams/[pk]/
-class TeamGet(generics.RetrieveAPIView):
+class TeamGetAndEdit(generics.RetrieveUpdateAPIView):
   queryset = Team.objects.all()\
     .prefetch_related('processes', 'products', 'userprofiles')
   serializer_class = TeamSerializer
@@ -199,6 +223,23 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = EditTaskSerializer
 
+  # NOTE: function designed ONLY for patching task names
+  # Receives a task name "custom_display" param, responds with True if it already exists (else False)
+  def patch(self, request, pk):
+    team_id = self.request.query_params.get('team_created_by', None)
+    new_name = self.request.query_params.get('custom_display', None)
+    if new_name is None:
+      return Response(status=400, data={'error': 'Bad request. Must have a custom_display parameter in PATCH name request'})
+
+    num_matching_names = Task.objects.filter(is_trashed=False, process_type__team_created_by=team_id) \
+      .annotate(name=Case(When(label_index=0, then=F('label')), default=Concat(F('label'), Value('-'), F('label_index')), output_field=models.CharField())) \
+      .filter(Q(name=new_name) | Q(custom_display=new_name)).count()
+    name_already_exists = False if num_matching_names == 0 else True
+
+    if not name_already_exists:
+      Task.objects.filter(pk=pk).update(custom_display=new_name)
+    return Response({'name_already_exists': name_already_exists})
+
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
@@ -227,7 +268,6 @@ class SimpleTaskSearch(generics.ListAPIView):
 
   def get_queryset(self):
     return simpleTaskSearch(self.request.query_params)
-
 
 # tasks/
 class TaskList(generics.ListAPIView):
@@ -318,10 +358,24 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 # processes/
 class ProcessList(generics.ListCreateAPIView):
   serializer_class = ProcessTypeWithUserSerializer
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_fields = ('created_by', 'team_created_by', 'id')
 
   def get_queryset(self):
     return process_search(self.request.query_params)
+
+  def get(self, request):
+    queryset = self.filter_queryset(self.get_queryset())
+    serializer = self.serializer_class(queryset, many=True)
+    ordering = request.query_params.get('ordering', '')
+    reverse = ordering[0:1] == '-'
+    field = ordering[1:] if reverse else ordering
+    if field == 'last_used':
+      data = sorted(serializer.data, key=lambda p: p['last_used'], reverse=reverse)
+    else:
+      data = serializer.data
+    return Response(data)
+
 
 # processes/[pk]/ ...where pk = 'primary key' == 'the id'
 class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -497,41 +551,64 @@ class ActivityList(generics.ListAPIView):
   serializer_class = ActivityListSerializer
 
   def get_queryset(self):
-    dt = datetime.datetime
-    queryset = Task.objects.filter(is_trashed=False)
-
     team = self.request.query_params.get('team', None)
-    if team is not None:
-      queryset = queryset.filter(process_type__team_created_by=team)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team)\
+      .select_related('process_type', 'product_type')
 
     start = self.request.query_params.get('start', None)
     end = self.request.query_params.get('end', None)
     if start is not None and end is not None:
+      dt = datetime.datetime
+      start_date = pytz.utc.localize(dt.strptime(start, constants.DATE_FORMAT))
+      end_date = pytz.utc.localize(dt.strptime(end, constants.DATE_FORMAT))
+      queryset = queryset.filter(created_at__range=(start_date, end_date))
 
-      # start = start.strip().split('-')
-      # end = end.strip().split('-')
-      # startDate = date(int(start[0]), int(start[1]), int(start[2]))
-      # endDate = date(int(end[0]), int(end[1]), int(end[2]))
-      startDate = dt.strptime(start, constants.DATE_FORMAT)
-      endDate = dt.strptime(end, constants.DATE_FORMAT)
-      queryset = queryset.filter(created_at__range=(startDate, endDate))
+    flagged = self.request.query_params.get('flagged', None)
+    if flagged and flagged.lower() == 'true':
+      queryset = queryset.filter(is_flagged=True)
 
-    sum_query = Case(
-                  When(items__is_virtual=True, then=Value(0)),
-                  default=F('items__amount'),
-                  output_field=DecimalField()
-                )
+    product_types = self.request.query_params.get('product_types', None)
+    if product_types is not None:
+      product_ids = product_types.strip().split(',')
+      queryset = queryset.filter(product_type__in=product_ids)
 
-    # separate by process type
-    return queryset.values(
+    process_types = self.request.query_params.get('process_types', None)
+    if process_types is not None:
+      process_ids = process_types.strip().split(',')
+      queryset = queryset.filter(process_type__in=process_ids)
+
+    label = self.request.query_params.get('label', None)
+    if label is not None:
+      queryset = queryset.filter(Q(keywords__icontains=label) | Q(search=SearchQuery(label)) | Q(label__istartswith=label) | Q(custom_display__istartswith=label))
+
+    aggregate_products = self.request.query_params.get('aggregate_products', None)
+
+    ordering = self.request.query_params.get('ordering', 'process_type__name')
+
+    queryset_values = [
       'process_type',
-      'product_type',
       'process_type__name',
       'process_type__code',
-      'product_type__code',
-      'process_type__unit').annotate(
+      'process_type__unit',
+      'process_type__icon',
+      'process_type__is_trashed',
+    ]
+
+    #Unless aggregate product param is true, return a separate row for each product type
+    if not aggregate_products or aggregate_products.lower() != 'true':
+      queryset_values.append('product_type')
+
+    return queryset.values(*queryset_values) \
+      .annotate(
+      product_type_ids=ArrayAgg('product_type'),
+      product_type_names=ArrayAgg('product_type__name'),
+      product_type_codes=ArrayAgg('product_type__code'),
       runs=Count('id', distinct=True)
-    ).annotate(outputs=Coalesce(Sum(sum_query), 0))
+    ).annotate(amount=Coalesce(Sum('items__amount'), 0)) \
+      .order_by(ordering)
 
 # activity/detail/
 class ActivityListDetail(generics.ListAPIView):
@@ -583,6 +660,7 @@ class ProductCodes(generics.ListAPIView):
 class ProductList(generics.ListCreateAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)
   serializer_class = ProductTypeWithUserSerializer
+  filter_backends = (OrderingFilter, DjangoFilterBackend)
   filter_fields = ('created_by', 'team_created_by', 'id')
 
   def get_queryset(self):
@@ -616,14 +694,10 @@ class TaskAttributeFilter(django_filters.rest_framework.FilterSet):
         model = TaskAttribute
         fields = ['task', 'attribute']
 
-class TaskAttributeList(generics.ListAPIView):
+class TaskAttributeList(generics.ListCreateAPIView):
   queryset = TaskAttribute.objects.all()
   serializer_class = BasicTaskAttributeSerializer
   filter_class = TaskAttributeFilter
-
-class TaskAttributeCreate(generics.CreateAPIView):
-  queryset = TaskAttribute.objects.all()
-  serializer_class = CreateTaskAttributeSerializer
 
 
 class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -632,7 +706,7 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 def index(request):
-  return HttpResponse("Hello, world. You're at the ics index.")
+  return HttpResponse("Hello, world. You're at the basic index.")
 
 
 class MovementCreate(generics.CreateAPIView):
@@ -894,7 +968,7 @@ class InventoryList2(generics.ListAPIView):
   serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
-    queryset = Item.active_objects
+    queryset = Item.active_objects.filter(creating_task__is_trashed=False)
 
     team = self.request.query_params.get('team', None)
     if team is None:
@@ -957,7 +1031,7 @@ class AdjustmentHistory(APIView):
     self.set_params()
     adjustments = self.get_adjustments()
     objects = []
-    end_date = None
+    end_date = constants.END_OF_TIME
 
     for adjustment in adjustments:
       objects.append(self.get_item_summary(adjustment.created_at, end_date))

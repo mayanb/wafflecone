@@ -13,7 +13,6 @@ from ics.v11.queries.processes_and_products import *
 import datetime
 from django.http import HttpResponse, HttpResponseForbidden
 import pytz
-from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view

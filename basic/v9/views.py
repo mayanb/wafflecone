@@ -1,21 +1,21 @@
 from rest_framework.response import Response
 from django.db.models.functions import Coalesce
-from ics.v9.calculated_fields_serializers import *
+from basic.v9.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from ics.paginations import *
-from ics.v9.queries.tasks import *
-from ics.v9.queries.processes_and_products import *
+from basic.paginations import *
+from basic.v9.queries.tasks import *
+from basic.v9.queries.processes_and_products import *
 import datetime
 from django.http import HttpResponse, HttpResponseForbidden
 import pytz
-from ics import constants
+from basic import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v9.queries.inventory import inventory_amounts
+from basic.v9.queries.inventory import inventory_amounts
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -632,7 +632,7 @@ class TaskAttributeDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 def index(request):
-  return HttpResponse("Hello, world. You're at the ics index.")
+  return HttpResponse("Hello, world. You're at the basic index.")
 
 
 class MovementCreate(generics.CreateAPIView):

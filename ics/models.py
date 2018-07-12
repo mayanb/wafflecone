@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.indexes import GinIndex
-from uuid import uuid4
 from django.db.models import Max
 import constants
 from django.utils import timezone

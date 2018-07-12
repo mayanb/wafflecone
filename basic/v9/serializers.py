@@ -4,15 +4,13 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from smtplib import SMTPException
 from uuid import uuid4
-from django.db.models import Count, F, Q, Sum
+from django.db.models import F, Sum
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
-from ics.utilities import *
-import operator
+from basic.utilities import *
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
-from django.contrib.postgres.aggregates.general import ArrayAgg
+from basic.v9.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -37,7 +35,7 @@ class AttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype', 'is_recurrent', 'is_trashed')
+		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype')
 
 
 class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
@@ -46,11 +44,12 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
 	last_used = serializers.DateTimeField(source='get_last_used_date', read_only=True)
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
+	icon = serializers.CharField(read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	def get_attributes(self, process_type):
-		return AttributeSerializer(process_type.attribute_set.order_by('rank'), many=True).data
+		return AttributeSerializer(process_type.attribute_set.filter(is_trashed=False), many=True).data
 
 	def get_username(self, product):
 		username = product.created_by.username
@@ -58,7 +57,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search', 'category')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
@@ -66,7 +65,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search', 'category')
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -78,7 +77,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values', 'is_recurrent')
+		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
 		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
 
@@ -246,8 +245,6 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 		new_item = Item.objects.create(creating_task=new_task, item_qr=qr_code, amount=actual_batch_size, is_generic=True)
 		ingredients = Ingredient.objects.filter(recipe__is_trashed=False, recipe__product_type=new_task.product_type, recipe__process_type=new_task.process_type)
 		default_batch_size = new_task.process_type.default_amount
-		if default_batch_size == 0:
-			default_batch_size = 1
 		for ingredient in ingredients:
 			scaled_amount = actual_batch_size*ingredient.amount/default_batch_size
 			TaskIngredient.objects.create(task=new_task, ingredient=ingredient, scaled_amount=scaled_amount)
@@ -255,13 +252,13 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 
 
 class AlertInputSerializer(serializers.ModelSerializer):
-	input_task_display = serializers.CharField(source='task', read_only=True)
-	input_task = serializers.CharField(source='task.id', read_only=True)
-	input_task_process_icon = serializers.CharField(source='task.process_type.icon', read_only=True)
-	input_task_process_name = serializers.CharField(source='task.process_type.name', read_only=True)
-	input_task_product_name = serializers.CharField(source='task.product_type.name', read_only=True)
+	input_task_display = serializers.CharField(source='input_item.creating_task', read_only=True)
+	input_task = serializers.CharField(source='input_item.creating_task.id', read_only=True)
+	input_task_process_icon = serializers.CharField(source='input_item.creating_task.process_type.icon', read_only=True)
+	input_task_process_name = serializers.CharField(source='input_item.creating_task.process_type.name', read_only=True)
+	input_task_product_name = serializers.CharField(source='input_item.creating_task.product_type.name', read_only=True)
 	input_qr = serializers.CharField(source='input_item.item_qr', read_only=True)
-	input_task_n = EditTaskSerializer(source='task', read_only=True)
+	input_task_n = EditTaskSerializer(source='input_item.creating_task', read_only=True)
 	input_item_virtual = serializers.BooleanField(source='input_item.is_virtual', read_only=True)
 	input_item_amount = serializers.DecimalField(source='input_item.amount', read_only=True, max_digits=10, decimal_places=3)
 	task_display = serializers.CharField(source='task', read_only=True)
@@ -274,11 +271,10 @@ class AlertInputSerializer(serializers.ModelSerializer):
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
-	is_recurrent = serializers.CharField(source='attribute.is_recurrent', read_only=True)
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent', 'updated_at', 'created_at')
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
 
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
@@ -286,13 +282,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'created_at')
-
-
-class TaskFileSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = TaskFile
-		fields = ('id', 'name', 'url', 'task')
+		fields = ('id', 'attribute', 'task', 'value')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
@@ -382,35 +372,19 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 
 
 class ActivityListSerializer(serializers.ModelSerializer):
-	process_type = serializers.SerializerMethodField()
-	product_types = serializers.SerializerMethodField()
-	runs = serializers.IntegerField()
-	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
-
-	def get_process_type(self, activity):
-		return {
-			'id': activity['process_type'],
-			'name': activity['process_type__name'],
-			'code': activity['process_type__code'],
-			'unit': activity['process_type__unit'],
-			'icon': activity['process_type__icon'],
-			'category': activity['process_type__category'],
-			'is_trashed': activity['process_type__is_trashed'],
-		}
-
-	def get_product_types(self, activity):
-		product_types_dict = {}
-		for i, id in enumerate(activity['product_type_ids']):
-			product_types_dict[id] = {
-				'id': id,
-				'name': activity['product_type_names'][i],
-				'code': activity['product_type_codes'][i],
-			}
-		return product_types_dict.values()
+	process_id=serializers.CharField(source='process_type', read_only=True)
+	process_name=serializers.CharField(source='process_type__name', read_only=True)
+	process_code = serializers.CharField(source='process_type__code', read_only=True)
+	process_unit=serializers.CharField(source='process_type__unit', read_only=True)
+	product_id=serializers.CharField(source='product_type', read_only=True)
+	product_code=serializers.CharField(source='product_type__code', read_only=True)
+	runs=serializers.CharField(read_only=True)
+	outputs=serializers.CharField(read_only=True)
+	flagged=serializers.CharField(read_only=True)
 
 	class Meta:
-		model = Task
-		fields = ('runs', 'amount', 'process_type', 'product_types')
+		model=Task
+		fields = ('runs', 'outputs', 'flagged', 'process_id', 'process_name', 'process_unit', 'product_id', 'product_code', 'process_code')
 
 
 class ActivityListDetailSerializer(serializers.ModelSerializer):
@@ -460,11 +434,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 	first_name = serializers.CharField(source='user.first_name')
 	last_name = serializers.CharField(source='user.last_name')
 	walkthrough = serializers.IntegerField(read_only=True)
-	task_label_type = serializers.IntegerField(source='team.task_label_type')
 
 	class Meta:
 		model = UserProfile
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
 
 
 def sendEmail(userprofile_id):
@@ -559,53 +532,14 @@ class TeamSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Team
-		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
-
-class BasicPinSerializer(serializers.ModelSerializer):
-	process_name = serializers.CharField(source='process_type.name', read_only=True)
-	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	product_code = serializers.SerializerMethodField('get_product_types')
-	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
-	input_products = serializers.CharField(write_only=True, required=False)
-
-	def get_product_types(self, goal):
-		return ProductTypeSerializer(goal.product_types, many=True).data
-
-	def create(self, validated_data):
-		product_types = validated_data.get('input_products', '')
-
-		pin = Pin.objects.create(
-			userprofile=validated_data.get('userprofile', ''),
-			process_type=validated_data.get('process_type', ''),
-			all_product_types=(product_types == "ALL"),
-		)
-
-		if product_types != 'ALL':
-			for product_type in product_types.split(','):
-				pin.product_types.add(product_type)
-			pin.save()
-
-		return pin
-
-	class Meta:
-		model = Pin
-		fields = ('id', 'all_product_types', 'input_products', 'process_type', 'process_name', 'process_unit', 'product_code', 'is_trashed', 'userprofile', 'created_at', 'process_icon')
-		extra_kwargs = {'input_products': {'write_only': True} }
+		fields = ('id', 'name', 'users', 'products', 'processes')
+# 
 
 class BasicGoalSerializer(serializers.ModelSerializer):
 	actual = serializers.SerializerMethodField(source='get_actual', read_only=True)
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
-	userprofile_name = serializers.SerializerMethodField()
-
-	def get_userprofile_name(self, goal):
-		user = goal.userprofile.user
-		if user.first_name and user.last_name:
-			return user.first_name + ' ' + user.last_name[0] + '.'
-		else:
-			return user.username.split('_')[0]
 
 	def get_product_types(self, goal):
 		return ProductTypeSerializer(goal.product_types, many=True).data
@@ -624,8 +558,6 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			start = datetime.combine(base.replace(day=1), min_time)
 
 		product_types = ProductType.objects.filter(goal_product_types__goal=goal)
-		if goal.all_product_types:
-			product_types = ProductType.objects.filter(team_created_by=goal.userprofile.team)
 
 		#TODO Optimize "actual" calculation into fewer queries
 		return Item.objects.filter(
@@ -638,85 +570,52 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'userprofile')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile')
 
 
 class GoalCreateSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
-	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
 	input_products = serializers.CharField(write_only=True, required=False)
 	rank = serializers.IntegerField(read_only=True)
-	userprofile_name = serializers.SerializerMethodField()
 	all_product_types = serializers.BooleanField(read_only=True)
-
-	def get_userprofile_name(self, goal):
-		user = goal.userprofile.user
-		if user.first_name and user.last_name:
-			return user.first_name + ' ' + user.last_name[0] + '.'
-		else:
-			return user.username.split('_')[0]
 
 	def get_product_types(self, goal):
 		return ProductTypeWithUserSerializer(ProductType.objects.filter(goal_product_types__goal=goal), many=True).data
 
 	def create(self, validated_data):
-		validation_error_msg = {'process_type': 'A goal already exists for this Time Frame, Product Type, and Process Type(s) combination'}
 		userprofile = validated_data.get('userprofile', '')
 		inputprods = validated_data.get('input_products', '')
-		process_type = validated_data.get('process_type', '')
-		goals_goal = validated_data.get('goal', '')
-		timerange = validated_data.get('timerange', '')
-		all_product_types = (inputprods == "ALL")
-		goal_product_types = []
+		goal_product_types = None
+
+		goal = Goal.objects.create(
+			userprofile=validated_data.get('userprofile', ''),
+			process_type=validated_data.get('process_type', ''),
+			goal=validated_data.get('goal', ''),
+			timerange=validated_data.get('timerange', ''),
+			all_product_types=(inputprods == "ALL")
+		)
 
 		# if we didn't mean to put all product types in this goal:
-		if (inputprods and not all_product_types):
+		if (inputprods and inputprods != "ALL"):
 			goal_product_types = inputprods.strip().split(',')
 
-		# 1. Reject Duplicate Goal (if needed):
-		# Filter for duplicates using all properties except Product Types
-		possible_duplicates = Goal.objects.filter(
-			is_trashed=False,
-			all_product_types=all_product_types,
-			timerange=timerange,
-			process_type=process_type,
-			userprofile__team=userprofile.team
-		)
+		# if we did mean to put all product types in this goal:	
+		if not goal_product_types:
+			team = UserProfile.objects.get(pk=userprofile.id).team
+			goal_product_types_objects = ProductType.objects.filter(is_trashed=False, team_created_by=team)
+			goal_product_types = []
+			for gp in goal_product_types_objects:
+				goal_product_types.append(gp.id)
 
-		# Filter for duplicate Product Types
-		if not all_product_types: # we need to check product_ids
-			product_clauses = (Q(arr__contains=product_id) for product_id in goal_product_types)
-			has_all_products = reduce(operator.or_, product_clauses)
-			annotated_possible_duplicates = possible_duplicates.annotate(
-				arr=ArrayAgg('goal_product_types__product_type__id', order_by='goal_product_types__product_type__id'),
-				count=Count('goal_product_types__product_type__id')
-			) \
-				.values_list('id', 'arr', 'count')
-			# Count prevents [1,2] from matching [1,2,3]:
-			possible_duplicates = annotated_possible_duplicates.filter(has_all_products).filter(count=len(goal_product_types))
-
-		if possible_duplicates.count() is not 0:
-			raise serializers.ValidationError(validation_error_msg)
-
-		# 2. All Clear: Create Goal
-		goal = Goal.objects.create(
-			userprofile=userprofile,
-			process_type=process_type,
-			goal=goals_goal,
-			timerange=timerange,
-			all_product_types=all_product_types
-		)
-
-		# Create many-to-many relationships between Goal and Product Types
 		for gp in goal_product_types:
 			GoalProductType.objects.create(product_type=ProductType.objects.get(pk=gp), goal=goal)
 		return goal
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'process_icon', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'created_at')
+		fields = ('id', 'all_product_types', 'process_type', 'input_products', 'goal', 'process_name', 'process_unit', 'product_code', 'userprofile', 'timerange', 'rank', 'is_trashed', 'trashed_time')
 		extra_kwargs = {'input_products': {'write_only': True} }
 
 
