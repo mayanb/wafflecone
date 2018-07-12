@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'ics',
     'qr',
     'cogs',
+    'basic',
     'django_filters',
     'storages',
     'corsheaders',
