@@ -918,6 +918,7 @@ class InventoryList2Serializer(serializers.Serializer):
 	process_unit = serializers.CharField(source='creating_task__process_type__unit')
 	process_code = serializers.CharField(source='creating_task__process_type__code')
 	process_icon = serializers.CharField(source='creating_task__process_type__icon')
+	process_category = serializers.CharField(source='creating_task__process_type__category')
 	product_id = serializers.CharField(source='creating_task__product_type')
 	product_name = serializers.CharField(source='creating_task__product_type__name')
 	product_code = serializers.CharField(source='creating_task__product_type__code')
@@ -926,7 +927,7 @@ class InventoryList2Serializer(serializers.Serializer):
 	def old_get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
-
+		
 		starting_total = 0
 
 		latest_adjustment = Adjustment.objects \

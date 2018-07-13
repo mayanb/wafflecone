@@ -631,8 +631,7 @@ class ActivityList(generics.ListAPIView):
     category_types = self.request.query_params.get('category_types', None)
     if category_types is not None:
       category_codes = category_types.strip().split(',')
-      process_ids = ProcessType.objects.filter(category__in=category_codes)
-      queryset = queryset.filter(process_type__in=process_ids)
+      queryset = queryset.filter(process_type__category__in=category_codes)
 
     label = self.request.query_params.get('label', None)
     if label is not None:
@@ -1042,12 +1041,18 @@ class InventoryList2(generics.ListAPIView):
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
 
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
+
     return queryset.values(
       'creating_task__process_type',
       'creating_task__process_type__name',
       'creating_task__process_type__unit',
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
+      'creating_task__process_type__category',
       'creating_task__product_type',
       'creating_task__product_type__name',
       'creating_task__product_type__code',
