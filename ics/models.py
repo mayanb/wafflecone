@@ -264,6 +264,7 @@ class Task(models.Model):
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
+	cost = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 
 	objects = TaskManager()
 
