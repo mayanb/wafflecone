@@ -7,11 +7,11 @@ from uuid import uuid4
 from django.db.models import Count, F, Q, Sum
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
-from ics.utilities import *
+from basic.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from basic.v10.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
@@ -37,7 +37,7 @@ class AttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype', 'is_recurrent', 'is_trashed')
+		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype')
 
 
 class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
@@ -50,7 +50,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
 
 	def get_attributes(self, process_type):
-		return AttributeSerializer(process_type.attribute_set.order_by('rank'), many=True).data
+		return AttributeSerializer(process_type.attribute_set.filter(is_trashed=False).order_by('rank'), many=True).data
 
 	def get_username(self, product):
 		username = product.created_by.username
@@ -58,7 +58,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search', 'category')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
@@ -66,7 +66,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search', 'category')
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -78,7 +78,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Attribute
-		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values', 'is_recurrent')
+		fields = ('id', 'process_type', 'name', 'rank', 'datatype', 'is_trashed', 'last_five_values')
 		read_only_fields = ('id', 'process_type', 'rank', 'last_five_values')
 
 
@@ -205,7 +205,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -231,7 +231,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')
@@ -274,11 +274,10 @@ class AlertInputSerializer(serializers.ModelSerializer):
 class BasicTaskAttributeSerializer(serializers.ModelSerializer):
 	att_name = serializers.CharField(source='attribute.name', read_only=True)
 	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
-	is_recurrent = serializers.CharField(source='attribute.is_recurrent', read_only=True)
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype', 'is_recurrent', 'updated_at', 'created_at')
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
 
 
 class NestedTaskAttributeSerializer(serializers.ModelSerializer):
@@ -286,13 +285,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = TaskAttribute
-		fields = ('id', 'attribute', 'task', 'value', 'created_at')
-
-
-class TaskFileSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = TaskFile
-		fields = ('id', 'name', 'url', 'task')
+		fields = ('id', 'attribute', 'task', 'value')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
@@ -394,7 +387,6 @@ class ActivityListSerializer(serializers.ModelSerializer):
 			'code': activity['process_type__code'],
 			'unit': activity['process_type__unit'],
 			'icon': activity['process_type__icon'],
-			'category': activity['process_type__category'],
 			'is_trashed': activity['process_type__is_trashed'],
 		}
 
@@ -425,6 +417,7 @@ class ActivityListDetailSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='userprofile.team.name')
 	team = serializers.CharField(source='userprofile.team.id', read_only=True)
+	time_format = serializers.CharField(source='userprofile.team.time_format', read_only=True)
 	account_type = serializers.CharField(source='userprofile.account_type', read_only=True)
 	profile_id = serializers.CharField(source='userprofile.id')
 	user_id = serializers.CharField(source='userprofile.user.id')
@@ -441,7 +434,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough')
+		fields = ('user_id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'has_gauth_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'time_format')
 
 
 class UserProfileEditSerializer(serializers.ModelSerializer):
@@ -453,6 +446,7 @@ class UserProfileEditSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
 	team_name = serializers.CharField(source='team.name', read_only=True)
 	team = serializers.CharField(source='team.id', read_only=True)
+	time_format = serializers.CharField(source='team.time_format', read_only=True)
 	profile_id = serializers.CharField(source='id', read_only=True)
 	user_id = serializers.CharField(source='user.id', read_only=True)
 	username = serializers.CharField(source='user.username', read_only=True)
@@ -464,7 +458,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserProfile
-		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type')
+		fields = ('user_id', 'id', 'profile_id', 'username', 'username_display', 'first_name', 'last_name', 'team', 'account_type', 'team_name', 'gauth_access_token', 'gauth_email', 'email', 'send_emails', 'last_seen', 'walkthrough', 'task_label_type', 'time_format')
 
 
 def sendEmail(userprofile_id):
@@ -560,6 +554,7 @@ class TeamSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Team
 		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
+# 
 
 class BasicPinSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)

@@ -7,11 +7,11 @@ from uuid import uuid4
 from django.db.models import Count, F, Q, Sum
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
-from ics.utilities import *
+from basic.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from basic.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
@@ -58,7 +58,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search', 'category')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search')
 
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
@@ -66,7 +66,7 @@ class ProcessTypeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search', 'category')
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -205,7 +205,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -231,7 +231,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')
@@ -287,12 +287,6 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = TaskAttribute
 		fields = ('id', 'attribute', 'task', 'value', 'created_at')
-
-
-class TaskFileSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = TaskFile
-		fields = ('id', 'name', 'url', 'task')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):
@@ -394,7 +388,6 @@ class ActivityListSerializer(serializers.ModelSerializer):
 			'code': activity['process_type__code'],
 			'unit': activity['process_type__unit'],
 			'icon': activity['process_type__icon'],
-			'category': activity['process_type__category'],
 			'is_trashed': activity['process_type__is_trashed'],
 		}
 

@@ -1,4 +1,5 @@
-from ics.v11.serializers import *
+from basic.v9.serializers import *
+from django.db.models import F
 
 
 # serializes all fields of the task, with nested items, inputs, and attributes
@@ -23,7 +24,21 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 		return None
 
 	def get_task_ingredients(self, task):
-		return BasicTaskIngredientSerializer(task.task_ingredients, many=True, read_only=True).data
+		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=task), many=True, read_only=True).data
+
+
+	def getInputUnit(self, task):
+		input = task.inputs.first()
+		if input is not None:
+			return input.input_item.creating_task.process_type.unit
+		else: 
+			return ''
+
+	def getItems(self, task):
+		if self.context.get('team_inventory', None) is not None:
+			return BasicItemSerializer(task.items.all().filter(inputs__isnull=True), many=True).data
+		else:
+			return BasicItemSerializer(task.items.all().annotate(is_used=F('inputs__task')), many=True).data
 
 	class Meta:
 		model = Task
@@ -48,8 +63,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'is_trashed',
 			'task_ingredients',
 			'num_flagged_ancestors',
-			'recipe_instructions',
-			'cost'
+			'recipe_instructions'
 		)
 
 
@@ -82,6 +96,27 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'product_type',
 			'num_flagged_ancestors'
 		)
+
+
+class CreateTaskAttributeSerializer(serializers.ModelSerializer):
+	att_name = serializers.CharField(source='attribute.name', read_only=True)
+	datatype = serializers.CharField(source='attribute.datatype', read_only=True)
+
+	class Meta:
+		model = TaskAttribute
+		fields = ('id', 'attribute', 'task', 'value', 'att_name', 'datatype')
+
+	def create(self, validated_data):
+		print(validated_data)
+		attribute = validated_data.get('attribute')
+		task = validated_data.get('task')
+		value = validated_data.get('value')
+
+		# create the TaskAttribute object and set its value
+		attribute_obj = attribute
+		task_obj = task
+		new_task_attribute = TaskAttribute.objects.create(attribute=attribute_obj, task=task_obj, value=value)
+		return new_task_attribute
 
 
 class NestedItemSerializer(serializers.ModelSerializer):

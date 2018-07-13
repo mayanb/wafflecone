@@ -1,4 +1,4 @@
-from ics.v11.serializers import *
+from basic.v11.serializers import *
 
 
 # serializes all fields of the task, with nested items, inputs, and attributes
@@ -48,8 +48,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'is_trashed',
 			'task_ingredients',
 			'num_flagged_ancestors',
-			'recipe_instructions',
-			'cost'
+			'recipe_instructions'
 		)
 
 
