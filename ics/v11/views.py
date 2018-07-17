@@ -1043,19 +1043,26 @@ class InventoryList2(generics.ListAPIView):
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
 
-    return queryset.values(
-      'creating_task__process_type',
+    queryset_values = ['creating_task__process_type',
       'creating_task__process_type__name',
       'creating_task__process_type__unit',
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
-      'creating_task__product_type',
-      'creating_task__product_type__name',
-      'creating_task__product_type__code',
-      'team_inventory'
-    ).annotate(
+      'team_inventory']
+
+    ordering_values = ['creating_task__process_type__name']
+
+    aggregate = self.request.query_params.get('aggregate', False)
+    if aggregate != 'true':
+      queryset_values.append('creating_task__product_type')
+      ordering_values.append('creating_task__product_type__name')
+
+    return queryset.values(*queryset_values).annotate(
       total_amount=Sum('amount'),
-    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
+      product_type_ids=ArrayAgg('creating_task__product_type'),
+      product_type_names=ArrayAgg('creating_task__product_type__name'),
+      product_type_codes=ArrayAgg('creating_task__product_type__code'),
+    ).order_by(*ordering_values)
 
 
 class AdjustmentHistory(APIView):

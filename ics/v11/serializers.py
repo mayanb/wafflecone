@@ -919,53 +919,39 @@ class InventoryList2Serializer(serializers.Serializer):
 	process_unit = serializers.CharField(source='creating_task__process_type__unit')
 	process_code = serializers.CharField(source='creating_task__process_type__code')
 	process_icon = serializers.CharField(source='creating_task__process_type__icon')
-	product_id = serializers.CharField(source='creating_task__product_type')
-	product_name = serializers.CharField(source='creating_task__product_type__name')
-	product_code = serializers.CharField(source='creating_task__product_type__code')
 	adjusted_amount = serializers.SerializerMethodField(source='get_adjusted_amount')
+	product_types = serializers.SerializerMethodField()
 
-	def old_get_adjusted_amount(self, item_summary):
-		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
-
-		starting_total = 0
-
-		latest_adjustment = Adjustment.objects \
-			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
-			.order_by('-created_at').first()
-
-		items_query = Item.active_objects.exclude(creating_task__process_type__code__in=['SH','D']).filter(
-			creating_task__process_type=process_type,
-			creating_task__product_type=product_type,
-			team_inventory=item_summary['team_inventory'],
-		)
-
-		if latest_adjustment:
-			start_time = latest_adjustment.created_at
-			items_query = items_query.filter(created_at__gt=start_time)
-			starting_total = latest_adjustment.amount
-
-		created_amount = old_inventory_created_amount(items_query)
-		used_amount = old_inventory_used_amount(items_query)
-
-		return starting_total + created_amount - used_amount
+	def get_product_types(self, item_summary):
+		product_types_dict = {}
+		for i, id in enumerate(item_summary['product_type_ids']):
+			product_types_dict[id] = {
+				'id': id,
+				'name': item_summary['product_type_names'][i],
+				'code': item_summary['product_type_codes'][i],
+			}
+		return product_types_dict.values()
 
 	def get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
+		product_types = list(set(item_summary['product_type_ids']))
 		start_time = None
 		starting_amount = 0
+		total_adjusted_amount = 0
 
-		latest_adjustment = Adjustment.objects \
+		for product_type in product_types:
+			latest_adjustment = Adjustment.objects \
 			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
 			.order_by('-created_at').first()
 
-		if latest_adjustment:
-			start_time = latest_adjustment.created_at
-			starting_amount = latest_adjustment.amount
+			if latest_adjustment:
+				start_time = latest_adjustment.created_at
+				starting_amount = latest_adjustment.amount
 
-		data = inventory_amounts(process_type, product_type, start_time, None)
-		return starting_amount + data['created_amount'] - data['used_amount']
+			data = inventory_amounts(process_type, product_type, start_time, None)
+			total_adjusted_amount = total_adjusted_amount + starting_amount + data['created_amount'] - data['used_amount']
+
+		return total_adjusted_amount
 
 
 class ItemSummarySerializer(serializers.Serializer):
