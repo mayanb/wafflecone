@@ -4,6 +4,22 @@ from django.db.models import Sum
 from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
 
 
+def calculate_adjusted_amount(process_type, product_type, team_id):
+	start_time = None
+	starting_amount = 0
+
+	latest_adjustment = Adjustment.objects \
+		.filter(process_type=process_type, product_type=product_type, userprofile__team=team_id) \
+		.order_by('-created_at').first()
+
+	if latest_adjustment:
+		start_time = latest_adjustment.created_at
+		starting_amount = latest_adjustment.amount
+
+	data = inventory_amounts(process_type, product_type, start_time, None)
+	return starting_amount + data['created_amount'] - data['used_amount']
+
+
 def inventory_amounts(process_type, product_type, start, end):
 	if start is None:
 		start = BEGINNING_OF_TIME
