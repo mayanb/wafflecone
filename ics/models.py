@@ -29,7 +29,7 @@ class Team(models.Model):
 	timezone = models.CharField(max_length=50, default=pytz.timezone('US/Pacific').zone)
 	task_label_type = models.IntegerField(default=0)
 	time_format = models.CharField(max_length=1, choices=TIME_FORMATS, default='n')
-	last_synced_with_square_at = models.DateTimeField(default=timezone.now())
+	last_synced_with_square_at = models.DateTimeField(default=timezone.now)
 
 	def __str__(self):
 		return self.name
