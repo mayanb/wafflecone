@@ -20,6 +20,25 @@ def calculate_adjusted_amount(process_type, product_type, team_id):
 	return starting_amount + data['created_amount'] - data['used_amount']
 
 
+def create_adjustments(adjustment_requests, team_id):
+	for adjustment_request in adjustment_requests:
+		amount_sold_via_square = float(adjustment_request['amount'])
+		userprofile = adjustment_request['userprofile']
+		process_type = adjustment_request['process_type']
+		product_type = adjustment_request['product_type']
+		explanation = adjustment_request['explanation']
+		current_inventory = float(calculate_adjusted_amount(process_type, product_type, team_id))
+		new_inventory_amount = current_inventory - amount_sold_via_square
+
+		Adjustment.objects.create(
+			userprofile=UserProfile.objects.get(pk=userprofile),
+			process_type=ProcessType.objects.get(pk=process_type),
+			product_type=ProductType.objects.get(pk=product_type),
+			amount=new_inventory_amount,
+			explanation=explanation,
+		)
+
+
 def inventory_amounts(process_type, product_type, start, end):
 	if start is None:
 		start = BEGINNING_OF_TIME

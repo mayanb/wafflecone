@@ -17,7 +17,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v11.queries.inventory import inventory_amounts, calculate_adjusted_amount
+from ics.v11.queries.inventory import inventory_amounts, create_adjustments
 from django.conf import settings
 import uuid
 import boto3
@@ -1022,33 +1022,25 @@ class CreateAdjustment(generics.CreateAPIView):
 # Receives a list of Adjustments to add/subtract to current inventory (since square doesn't know Polymer's inventory),
 # and creates a new Adjustment for each.
 class CreateSquareAdjustments(generics.CreateAPIView):
-  serializer_class = ProcessTypeWithUserSerializer
-
   def post(self, request, *args, **kwargs):
     adjustment_requests = request.data['adjustment_requests']
     team_id = request.data['team_id']
-    for adjustment_request in adjustment_requests:
-      amount_sold_via_square = float(adjustment_request['amount'])
-      userprofile = adjustment_request['userprofile']
-      process_type = adjustment_request['process_type']
-      product_type = adjustment_request['product_type']
-      explanation = adjustment_request['explanation']
-      current_inventory = float(calculate_adjusted_amount(process_type, product_type, team_id))
-      new_inventory_amount = current_inventory - amount_sold_via_square
-
-      Adjustment.objects.create(
-        userprofile=UserProfile.objects.get(pk=userprofile),
-        process_type=ProcessType.objects.get(pk=process_type),
-        product_type=ProductType.objects.get(pk=product_type),
-        amount=new_inventory_amount,
-        explanation=explanation,
-      )
+    create_adjustments(adjustment_requests, team_id)
 
     # Used as lower-bound for retrieving future Square transactions
     last_synced_with_square_at = request.data['last_synced_with_square_at']
     Team.objects.filter(pk=team_id).update(last_synced_with_square_at=last_synced_with_square_at)
 
     return Response(data='{"message": "Successfully made all adjustments.}', status=201)
+
+
+class CreateCsvAdjustments(generics.CreateAPIView):
+  def post(self, request, *args, **kwargs):
+    adjustment_requests = request.data['adjustment_requests']
+    team_id = request.data['team_id']
+    create_adjustments(adjustment_requests, team_id)
+
+    # Save the order number to prevent duplicate submissions?
 
 
 # Update times used as the lower bound for retrieving recent Square transactions used to adjust Polymer's inventory
