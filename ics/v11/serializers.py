@@ -11,7 +11,7 @@ from ics.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from ics.v11.queries.inventory import calculate_adjusted_amount, old_inventory_created_amount, old_inventory_used_amount
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
@@ -561,6 +561,13 @@ class TeamSerializer(serializers.ModelSerializer):
 		model = Team
 		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
 
+
+class SquareUpdateTimesSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Team
+		fields = ('id', 'name', 'last_synced_with_square_at')
+
+
 class BasicPinSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
@@ -953,19 +960,8 @@ class InventoryList2Serializer(serializers.Serializer):
 	def get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
-		start_time = None
-		starting_amount = 0
-
-		latest_adjustment = Adjustment.objects \
-			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
-			.order_by('-created_at').first()
-
-		if latest_adjustment:
-			start_time = latest_adjustment.created_at
-			starting_amount = latest_adjustment.amount
-
-		data = inventory_amounts(process_type, product_type, start_time, None)
-		return starting_amount + data['created_amount'] - data['used_amount']
+		team_id = item_summary['team_inventory']
+		return calculate_adjusted_amount(process_type, product_type, team_id)
 
 
 class ItemSummarySerializer(serializers.Serializer):

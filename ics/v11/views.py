@@ -16,7 +16,7 @@ import pytz
 from ics import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v11.queries.inventory import inventory_amounts
+from ics.v11.queries.inventory import inventory_amounts, create_adjustments, adjust_inventory_from_stitch_csv
 from django.conf import settings
 import uuid
 import boto3
@@ -247,6 +247,9 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
+
+
+Task.objects.filter(is_trashed=False).annotate(num_children=Count(F('items__inputs'))).filter(num_children__gte=0)
 
 
 # tasks/search/?label=[str]
@@ -1015,6 +1018,36 @@ class AlertsMarkAsRead(generics.ListAPIView):
 class CreateAdjustment(generics.CreateAPIView):
   queryset = Adjustment.objects.all()
   serializer_class = AdjustmentSerializer
+
+
+# Receives a list of Adjustments to add/subtract to current inventory (since square doesn't know Polymer's inventory),
+# and creates a new Adjustment for each.
+class CreateSquareAdjustments(generics.CreateAPIView):
+  def post(self, request, *args, **kwargs):
+    adjustment_requests = request.data['adjustment_requests']
+    team_id = request.data['team_id']
+    create_adjustments(adjustment_requests, team_id)
+
+    # Used as lower-bound for retrieving future Square transactions
+    last_synced_with_square_at = request.data['last_synced_with_square_at']
+    Team.objects.filter(pk=team_id).update(last_synced_with_square_at=last_synced_with_square_at)
+
+    return Response(data='{"message": "Successfully made all adjustments.}', status=201)
+
+
+class CreateCsvAdjustments(generics.CreateAPIView):
+  def post(self, request, *args, **kwargs):
+    polymer_team_id = 2
+    file_name = './stitch_order.csv'
+    adjust_inventory_from_stitch_csv(polymer_team_id, file_name)
+    # Save the order number to DB in order to prevent duplicate submissions?
+    return Response(data='{"message": "Successfully made all adjustments.}', status=201)
+
+
+# Update times used as the lower bound for retrieving recent Square transactions used to adjust Polymer's inventory
+class GetSquareUpdateTimes(generics.ListAPIView):
+  queryset = Team.objects.all()
+  serializer_class = SquareUpdateTimesSerializer
 
 
 class InventoryList2(generics.ListAPIView):
