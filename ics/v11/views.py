@@ -17,7 +17,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v11.queries.inventory import inventory_amounts, create_adjustments
+from ics.v11.queries.inventory import inventory_amounts, create_adjustments, adjust_inventory_from_stitch_csv
 from django.conf import settings
 import uuid
 import boto3
@@ -248,6 +248,9 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
+
+
+Task.objects.filter(is_trashed=False).annotate(num_children=Count(F('items__inputs'))).filter(num_children__gte=0)
 
 
 # tasks/search/?label=[str]
@@ -1036,11 +1039,11 @@ class CreateSquareAdjustments(generics.CreateAPIView):
 
 class CreateCsvAdjustments(generics.CreateAPIView):
   def post(self, request, *args, **kwargs):
-    adjustment_requests = request.data['adjustment_requests']
-    team_id = request.data['team_id']
-    create_adjustments(adjustment_requests, team_id)
-
-    # Save the order number to prevent duplicate submissions?
+    polymer_team_id = 2
+    file_name = './stitch_order.csv'
+    adjust_inventory_from_stitch_csv(polymer_team_id, file_name)
+    # Save the order number to DB in order to prevent duplicate submissions?
+    return Response(data='{"message": "Successfully made all adjustments.}', status=201)
 
 
 # Update times used as the lower bound for retrieving recent Square transactions used to adjust Polymer's inventory
