@@ -4,6 +4,7 @@ from django.db.models import Sum
 from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
 from sku_mappings_to_integrations import stitch_sku_mappings_by_team
 import csv
+import codecs
 
 
 def calculate_adjusted_amount(process_type, product_type, team_id):
@@ -33,18 +34,21 @@ def get_sku_info(row, team_skus):
 	return team_skus.get(sku_id, False)
 
 
-def adjust_inventory_from_stitch_csv(polymer_team_id, file_name):
-	team_info = stitch_sku_mappings_by_team[polymer_team_id]
+def adjust_inventory_using_stitch_csv(polymer_team_id, request):
+	team_info = stitch_sku_mappings_by_team.get(polymer_team_id, None)
+	if not team_info:
+		return
 	polymer_userprofile_id = team_info['polymer_userprofile_id']
 	team_skus = team_info['team_skus']
 
+	# Extract csv
+	csvfile = request.FILES['file_binary']
+	dialect = csv.Sniffer().sniff(codecs.EncodedFile(csvfile, "utf-8").read(1024))
+	csvfile.open()
+	reader = csv.DictReader(codecs.EncodedFile(csvfile, "utf-8"), delimiter=',', dialect=dialect)
+
+	# Format Adjustment request objects
 	adjustment_requests = []
-	csv_list = ['Line Item Quantity,Line Item Name,Line Item SKU,Line Item ID,Line Item Total,Order Number',
-	            '5,"Books (No Monkeys, No Chocolate)",710,1,42.40,189334',
-	            '11,"Packaged Nibs (Kokoa Kamili-Tanzania, 2016, 350 g)",903,2,96.24,189334',
-	            '60,"Sample Bars Unfoiled (Camino Verde, Ecuador, 85%)",110-USMPL,3,150.00,189334',
-	            '333,[Polymer doesnt track me],333,333,333,189334']
-	reader = csv.DictReader(csv_list)
 	for row in reader:
 		sku_info = get_sku_info(row, team_skus)
 		if not sku_info:  # reject blank lines or products which aren't tracked in Polymer
@@ -56,7 +60,7 @@ def adjust_inventory_from_stitch_csv(polymer_team_id, file_name):
 			'amount': float(row['Line Item Total']),
 			'explanation': get_stitch_adjustment_explanation(row['Line Item Name'], row['Order Number']),
 		})
-
+	print('CSV ADJUSTMENT REQUESTS:')
 	print(adjustment_requests)
 	create_adjustments(adjustment_requests, polymer_team_id)
 

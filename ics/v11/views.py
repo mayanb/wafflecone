@@ -17,7 +17,7 @@ from django.utils import timezone
 from ics import constants
 import json
 from rest_framework.decorators import api_view
-from ics.v11.queries.inventory import inventory_amounts, create_adjustments, adjust_inventory_from_stitch_csv
+from ics.v11.queries.inventory import inventory_amounts, create_adjustments, adjust_inventory_using_stitch_csv
 from django.conf import settings
 import uuid
 import boto3
@@ -1039,10 +1039,10 @@ class CreateSquareAdjustments(generics.CreateAPIView):
 
 class CreateCsvAdjustments(generics.CreateAPIView):
   def post(self, request, *args, **kwargs):
-    polymer_team_id = 2
-    file_name = './stitch_order.csv'
-    adjust_inventory_from_stitch_csv(polymer_team_id, file_name)
-    # Save the order number to DB in order to prevent duplicate submissions?
+    polymer_team_id = request.data.get('team', None)
+    if polymer_team_id is None:
+      raise serializers.ValidationError('Request must include "team" data')
+    adjust_inventory_using_stitch_csv(int(polymer_team_id), request)
     return Response(data='{"message": "Successfully made all adjustments.}', status=201)
 
 
