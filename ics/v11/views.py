@@ -22,6 +22,7 @@ from django.conf import settings
 import uuid
 import boto3
 import os
+from ics.v11.square.update_all_team_inventories import update_all_team_inventories, iso_format
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -1023,15 +1024,16 @@ class CreateAdjustment(generics.CreateAPIView):
 # and creates a new Adjustment for each.
 class CreateSquareAdjustments(generics.CreateAPIView):
   def post(self, request, *args, **kwargs):
-    adjustment_requests = request.data['adjustment_requests']
-    team_id = request.data['team_id']
-    new_adjustments = create_adjustments(adjustment_requests, team_id)
+    last_square_sync_times = dict(Team.objects.values_list('id', 'last_synced_with_square_at'))
+    end_time = iso_format(timezone.now())
+    failed_teams = update_all_team_inventories(last_square_sync_times, end_time)
+    if failed_teams:
+      message = "Square sync failed with teams: " + ", ".join(failed_teams)
+      data = '{"message": "%s"}' % message
+      return Response(data=data, status=500)
+    Team.objects.update(last_synced_with_square_at=end_time)
 
-    # Used as lower-bound for retrieving future Square transactions
-    last_synced_with_square_at = request.data['last_synced_with_square_at']
-    Team.objects.filter(pk=team_id).update(last_synced_with_square_at=last_synced_with_square_at)
-
-    return Response(data='{"message": "Successfully made all adjustments.}', status=201)
+    return Response(data='{"message": "Successfully made all adjustments."}', status=201)
 
 
 class CreateCsvAdjustments(generics.CreateAPIView):
