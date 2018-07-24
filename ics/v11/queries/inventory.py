@@ -37,7 +37,7 @@ def get_sku_info(row, team_skus):
 def adjust_inventory_using_stitch_csv(polymer_team_id, request):
 	team_info = stitch_sku_mappings_by_team.get(polymer_team_id, None)
 	if not team_info:
-		return
+		return None
 	polymer_userprofile_id = team_info['polymer_userprofile_id']
 	team_skus = team_info['team_skus']
 
@@ -60,28 +60,30 @@ def adjust_inventory_using_stitch_csv(polymer_team_id, request):
 			'amount': float(row['Line Item Total']),
 			'explanation': get_stitch_adjustment_explanation(row['Line Item Name'], row['Order Number']),
 		})
-	print('CSV ADJUSTMENT REQUESTS:')
-	print(adjustment_requests)
-	create_adjustments(adjustment_requests, polymer_team_id)
+
+	return create_adjustments(adjustment_requests, polymer_team_id)
 
 
 def create_adjustments(adjustment_requests, team_id):
+	new_adjustments = []
 	for adjustment_request in adjustment_requests:
-		amount_sold_via_square = float(adjustment_request['amount'])
+		amount_sold = float(adjustment_request['amount'])  # Note: amount here represents change, not new inventory amount
 		userprofile = adjustment_request['userprofile']
 		process_type = adjustment_request['process_type']
 		product_type = adjustment_request['product_type']
 		explanation = adjustment_request['explanation']
 		current_inventory = float(calculate_adjusted_amount(process_type, product_type, team_id))
-		new_inventory_amount = current_inventory - amount_sold_via_square
+		new_inventory_amount = current_inventory - amount_sold
 
-		Adjustment.objects.create(
+		adjustment = Adjustment.objects.create(
 			userprofile=UserProfile.objects.get(pk=userprofile),
 			process_type=ProcessType.objects.get(pk=process_type),
 			product_type=ProductType.objects.get(pk=product_type),
 			amount=new_inventory_amount,
 			explanation=explanation,
 		)
+		new_adjustments.append(adjustment)
+	return new_adjustments
 
 
 def inventory_amounts(process_type, product_type, start, end):

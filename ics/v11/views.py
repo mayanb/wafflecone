@@ -1028,7 +1028,7 @@ class CreateSquareAdjustments(generics.CreateAPIView):
   def post(self, request, *args, **kwargs):
     adjustment_requests = request.data['adjustment_requests']
     team_id = request.data['team_id']
-    create_adjustments(adjustment_requests, team_id)
+    new_adjustments = create_adjustments(adjustment_requests, team_id)
 
     # Used as lower-bound for retrieving future Square transactions
     last_synced_with_square_at = request.data['last_synced_with_square_at']
@@ -1042,8 +1042,13 @@ class CreateCsvAdjustments(generics.CreateAPIView):
     polymer_team_id = request.data.get('team', None)
     if polymer_team_id is None:
       raise serializers.ValidationError('Request must include "team" data')
-    adjust_inventory_using_stitch_csv(int(polymer_team_id), request)
-    return Response(data='{"message": "Successfully made all adjustments.}', status=201)
+    new_adjustments = adjust_inventory_using_stitch_csv(int(polymer_team_id), request)
+    if new_adjustments is None:
+      raise serializers.ValidationError('Your team has not registered any data mapping the csv rows to Polymer inventory')
+    serialized_adjustments = []
+    for adjustment in new_adjustments:
+      serialized_adjustments.append(AdjustmentHistorySerializer(adjustment).data)
+    return Response(data=serialized_adjustments, status=201)
 
 
 # Update times used as the lower bound for retrieving recent Square transactions used to adjust Polymer's inventory
