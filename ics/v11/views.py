@@ -250,9 +250,6 @@ class DeleteTask(generics.UpdateAPIView):
   serializer_class = DeleteTaskSerializer
 
 
-Task.objects.filter(is_trashed=False).annotate(num_children=Count(F('items__inputs'))).filter(num_children__gte=0)
-
-
 # tasks/search/?label=[str]
 class TaskSearch(generics.ListAPIView):
   serializer_class = NestedTaskSerializer
