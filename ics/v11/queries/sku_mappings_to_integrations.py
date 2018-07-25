@@ -6,8 +6,8 @@ alabama_team_skus = {
 }
 valencia_team_skus = {
 	'1': {'polymer_process_id': 34, 'polymer_product_id': 31},  # FC Mantuano
-	'2': {'polymer_process_id': 34, 'polymer_product_id': 31},
-	'3': {'polymer_process_id': 34, 'polymer_product_id': 31},
+	'2': {'polymer_process_id': 119, 'polymer_product_id': 187},  # Delivery Nibs, India
+	'3': {'polymer_process_id': 203, 'polymer_product_id': 187},  # Unfoiled Sample Bars, India
 }
 
 # EXPORTED: All Stitch to Polymer SKU mappings
