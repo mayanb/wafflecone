@@ -43,7 +43,6 @@ def old_inventory_used_amount(items_query):
 def get_adjusted_amount(process_type, product_type):
 	start_time = None
 	starting_amount = 0
-	#print('process_type={}, product_type={}'.format(process_type, product_type))
 	latest_adjustment = Adjustment.objects \
 		.filter(process_type=process_type, product_type=product_type) \
 		.order_by('-created_at').first()
