@@ -33,20 +33,21 @@ def task_deleted(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.id }
 	check_flagged_tasks_alerts(**kwargs)
 	check_goals_alerts(**kwargs)
-	# 1) ADITYA CODE HERE | kwargs.pk will be the id of the Task being deleted
+
 
 @receiver(post_save, sender=Item)
 def item_changed(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.creating_task.id }
 	check_goals_alerts(**kwargs)
-	# 4) ADITYA CODE HERE | kwargs.pk will be the id of the creating_task
+
 
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, **kwargs):
 	kwargs = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs)
-	# 2a) ADITYA CODE HERE | kwargs.taskID will be the id of the existing task, kwargs.creatingTask id
-	#                        will be the id of the incoming input task
+	# updates costs of children of updated task(taskID)
+	update_cost_added_input(**kwargs)
+
 
 # this signal only gets called once whereas all the others get called twice
 @receiver(post_delete, sender=Input)
@@ -55,14 +56,12 @@ def input_deleted(sender, instance, **kwargs):
 	unflag_task_descendants(**kwargs)
 	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs2)
-	# 2b) ADITYA CODE HERE | kwargs.taskID will be the id of the existing task, kwargs.creatingTask id
-	#                       will be the id of the deleted input task (use kwargs2)
 
-@receiver(post_save, sender=TaskIngedient)
+
+@receiver(post_save, sender=TaskIngredient)
 def input_deleted(sender, instance, **kwargs):
 	kwargs = { 
 		'taskID' : instance.task.id, 
 		'ingredientID': instance.ingredient, 
 		'actual_amount': instance.actual_amount
 	}
-	# 3) ADITYA CODE HERE | actual_amount is the new amount for the TaskIngredient
