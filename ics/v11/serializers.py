@@ -744,7 +744,7 @@ class ReorderAttributeSerializer(serializers.ModelSerializer):
 	def update(self, instance, validated_data):
 		if validated_data['new_rank'] == -1:
 			instance.is_trashed = True  # instance.save() called in reorder()
-			validated_data['new_rank'] = POSITIVE_SMALL_INTEGER_FIELD_MAX  # Assumes attribute won't have 36,000 attributes
+			validated_data['new_rank'] = POSITIVE_SMALL_INTEGER_FIELD_MAX  # Assumes attribute won't have 32767 attributes
 		return reorder(
 			instance,
 			validated_data,
