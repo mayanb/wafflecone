@@ -34,29 +34,36 @@ def unflag_task_descendants(**kwargs):
 		task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
 
 
-# calculate cost of current task and propagate changes when inputs added
+# calculate cost of current task and propagate changes when inputs added/deleted
 @task
-def update_cost_added_input(**kwargs):
+def update_cost_changed_input(**kwargs):
 	updated_task = kwargs['taskID']
 	input_creating_task = kwargs['creatingTaskID']
-
+	input_added = kwargs['added']
 	# fetch updated_task object with children
 	parents = Task.objects.filter(is_trashed=False, pk=updated_task).annotate(
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))
 	# fetch task which created the input
-	input_parent = Task.objects.filter(is_trashed=False, pk=input_creating_task)
-
+	input_parent = Task.objects.filter(is_trashed=False, pk=input_creating_task).annotate(
+				batch_size=Coalesce(Sum('items__amount'), 0))
 	if input_parent[0].cost is None:
 		# return if cost is None for parent
 		return
 
-	# update remaining worth of parent task -> subtract cost worth task's batch_size
-	new_remaining_worth = input_parent[0].remaining_worth - input_parent[0].cost
+	# update remaining worth of parent task -> subtract/add cost worth task's batch_size
+	if input_added:
+		new_remaining_worth = (input_parent[0].remaining_worth or input_parent[0].cost) - input_parent[0].cost
+	else:
+		new_remaining_worth = (input_parent[0].remaining_worth or input_parent[0].cost) + input_parent[0].cost
 	Task.objects.filter(pk=input_creating_task).update(remaining_worth=new_remaining_worth)
 
-	# update cost and remaining worth of updated task _-> add cost worth parent task's batch size
-	new_updated_task_cost = parents[0].cost + input_parent[0].cost
-	new_updated_task_remaining_worth = parents[0].remaining_worth + input_parent[0].cost
+	# update cost and remaining worth of updated task -> add cost worth parent task's batch size
+	if input_added:
+		new_updated_task_cost = (parents[0].cost or 0) + input_parent[0].cost
+		new_updated_task_remaining_worth = (parents[0].remaining_worth or 0) + input_parent[0].cost
+	else:
+		new_updated_task_cost = parents[0].cost - input_parent[0].cost
+		new_updated_task_remaining_worth = parents[0].remaining_worth - input_parent[0].cost
 	Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost,
 												remaining_worth=new_updated_task_remaining_worth)
 
@@ -76,7 +83,7 @@ def update_cost_added_input(**kwargs):
 			parents = Task.objects.filter(is_trashed=False, pk__in=ids).annotate(
 				task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))
 			faulty_tasks = {}  # stores tasks which are not available in taskingredient table
-			list_parents = {} # stores parents list and taskingredients for each child task
+			list_parents = {}  # stores parents list and taskingredients for each child task
 			get_ingredients(faulty_tasks, list_parents, parents)
 
 			# populate task_ing_map with taskingredients along with all the parents contributing that ingredient for each task
@@ -85,10 +92,17 @@ def update_cost_added_input(**kwargs):
 				for task_ing in list_parents[key]['task_ings']:
 					task_ing_map[(task_ing.ingredient.process_type_id, task_ing.ingredient.product_type_id)] = {
 						'amount': task_ing.actual_amount, 'parent_tasks': set()}
+				if input_added and key == updated_task and (input_parent[0].process_type_id, input_parent[0].product_type_id) not in task_ing_map:
+					task_ing_map[(input_parent[0].process_type_id, input_parent[0].product_type_id)] = {
+						'amount': input_parent[0].batch_size, 'parent_tasks': set()}
 				for parent in list_parents[key]['parents']:
 					if parent in tasks:
-						task_ing_map[(tasks[parent]['process_type'], tasks[parent]['product_type'])]['parent_tasks'].add(
-							parent)
+						if input_added:
+							task_ing_map[(tasks[parent]['process_type'], tasks[parent]['product_type'])]['parent_tasks'].add(
+								parent)
+						elif parent != input_creating_task:
+							task_ing_map[(tasks[parent]['process_type'], tasks[parent]['product_type'])][
+								'parent_tasks'].add(parent)
 				list_parents[key]['task_ing_map'] = task_ing_map
 
 			# stores intermediate results of cost and remaining_worth for all tasks to avoid recursive db calls
@@ -96,29 +110,33 @@ def update_cost_added_input(**kwargs):
 			final_costs = {}
 			for task in initial_costs:
 				final_costs[task.id] = {'id': task.id, 'cost': task.cost, 'remaining_worth': task.remaining_worth}
-
 			old_cost = parents[0].cost
-			old_batch_size = tasks[updated_task]['batch_size'] - tasks[input_creating_task]['batch_size']
+			if input_added:
+				old_batch_size = tasks[updated_task]['batch_size']
+				new_batch_size = tasks[updated_task]['batch_size'] + input_parent[0].batch_size
+			else:
+				old_batch_size = tasks[updated_task]['batch_size'] + input_parent[0].batch_size
+				new_batch_size = tasks[updated_task]['batch_size']
 			prev_unit_cost = float(round(old_cost / old_batch_size, 2))
-			new_unit_cost = float(round(tasks[updated_task]['cost'] / tasks[updated_task]['batch_size'], 2))
+			new_unit_cost = float(round(tasks[updated_task]['cost'] / new_batch_size, 2))
 
 			# calculate difference of unit costs
 			unit_cost = new_unit_cost - prev_unit_cost
 			# iterate through each child of the updated task and propagate data
 			for child in tasks[updated_task]['list_children']:
 				if child is not None and child not in faulty_tasks and child in final_costs:
-					new_difference = update_cost(updated_task, child, unit_cost, tasks, list_parents, final_costs)
+					new_difference = update_cost(updated_task, child, unit_cost, tasks, list_parents, final_costs, input_added)
 					# call rec_cost() to propagate values to children of child task if it is present in tasks list
 					if child in tasks:
 						visited = {}  # handles tasks with circular dependencies
-						rec_cost(child, new_difference, final_costs, tasks, faulty_tasks, list_parents, visited)
+						rec_cost(child, new_difference, final_costs, tasks, faulty_tasks, list_parents, visited, input_added)
 	except Exception as e:
 		print "except block"
 		print(str(e))
 
 
 # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
-def update_cost(task, child, unit_cost, tasks, list_parents, final_costs):
+def update_cost(task, child, unit_cost, tasks, list_parents, final_costs, input_added):
 	# find number of parent contributing same ingredient to the child task
 	num_parents = len(list_parents[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['parent_tasks'])
 	# total amount of ingredient associated with the child task
@@ -126,36 +144,37 @@ def update_cost(task, child, unit_cost, tasks, list_parents, final_costs):
 	# actual amount to be transferred to the child
 	actual_amount = float(total_amount / num_parents)
 	new_difference = unit_cost * actual_amount
-	if final_costs[child]['cost'] is None:
-		final_costs[child]['cost'] = 0
-	if final_costs[child]['remaining_worth'] is None:
-		final_costs[child]['remaining_worth'] = 0
-	# updated total cost associated with the child
-	final_costs[child]['cost'] = float(final_costs[child]['cost']) + new_difference
-	# updated remaining worth of the child
-	final_costs[child]['remaining_worth'] = float(final_costs[child]['remaining_worth']) + new_difference
+	final_costs[child]['cost'] = final_costs[child]['cost'] or 0
+	final_costs[child]['remaining_worth'] = final_costs[child]['remaining_worth'] or 0
+	# updated total cost and remaining_worth associated with the child and parent
+	if input_added:
+		final_costs[child]['cost'] = float(final_costs[child]['cost']) + new_difference
+		final_costs[child]['remaining_worth'] = float(final_costs[child]['remaining_worth']) + new_difference
+		final_costs[task]['remaining_worth'] = float(final_costs[task]['remaining_worth']) - new_difference
+	else:
+		final_costs[child]['cost'] = float(final_costs[child]['cost']) - new_difference
+		final_costs[child]['remaining_worth'] = float(final_costs[child]['remaining_worth']) - new_difference
+		final_costs[task]['remaining_worth'] = float(final_costs[task]['remaining_worth']) + new_difference
 	# update child costs
 	Task.objects.filter(pk=child).update(cost=final_costs[child]['cost'], remaining_worth=final_costs[child]['remaining_worth'])
-	# updated remaining worth of parent after transferring some part to current child
-	final_costs[task]['remaining_worth'] = float(final_costs[task]['remaining_worth']) - new_difference
 	# update parent task costs
 	Task.objects.filter(pk=task).update(remaining_worth=final_costs[task]['remaining_worth'])
 	return new_difference
 
 
 # function to recursively propagate data
-def rec_cost(parent, proportional_cost, final_costs, tasks, faulty_tasks, list_parents, visited):
+def rec_cost(parent, proportional_cost, final_costs, tasks, faulty_tasks, list_parents, visited, input_added):
 	# batch_size should not be 0 (when you run script again)
 	unit_cost = float(round(proportional_cost / float(tasks[parent]['batch_size']), 2))
 	for child in tasks[parent]['list_children']:
 		if child is not None and child not in faulty_tasks and child in final_costs and child not in visited:
 			visited[child] = child
-			new_difference = update_cost(parent, child, unit_cost, tasks, list_parents, final_costs)
+			new_difference = update_cost(parent, child, unit_cost, tasks, list_parents, final_costs, input_added)
 			if child in tasks:
-				rec_cost(child, new_difference, final_costs, tasks, faulty_tasks, list_parents, visited)
+				rec_cost(child, new_difference, final_costs, tasks, faulty_tasks, list_parents, visited, input_added)
 
 
-# to get the list of tasks which are parent to some tasks and populate required data in tasks
+# to get the list of tasks which are parent to some tasks and populate required fields in tasks
 def parents_list(tasks_with_child, tasks):
 	for task in tasks_with_child:
 		children = set(task.children_list)

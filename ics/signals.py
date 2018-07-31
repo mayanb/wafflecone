@@ -43,10 +43,10 @@ def item_changed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, **kwargs):
-	kwargs = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
+	kwargs = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id, 'added' : True}
 	check_anomalous_inputs_alerts(**kwargs)
 	# updates costs of children of updated task(taskID)
-	update_cost_added_input(**kwargs)
+	update_cost_changed_input(**kwargs)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -54,12 +54,13 @@ def input_changed(sender, instance, **kwargs):
 def input_deleted(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.task.id }
 	unflag_task_descendants(**kwargs)
-	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
+	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id, 'added' : False}
 	check_anomalous_inputs_alerts(**kwargs2)
-
+	# updates costs of children of updated task(taskID)
+	update_cost_changed_input(**kwargs2)
 
 @receiver(post_save, sender=TaskIngredient)
-def input_deleted(sender, instance, **kwargs):
+def ingredient_deleted(sender, instance, **kwargs):
 	kwargs = { 
 		'taskID' : instance.task.id, 
 		'ingredientID': instance.ingredient, 
