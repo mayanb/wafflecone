@@ -72,9 +72,8 @@ def get_most_recent_payment(payments_array):
 	return max(payments_array, key=get_datetime_object)
 
 
-def get_adjustment_explanation(square_name, last_synced_with_square_at):
-	date_display_str = dateutil.parser.parse(last_synced_with_square_at).strftime('%c')
-	return 'This adjustment was made automatically based on sales of "%s" on Square on or before %s.' % (square_name, date_display_str)
+def get_adjustment_explanation(square_name):
+	return 'This adjustment was made automatically based on sales of "%s" on Square' % square_name
 
 
 def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_team_id):
@@ -99,7 +98,7 @@ def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_te
 			'process_type': info['polymer_process_id'],
 			'product_type': info['polymer_product_id'],
 			'amount': total_amount_for_item,
-			'explanation': get_adjustment_explanation(info['square_name'], end_time),
+			'explanation': get_adjustment_explanation(info['square_name']),
 		})
 	return {
 		'adjustment_requests': adjustments,
