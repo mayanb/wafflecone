@@ -29,7 +29,7 @@ def get_datetime_object(payment):
 def get_sorted_unique_payments(all_location_payments):
 	seen_payment_ids = set()
 	unique_payments = []
-	print("Number of unfiltered payments from each location (note Square throttles after 200):")
+	print("Number of unfiltered payments from each location:")
 	for payments in all_location_payments:
 		print(str(len(payments)))
 	payments = reduce(lambda sum, payments: sum + payments, all_location_payments, [])
@@ -78,7 +78,7 @@ def get_adjustment_explanation(square_name, last_synced_with_square_at):
 
 
 def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_team_id):
-	# Reads'Request (up to 200) payments made from begin_time (inclusive) to end_time (exclusive), sorted chronologically'
+	# Request payments made from begin_time (inclusive) to end_time (exclusive), sorted chronologically
 	time_range = {'begin_time': begin_time, 'end_time': end_time, 'order': 'ASC', 'limit': 200}  # 200 is max allowed
 	request_headers = {
 		'Authorization': 'Bearer ' + access_token,
