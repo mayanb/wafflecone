@@ -24,6 +24,7 @@ class Team(models.Model):
 		('n', 'normal')
 	)
 
+	last_synced_with_square_at = models.DateTimeField(default=timezone.now)
 	name = models.CharField(max_length=50, unique=True)
 	timezone = models.CharField(max_length=50, default=pytz.timezone('US/Pacific').zone)
 	task_label_type = models.IntegerField(default=0)
