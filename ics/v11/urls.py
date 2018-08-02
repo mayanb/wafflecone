@@ -96,6 +96,8 @@ urlpatterns = [
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
+    url(r'^adjustments/square/$', views.CreateSquareAdjustments.as_view(), name='square_adjustments'),
+    url(r'^adjustments/csv/$', views.CreateCsvAdjustments.as_view(), name='create_csv_adjustments'),
 
     url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 

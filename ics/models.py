@@ -13,6 +13,8 @@ from django.db.models.expressions import RawSQL
 from django.db.models import F
 # from ics.async_actions import *
 
+def one_month_ago():
+	return timezone.now() - timezone.timedelta(days=30)
 
 # AUTH MODELS
 class InviteCode(models.Model):
@@ -29,6 +31,7 @@ class Team(models.Model):
 	timezone = models.CharField(max_length=50, default=pytz.timezone('US/Pacific').zone)
 	task_label_type = models.IntegerField(default=0)
 	time_format = models.CharField(max_length=1, choices=TIME_FORMATS, default='n')
+	last_synced_with_square_at = models.DateTimeField(default=one_month_ago)
 
 	def __str__(self):
 		return self.name
