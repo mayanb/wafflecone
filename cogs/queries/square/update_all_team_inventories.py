@@ -1,5 +1,5 @@
-from cogs.square.square_sku_mappings_by_team import square_sku_mappings_by_team
-from cogs.square.get_square_changes import get_square_changes
+from cogs.queries.square.square_sku_mappings_by_team import square_sku_mappings_by_team
+from cogs.queries.square.get_square_changes import get_square_changes
 from cogs.queries.integration_adjustments import create_adjustments
 
 # Runs a square fetch of payment data for the time period specified for each Polymer team specified.

@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from ics.models import *
 from basic.v11.serializers import AdjustmentHistorySerializer
-from cogs.square.update_all_team_inventories import iso_format, update_all_team_inventories
+from cogs.queries.square.update_all_team_inventories import iso_format, update_all_team_inventories
 from cogs.queries.integration_adjustments import adjust_inventory_using_stitch_csv
 
 
