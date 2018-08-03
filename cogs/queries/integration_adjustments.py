@@ -1,6 +1,6 @@
 from ics.models import *
 from basic.v11.queries.inventory import inventory_amounts
-from sku_mappings_to_integrations import get_sku_mappings_for
+from sku_mappings_to_integrations import sku_mappings_by_team
 import csv
 import codecs
 
@@ -40,7 +40,7 @@ def extract_csv_reader(request):
 
 
 def adjust_inventory_using_stitch_csv(polymer_team_id, request):
-	team_info = get_sku_mappings_for(polymer_team_id)
+	team_info = sku_mappings_by_team.get(polymer_team_id, None)
 	if not team_info:
 		return None
 

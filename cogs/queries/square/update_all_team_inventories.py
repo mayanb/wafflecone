@@ -1,4 +1,4 @@
-from cogs.queries.square.square_sku_mappings_by_team import square_sku_mappings_by_team
+from cogs.queries.sku_mappings_to_integrations import sku_mappings_by_team
 from cogs.queries.square.get_square_changes import get_square_changes
 from cogs.queries.integration_adjustments import create_adjustments
 
@@ -14,7 +14,8 @@ def iso_format(timezone_object):
 
 def update_all_team_inventories(last_square_sync_times, end_time):
 	failed_teams = []
-	for polymer_team, team_data in square_sku_mappings_by_team.iteritems():
+	for polymer_team_id, team_data in sku_mappings_by_team.iteritems():
+		polymer_team = team_data['polymer_team_name']
 		try:
 			update_team_inventory(end_time, polymer_team, team_data, last_square_sync_times)
 		except Exception as e:
@@ -31,7 +32,7 @@ def update_team_inventory(end_time, polymer_team, team_data, last_square_sync_ti
 	print('end time:' + end_time)
 
 	print('Requesting inventory data from Square for %s__________________________' % polymer_team)
-	inventory_changes = get_square_changes(begin_time, end_time, team_data['access_token'], team_data['team_skus'], team_data['polymer_team_id'])
+	inventory_changes = get_square_changes(begin_time, end_time, team_data['square_access_token'], team_data['square'], team_data['polymer_team_id'])
 	print(inventory_changes)
 
 	print('\nRequesting Polymer inventory adjustments for %s__________________________' % polymer_team)

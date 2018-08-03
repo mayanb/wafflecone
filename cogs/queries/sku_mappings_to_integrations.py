@@ -1,3 +1,4 @@
+import os
 # Stitch to Polymer SKU mappings for individual teams.
 
 square_alabama = {'254KSPKT6NID7MBRX6QYIVWX': {'polymer_process_id': 15,
@@ -192,12 +193,16 @@ stitch_alabama = {'1033': {'polymer_process_id': 15,
                            'square_name': '85% Costa Esmeraldas, Ecuador',
                            'stitch_line_item_id': '1725'}}
 
-
-sku_mappings_by_team = {
-	1: {'polymer_userprofile_id': 1, 'square': square_alabama, 'stitch': stitch_alabama},
-}
-
+DANDELION_SQUARE_ACCESS_TOKEN = os.environ['DANDELION_SQUARE_ACCESS_TOKEN']
 
 # EXPORTED: All Stitch to Polymer SKU mappings
-def get_sku_mappings_for(team_id):
-	return sku_mappings_by_team.get(team_id, None)
+sku_mappings_by_team = {
+	1: {
+		'polymer_team_name': 'alabama',
+		'polymer_team_id': 1,
+		'polymer_userprofile_id': 1,
+		'square': square_alabama,
+		'stitch': stitch_alabama,
+		'square_access_token': DANDELION_SQUARE_ACCESS_TOKEN,
+	}
+}
