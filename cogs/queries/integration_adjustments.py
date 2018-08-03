@@ -1,6 +1,6 @@
 from ics.models import *
 from basic.v11.queries.inventory import inventory_amounts
-from sku_mappings_to_integrations import stitch_sku_mappings_by_team
+from sku_mappings_to_integrations import get_sku_mappings_for
 import csv
 import codecs
 
@@ -25,38 +25,40 @@ def get_stitch_adjustment_explanation(square_name, order_number):
 	return 'This adjustment was made from a csv upload of sales of "%s" on Stitch for order number %s.' % (square_name, order_number)
 
 
-def get_sku_info(row, team_skus):
-	sku_id = row.get('Line Item ID', False)
+def get_sku_info(row, team_stitch_skus):
+	sku_id = row.get('LineItemID', False)
 	if not sku_id:
 		return False
-	return team_skus.get(sku_id, False)
+	return team_stitch_skus.get(sku_id, False)
 
 
-def adjust_inventory_using_stitch_csv(polymer_team_id, request):
-	team_info = stitch_sku_mappings_by_team.get(polymer_team_id, None)
-	if not team_info:
-		return None
-	polymer_userprofile_id = team_info['polymer_userprofile_id']
-	team_skus = team_info['team_skus']
-
-	# Extract csv
+def extract_csv_reader(request):
 	csvfile = request.FILES['file_binary']
 	dialect = csv.Sniffer().sniff(codecs.EncodedFile(csvfile, "utf-8").read(1024))
 	csvfile.open()
-	reader = csv.DictReader(codecs.EncodedFile(csvfile, "utf-8"), delimiter=',', dialect=dialect)
+	return csv.DictReader(codecs.EncodedFile(csvfile, "utf-8"), delimiter=',', dialect=dialect)
+
+
+def adjust_inventory_using_stitch_csv(polymer_team_id, request):
+	team_info = get_sku_mappings_for(polymer_team_id)
+	if not team_info:
+		return None
+
+	polymer_userprofile_id = team_info['polymer_userprofile_id']
+	team_stitch_skus = team_info['stitch']
 
 	# Format Adjustment request objects
 	adjustment_requests = []
-	for row in reader:
-		sku_info = get_sku_info(row, team_skus)
+	for row in extract_csv_reader(request):
+		sku_info = get_sku_info(row, team_stitch_skus)
 		if not sku_info:  # reject blank lines or products which aren't tracked in Polymer
 			continue
 		adjustment_requests.append({
 			'userprofile': polymer_userprofile_id,
 			'process_type': sku_info['polymer_process_id'],
 			'product_type': sku_info['polymer_product_id'],
-			'amount': float(row['Line Item Total']),
-			'explanation': get_stitch_adjustment_explanation(row['Line Item Name'], row['Order Number']),
+			'amount': float(row['LineItemTotal']),
+			'explanation': get_stitch_adjustment_explanation(row['LineItemName'], row['OrderNumber']),
 		})
 
 	return create_adjustments(adjustment_requests, polymer_team_id)
