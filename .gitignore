@@ -4,6 +4,7 @@ staticfiles
 .env
 db.sqlite3
 node_modules/
+.vscode
 .DS_Store
 .idea
 dump.sql
@@ -11,3 +12,5 @@ local-env
 .pytest_cache
 
 local-env.sh
+local-env.env
+.pycharmrc

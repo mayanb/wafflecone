@@ -1072,7 +1072,7 @@ class InventoryList2(generics.ListAPIView):
     ).order_by(*ordering_values)
 
 class InventoryList2Aggregate(generics.ListAPIView):
-  serializer_class = InventoryList2AggregateSerializer
+  serializer_class = InventoryList2Serializer
 
   def get_queryset(self):
     queryset = Item.active_objects.filter(creating_task__is_trashed=False)

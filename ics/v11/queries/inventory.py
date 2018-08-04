@@ -1,6 +1,6 @@
 from ics.models import *
 from django.db.models.functions import Coalesce
-from django.db.models import Sum
+from django.db.models import Sum, Func, Case, When
 from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
 
 
@@ -40,7 +40,7 @@ def old_inventory_used_amount(items_query):
 	partially_used_amount = (items_query.filter(inputs__isnull=False, inputs__amount__isnull=False).aggregate(amount=Sum('inputs__amount'))['amount'] or 0)
 	return fully_used_amount + partially_used_amount
 
-def get_adjusted_amount(process_type, product_type):
+def get_adjusted_item_amount(process_type, product_type):
 	start_time = None
 	starting_amount = 0
 	latest_adjustment = Adjustment.objects \
@@ -54,29 +54,38 @@ def get_adjusted_amount(process_type, product_type):
 	data = inventory_amounts(process_type, product_type, start_time, None)
 	return starting_amount + data['created_amount'] - data['used_amount']
 
-def get_adjusted_cost(process_type, product_type):
+def get_adjusted_item_cost(process_type, product_type):
 	cost = 0
-	amount_remaining = get_adjusted_amount(process_type, product_type)
-	items = Item.objects \
+	amount_remaining = get_adjusted_item_amount(process_type, product_type)
+
+	item = Item.objects \
 		.filter(
 			creating_task__is_trashed=False,
 			creating_task__process_type=process_type,
 			creating_task__product_type=product_type,
 		).annotate(
-			cost=F('creating_task__cost')
-		).order_by('-created_at')
-
-	for item in items:
-		#print('Item: amount={}, cost={}, created_at={}'.format(item.amount, item.cost, item.created_at))
-		if amount_remaining > 0:
-			if amount_remaining - item.amount >= 0:
-				cost += item.cost
-				amount_remaining -= item.amount
-			else: 
-				ratio = item.cost / item.amount
-				cost += ratio * amount_remaining
-				amount_remaining = 0
-		else:
-			break
-	return cost
+			cost=F('creating_task__cost'),
+			cumulative_amount=Func(
+				Sum('amount'), 
+				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
+				order_by='ics_item.created_at DESC'
+			),
+			cumulative_cost=Func(
+				Sum('creating_task__cost'), 
+				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
+				order_by='ics_item.created_at DESC'
+			),
+		).annotate(
+			amount_diff=amount_remaining-F('cumulative_amount'),
+		).annotate(
+			cumulative_cost_per_unit=Case(
+				When(cumulative_amount__gt=0, then=F('cumulative_cost')/F('cumulative_amount')),
+				default=0
+			),
+			amount_diff_abs=Func(F('amount_diff'), function='ABS')	
+		).annotate(
+			cumulative_cost_offset=F('amount_diff')*F('cumulative_cost_per_unit'),
+		).order_by('amount_diff_abs').first()
+	
+	return item.cumulative_cost + item.cumulative_cost_offset
 	

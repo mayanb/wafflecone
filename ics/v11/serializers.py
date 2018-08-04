@@ -11,7 +11,7 @@ from ics.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import get_adjusted_amount, get_adjusted_cost, old_inventory_created_amount, old_inventory_used_amount
+from ics.v11.queries.inventory import *
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
 
@@ -911,7 +911,7 @@ class AdjustmentSerializer(serializers.ModelSerializer):
 	def get_cost(self, adjustment):
 		process_type = adjustment.process_type_id
 		product_type = adjustment.product_type_id
-		return get_adjusted_cost(process_type, product_type)
+		return get_adjusted_item_cost(process_type, product_type)
 
 	class Meta:
 		model = Adjustment
@@ -919,10 +919,34 @@ class AdjustmentSerializer(serializers.ModelSerializer):
 
 
 class InventoryList2Serializer(serializers.Serializer):
+	category = serializers.SerializerMethodField()
 	process_type = serializers.SerializerMethodField()
 	product_types = serializers.SerializerMethodField()
 	adjusted_amount = serializers.SerializerMethodField()
 	adjusted_cost = serializers.SerializerMethodField()
+
+	def get_category(self, item_summary):
+		return item_summary['creating_task__process_type__category']
+
+	def get_process_type(self, item_summary):
+		return {
+			'id': item_summary['creating_task__process_type'],
+			'name': item_summary['creating_task__process_type__name'],
+			'code': item_summary['creating_task__process_type__code'],
+			'unit': item_summary['creating_task__process_type__unit'],
+			'icon': item_summary['creating_task__process_type__icon'],
+			'category': item_summary['creating_task__process_type__category'],
+		}
+	
+	def get_product_types(self, item_summary):
+		product_types_dict = {}
+		for i, id in enumerate(item_summary['product_type_ids']):
+			product_types_dict[id] = {
+				'id': id,
+				'name': item_summary['product_type_names'][i],
+				'code': item_summary['product_type_codes'][i],
+			}
+		return product_types_dict.values()
 
 	def get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
@@ -930,7 +954,7 @@ class InventoryList2Serializer(serializers.Serializer):
 		total_adjusted_amount = 0
 
 		for product_type in product_types:
-			total_adjusted_amount += get_adjusted_amount(process_type, product_type)
+			total_adjusted_amount += get_adjusted_item_amount(process_type, product_type)
 		return total_adjusted_amount
 
 	def get_adjusted_cost(self, item_summary):
@@ -939,65 +963,7 @@ class InventoryList2Serializer(serializers.Serializer):
 		total_cost = 0
 
 		for product_type in product_types:
-			total_cost += get_adjusted_cost(process_type, product_type)
-		return total_cost
-
-	def get_process_type(self, item):
-		return {
-			'id': item['creating_task__process_type'],
-			'name': item['creating_task__process_type__name'],
-			'code': item['creating_task__process_type__code'],
-			'unit': item['creating_task__process_type__unit'],
-			'icon': item['creating_task__process_type__icon'],
-			'category': item['creating_task__process_type__category'],
-		}
-	
-	def get_product_types(self, item_summary):
-		product_types_dict = {}
-		for i, id in enumerate(item_summary['product_type_ids']):
-			product_types_dict[id] = {
-				'id': id,
-				'name': item_summary['product_type_names'][i],
-				'code': item_summary['product_type_codes'][i],
-			}
-		return product_types_dict.values()
-
-class InventoryList2AggregateSerializer(serializers.Serializer):
-	category = serializers.SerializerMethodField()
-	process_type = serializers.SerializerMethodField()
-	product_types = serializers.SerializerMethodField()
-	adjusted_cost = serializers.SerializerMethodField()
-
-	def get_category(self, item_summary):
-		return item_summary['creating_task__process_type__category']
-
-	def get_process_type(self, item):
-		return {
-			'id': item['creating_task__process_type'],
-			'name': item['creating_task__process_type__name'],
-			'code': item['creating_task__process_type__code'],
-			'unit': item['creating_task__process_type__unit'],
-			'icon': item['creating_task__process_type__icon'],
-			'category': item['creating_task__process_type__category'],
-		}
-	
-	def get_product_types(self, item_summary):
-		product_types_dict = {}
-		for i, id in enumerate(item_summary['product_type_ids']):
-			product_types_dict[id] = {
-				'id': id,
-				'name': item_summary['product_type_names'][i],
-				'code': item_summary['product_type_codes'][i],
-			}
-		return product_types_dict.values()
-
-	def get_adjusted_cost(self, item_summary):
-		process_type = item_summary['creating_task__process_type']
-		product_types = list(set(item_summary['product_type_ids']))
-		total_cost = 0
-
-		for product_type in product_types:
-			total_cost += get_adjusted_cost(process_type, product_type)
+			total_cost += get_adjusted_item_cost(process_type, product_type)
 		return total_cost
 
 
