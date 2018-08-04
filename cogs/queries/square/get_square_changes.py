@@ -68,10 +68,6 @@ def get_payments_by_item_id(time_range, request_headers, team_skus):
 	return item_id_to_payments_map
 
 
-def get_most_recent_payment(payments_array):
-	return max(payments_array, key=get_datetime_object)
-
-
 def get_adjustment_explanation(square_name):
 	return 'This adjustment was made automatically based on sales of "%s" on Square' % square_name
 
