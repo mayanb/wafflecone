@@ -30,4 +30,3 @@ DATE_FORMAT = "%Y-%m-%d-%H-%M-%S-%f"
 BEGINNING_OF_TIME = timezone.make_aware(datetime.datetime(1, 1, 1), timezone.utc)
 END_OF_TIME = timezone.make_aware(datetime.datetime(3000, 1, 1), timezone.utc)
 
-POSITIVE_SMALL_INTEGER_FIELD_MAX = 32767
