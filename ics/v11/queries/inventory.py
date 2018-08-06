@@ -56,7 +56,7 @@ def get_adjusted_item_amount(process_type, product_type):
 
 def get_adjusted_item_cost(process_type, product_type):
 	cost = 0
-	amount_remaining = get_adjusted_item_amount(process_type, product_type)
+	actual_amount = get_adjusted_item_amount(process_type, product_type)
 
 	item = Item.objects \
 		.filter(
@@ -65,29 +65,47 @@ def get_adjusted_item_cost(process_type, product_type):
 			creating_task__product_type=product_type,
 		).annotate(
 			cost=F('creating_task__cost'),
+			# Item amount plus all items' amounts that come after it
+			# (most recent item will have the smallest cumulative_amount)
 			cumulative_amount=Func(
 				Sum('amount'), 
 				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
 				order_by='ics_item.created_at DESC'
 			),
+			# Cost of task plus all tasks that come after it
+			# (most recent task will have the smallest cumulative_cost)
 			cumulative_cost=Func(
 				Sum('creating_task__cost'), 
 				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
 				order_by='ics_item.created_at DESC'
 			),
 		).annotate(
-			amount_diff=amount_remaining-F('cumulative_amount'),
+			# Difference between the actual amount and the cumulative_amount
+			amount_diff=actual_amount-F('cumulative_amount'),
 		).annotate(
+			# cost/amount = cost per unit
 			cumulative_cost_per_unit=Case(
 				When(cumulative_amount__gt=0, then=F('cumulative_cost')/F('cumulative_amount')),
 				default=0
 			),
+			# Absolute value of amount_diff
 			amount_diff_abs=Func(F('amount_diff'), function='ABS')	
 		).annotate(
+			# The cost that needs to be added to the item's cumulative_cost in order to account for the remaining inventory amount
 			cumulative_cost_offset=F('amount_diff')*F('cumulative_cost_per_unit'),
+		# This order_by().first() will select the item whos cumulative_amount is closest to the actual amount
+		# Doing this will give us the most accurate cost estimate possible
 		).order_by('amount_diff_abs').first()
-	total_cumulative_cost = item.cumulative_cost + item.cumulative_cost_offset
+
+	# Set total cost to zero if task cost is None
+	if item.cumulative_cost is None or item.cumulative_cost_offset is None:
+		total_cumulative_cost = 0
+	else:
+		total_cumulative_cost = item.cumulative_cost + item.cumulative_cost_offset
+
+	# Do not return negative costs when inventory has negative amounts
 	if total_cumulative_cost < 0:
 		return 0
+
 	return total_cumulative_cost
 	
