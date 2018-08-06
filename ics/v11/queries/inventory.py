@@ -86,6 +86,8 @@ def get_adjusted_item_cost(process_type, product_type):
 		).annotate(
 			cumulative_cost_offset=F('amount_diff')*F('cumulative_cost_per_unit'),
 		).order_by('amount_diff_abs').first()
-	
-	return item.cumulative_cost + item.cumulative_cost_offset
+	total_cumulative_cost = item.cumulative_cost + item.cumulative_cost_offset
+	if total_cumulative_cost < 0:
+		return 0
+	return total_cumulative_cost
 	

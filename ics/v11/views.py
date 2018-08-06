@@ -1146,7 +1146,7 @@ class AdjustmentHistory(APIView):
 
   def get_adjustments(self):
     queryset = Adjustment.objects\
-      .filter(process_type=self.process_type, product_type=self.product_type, userprofile__team=self.team)\
+      .filter(process_type=self.process_type, product_type=self.product_type)\
       .order_by('-created_at')
     return queryset.all()
 
