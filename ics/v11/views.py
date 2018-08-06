@@ -501,7 +501,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
-        ).annotate(oldest=Min('creating_task__created_at'))
+      ).annotate(oldest=Min('creating_task__created_at'))
 
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
@@ -1046,30 +1046,20 @@ class InventoryList2(generics.ListAPIView):
       category_codes = category_types.strip().split(',')
       queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
 
-    aggregate_products = self.request.query_params.get('aggregate_products', None)
-
-    queryset_values = [
+    return queryset.values(
       'creating_task__process_type',
       'creating_task__process_type__name',
       'creating_task__process_type__unit',
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
       'creating_task__process_type__category',
+      'creating_task__product_type',
+      'creating_task__product_type__name',
+      'creating_task__product_type__code',
       'team_inventory'
-    ] 
-
-    ordering_values = ['creating_task__process_type__name']
-
-    #Unless aggregate product param is true, return a separate row for each product type
-    if not aggregate_products or aggregate_products.lower() != 'true':
-      queryset_values.append('creating_task__product_type')
-      ordering_values.append('creating_task__product_type__name')
-
-    return queryset.values(*queryset_values).annotate(
-      product_type_ids=ArrayAgg('creating_task__product_type'),
-      product_type_names=ArrayAgg('creating_task__product_type__name'),
-      product_type_codes=ArrayAgg('creating_task__product_type__code'),
-    ).order_by(*ordering_values)
+    ).annotate(
+      total_amount=Sum('amount'),
+    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
 
 
 class AdjustmentHistory(APIView):
