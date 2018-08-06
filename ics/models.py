@@ -212,7 +212,7 @@ class Attribute(models.Model):
 				is_trashed=False
 			).aggregate(Max('rank'))['rank__max']
 			if prev_rank is None:
-				prev_rank = 0
+				prev_rank = -1
 			self.rank = prev_rank + 1
 		super(Attribute, self).save(*args, **kwargs)
 
