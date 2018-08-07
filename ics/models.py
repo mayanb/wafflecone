@@ -5,6 +5,7 @@ from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.indexes import GinIndex
 from django.db.models import Max
+from model_utils import FieldTracker
 import constants
 from django.utils import timezone
 import pytz
@@ -437,6 +438,7 @@ class Item(models.Model):
 
 	objects = models.Manager()
 	active_objects = ActiveItemsManager()
+	tracker = FieldTracker()
 
 	def __str__(self):
 		return str(self.creating_task) + " - " + self.item_qr[-6:]
@@ -728,3 +730,5 @@ class TaskIngredient(models.Model):
 	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="task_ingredients")
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)
+	was_amount_changed = models.BooleanField(default=False)
+	tracker = FieldTracker()

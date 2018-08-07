@@ -28,6 +28,9 @@ def task_changed(sender, instance, **kwargs):
 	if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
 		check_flagged_tasks_alerts(**kwargs)
 
+	task_deleted_update_cost(**kwargs)
+
+
 @receiver(post_delete, sender=Task)
 def task_deleted(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.id }
@@ -37,8 +40,11 @@ def task_deleted(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Item)
 def item_changed(sender, instance, **kwargs):
-	kwargs = { 'pk' : instance.creating_task.id }
+	previous_amount = instance.tracker.previous('amount')
+	kwargs = { 'pk' : instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
 	check_goals_alerts(**kwargs)
+	# updates costs of children when batch size changed
+	batch_size_update(**kwargs)
 
 
 @receiver(post_save, sender=Input)
@@ -46,7 +52,7 @@ def input_changed(sender, instance, **kwargs):
 	kwargs = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id, 'added' : True}
 	check_anomalous_inputs_alerts(**kwargs)
 	# updates costs of children of updated task(taskID)
-	update_cost_changed_input(**kwargs)
+	# input_update(**kwargs)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -57,12 +63,14 @@ def input_deleted(sender, instance, **kwargs):
 	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id, 'added' : False}
 	check_anomalous_inputs_alerts(**kwargs2)
 	# updates costs of children of updated task(taskID)
-	update_cost_changed_input(**kwargs2)
+	# input_update(**kwargs2)
+
 
 @receiver(post_save, sender=TaskIngredient)
-def ingredient_deleted(sender, instance, **kwargs):
-	kwargs = { 
-		'taskID' : instance.task.id, 
-		'ingredientID': instance.ingredient, 
-		'actual_amount': instance.actual_amount
-	}
+def ingredient_updated(sender, instance, **kwargs):
+	# get the previous value
+	previous_amount = instance.tracker.previous('actual_amount')
+	if instance.was_amount_changed:
+		kwargs = {'taskID': instance.task.id, 'ingredientID': instance.ingredient_id,
+				  'actual_amount': instance.actual_amount, 'task_ing_id': instance.id, 'previous_amount': previous_amount}
+		# ingredient_amount_update(**kwargs)
