@@ -1,6 +1,6 @@
 from ics.models import *
 from django.db.models.functions import Coalesce
-from django.db.models import Sum, Func, Case, When
+from django.db.models import Sum, Func, Case, When, Value, DecimalField
 from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
 
 
@@ -64,7 +64,8 @@ def get_adjusted_item_cost(process_type, product_type):
 			creating_task__process_type=process_type,
 			creating_task__product_type=product_type,
 		).annotate(
-			cost=F('creating_task__cost'),
+			cost=Coalesce(F('creating_task__cost'), 0),
+		).annotate(
 			# Item amount plus all items' amounts that come after it
 			# (most recent item will have the smallest cumulative_amount)
 			cumulative_amount=Func(
@@ -75,7 +76,7 @@ def get_adjusted_item_cost(process_type, product_type):
 			# Cost of task plus all tasks that come after it
 			# (most recent task will have the smallest cumulative_cost)
 			cumulative_cost=Func(
-				Sum('creating_task__cost'), 
+				Sum('cost'),
 				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
 				order_by='ics_item.created_at DESC'
 			),
@@ -84,6 +85,11 @@ def get_adjusted_item_cost(process_type, product_type):
 			amount_diff=actual_amount-F('cumulative_amount'),
 		).annotate(
 			# cost/amount = cost per unit
+			cost_per_unit=Case(
+				When(cumulative_amount__gt=0, then=F('cost')/F('amount')),
+				default=0
+			),
+			# cumulative cost/cumulative amount = cumulative cost per unit
 			cumulative_cost_per_unit=Case(
 				When(cumulative_amount__gt=0, then=F('cumulative_cost')/F('cumulative_amount')),
 				default=0
@@ -92,16 +98,24 @@ def get_adjusted_item_cost(process_type, product_type):
 			amount_diff_abs=Func(F('amount_diff'), function='ABS')	
 		).annotate(
 			# The cost that needs to be added to the item's cumulative_cost in order to account for the remaining inventory amount
-			cumulative_cost_offset=F('amount_diff')*F('cumulative_cost_per_unit'),
+			# if amount_diff is positive, then use the cumulative cost per unit rather than this individual item's cost per unit
+			cost_offset=Case(
+				When(amount_diff__gt=0, then=F('amount_diff')*F('cumulative_cost_per_unit')),
+				default=F('amount_diff')*F('cost_per_unit'),
+				output_field=DecimalField()
+			),
+			gt_zero=Case(
+				When(amount_diff__gt=0, then=Value(1)),
+				default=Value(0),
+				output_field=DecimalField()
+			)
 		# This order_by().first() will select the item whos cumulative_amount is closest to the actual amount
+		# It will sort first by those whos amount_diff is negative and then by the amount_diff_abs that is closest to zero
 		# Doing this will give us the most accurate cost estimate possible
-		).order_by('amount_diff_abs').first()
+		).order_by('gt_zero', 'amount_diff_abs').first()
 
-	# Set total cost to zero if task cost is None
-	if item.cumulative_cost is None or item.cumulative_cost_offset is None:
-		total_cumulative_cost = 0
-	else:
-		total_cumulative_cost = item.cumulative_cost + item.cumulative_cost_offset
+	#total_cumulative_cost = item.cumulative_cost + item.cumulative_cost_offset
+	total_cumulative_cost = item.cumulative_cost + item.cost_offset
 
 	# Do not return negative costs when inventory has negative amounts
 	if total_cumulative_cost < 0:
