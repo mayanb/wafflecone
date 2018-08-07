@@ -69,42 +69,23 @@ def get_adjusted_item_cost(process_type, product_type):
 			# Item amount plus all items' amounts that come after it
 			# (most recent item will have the smallest cumulative_amount)
 			cumulative_amount=Func(
-				Sum('amount'), 
-				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
+				Sum('amount'),
+				template='%(expressions)s OVER (ORDER BY %(order_by)s)',
 				order_by='ics_item.created_at DESC'
 			),
 			# Cost of task plus all tasks that come after it
 			# (most recent task will have the smallest cumulative_cost)
 			cumulative_cost=Func(
 				Sum('cost'),
-				template='%(expressions)s OVER (ORDER BY %(order_by)s)', 
+				template='%(expressions)s OVER (ORDER BY %(order_by)s)',
 				order_by='ics_item.created_at DESC'
 			),
 		).annotate(
 			# Difference between the actual amount and the cumulative_amount
 			amount_diff=actual_amount-F('cumulative_amount'),
 		).annotate(
-			# cost/amount = cost per unit
-			cost_per_unit=Case(
-				When(cumulative_amount__gt=0, then=F('cost')/F('amount')),
-				default=0
-			),
-			# cumulative cost/cumulative amount = cumulative cost per unit
-			cumulative_cost_per_unit=Case(
-				When(cumulative_amount__gt=0, then=F('cumulative_cost')/F('cumulative_amount')),
-				default=0
-			),
-			# Absolute value of amount_diff
-			amount_diff_abs=Func(F('amount_diff'), function='ABS')	
-		).annotate(
-			# The cost that needs to be added to the item's cumulative_cost in order to account for the remaining inventory amount
-			# if amount_diff is positive, then use the cumulative cost per unit rather than this individual item's cost per unit
-			cost_offset=Case(
-				When(amount_diff__gt=0, then=F('amount_diff')*F('cumulative_cost_per_unit')),
-				default=F('amount_diff')*F('cost_per_unit'),
-				output_field=DecimalField()
-			),
-			gt_zero=Case(
+			amount_diff_abs=Func(F('amount_diff'), function='ABS'),
+			gt_zero = Case(
 				When(amount_diff__gt=0, then=Value(1)),
 				default=Value(0),
 				output_field=DecimalField()
@@ -114,8 +95,23 @@ def get_adjusted_item_cost(process_type, product_type):
 		# Doing this will give us the most accurate cost estimate possible
 		).order_by('gt_zero', 'amount_diff_abs').first()
 
+	# cost_offset is what needs to be added to the item's cumulative_cost in order to account for the remaining inventory amount
+	# if amount_diff is positive, then use the cumulative cost per unit rather than this individual item's cost per unit
+	if item.amount_diff > 0:
+		if item.cumulative_amount > 0:
+			cumulative_cost_per_unit = item.cumulative_cost / item.cumulative_amount
+		else:
+			cumulative_cost_per_unit = 0
+		cost_offset = item.amount_diff*cumulative_cost_per_unit
+	else:
+		if item.amount > 0:
+			cost_per_unit = item.cost / item.amount
+		else:
+			cost_per_unit = 0
+		cost_offset = item.amount_diff*cost_per_unit
+
 	#total_cumulative_cost = item.cumulative_cost + item.cumulative_cost_offset
-	total_cumulative_cost = item.cumulative_cost + item.cost_offset
+	total_cumulative_cost = item.cumulative_cost + cost_offset
 
 	# Do not return negative costs when inventory has negative amounts
 	if total_cumulative_cost < 0:
