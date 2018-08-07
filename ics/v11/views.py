@@ -244,13 +244,6 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
       Task.objects.filter(pk=pk).update(custom_display=new_name)
     return Response({'name_already_exists': name_already_exists})
 
-  # If put request is trash-ing a task, call a special cost update function
-  def put(self, request, *args, **kwargs):
-    is_trashed = json.loads(request.body).get('is_trashed', False)
-    if is_trashed:
-      print("is_trashed == True, so update costs for a deleted task...")
-    return super(TaskEdit, self).patch(request, *args, **kwargs)
-
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
