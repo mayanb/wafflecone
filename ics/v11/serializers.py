@@ -11,7 +11,7 @@ from ics.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from ics.v11.queries.inventory import *
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.constants import POSITIVE_SMALL_INTEGER_FIELD_MAX
 
@@ -910,46 +910,36 @@ class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
 class AdjustmentSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
 	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+	cost = serializers.SerializerMethodField()
+
+	def get_cost(self, adjustment):
+		process_type = adjustment.process_type_id
+		product_type = adjustment.product_type_id
+		return get_adjusted_item_cost(process_type, product_type)
 
 	class Meta:
 		model = Adjustment
-		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount', 'explanation')
+		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount', 'cost', 'explanation')
 
 
 class InventoryList2Serializer(serializers.Serializer):
+	category = serializers.SerializerMethodField()
 	process_type = serializers.SerializerMethodField()
 	product_types = serializers.SerializerMethodField()
-	adjusted_amount = serializers.SerializerMethodField(source='get_adjusted_amount')
+	adjusted_amount = serializers.SerializerMethodField()
+	adjusted_cost = serializers.SerializerMethodField()
 
-	def get_adjusted_amount(self, item_summary):
-		process_type = item_summary['creating_task__process_type']
-		product_types = list(set(item_summary['product_type_ids']))
-		total_adjusted_amount = 0
+	def get_category(self, item_summary):
+		return item_summary['creating_task__process_type__category']
 
-		for product_type in product_types:
-			start_time = None
-			starting_amount = 0
-			latest_adjustment = Adjustment.objects \
-				.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
-				.order_by('-created_at').first()
-
-			if latest_adjustment:
-				start_time = latest_adjustment.created_at
-				starting_amount = latest_adjustment.amount
-
-			data = inventory_amounts(process_type, product_type, start_time, None)
-			total_adjusted_amount += starting_amount + data['created_amount'] - data['used_amount']
-
-		return total_adjusted_amount
-
-	def get_process_type(self, item):
+	def get_process_type(self, item_summary):
 		return {
-			'id': item['creating_task__process_type'],
-			'name': item['creating_task__process_type__name'],
-			'code': item['creating_task__process_type__code'],
-			'unit': item['creating_task__process_type__unit'],
-			'icon': item['creating_task__process_type__icon'],
-			'category': item['creating_task__process_type__category'],
+			'id': item_summary['creating_task__process_type'],
+			'name': item_summary['creating_task__process_type__name'],
+			'code': item_summary['creating_task__process_type__code'],
+			'unit': item_summary['creating_task__process_type__unit'],
+			'icon': item_summary['creating_task__process_type__icon'],
+			'category': item_summary['creating_task__process_type__category'],
 		}
 	
 	def get_product_types(self, item_summary):
@@ -961,6 +951,24 @@ class InventoryList2Serializer(serializers.Serializer):
 				'code': item_summary['product_type_codes'][i],
 			}
 		return product_types_dict.values()
+
+	def get_adjusted_amount(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_types = list(set(item_summary['product_type_ids']))
+		total_adjusted_amount = 0
+
+		for product_type in product_types:
+			total_adjusted_amount += get_adjusted_item_amount(process_type, product_type)
+		return total_adjusted_amount
+
+	def get_adjusted_cost(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_types = list(set(item_summary['product_type_ids']))
+		total_cost = 0
+
+		for product_type in product_types:
+			total_cost += get_adjusted_item_cost(process_type, product_type)
+		return total_cost
 
 
 class ItemSummarySerializer(serializers.Serializer):
