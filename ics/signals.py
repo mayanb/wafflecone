@@ -1,5 +1,5 @@
 from ics.models import *
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from ics.async_actions import *
 from ics.alerts import *
@@ -28,7 +28,12 @@ def task_changed(sender, instance, **kwargs):
 	if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
 		check_flagged_tasks_alerts(**kwargs)
 
-	task_deleted_update_cost(**kwargs)
+
+@receiver(pre_save, sender=Task)
+def task_changed(sender, instance, **kwargs):
+	print("pre_save called on Task")
+	if instance.is_trashed:
+		task_deleted_update_cost(instance.id)
 
 
 @receiver(post_delete, sender=Task)

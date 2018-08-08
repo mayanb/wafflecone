@@ -213,3 +213,47 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 				parent)
 		descendant_ingredients[key]['task_ing_map'] = task_ing_map
 	return descendant_ingredients
+
+
+# MAIN: updates costs when task is deleted
+def task_deleted_update_cost(deleted_task):
+	update_children_of_deleted_task(deleted_task)
+	# then propagate to all ancestors
+
+
+def update_children_of_deleted_task(deleted_task):
+	# fetch all the descendants of deleted task
+	deleted_task_descendants = Task.descendants(Task.objects.filter(pk=deleted_task)[0])
+	if not deleted_task_descendants:
+		print ("No descendents")
+		return
+	tasks = task_details(deleted_task_descendants)
+	tasks = include_deleted_task(tasks, deleted_task)
+	descendant_ingredients = descendant_ingredient_details(deleted_task_descendants, tasks)
+	if tasks[deleted_task]['children'] != set([None]):
+		batch_size = tasks[deleted_task]['batch_size']
+		cost = tasks[deleted_task]['cost']
+		prev_unit_cost = float(round(cost / batch_size, 2))
+		new_unit_cost = 0
+		# print("cost: %d, batch_size: %d, prev_unit_cost: %d, new_unit_cost: %d" % (cost, batch_size, prev_unit_cost, new_unit_cost))
+		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
+
+
+# include deleted task in tasks object
+def include_deleted_task(tasks, deleted_task):
+	deleted_tasks_batch_size = Task.objects.filter(pk=deleted_task).annotate(batch_size=Coalesce(Sum('items__amount'), 0))[0]
+	deleted_tasks_with_parents_children = Task.objects.filter(pk=deleted_task).annotate(
+		children_list=ArrayAgg('items__inputs__task'),
+		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'),
+		ingredients=ArrayAgg('task_ingredients__ingredient')
+	)[0]
+
+	tasks[deleted_task] = {
+		'children': set(deleted_tasks_with_parents_children.children_list),
+		'process_type': deleted_tasks_batch_size.process_type_id,
+		'ingredients': set(deleted_tasks_with_parents_children.ingredients),
+		'product_type': deleted_tasks_batch_size.product_type_id, 'cost': deleted_tasks_batch_size.cost,
+		'parents': set(deleted_tasks_with_parents_children.task_parent_ids),
+		'remaining_worth': deleted_tasks_batch_size.remaining_worth,
+		'batch_size': deleted_tasks_batch_size.batch_size}
+	return tasks
