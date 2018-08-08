@@ -76,7 +76,7 @@ def input_update(**kwargs):
 	Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 	try:
 		# fetch all the descendants of updated task
-		updated_task_descendants = Task.descendants(Task.objects.filter(pk=updated_task)[0])
+		updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task)[0])
 		if updated_task_descendants.count() == 0:
 			return
 		# Task.objects.get(pk=updated_task).descendats()
@@ -143,7 +143,7 @@ def ingredient_amount_update(**kwargs):
 
 	# update children
 	# fetch all the descendants of updated task
-	updated_task_descendants = Task.descendants(Task.objects.filter(pk=updated_task_id)[0])
+	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task_id)[0])
 	if updated_task_descendants.count() == 0:
 		return
 	tasks = task_details(updated_task_descendants)
@@ -159,7 +159,7 @@ def ingredient_amount_update(**kwargs):
 def batch_size_update(**kwargs):
 	updated_task = kwargs['pk']
 	# fetch all the descendants of updated task
-	updated_task_descendants = Task.descendants(Task.objects.filter(pk=updated_task)[0])
+	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task)[0])
 	if updated_task_descendants.count() == 0:
 		return
 	tasks = task_details(updated_task_descendants)
@@ -340,7 +340,7 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 
 def update_children_of_deleted_task(deleted_task):
 	# fetch all the descendants of deleted task
-	deleted_task_descendants = Task.descendants(Task.objects.filter(pk=deleted_task)[0])
+	deleted_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=deleted_task)[0])
 	if not deleted_task_descendants:
 		print ("No descendents")
 		return
@@ -349,7 +349,11 @@ def update_children_of_deleted_task(deleted_task):
 	if tasks[deleted_task]['children'] != set([None]):
 		batch_size = tasks[deleted_task]['batch_size']
 		cost = tasks[deleted_task]['cost']
-		prev_unit_cost = float(round(4 / 2, 2))
+		prev_unit_cost = float(round(cost / batch_size, 2))
 		new_unit_cost = 0
 		# print("cost: %d, batch_size: %d, prev_unit_cost: %d, new_unit_cost: %d" % (cost, batch_size, prev_unit_cost, new_unit_cost))
 		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
+
+
+def get_non_trashed_descendants(task):
+	return Task.descendants(task).filter(is_trashed=False)
