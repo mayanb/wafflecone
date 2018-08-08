@@ -74,29 +74,85 @@ def input_update(**kwargs):
 		new_updated_task_cost = updated_task_with_parents.cost - input_parent.cost
 		new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth - input_parent.cost
 	Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
-
 	try:
 		# fetch all the descendants of updated task
 		updated_task_descendants = Task.descendants(Task.objects.filter(pk=updated_task)[0])
+		if updated_task_descendants.count() == 0:
+			return
 		# Task.objects.get(pk=updated_task).descendats()
 		tasks = task_details(updated_task_descendants)
 		descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-		if tasks[updated_task]['children'] != [None]:
-			batch_size = tasks[updated_task]['batch_size']
-			prev_unit_cost = float(round(old_cost / batch_size, 2))
-			new_unit_cost = float(round(tasks[updated_task]['cost'] / batch_size, 2))
-			# call update_children to update costs of all updated_task's children
-			update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
+
+		batch_size = tasks[updated_task]['batch_size']
+		prev_unit_cost = float(round(old_cost / batch_size, 2))
+		new_unit_cost = float(round(tasks[updated_task]['cost'] / batch_size, 2))
+		# call update_children to update costs of all updated_task's children
+		update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
 
 	except Exception as e:
 		print "except block"
 		print(str(e))
 
 
-# updates costs when task is deleted
-# yet to implement
-def task_deleted_update_cost(**kwargs):
-	print kwargs
+def ingredient_amount_update(**kwargs):
+	TaskIngredient.objects.filter(pk=kwargs['task_ing_id']).update(was_amount_changed=False)
+	# update parents and updated_task
+	updated_task_id = kwargs['taskID']
+	updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
+		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
+	parent_ids = updated_task.task_parent_ids
+	updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
+		batch_size=Coalesce(Sum('items__amount'), 0))
+	ingredient = Ingredient.objects.get(pk=kwargs['ingredientID'])
+	parents_contributing_ingredient = {}
+	for x in range(0, len(set(parent_ids))):
+		if updated_task_parents[x].process_type_id == ingredient.process_type_id and \
+				updated_task_parents[x].product_type_id == ingredient.product_type_id:
+			parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
+	num_parents = len(parents_contributing_ingredient)
+	old_amount = kwargs['previous_amount']
+	new_amount = kwargs['actual_amount']
+	old_avg_amount = old_amount / num_parents
+	new_avg_amount = new_amount / num_parents
+
+	total_diff = 0
+	for task in parents_contributing_ingredient:
+		if parents_contributing_ingredient[task].cost is None:
+			return
+		unit_cost = parents_contributing_ingredient[task].cost / parents_contributing_ingredient[task].batch_size
+		# cost of ingredient used previously
+		prev_utilization = old_avg_amount * unit_cost
+		# cost of ingredient used now
+		new_utilization = new_avg_amount * unit_cost
+		utilization_diff = new_utilization - prev_utilization
+		if utilization_diff > parents_contributing_ingredient[task].remaining_worth:
+			new_remaining_worth = 0
+			total_diff += parents_contributing_ingredient[task].remaining_worth
+		elif parents_contributing_ingredient[task].remaining_worth - utilization_diff < parents_contributing_ingredient[task].cost:
+			new_remaining_worth = parents_contributing_ingredient[task].remaining_worth - utilization_diff
+			total_diff += utilization_diff
+		else:
+			new_remaining_worth = parents_contributing_ingredient[task].cost
+			total_diff += parents_contributing_ingredient[task].remaining_worth - parents_contributing_ingredient[task].cost
+		# Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
+	old_updated_task_cost = updated_task.cost
+	old_updated_task_remaining_worth = updated_task.remaining_worth
+	new_updated_task_cost = old_updated_task_cost + total_diff
+	new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_diff
+	# Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+
+	# update children
+	# fetch all the descendants of updated task
+	updated_task_descendants = Task.descendants(Task.objects.filter(pk=updated_task_id)[0])
+	if updated_task_descendants.count() == 0:
+		return
+	tasks = task_details(updated_task_descendants)
+	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
+	batch_size = tasks[updated_task_id]['batch_size']
+	prev_unit_cost = float(round(old_updated_task_cost / batch_size, 2))
+	new_unit_cost = float(round(new_updated_task_cost / batch_size, 2))
+	# call update_children to update costs of all updated_task's children
+	update_children(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients)
 
 
 # calculate cost of current task and propagate changes when batch size changed
@@ -104,16 +160,17 @@ def batch_size_update(**kwargs):
 	updated_task = kwargs['pk']
 	# fetch all the descendants of updated task
 	updated_task_descendants = Task.descendants(Task.objects.filter(pk=updated_task)[0])
+	if updated_task_descendants.count() == 0:
+		return
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	if tasks[updated_task]['children'] != [None]:
-		new_batch_size = tasks[updated_task]['batch_size']
-		cost = tasks[updated_task]['cost']
-		amount_diff = kwargs['new_amount'] - kwargs['previous_amount']
-		old_batch_size = new_batch_size - amount_diff
-		prev_unit_cost = float(round(cost / old_batch_size, 2))
-		new_unit_cost = float(round(cost / new_batch_size, 2))
-		update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
+	new_batch_size = tasks[updated_task]['batch_size']
+	cost = tasks[updated_task]['cost']
+	amount_diff = kwargs['new_amount'] - kwargs['previous_amount']
+	old_batch_size = new_batch_size - amount_diff
+	prev_unit_cost = float(round(cost / old_batch_size, 2))
+	new_unit_cost = float(round(cost / new_batch_size, 2))
+	update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
 
 
 # calculate costs for all the children of current task
@@ -183,7 +240,6 @@ def task_details(updated_task_descendants):
 		children_list=ArrayAgg('items__inputs__task'),
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'),
 		ingredients=ArrayAgg('task_ingredients__ingredient'))
-
 	tasks = {}
 	for x in range(0, related_tasks_with_parents_children.count()):
 		tasks[related_tasks_with_parents_children[x].id] = {'children': set(related_tasks_with_parents_children[x].children_list),
