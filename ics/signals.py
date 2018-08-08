@@ -34,7 +34,7 @@ def task_changed(sender, instance, **kwargs):
 def task_changed(sender, instance, **kwargs):
 	print("pre_save called on Task")
 	if instance.is_trashed:
-		task_deleted_update_cost(instance.id)
+		task_deleted_update_cost(instance)
 
 
 @receiver(post_delete, sender=Task)
