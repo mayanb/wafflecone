@@ -72,7 +72,7 @@ def get_adjustment_explanation(square_name):
 	return 'This adjustment was made automatically based on sales of "%s" on Square' % square_name
 
 
-def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_team_id):
+def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_team_id, polymer_userprofile_id):
 	# Request payments made from begin_time (inclusive) to end_time (exclusive), sorted chronologically
 	time_range = {'begin_time': begin_time, 'end_time': end_time, 'order': 'ASC', 'limit': 200}  # 200 is max allowed
 	request_headers = {
@@ -90,7 +90,7 @@ def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_te
 		total_amount_for_item = reduce(lambda sum, payment: sum + float(payment['quantity']), payments_array, 0)
 		info = team_skus[item_id]
 		adjustments.append({
-			'userprofile': 1,
+			'userprofile': polymer_userprofile_id,
 			'process_type': info['polymer_process_id'],
 			'product_type': info['polymer_product_id'],
 			'amount': total_amount_for_item,

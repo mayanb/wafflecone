@@ -39,12 +39,16 @@ def extract_csv_reader(request):
 	return csv.DictReader(codecs.EncodedFile(csvfile, "utf-8"), delimiter=',', dialect=dialect)
 
 
+def get_first_user_id_for_team(polymer_team_id):
+	return UserProfile.objects.filter(team=polymer_team_id).order_by('id').first().id
+
+
 def adjust_inventory_using_stitch_csv(polymer_team_id, request):
 	team_info = sku_mappings_by_team.get(polymer_team_id, None)
 	if not team_info:
 		return None
 
-	polymer_userprofile_id = team_info['polymer_userprofile_id']
+	polymer_userprofile_id = get_first_user_id_for_team(polymer_team_id)
 	team_stitch_skus = team_info['stitch']
 
 	# Format Adjustment request objects

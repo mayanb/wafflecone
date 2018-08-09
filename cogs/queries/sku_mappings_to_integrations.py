@@ -200,7 +200,6 @@ sku_mappings_by_team = {
 	1: {
 		'polymer_team_name': 'alabama',
 		'polymer_team_id': 1,
-		'polymer_userprofile_id': 1,
 		'square': square_alabama,
 		'stitch': stitch_alabama,
 		'square_access_token': DANDELION_SQUARE_ACCESS_TOKEN,
