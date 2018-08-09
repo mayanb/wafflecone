@@ -232,8 +232,18 @@ def update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descenda
 				rec_cost(child, new_difference, tasks, visited, descendant_ingredients)
 
 
+# Make-shift solution: we're unable to filter out rashed tasks in ArrayAggs, so we just have to skip em
+def task_is_trashed(task, maps_of_non_trashed_tasks):
+	for map in maps_of_non_trashed_tasks:
+		if task not in map:
+			return True
+	return False
+
+
 # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
 def update_cost(task, child, unit_cost, tasks, descendant_ingredients):
+	if task_is_trashed(task, [descendant_ingredients, tasks]) or task_is_trashed(child, [descendant_ingredients, tasks]):
+		return 0  # @Aditya, does zero work?
 	# find number of parent contributing same ingredient to the child task
 	num_parents = len(descendant_ingredients[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['parent_tasks'])
 	# total amount of ingredient associated with the child task
@@ -312,6 +322,8 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 			task_ing_map[(ingredient_details['ingredient__process_type'], ingredient_details['ingredient__product_type'])] = {
 								'amount': ingredient_details['actual_amount'], 'parent_tasks': set()}
 		for parent in tasks[key]['parents']:
+			if task_is_trashed(parent, [tasks]):
+				continue
 			task_ing_map[(tasks[parent]['process_type'], tasks[parent]['product_type'])]['parent_tasks'].add(
 				parent)
 		descendant_ingredients[key]['task_ing_map'] = task_ing_map
