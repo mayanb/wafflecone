@@ -208,7 +208,7 @@ class TeamCreate(generics.CreateAPIView):
 ######################
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
-  created_at = django_filters.DateTimeFilter(name="created_at", lookup_expr="startswith")
+  created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
   class Meta:
       model = Task
       fields = ['created_at', 'is_open']
@@ -606,7 +606,13 @@ class ActivityList(generics.ListAPIView):
     queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team)\
       .select_related('process_type', 'product_type')
 
-    queryset = filter_by_created_at_range(self.request.query_params, queryset)
+    start = self.request.query_params.get('start', None)
+    end = self.request.query_params.get('end', None)
+    if start is not None and end is not None:
+      dt = datetime.datetime
+      start_date = pytz.utc.localize(dt.strptime(start, constants.DATE_FORMAT))
+      end_date = pytz.utc.localize(dt.strptime(end, constants.DATE_FORMAT))
+      queryset = queryset.filter(created_at__range=(start_date, end_date))
 
     flagged = self.request.query_params.get('flagged', None)
     if flagged and flagged.lower() == 'true':
