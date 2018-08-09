@@ -1,6 +1,7 @@
 from cogs.queries.sku_mappings_to_integrations import sku_mappings_by_team
 from cogs.queries.square.get_square_changes import get_square_changes
 from cogs.queries.integration_adjustments import create_adjustments, get_first_user_id_for_team
+from cogs.queries.debug_helpers import debug_print
 
 # Runs a square fetch of payment data for the time period specified for each Polymer team specified.
 # Makes necessary adjustments to Polymer's database, then saves (exclusive) end_time for use as begin_time (inclusive)
@@ -22,17 +23,17 @@ def update_all_team_inventories(last_square_sync_times, end_time):
 		except Exception as e:
 			error_string = '%s (%s)' % (polymer_team, e)
 			failed_teams.append(error_string)
-			print('Updating inventory based on Square transactions terminated due to an exception:')
-			print(e)
+			debug_print('Updating inventory based on Square transactions terminated due to an exception:')
+			debug_print(e)
 	return failed_teams
 
 
 def update_team_inventory(end_time, polymer_team, team_data, last_square_sync_times):
 	begin_time = iso_format(last_square_sync_times[team_data['polymer_team_id']])
-	print('Begin time: ' + begin_time)
-	print('end time:' + end_time)
+	debug_print('Begin time: ' + begin_time)
+	debug_print('end time:' + end_time)
 
-	print('Requesting inventory data from Square for %s__________________________' % polymer_team)
+	debug_print('Requesting inventory data from Square for %s__________________________' % polymer_team)
 	inventory_changes = get_square_changes(
 		begin_time,
 		end_time,
@@ -41,8 +42,8 @@ def update_team_inventory(end_time, polymer_team, team_data, last_square_sync_ti
 		team_data['polymer_team_id'],
 		team_data['polymer_userprofile_id']
 	)
-	print(inventory_changes)
+	debug_print(inventory_changes)
 
-	print('\nRequesting Polymer inventory adjustments for %s__________________________' % polymer_team)
+	debug_print('\nRequesting Polymer inventory adjustments for %s__________________________' % polymer_team)
 	create_adjustments(inventory_changes['adjustment_requests'], inventory_changes['team_id'])
-	print('\n')
+	debug_print('\n')

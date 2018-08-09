@@ -1,9 +1,10 @@
 import requests
+from cogs.queries.debug_helpers import debug_print
 
 
 def make_request(url, headers={}, method='GET', data=None):
 	if method == 'POST':
-		print("COMPLETED POST TO: " + url)
+		debug_print("COMPLETED POST TO: " + url)
 		return extract_data(requests.post(url, headers=headers, data=data))
 
 	# Assumes GET responses bodies are Arrays which it will aggregate across potentially paginated responses.
@@ -11,11 +12,11 @@ def make_request(url, headers={}, method='GET', data=None):
 		data = []
 		url_to_next_page_of_data = url
 		while url_to_next_page_of_data:
-			print('Get URL: ' + url_to_next_page_of_data)
+			debug_print('Get URL: ' + url_to_next_page_of_data)
 			res = requests.get(url_to_next_page_of_data, headers=headers)
 			data += extract_data(res)
 			url_to_next_page_of_data = res.links.get('next', {}).get('url', False)
-		print("FETCHED ALL (PAGINATED) DATA FROM: " + url)
+		debug_print("FETCHED ALL (PAGINATED) DATA FROM: " + url)
 		return data
 
 

@@ -2,6 +2,7 @@ import urllib
 from functools import reduce
 import dateutil.parser
 from make_request import make_request
+from cogs.queries.debug_helpers import debug_print, debugging
 
 
 # Obtains all of the business's location IDs. Each location has its own collection of inventory, payments, etc.
@@ -29,11 +30,11 @@ def get_datetime_object(payment):
 def get_sorted_unique_payments(all_location_payments):
 	seen_payment_ids = set()
 	unique_payments = []
-	print("Number of unfiltered payments from each location:")
+	debug_print("Number of unfiltered payments from each location:")
 	for payments in all_location_payments:
-		print(str(len(payments)))
+		debug_print(str(len(payments)))
 	payments = reduce(lambda sum, payments: sum + payments, all_location_payments, [])
-	print('Total payments (all locations):  ' + str(len(payments)))
+	debug_print('Total payments (all locations):  ' + str(len(payments)))
 
 	for payment in payments:
 		# Filter duplicates or anything without a date
@@ -41,7 +42,7 @@ def get_sorted_unique_payments(all_location_payments):
 			continue
 		seen_payment_ids.add(payment['id'])
 		unique_payments.append(payment)
-	print('Unique payments (all locations): ' + str(len(unique_payments)))
+	debug_print('Unique payments (all locations): ' + str(len(unique_payments)))
 	return sorted(unique_payments, key=get_datetime_object)
 
 
@@ -84,8 +85,9 @@ def get_square_changes(begin_time, end_time, access_token, team_skus, polymer_te
 
 	adjustments = []
 	for item_id, payments_array in payments_by_item_id.iteritems():
-		for payment in payments_array:  # SANITY CHECK
-			print(str(payment['name']) + ': ' + str(payment['quantity']) + ', ' + str(payment['created_at']))
+		if debugging():
+			for payment in payments_array:  # SANITY CHECK
+				debug_print(str(payment['name']) + ': ' + str(payment['quantity']) + ', ' + str(payment['created_at']))
 
 		total_amount_for_item = reduce(lambda sum, payment: sum + float(payment['quantity']), payments_array, 0)
 		info = team_skus[item_id]
