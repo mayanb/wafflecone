@@ -13,6 +13,7 @@ import pytz
 import re
 from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from ics.constants import POSITIVE_SMALL_INTEGER_FIELD_MAX
 
 
 class InviteCodeSerializer(serializers.ModelSerializer):
@@ -740,6 +741,9 @@ class ReorderAttributeSerializer(serializers.ModelSerializer):
 	new_rank = serializers.IntegerField(write_only=True)
 
 	def update(self, instance, validated_data):
+		if validated_data['new_rank'] == -1:
+			instance.is_trashed = True  # instance.save() called in reorder()
+			validated_data['new_rank'] = POSITIVE_SMALL_INTEGER_FIELD_MAX  # Assumes attribute won't have 32767 attributes
 		return reorder(
 			instance,
 			validated_data,
