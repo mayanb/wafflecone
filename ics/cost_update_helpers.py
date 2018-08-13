@@ -8,11 +8,13 @@ from django.db.models import F, Count, Sum
 # calculate costs for all the children of current task
 def update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients):
 	# calculate difference of unit costs
-	unit_cost = new_unit_cost - prev_unit_cost
+	unit_cost_diff = new_unit_cost - prev_unit_cost
+	if unit_cost_diff == 0:
+		return
 	# iterate through each child of the updated task and propagate data
 	for child in tasks[updated_task]['children']:
 		if child is not None:
-			new_difference = update_cost(updated_task, child, unit_cost, tasks, descendant_ingredients)
+			new_difference = update_cost(updated_task, child, unit_cost_diff, tasks, descendant_ingredients)
 			# call rec_cost() to propagate values to children of child task if it is present in tasks list
 			if child in tasks:
 				visited = {}  # handles tasks with circular dependencies
@@ -28,7 +30,7 @@ def task_is_trashed(task, maps_of_non_trashed_tasks):
 
 
 # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
-def update_cost(task, child, unit_cost, tasks, descendant_ingredients):
+def update_cost(task, child, unit_cost_diff, tasks, descendant_ingredients):
 	if task_is_trashed(task, [descendant_ingredients, tasks]) or task_is_trashed(child, [descendant_ingredients, tasks]):
 		return 0  # @Aditya, does zero work?
 	# find number of parent contributing same ingredient to the child task
@@ -37,7 +39,7 @@ def update_cost(task, child, unit_cost, tasks, descendant_ingredients):
 	total_amount = descendant_ingredients[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['amount']
 	# actual amount to be transferred to the child
 	actual_amount = float(total_amount / num_parents)
-	new_difference = unit_cost * actual_amount
+	new_difference = unit_cost_diff * actual_amount
 	tasks[child]['cost'] = tasks[child]['cost'] or 0
 	tasks[child]['remaining_worth'] = tasks[child]['remaining_worth'] or 0
 	# updated total cost and remaining_worth associated with the child and parent
@@ -54,13 +56,13 @@ def update_cost(task, child, unit_cost, tasks, descendant_ingredients):
 
 
 # function to recursively propagate data
-def rec_cost(parent, proportional_cost, tasks, visited, descendant_ingredients):
+def rec_cost(parent, new_difference, tasks, visited, descendant_ingredients):
 	# batch_size should not be 0 (when you run script again)
-	unit_cost = float(round(proportional_cost / float(tasks[parent]['batch_size']), 2))
+	unit_cost_diff = get_unit_cost(new_difference, float(tasks[parent]['batch_size']))
 	for child in tasks[parent]['children']:
 		if child is not None and child not in visited:
 			visited[child] = child
-			new_difference = update_cost(parent, child, unit_cost, tasks, descendant_ingredients)
+			new_difference = update_cost(parent, child, unit_cost_diff, tasks, descendant_ingredients)
 			if child in tasks:
 				rec_cost(child, new_difference, tasks, visited, descendant_ingredients)
 
@@ -119,6 +121,22 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 
 def get_non_trashed_descendants(task):
 	return Task.descendants(task).filter(is_trashed=False)
+
+
+# BATCH SIZE UPDATE HELPERS
+
+def get_prev_and_new_unit_costs(task, kwargs):
+	new_batch_size = task['batch_size']
+	amount_diff = kwargs['new_amount'] - kwargs['previous_amount']
+	old_batch_size = new_batch_size - amount_diff
+	cost = task['cost']
+	prev_unit_cost = get_unit_cost(cost, old_batch_size)
+	new_unit_cost = get_unit_cost(cost, new_batch_size)
+	return prev_unit_cost, new_unit_cost
+
+
+def get_unit_cost(cost, batch_size):
+	return float(round(cost / batch_size, 2))
 
 
 # DELETED TASK HELPERS:
@@ -217,7 +235,7 @@ def update_children_of_deleted_task(deleted_task):
 	if tasks[deleted_task]['children'] != set([None]):
 		batch_size = tasks[deleted_task]['batch_size']
 		cost = tasks[deleted_task]['cost']
-		prev_unit_cost = float(round(cost / batch_size, 2))
+		prev_unit_cost = get_unit_cost(cost, batch_size)
 		new_unit_cost = 0
 		# print("cost: %d, batch_size: %d, prev_unit_cost: %d, new_unit_cost: %d" % (cost, batch_size, prev_unit_cost, new_unit_cost))
 		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)

@@ -149,8 +149,8 @@ def input_update(**kwargs):
 		descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
 
 		batch_size = tasks[updated_task]['batch_size']
-		prev_unit_cost = float(round(old_cost / batch_size, 2))
-		new_unit_cost = float(round(tasks[updated_task]['cost'] / batch_size, 2))
+		prev_unit_cost = get_unit_cost(old_cost, batch_size)
+		new_unit_cost = get_unit_cost(tasks[updated_task]['cost'], batch_size)
 		# call update_children to update costs of all updated_task's children
 		update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
 
@@ -195,8 +195,8 @@ def ingredient_amount_update(**kwargs):
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
 	batch_size = tasks[updated_task_id]['batch_size']
-	prev_unit_cost = float(round(old_updated_task_cost / batch_size, 2))
-	new_unit_cost = float(round(new_updated_task_cost / batch_size, 2))
+	prev_unit_cost = get_unit_cost(old_updated_task_cost, batch_size)
+	new_unit_cost = get_unit_cost(new_updated_task_cost, batch_size)
 	# call update_children to update costs of all updated_task's children
 	# update_children(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients)
 
@@ -208,14 +208,11 @@ def batch_size_update(**kwargs):
 	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task)[0])
 	if updated_task_descendants.count() == 0:
 		return
+
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	new_batch_size = tasks[updated_task]['batch_size']
-	cost = tasks[updated_task]['cost']
-	amount_diff = kwargs['new_amount'] - kwargs['previous_amount']
-	old_batch_size = new_batch_size - amount_diff
-	prev_unit_cost = float(round(cost / old_batch_size, 2))
-	new_unit_cost = float(round(cost / new_batch_size, 2))
+	prev_unit_cost, new_unit_cost = get_prev_and_new_unit_costs(tasks[updated_task], kwargs)
+
 	update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
 
 
