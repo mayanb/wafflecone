@@ -59,8 +59,7 @@ def input_changed(sender, instance, **kwargs):
 			    'input_item__creating_task__product_type' : instance.input_item.creating_task.product_type_id,
 				'input_item__creating_task__process_type' : instance.input_item.creating_task.process_type_id}
 	check_anomalous_inputs_alerts(**kwargs)
-	# updates costs of children of updated task(taskID)
-	# input_update(**kwargs)
+	input_update(**kwargs)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -72,10 +71,7 @@ def input_deleted(sender, instance, **kwargs):
 				'input_item__creating_task__product_type' : instance.input_item.creating_task.product_type_id,
 				'input_item__creating_task__process_type' : instance.input_item.creating_task.process_type_id}
 	check_anomalous_inputs_alerts(**kwargs2)
-	# print "input ingredient id"
-	# print instance.input_item.ingredient
-	# updates costs of children of updated task(taskID)
-	# input_update(**kwargs2)
+	input_update(**kwargs2)
 
 
 @receiver(post_save, sender=TaskIngredient)

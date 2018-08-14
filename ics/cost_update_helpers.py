@@ -227,7 +227,7 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 			print "else"
 			new_remaining_worth = parents_contributing_ingredient[task].cost
 			total_diff += parents_contributing_ingredient[task].remaining_worth - parents_contributing_ingredient[task].cost
-		# Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
+		Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
 		print "new remaining"
 		print new_remaining_worth
 		print "total diff"

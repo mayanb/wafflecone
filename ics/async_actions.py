@@ -36,11 +36,9 @@ def unflag_task_descendants(**kwargs):
 
 
 # calculate cost of current task and propagate changes when inputs added/deleted
-# @Maya
-# this function will be altered this afternoon when we handle recipe changes
 @task
 def input_update(**kwargs):
-	# when recipe is defined
+	# NO RECIPE EXISTS
 	recipe = kwargs['recipe']
 	if recipe is None:
 		updated_task = kwargs['taskID']
@@ -62,9 +60,9 @@ def input_update(**kwargs):
 			new_updated_task_cost = updated_task_with_parents.cost + input_parent.cost - input_parent.remaining_worth
 			new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth + input_parent.cost - input_parent.remaining_worth
 			parent_remaining_worth = input_parent.cost
-		# Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
-		# Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
-	# recipe not defined
+		Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
+		Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+	# RECIPE EXISTS
 	else:
 		updated_task_id = kwargs['taskID']
 		input_item__creating_task__product_type = kwargs['input_item__creating_task__product_type']
@@ -106,8 +104,8 @@ def input_update(**kwargs):
 				parent_remaining_worth = input_parent.reamaining_worth - parent_contribution
 				new_updated_task_cost = updated_task_with_parents.cost + parent_contribution
 				new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth + parent_contribution
-				# Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
-				# Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+				Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
+				Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 			else:
 				num_parents = len(parents_contributing_ingredient) - 1
 				total_diff = update_parents_for_ingredient(parents_contributing_ingredient, actual_amount, actual_amount, num_parents,
@@ -117,7 +115,7 @@ def input_update(**kwargs):
 				old_updated_task_remaining_worth = updated_task.remaining_worth
 				new_updated_task_cost = old_updated_task_cost + total_diff
 				new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_diff
-				# Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+				Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 		else:
 			if similar_inputs < 1:
 				parent_unit_cost = input_parent.cost / input_parent.batch_size
@@ -125,8 +123,8 @@ def input_update(**kwargs):
 				parent_remaining_worth = input_parent.reamaining_worth + parent_contribution
 				new_updated_task_cost = updated_task_with_parents.cost - parent_contribution
 				new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth - parent_contribution
-				# Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
-				# Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+				Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
+				Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 			else:
 				num_parents = len(parents_contributing_ingredient) + 1
 				total_diff = update_parents_for_ingredient(parents_contributing_ingredient, actual_amount, actual_amount, num_parents,
@@ -136,11 +134,10 @@ def input_update(**kwargs):
 				old_updated_task_remaining_worth = updated_task.remaining_worth
 				new_updated_task_cost = old_updated_task_cost + total_diff
 				new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_diff
-				# Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+				Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 
 	try:
 		# update descendants
-		# fetch all the descendants of updated task
 		updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task)[0])
 		if updated_task_descendants.count() == 0:
 			return
@@ -151,7 +148,7 @@ def input_update(**kwargs):
 		batch_size = tasks[updated_task]['batch_size']
 		prev_unit_cost = get_unit_cost(old_cost, batch_size)
 		new_unit_cost = get_unit_cost(tasks[updated_task]['cost'], batch_size)
-		# call update_children to update costs of all updated_task's children
+
 		update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
 
 	except Exception as e:
