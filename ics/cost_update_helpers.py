@@ -250,3 +250,26 @@ def update_children_of_deleted_task(deleted_task):
 		new_unit_cost = 0
 		# print("cost: %d, batch_size: %d, prev_unit_cost: %d, new_unit_cost: %d" % (cost, batch_size, prev_unit_cost, new_unit_cost))
 		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
+
+
+# UPDATE INPUT HELPERS
+
+def handle_input_change_with_no_recipe(kwargs, updated_task_with_parents, updated_task_id):
+	input_creating_task = kwargs['creatingTaskID']
+	input_added = kwargs['added']
+	# fetch task which created the input
+	input_parent = Task.objects.filter(is_trashed=False, pk=input_creating_task).annotate(
+		batch_size=Coalesce(Sum('items__amount'), 0))[0]
+	if input_parent.cost is None:
+		return
+	if input_added:
+		print('input added...')
+		new_updated_task_cost = updated_task_with_parents.cost + input_parent.remaining_worth
+		new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth + input_parent.remaining_worth
+		parent_remaining_worth = 0
+	else:
+		new_updated_task_cost = updated_task_with_parents.cost + input_parent.cost - input_parent.remaining_worth
+		new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth + input_parent.cost - input_parent.remaining_worth
+		parent_remaining_worth = input_parent.cost
+	Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
+	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
