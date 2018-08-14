@@ -137,7 +137,8 @@ def ingredient_amount_update(**kwargs):
 	updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
 	parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task.task_parent_ids, kwargs['ingredientID'])
-	if len(parents_contributing_ingredient) < 2:
+	if len(parents_contributing_ingredient) <= 1:
+		# With just 1 input, changing the ingredient amount doesn't affect anyone's cost, since all cost comes from 1 task.
 		return
 	old_amount = kwargs['previous_amount']
 	new_amount = kwargs['actual_amount']
