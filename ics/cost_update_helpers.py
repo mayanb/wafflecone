@@ -273,3 +273,17 @@ def handle_input_change_with_no_recipe(kwargs, updated_task_with_parents, update
 		parent_remaining_worth = input_parent.cost
 	Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
 	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+
+
+# UPDATE INGREDIENT HELPERS
+
+def get_parents_contributing_ingredient(parent_ids, ingredient_id):
+	updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
+		batch_size=Coalesce(Sum('items__amount'), 0))
+	ingredient = Ingredient.objects.get(pk=ingredient_id)
+	parents_contributing_ingredient = {}
+	for x in range(0, len(set(parent_ids))):
+		if updated_task_parents[x].process_type_id == ingredient.process_type_id and \
+						updated_task_parents[x].product_type_id == ingredient.product_type_id:
+			parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
+	return parents_contributing_ingredient

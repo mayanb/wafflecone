@@ -68,15 +68,7 @@ def input_update(**kwargs):
 		#***************#
 		updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
 			task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
-		parent_ids = updated_task.task_parent_ids
-		updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
-			batch_size=Coalesce(Sum('items__amount'), 0))
-		ingredient = Ingredient.objects.get(pk=ingredient_id)
-		parents_contributing_ingredient = {}
-		for x in range(0, len(set(parent_ids))):
-			if updated_task_parents[x].process_type_id == ingredient.process_type_id and \
-					updated_task_parents[x].product_type_id == ingredient.product_type_id:
-				parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
+		parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task.task_parent_ids, ingredient_id.id)
 
 		if input_added:
 			if similar_inputs < 2:
@@ -144,15 +136,7 @@ def ingredient_amount_update(**kwargs):
 	updated_task_id = kwargs['taskID']
 	updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
-	parent_ids = updated_task.task_parent_ids
-	updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
-		batch_size=Coalesce(Sum('items__amount'), 0))
-	ingredient = Ingredient.objects.get(pk=kwargs['ingredientID'])
-	parents_contributing_ingredient = {}
-	for x in range(0, len(set(parent_ids))):
-		if updated_task_parents[x].process_type_id == ingredient.process_type_id and \
-				updated_task_parents[x].product_type_id == ingredient.product_type_id:
-			parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
+	parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task.task_parent_ids, kwargs['ingredientID'])
 	if len(parents_contributing_ingredient) < 2:
 		return
 	old_amount = kwargs['previous_amount']
