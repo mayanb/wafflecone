@@ -9,6 +9,7 @@ from django.db.models import F, Count, Sum
 def update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients):
 	# calculate difference of unit costs
 	unit_cost_diff = new_unit_cost - prev_unit_cost
+	print('unit_cost_diff', unit_cost_diff)
 	if unit_cost_diff == 0:
 		return
 	# iterate through each child of the updated task and propagate data
@@ -31,8 +32,8 @@ def task_is_trashed(task, maps_of_non_trashed_tasks):
 
 # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
 def update_cost(task, child, unit_cost_diff, tasks, descendant_ingredients):
-	if task_is_trashed(task, [descendant_ingredients, tasks]) or task_is_trashed(child, [descendant_ingredients, tasks]):
-		return 0  # @Aditya, does zero work?
+	# if task_is_trashed(task, [descendant_ingredients, tasks]) or task_is_trashed(child, [descendant_ingredients, tasks]):
+	# 	return 0  # @Aditya, does zero work?
 	# find number of parent contributing same ingredient to the child task
 	num_parents = len(descendant_ingredients[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['parent_tasks'])
 	# total amount of ingredient associated with the child task
@@ -40,19 +41,27 @@ def update_cost(task, child, unit_cost_diff, tasks, descendant_ingredients):
 	# actual amount to be transferred to the child
 	actual_amount = float(total_amount / num_parents)
 	new_difference = unit_cost_diff * actual_amount
-	tasks[child]['cost'] = tasks[child]['cost'] or 0
-	tasks[child]['remaining_worth'] = tasks[child]['remaining_worth'] or 0
-	# updated total cost and remaining_worth associated with the child and parent
-	print "new difference"
-	print new_difference
-	tasks[child]['cost'] = float(tasks[child]['cost']) + new_difference
-	tasks[child]['remaining_worth'] = float(tasks[child]['remaining_worth']) + new_difference
-	tasks[task]['remaining_worth'] = float(tasks[task]['remaining_worth']) - new_difference
-	# update child costs
-	Task.objects.filter(pk=child).update(cost=tasks[child]['cost'], remaining_worth=tasks[child]['remaining_worth'])
-	# update parent task costs
-	Task.objects.filter(pk=task).update(remaining_worth=tasks[task]['remaining_worth'])
+	print('new_difference', new_difference, 'parent task', task)
+	update_cost_and_remaining_worth_of_child(child, tasks, new_difference)
+	update_remaining_worth_of_parent(task, tasks, new_difference)
 	return new_difference
+
+
+def update_cost_and_remaining_worth_of_child(child, tasks, new_difference):
+	tasks[child]['remaining_worth'] = get_new_dollar_value(tasks[child]['remaining_worth'], new_difference)
+	tasks[child]['cost'] = get_new_dollar_value(tasks[child]['cost'], new_difference)
+	Task.objects.filter(pk=child).update(cost=tasks[child]['cost'], remaining_worth=tasks[child]['remaining_worth'])
+
+
+def update_remaining_worth_of_parent(task, tasks, new_difference):
+	tasks[task]['remaining_worth'] = get_new_dollar_value(tasks[task]['remaining_worth'], -1 * new_difference)
+	Task.objects.filter(pk=task).update(remaining_worth=tasks[task]['remaining_worth'])
+
+
+# Returns 0 if difference makes value negative
+def get_new_dollar_value(curr_value, new_difference_to_add):
+	new_dollar_value = float(curr_value or 0) + new_difference_to_add
+	return new_dollar_value if new_dollar_value >= 0 else 0
 
 
 # function to recursively propagate data
@@ -132,6 +141,8 @@ def get_prev_and_new_unit_costs(task, kwargs):
 	cost = task['cost']
 	prev_unit_cost = get_unit_cost(cost, old_batch_size)
 	new_unit_cost = get_unit_cost(cost, new_batch_size)
+	print('prev_unit_cost, new_unit_cost')
+	print(prev_unit_cost, new_unit_cost)
 	return prev_unit_cost, new_unit_cost
 
 

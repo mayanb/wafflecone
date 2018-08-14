@@ -204,7 +204,6 @@ def ingredient_amount_update(**kwargs):
 # calculate cost of current task and propagate changes when batch size changed
 def batch_size_update(**kwargs):
 	updated_task = kwargs['pk']
-	# fetch all the descendants of updated task
 	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task)[0])
 	if updated_task_descendants.count() == 0:
 		return
