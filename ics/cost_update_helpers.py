@@ -202,16 +202,17 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 			return
 
 		unit_cost = parent.cost / parent.batch_size
-		# cost of ingredient used previously
-		prev_utilization = old_avg_amount * unit_cost
+
+		cost_or_ingredient_used_previously = old_avg_amount * unit_cost
 		if task == creating_task and input_added:
-			prev_utilization = 0
-		# cost of ingredient used now
-		new_utilization = new_avg_amount * unit_cost
+			cost_or_ingredient_used_previously = 0
+
+		cost_of_ingredient_used_now = new_avg_amount * unit_cost
 		if task == creating_task and input_deleted:
-			new_utilization = 0
-		utilization_diff = new_utilization - prev_utilization
-		print("parent cost", parent.cost, "parent batch size", parent.batch_size, "prev util", prev_utilization, "new util", new_utilization, "utilization diff", utilization_diff)
+			cost_of_ingredient_used_now = 0
+
+		utilization_diff = cost_of_ingredient_used_now - cost_or_ingredient_used_previously
+		print("parent cost", parent.cost, "parent batch size", parent.batch_size, "prev util", cost_or_ingredient_used_previously, "new util", cost_of_ingredient_used_now, "utilization diff", utilization_diff)
 
 		if requires_more_than_remains_in_parent(utilization_diff, parent):
 			new_remaining_worth = 0
@@ -219,8 +220,8 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 		elif child_gives_back_more_than_it_took(utilization_diff, parent):
 			new_remaining_worth = min(parent.remaining_worth - utilization_diff, parent.cost)
 			total_change_in_value_from_all_parents += new_remaining_worth - parent.remaining_worth
-		else:  # barring 2 extreme cases above requiring capping, simply return value as needed
-			new_remaining_worth = parent.remaining_worth - new_utilization
+		else:  # barring 2 extreme cases above requiring capping, simply use utilization_diff
+			new_remaining_worth = parent.remaining_worth - utilization_diff
 			total_change_in_value_from_all_parents += utilization_diff
 
 		Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
