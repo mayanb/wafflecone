@@ -61,7 +61,11 @@ def update_remaining_worth_of_parent(task, tasks, new_difference):
 # Returns 0 if difference makes value negative
 def get_new_dollar_value(curr_value, new_difference_to_add):
 	new_dollar_value = float(curr_value or 0) + new_difference_to_add
-	return new_dollar_value if new_dollar_value >= 0 else 0
+	return zero_or_greater(new_dollar_value)
+
+
+def zero_or_greater(number):
+	return number if number >= 0 else 0
 
 
 # function to recursively propagate data
@@ -190,16 +194,14 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 								  input_added=False, input_deleted=False):
 	old_avg_amount = old_amount / num_parents
 	new_avg_amount = new_amount / num_parents
-	total_diff = 0
-	print parents_contributing_ingredient
+	total_change_in_value_from_all_parents = 0
+	print(parents_contributing_ingredient)
 	for task in parents_contributing_ingredient:
-		if parents_contributing_ingredient[task].cost is None:
+		parent = parents_contributing_ingredient[task]
+		if parent.cost is None:
 			return
-		print "parent cost"
-		print parents_contributing_ingredient[task].cost
-		print "parent batch size"
-		print parents_contributing_ingredient[task].batch_size
-		unit_cost = parents_contributing_ingredient[task].cost / parents_contributing_ingredient[task].batch_size
+
+		unit_cost = parent.cost / parent.batch_size
 		# cost of ingredient used previously
 		prev_utilization = old_avg_amount * unit_cost
 		if task == creating_task and input_added:
@@ -208,31 +210,30 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 		new_utilization = new_avg_amount * unit_cost
 		if task == creating_task and input_deleted:
 			new_utilization = 0
-		print "prev util"
-		print prev_utilization
-		print "new util"
-		print new_utilization
 		utilization_diff = new_utilization - prev_utilization
-		print "utilization diff"
-		print utilization_diff
-		if utilization_diff > parents_contributing_ingredient[task].remaining_worth:
-			print "if"
+		print("parent cost", parent.cost, "parent batch size", parent.batch_size, "prev util", prev_utilization, "new util", new_utilization, "utilization diff", utilization_diff)
+
+		if requires_more_than_remains_in_parent(utilization_diff, parent):
 			new_remaining_worth = 0
-			total_diff += parents_contributing_ingredient[task].remaining_worth
-		elif parents_contributing_ingredient[task].remaining_worth - utilization_diff < parents_contributing_ingredient[task].cost:
-			print "elif"
-			new_remaining_worth = parents_contributing_ingredient[task].remaining_worth - utilization_diff
-			total_diff += utilization_diff
-		else:
-			print "else"
-			new_remaining_worth = parents_contributing_ingredient[task].cost
-			total_diff += parents_contributing_ingredient[task].remaining_worth - parents_contributing_ingredient[task].cost
+			total_change_in_value_from_all_parents += parent.remaining_worth
+		elif child_gives_back_more_than_it_took(utilization_diff, parent):
+			new_remaining_worth = min(parent.remaining_worth - utilization_diff, parent.cost)
+			total_change_in_value_from_all_parents += new_remaining_worth - parent.remaining_worth
+		else:  # barring 2 extreme cases above requiring capping, simply return value as needed
+			new_remaining_worth = parent.remaining_worth - new_utilization
+			total_change_in_value_from_all_parents += utilization_diff
+
 		Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
-		print "new remaining"
-		print new_remaining_worth
-		print "total diff"
-		print total_diff
-	return total_diff
+		print("new remaining", new_remaining_worth, "total diff", total_change_in_value_from_all_parents)
+	return total_change_in_value_from_all_parents
+
+
+def requires_more_than_remains_in_parent(utilization_diff, parent):
+	return utilization_diff > parent.remaining_worth
+
+
+def child_gives_back_more_than_it_took(utilization_diff, parent):
+	return parent.remaining_worth - utilization_diff > parent.cost
 
 
 def update_children_of_deleted_task(deleted_task):
@@ -248,13 +249,12 @@ def update_children_of_deleted_task(deleted_task):
 		cost = tasks[deleted_task]['cost']
 		prev_unit_cost = get_unit_cost(cost, batch_size)
 		new_unit_cost = 0
-		# print("cost: %d, batch_size: %d, prev_unit_cost: %d, new_unit_cost: %d" % (cost, batch_size, prev_unit_cost, new_unit_cost))
 		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
 
 
 # UPDATE INPUT HELPERS
 
-def handle_input_change_with_no_recipe(kwargs, updated_task_with_parents, updated_task_id):
+def handle_input_change_with_no_recipe(kwargs, updated_task, updated_task_id):
 	input_creating_task = kwargs['creatingTaskID']
 	input_added = kwargs['added']
 	# fetch task which created the input
@@ -264,13 +264,16 @@ def handle_input_change_with_no_recipe(kwargs, updated_task_with_parents, update
 		return
 	if input_added:
 		print('input added...')
-		new_updated_task_cost = updated_task_with_parents.cost + input_parent.remaining_worth
-		new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth + input_parent.remaining_worth
+		new_updated_task_cost = updated_task.cost + input_parent.remaining_worth
+		new_updated_task_remaining_worth = updated_task.remaining_worth + input_parent.remaining_worth
 		parent_remaining_worth = 0
-	else:
-		new_updated_task_cost = updated_task_with_parents.cost + input_parent.cost - input_parent.remaining_worth
-		new_updated_task_remaining_worth = updated_task_with_parents.remaining_worth + input_parent.cost - input_parent.remaining_worth
+	else:  # input deleted
+		# TO DO: deleting an input automatically subtracts the FULL batch_size from the TaskIngredient
+		# We should re-distribute value to all other Parent Inputs of this ingredient type
+		new_updated_task_cost = updated_task.cost + input_parent.cost - input_parent.remaining_worth
+		new_updated_task_remaining_worth = updated_task.remaining_worth + input_parent.cost - input_parent.remaining_worth
 		parent_remaining_worth = input_parent.cost
+	print('new_updated_task_cost', new_updated_task_cost, 'new_updated_task_remaining_worth', new_updated_task_remaining_worth, 'parent_remaining_worth', parent_remaining_worth)
 	Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
 	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 
