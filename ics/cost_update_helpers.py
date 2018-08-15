@@ -291,3 +291,16 @@ def get_parents_contributing_ingredient(parent_ids, ingredient_id):
 						updated_task_parents[x].product_type_id == ingredient.product_type_id:
 			parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
 	return parents_contributing_ingredient
+
+
+def update_children_after_amount_update(updated_task_id, old_updated_task_cost, new_updated_task_cost):
+	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task_id)[0])
+	if updated_task_descendants.count() == 0:
+		return
+	tasks = task_details(updated_task_descendants)
+	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
+	batch_size = tasks[updated_task_id]['batch_size']
+	prev_unit_cost = get_unit_cost(old_updated_task_cost, batch_size)
+	new_unit_cost = get_unit_cost(new_updated_task_cost, batch_size)
+
+	update_children(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients)

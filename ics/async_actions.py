@@ -150,17 +150,7 @@ def ingredient_amount_update(**kwargs):
 	new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_change_in_value_from_all_parents
 	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 
-	# update children
-	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task_id)[0])
-	if updated_task_descendants.count() == 0:
-		return
-	tasks = task_details(updated_task_descendants)
-	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	batch_size = tasks[updated_task_id]['batch_size']
-	prev_unit_cost = get_unit_cost(old_updated_task_cost, batch_size)
-	new_unit_cost = get_unit_cost(new_updated_task_cost, batch_size)
-
-	update_children(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients)
+	update_children_after_amount_update(updated_task_id, old_updated_task_cost, new_updated_task_cost)
 
 
 # calculate cost of current task and propagate changes when batch size changed
