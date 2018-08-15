@@ -203,30 +203,49 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 
 		unit_cost = parent.cost / parent.batch_size
 
-		cost_or_ingredient_used_previously = old_avg_amount * unit_cost
+		cost_of_ingredient_used_previously = old_avg_amount * unit_cost
 		if task == creating_task and input_added:
-			cost_or_ingredient_used_previously = 0
+			cost_of_ingredient_used_previously = 0
 
 		cost_of_ingredient_used_now = new_avg_amount * unit_cost
 		if task == creating_task and input_deleted:
 			cost_of_ingredient_used_now = 0
 
-		utilization_diff = cost_of_ingredient_used_now - cost_or_ingredient_used_previously
-		print("parent cost", parent.cost, "parent batch size", parent.batch_size, "prev util", cost_or_ingredient_used_previously, "new util", cost_of_ingredient_used_now, "utilization diff", utilization_diff)
+		utilization_diff = get_capped_utilization_diff(cost_of_ingredient_used_now, cost_of_ingredient_used_previously, parent.cost)
+		print("parent cost", parent.cost, "parent batch size", parent.batch_size, "prev util", cost_of_ingredient_used_previously, "new util", cost_of_ingredient_used_now, "utilization diff", utilization_diff)
 
-		if requires_more_than_remains_in_parent(utilization_diff, parent):
-			new_remaining_worth = 0
-			total_change_in_value_from_all_parents += parent.remaining_worth
-		elif child_gives_back_more_than_it_took(utilization_diff, parent):
-			new_remaining_worth = min(parent.remaining_worth - utilization_diff, parent.cost)
-			total_change_in_value_from_all_parents += new_remaining_worth - parent.remaining_worth
-		else:  # barring 2 extreme cases above requiring capping, simply use utilization_diff
-			new_remaining_worth = parent.remaining_worth - utilization_diff
-			total_change_in_value_from_all_parents += utilization_diff
+		new_remaining_worth = parent.remaining_worth - utilization_diff
+		total_change_in_value_from_all_parents += utilization_diff
 
 		Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
 		print("new remaining", new_remaining_worth, "total diff", total_change_in_value_from_all_parents)
 	return total_change_in_value_from_all_parents
+
+
+# utilization_diff + remaining_worth must remain with the range of 0 to cost (inclusive).
+# In this function, we only return the fraction of the utilization_diff which falls within this range.
+# This, for example prevents 100 kgs worth of cost from being added to a parent of batch_size = 100 kgs
+# when its only child goes from using 400 kgs to 300 kgs (here, named each_is_greater_than_parent).
+def get_capped_utilization_diff(cost_now, cost_previously, parent_cost):
+	if each_is_greater_than_parent_cost(cost_now, cost_previously, parent_cost):
+		return 0  # no actual change to anyone's cost/value will result, since both exceed parents cost.
+	elif one_is_above_and_one_is_below_parent_cost(cost_now, cost_previously, parent_cost):
+		if cost_now < cost_previously:
+			return cost_now - parent_cost
+		elif cost_previously < cost_now:
+			return parent_cost - cost_previously
+	else:
+		return cost_now - cost_previously
+
+
+def each_is_greater_than_parent_cost(cost_now, cost_previously, parent_cost):
+	return cost_now > parent_cost and cost_previously > parent_cost
+
+
+def one_is_above_and_one_is_below_parent_cost(cost_now, cost_previously, parent_cost):
+	now_above_previously = cost_now > parent_cost and cost_previously <= parent_cost
+	previously_above_now = cost_now <= parent_cost and cost_previously > parent_cost
+	return now_above_previously or previously_above_now
 
 
 def requires_more_than_remains_in_parent(utilization_diff, parent):
