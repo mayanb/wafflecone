@@ -81,13 +81,13 @@ def input_update(**kwargs):
 				Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 			else:
 				num_parents = len(parents_contributing_ingredient) - 1
-				total_diff = update_parents_for_ingredient(parents_contributing_ingredient, actual_amount, actual_amount, num_parents,
+				total_change_in_value_from_all_parents = update_parents_for_ingredient(parents_contributing_ingredient, actual_amount, actual_amount, num_parents,
 														   input_creating_task, True)
 
 				old_updated_task_cost = updated_task.cost
 				old_updated_task_remaining_worth = updated_task.remaining_worth
-				new_updated_task_cost = old_updated_task_cost + total_diff
-				new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_diff
+				new_updated_task_cost = old_updated_task_cost + total_change_in_value_from_all_parents
+				new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_change_in_value_from_all_parents
 				Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 		else:
 			if similar_inputs < 1:
@@ -100,13 +100,13 @@ def input_update(**kwargs):
 				Task.objects.filter(pk=updated_task).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 			else:
 				num_parents = len(parents_contributing_ingredient) + 1
-				total_diff = update_parents_for_ingredient(parents_contributing_ingredient, actual_amount, actual_amount, num_parents,
+				total_change_in_value_from_all_parents = update_parents_for_ingredient(parents_contributing_ingredient, actual_amount, actual_amount, num_parents,
 														   input_creating_task, False, True)
 
 				old_updated_task_cost = updated_task.cost
 				old_updated_task_remaining_worth = updated_task.remaining_worth
-				new_updated_task_cost = old_updated_task_cost + total_diff
-				new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_diff
+				new_updated_task_cost = old_updated_task_cost + total_change_in_value_from_all_parents
+				new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_change_in_value_from_all_parents
 				Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 
 	try:
@@ -137,18 +137,18 @@ def ingredient_amount_update(**kwargs):
 	updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
 	parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task.task_parent_ids, kwargs['ingredientID'])
-	if len(parents_contributing_ingredient) <= 1:
-		# With just 1 input, changing the ingredient amount doesn't affect anyone's cost, since all cost comes from 1 task.
-		return
+	# if len(parents_contributing_ingredient) <= 1:
+	# 	# With just 1 input, changing the ingredient amount doesn't affect anyone's cost, since all cost comes from 1 task.
+	# 	return
 	old_amount = kwargs['previous_amount']
 	new_amount = kwargs['actual_amount']
 	num_parents = len(parents_contributing_ingredient)
 
-	total_diff = update_parents_for_ingredient(parents_contributing_ingredient, old_amount, new_amount, num_parents)
+	total_change_in_value_from_all_parents = update_parents_for_ingredient(parents_contributing_ingredient, old_amount, new_amount, num_parents)
 	old_updated_task_cost = updated_task.cost
 	old_updated_task_remaining_worth = updated_task.remaining_worth
-	new_updated_task_cost = old_updated_task_cost + total_diff
-	new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_diff
+	new_updated_task_cost = old_updated_task_cost + total_change_in_value_from_all_parents
+	new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_change_in_value_from_all_parents
 	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
 
 	# update children
