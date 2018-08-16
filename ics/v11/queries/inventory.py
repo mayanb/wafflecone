@@ -39,3 +39,17 @@ def old_inventory_used_amount(items_query):
 	fully_used_amount = (items_query.filter(inputs__isnull=False, inputs__amount__isnull=True).distinct().aggregate(amount=Sum('amount'))['amount'] or 0)
 	partially_used_amount = (items_query.filter(inputs__isnull=False, inputs__amount__isnull=False).aggregate(amount=Sum('inputs__amount'))['amount'] or 0)
 	return fully_used_amount + partially_used_amount
+
+def get_adjusted_item_amount(process_type, product_type):
+	start_time = None
+	starting_amount = 0
+	latest_adjustment = Adjustment.objects \
+		.filter(process_type=process_type, product_type=product_type) \
+		.order_by('-created_at').first()
+
+	if latest_adjustment:
+		start_time = latest_adjustment.created_at
+		starting_amount = latest_adjustment.amount
+
+	data = inventory_amounts(process_type, product_type, start_time, None)
+	return starting_amount + data['created_amount'] - data['used_amount']

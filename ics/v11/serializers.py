@@ -12,7 +12,8 @@ from ics.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from datetime import datetime, timedelta
+from ics.v11.queries.inventory import *
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.constants import POSITIVE_SMALL_INTEGER_FIELD_MAX
 
@@ -381,6 +382,75 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		fields = ('id', 'items', 'display')
+
+class InventoryAncestorsSerializer(serializers.Serializer):
+	process_type = serializers.SerializerMethodField()
+	product_type = serializers.SerializerMethodField()
+	adjusted_amount = serializers.SerializerMethodField()
+
+	def get_process_type(self, item_summary):
+		process = ProcessType.objects.get(id=item_summary['creating_task__process_type'])
+		return {
+			'id': process.id,
+			'name': process.name,
+			'code': process.code,
+			'unit': process.unit,
+			'icon': process.icon,
+			'category': process.category,
+		}
+
+	def get_product_type(self, item_summary):
+		product = ProductType.objects.get(id=item_summary['creating_task__product_type'])
+		return {
+			'id': product.id,
+			'name': product.name,
+			'code': product.code,
+		}
+
+	def get_adjusted_amount(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_type = item_summary['creating_task__product_type']
+		return get_adjusted_item_amount(process_type, product_type)
+
+class InventoryRemainingSerializer(serializers.Serializer):
+	process_type = serializers.SerializerMethodField()
+	product_type = serializers.SerializerMethodField()
+	date_exhausted = serializers.SerializerMethodField()
+
+	def get_process_type(self, item_summary):
+		process = ProcessType.objects.get(id=item_summary['creating_task__process_type'])
+		return {
+			'id': process.id,
+			'name': process.name,
+			'code': process.code,
+			'unit': process.unit,
+			'icon': process.icon,
+			'category': process.category,
+		}
+
+	def get_product_type(self, item_summary):
+		product = ProductType.objects.get(id=item_summary['creating_task__product_type'])
+		return {
+			'id': product.id,
+			'name': product.name,
+			'code': product.code,
+		}
+
+	def get_date_exhausted(self, item_summary):
+		# compute the rate of consumption
+		timeElapsed = timedelta(days=30).total_seconds()
+		rateOfConsumption = timeElapsed / float(item_summary['amount_used'])
+
+		# find the amount still remaining
+		process_type = item_summary['creating_task__process_type']
+		product_type = item_summary['creating_task__product_type']
+		amount_remaining = float(get_adjusted_item_amount(process_type, product_type))
+
+		# calculate the date in the future in which the amount will be exhausted
+		secondsUntilExhaused = amount_remaining * rateOfConsumption
+		delta = timedelta(seconds=secondsUntilExhaused)
+		futureDate = datetime.now() + delta
+		return futureDate
 
 
 class ActivityListSerializer(serializers.ModelSerializer):

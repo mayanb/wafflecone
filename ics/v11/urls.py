@@ -69,6 +69,10 @@ urlpatterns = [
     url(r'^inventory/$', views.InventoryList.as_view()),
     url(r'^inventory/detail/$', views.InventoryDetail.as_view()),
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
+    url(r'^inventory/ancestors/$', views.InventoryAncestors.as_view(), name='inventory_ancestors'),
+    url(r'^inventory/remaining/$', views.InventoryRemaining.as_view(), name='inventory_remaining'),
+
+    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 
     url(r'^activity/$', views.ActivityList.as_view(), name='activity_log'),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
@@ -96,8 +100,6 @@ urlpatterns = [
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
-
-    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 
     url(r'^adjustment-history/$', views.AdjustmentHistory.as_view(), name='adjustment-history'),
 
