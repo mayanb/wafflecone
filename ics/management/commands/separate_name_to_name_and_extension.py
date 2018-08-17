@@ -15,3 +15,6 @@ class Command(BaseCommand):
 				file.name = newName
 				file.extension = extension
 				file.save()
+				self.stdout.write('Separated "{}" into "{}" and "{}"'.format(originalName, newName, extension))
+
+		self.stdout.write(self.style.SUCCESS('Successfully updated name and extension fields'))
