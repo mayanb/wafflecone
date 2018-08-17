@@ -323,13 +323,14 @@ class FileList(generics.ListCreateAPIView):
     if team_id is None:
       raise serializers.ValidationError('Request must include "team" data')
       
-    _, file_ext = os.path.splitext(original_filename)
+    file_name, file_ext = os.path.splitext(original_filename)
     file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
     bucket = settings.AWS_S3_FILE_UPLOAD_BUCKET
     obj = client.put_object(
       Body=file_binary, 
       Key=file_path, 
       Bucket=bucket,
+      # we use ContentDisposition so that the user can download the file with its original filename
       ContentDisposition='attachment; filename="' + original_filename + '"'
       )
 
@@ -338,7 +339,8 @@ class FileList(generics.ListCreateAPIView):
     task_id = request.data.get('task')
     new_file = TaskFile.objects.create(
       url=link, 
-      name=original_filename, 
+      name=file_name,
+      extension=file_ext,
       task=Task.objects.get(id=task_id)
       )
     serializer = TaskFileSerializer(new_file)
