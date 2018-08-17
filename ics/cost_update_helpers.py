@@ -194,8 +194,8 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 								  input_added=False, input_deleted=False):
 	old_avg_amount = old_amount / num_parents
 	new_avg_amount = new_amount / num_parents
+
 	total_change_in_value_from_all_parents = 0
-	print(parents_contributing_ingredient)
 	for task in parents_contributing_ingredient:
 		parent = parents_contributing_ingredient[task]
 		if parent.cost is None:
@@ -275,27 +275,45 @@ def update_children_of_deleted_task(deleted_task):
 # UPDATE INPUT HELPERS
 
 def handle_input_change_with_no_recipe(kwargs, updated_task, updated_task_id):
-	input_creating_task = kwargs['creatingTaskID']
+	parent_task_of_changed_input_id = kwargs['creatingTaskID']
 	input_added = kwargs['added']
-	# fetch task which created the input
-	input_parent = Task.objects.filter(is_trashed=False, pk=input_creating_task).annotate(
+	parent_task_of_changed_input = Task.objects.filter(is_trashed=False, pk=parent_task_of_changed_input_id).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))[0]
-	if input_parent.cost is None:
+	if parent_task_of_changed_input.cost is None:
 		return
+
 	if input_added:
 		print('input added...')
-		new_updated_task_cost = updated_task.cost + input_parent.remaining_worth
-		new_updated_task_remaining_worth = updated_task.remaining_worth + input_parent.remaining_worth
+		new_updated_task_cost = updated_task.cost + parent_task_of_changed_input.remaining_worth
+		new_updated_task_remaining_worth = updated_task.remaining_worth + parent_task_of_changed_input.remaining_worth
 		parent_remaining_worth = 0
-	else:  # input deleted
-		# TO DO: deleting an input automatically subtracts the FULL batch_size from the TaskIngredient
-		# We should re-distribute value to all other Parent Inputs of this ingredient type
-		new_updated_task_cost = updated_task.cost + input_parent.cost - input_parent.remaining_worth
-		new_updated_task_remaining_worth = updated_task.remaining_worth + input_parent.cost - input_parent.remaining_worth
-		parent_remaining_worth = input_parent.cost
-	print('new_updated_task_cost', new_updated_task_cost, 'new_updated_task_remaining_worth', new_updated_task_remaining_worth, 'parent_remaining_worth', parent_remaining_worth)
-	Task.objects.filter(pk=input_creating_task).update(remaining_worth=parent_remaining_worth)
-	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+
+		Task.objects.filter(pk=parent_task_of_changed_input.id).update(remaining_worth=parent_remaining_worth)
+		Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+
+	else:
+		handle_input_delete_with_no_recipe(kwargs, updated_task_id, parent_task_of_changed_input)
+
+
+def handle_input_delete_with_no_recipe(kwargs, updated_task_id, parent_task_of_changed_input):
+	ingredient = Ingredient.objects.get(process_type_id=kwargs['input_item__creating_task__process_type'],
+																			product_type_id=kwargs['input_item__creating_task__product_type'])
+	is_pre_delete = kwargs['is_pre_delete']
+	print('ingredient.id', ingredient.id)
+	task_ingredient_current_amount = TaskIngredient.objects.filter(ingredient_id=ingredient.id).values('actual_amount')[0]['actual_amount']
+	if is_pre_delete:
+		print('no inputs for this ingredient, we are pre-delete, homies')
+		# This is nearly identical to ingredient_amount_update(new amount is 0). We do it pre-delete to access the
+		# TaskIngredient.actual_amount which will no longer exists post-deletion of the final input. This is preemptive.
+		new_amount = 0
+		old_amount = task_ingredient_current_amount
+		update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, ingredient.id)
+
+	else:  # Inputs remain for this ingredient, making this effectively identical to ingredient_amount_update
+		print('Inputs remain')
+		new_amount = task_ingredient_current_amount
+		old_amount = new_amount + parent_task_of_changed_input.batch_size  # Deleting inputs subtracts the its batch size
+		update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, ingredient.id)
 
 
 # UPDATE INGREDIENT HELPERS
@@ -305,11 +323,30 @@ def get_parents_contributing_ingredient(parent_ids, ingredient_id):
 		batch_size=Coalesce(Sum('items__amount'), 0))
 	ingredient = Ingredient.objects.get(pk=ingredient_id)
 	parents_contributing_ingredient = {}
+	if parent_ids == [None] or updated_task_parents.count() == 0:
+		return {}
+
 	for x in range(0, len(set(parent_ids))):
 		if updated_task_parents[x].process_type_id == ingredient.process_type_id and \
 						updated_task_parents[x].product_type_id == ingredient.product_type_id:
 			parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
 	return parents_contributing_ingredient
+
+
+def update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, ingredient_id):
+	updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
+	parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task.task_parent_ids, ingredient_id)
+	num_parents = len(parents_contributing_ingredient)
+	total_change_in_value_from_all_parents = update_parents_for_ingredient(parents_contributing_ingredient, old_amount, new_amount, num_parents)
+
+	old_updated_task_cost = updated_task.cost
+	old_updated_task_remaining_worth = updated_task.remaining_worth
+
+	new_updated_task_cost = old_updated_task_cost + total_change_in_value_from_all_parents
+	new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_change_in_value_from_all_parents
+	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
+
+	update_children_after_amount_update(updated_task_id, old_updated_task_cost, new_updated_task_cost)
 
 
 def update_children_after_amount_update(updated_task_id, old_updated_task_cost, new_updated_task_cost):
@@ -323,3 +360,33 @@ def update_children_after_amount_update(updated_task_id, old_updated_task_cost, 
 	new_unit_cost = get_unit_cost(new_updated_task_cost, batch_size)
 
 	update_children(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients)
+
+
+# SIGNAL HELPERS
+
+def deleting_final_input_for_task_ingredient(instance):
+	return num_inputs_for_this_ingredient(instance) == 1
+
+
+def pre_delete_has_not_already_handled_updating_cost(instance):
+	return num_inputs_for_this_ingredient(instance) != 0
+
+
+def num_inputs_for_this_ingredient(instance):
+	ingredient = Ingredient.objects.get(product_type=instance.input_item.creating_task.product_type_id,
+																			process_type=instance.input_item.creating_task.process_type_id)
+	updated_task = Task.objects.filter(pk=instance.task.id).annotate(
+		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
+	return len(get_parents_contributing_ingredient(updated_task.task_parent_ids, ingredient.id))
+
+
+def get_input_kwargs(instance, added=False, is_pre_delete=False):
+	return {
+		'taskID' : instance.task.id,
+		'creatingTaskID' : instance.input_item.creating_task.id,
+		'added' : added,
+		'is_pre_delete': is_pre_delete,
+		'recipe' : instance.task.recipe,
+		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
+		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id
+	}

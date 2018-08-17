@@ -43,7 +43,7 @@ def input_update(**kwargs):
 	updated_task_with_parents = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
 
-	if recipe is None:
+	if not recipe:
 		handle_input_change_with_no_recipe(kwargs, updated_task_with_parents, updated_task_id)
 
 	# RECIPE EXISTS
@@ -130,27 +130,13 @@ def input_update(**kwargs):
 
 
 def ingredient_amount_update(**kwargs):
-	print("ingredient_amount_update CALLED", kwargs)
 	TaskIngredient.objects.filter(pk=kwargs['task_ing_id']).update(was_amount_changed=False)
 
 	updated_task_id = kwargs['taskID']
-	updated_task = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
-		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))[0]
-	parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task.task_parent_ids, kwargs['ingredientID'])
-
 	old_amount = kwargs['previous_amount']
 	new_amount = kwargs['actual_amount']
-	num_parents = len(parents_contributing_ingredient)
-	total_change_in_value_from_all_parents = update_parents_for_ingredient(parents_contributing_ingredient, old_amount, new_amount, num_parents)
-
-	old_updated_task_cost = updated_task.cost
-	old_updated_task_remaining_worth = updated_task.remaining_worth
-
-	new_updated_task_cost = old_updated_task_cost + total_change_in_value_from_all_parents
-	new_updated_task_remaining_worth = old_updated_task_remaining_worth + total_change_in_value_from_all_parents
-	Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
-
-	update_children_after_amount_update(updated_task_id, old_updated_task_cost, new_updated_task_cost)
+	ingredient_id = kwargs['ingredientID']
+	update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, ingredient_id)
 
 
 # calculate cost of current task and propagate changes when batch size changed
