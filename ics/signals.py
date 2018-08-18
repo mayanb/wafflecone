@@ -61,7 +61,51 @@ def input_changed(sender, instance, **kwargs):
 	input_update(**kwargs)
 
 
-def pre_pre_delete_code_refactored_from_model(instance):
+@receiver(pre_delete, sender=Input)
+def input_deleted_pre_delete(sender, instance, **kwargs):
+	kwargs2 = get_input_kwargs(instance)
+	print('pre_delete', kwargs2)
+	input_update(**kwargs2)
+
+	update_task_ingredient_after_input_delete(instance)
+	kwargs = { 'pk' : instance.task.id }
+	unflag_task_descendants(**kwargs)
+	check_anomalous_inputs_alerts(**kwargs2)
+
+
+# this signal only gets called once whereas all the others get called twice
+@receiver(post_delete, sender=Input)
+def input_deleted(sender, instance, **kwargs):
+	kwargs = { 'pk' : instance.task.id }
+	unflag_task_descendants(**kwargs)
+	kwargs2 = get_input_kwargs(instance)
+	check_anomalous_inputs_alerts(**kwargs2)
+
+
+@receiver(post_save, sender=TaskIngredient)
+def ingredient_updated(sender, instance, **kwargs):
+	# get the previous value
+	previous_amount = instance.tracker.previous('actual_amount')
+	if instance.was_amount_changed:
+		kwargs = {'taskID': instance.task.id, 'ingredientID': instance.ingredient_id,
+				  'actual_amount': instance.actual_amount, 'task_ing_id': instance.id, 'previous_amount': previous_amount}
+		ingredient_amount_update(**kwargs)
+
+
+# HELPER FUNCTIONS
+
+def get_input_kwargs(instance, added=False):
+	return {
+		'taskID': instance.task.id,
+		'creatingTaskID': instance.input_item.creating_task.id,
+		'added': added,
+		'recipe': instance.task.recipe,
+		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
+		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id
+	}
+
+
+def update_task_ingredient_after_input_delete(instance):
 	similar_inputs = Input.objects.filter(task=instance.task, \
 	                                      input_item__creating_task__product_type=instance.input_item.creating_task.product_type, \
 	                                      input_item__creating_task__process_type=instance.input_item.creating_task.process_type)
@@ -85,34 +129,3 @@ def pre_pre_delete_code_refactored_from_model(instance):
 	else:
 		# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
 		task_ings_without_recipe.update(actual_amount=F('actual_amount') - instance.input_item.amount)
-
-
-@receiver(pre_delete, sender=Input)
-def input_deleted_pre_delete(sender, instance, **kwargs):
-	kwargs2 = get_input_kwargs(instance)
-	print('pre_delete', kwargs2)
-	input_update(**kwargs2)
-
-	pre_pre_delete_code_refactored_from_model(instance)
-	kwargs = { 'pk' : instance.task.id }
-	unflag_task_descendants(**kwargs)
-	check_anomalous_inputs_alerts(**kwargs2)
-
-
-# this signal only gets called once whereas all the others get called twice
-@receiver(post_delete, sender=Input)
-def input_deleted(sender, instance, **kwargs):
-	kwargs = { 'pk' : instance.task.id }
-	unflag_task_descendants(**kwargs)
-	kwargs2 = get_input_kwargs(instance)
-	check_anomalous_inputs_alerts(**kwargs2)
-
-
-@receiver(post_save, sender=TaskIngredient)
-def ingredient_updated(sender, instance, **kwargs):
-	# get the previous value
-	previous_amount = instance.tracker.previous('actual_amount')
-	if instance.was_amount_changed:
-		kwargs = {'taskID': instance.task.id, 'ingredientID': instance.ingredient_id,
-				  'actual_amount': instance.actual_amount, 'task_ing_id': instance.id, 'previous_amount': previous_amount}
-		ingredient_amount_update(**kwargs)

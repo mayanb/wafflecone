@@ -360,16 +360,3 @@ def update_children_after_amount_update(updated_task_id, old_updated_task_cost, 
 	new_unit_cost = get_unit_cost(new_updated_task_cost, batch_size)
 
 	update_children(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients)
-
-
-# SIGNAL HELPERS
-
-def get_input_kwargs(instance, added=False):
-	return {
-		'taskID' : instance.task.id,
-		'creatingTaskID' : instance.input_item.creating_task.id,
-		'added' : added,
-		'recipe' : instance.task.recipe,
-		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
-		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id
-	}
