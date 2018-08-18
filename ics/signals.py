@@ -93,10 +93,10 @@ def pre_pre_delete_code_refactored_from_model(instance):
 
 @receiver(pre_delete, sender=Input)
 def input_deleted_pre_delete(sender, instance, **kwargs):
-	kwargs2 = get_input_kwargs(instance, is_pre_delete=True)
-	if deleting_final_input_for_task_ingredient(instance):
-		print('pre_delete', kwargs2)
-		input_update(**kwargs2)
+	kwargs2 = get_input_kwargs(instance)
+	print('pre_delete', kwargs2)
+	input_update(**kwargs2)
+
 	pre_pre_delete_code_refactored_from_model(instance)
 	kwargs = { 'pk' : instance.task.id }
 	unflag_task_descendants(**kwargs)
@@ -110,9 +110,6 @@ def input_deleted(sender, instance, **kwargs):
 	unflag_task_descendants(**kwargs)
 	kwargs2 = get_input_kwargs(instance)
 	check_anomalous_inputs_alerts(**kwargs2)
-	if pre_delete_has_not_already_handled_updating_cost(instance):
-		print('post_delete', kwargs2)
-		# input_update(**kwargs2)
 
 
 @receiver(post_save, sender=TaskIngredient)
