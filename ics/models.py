@@ -458,6 +458,13 @@ class Input(models.Model):
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
+	def delete(self):
+		# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
+		if self.input_item.creating_task.is_flagged or self.input_item.creating_task.num_flagged_ancestors > 0:
+			Task.objects.filter(id__in=[self.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
+
+		super(Input, self).delete()
+
 
 class FormulaAttribute(models.Model):
 	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)

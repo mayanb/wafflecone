@@ -62,10 +62,6 @@ def input_changed(sender, instance, **kwargs):
 
 
 def pre_pre_delete_code_refactored_from_model(instance):
-	# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
-	if instance.input_item.creating_task.is_flagged or instance.input_item.creating_task.num_flagged_ancestors > 0:
-		Task.objects.filter(id__in=[instance.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
-
 	similar_inputs = Input.objects.filter(task=instance.task, \
 	                                      input_item__creating_task__product_type=instance.input_item.creating_task.product_type, \
 	                                      input_item__creating_task__process_type=instance.input_item.creating_task.process_type)
