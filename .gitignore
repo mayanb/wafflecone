@@ -11,3 +11,4 @@ local-env
 .pytest_cache
 
 local-env.sh
+local-env.env
