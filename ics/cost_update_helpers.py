@@ -299,18 +299,17 @@ def handle_input_change_with_no_recipe(kwargs, updated_task, updated_task_id):
 # This is nearly identical to ingredient_amount_update(new amount is 0). We do it pre-delete to access the
 # TaskIngredient.actual_amount which will no longer exists post-deletion of the final input.
 def handle_input_delete_with_no_recipe(kwargs, updated_task, creating_task_of_changed_input):
-	ingredient = Ingredient.objects.get(process_type_id=kwargs['input_item__creating_task__process_type'],
-																			product_type_id=kwargs['input_item__creating_task__product_type'])
-	task_ingredient_current_amount = TaskIngredient.objects.filter(ingredient_id=ingredient.id).values('actual_amount')[0]['actual_amount']
+	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
+	ingredient_id = kwargs['ingredientID']
 
-	old_amount = task_ingredient_current_amount
+	old_amount = task_ingredient__actual_amount
 	# Deleting inputs subtracts the its batch size. Note: can produce negative amounts in special cases, matching codebase
 	new_amount = old_amount - creating_task_of_changed_input.batch_size
 	update_parents_for_ingredient_and_then_child(
 		updated_task.id,
 		old_amount,
 		new_amount,
-		ingredient.id,
+		ingredient_id,
 		creating_task_of_changed_input=creating_task_of_changed_input.id,
 		input_deleted=True,
 	)

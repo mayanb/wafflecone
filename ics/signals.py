@@ -35,6 +35,7 @@ def task_changed(sender, instance, **kwargs):
 def task_changed(sender, instance, **kwargs):
 	print("pre_save called on Task")
 	# if instance.is_trashed:
+	#   # ASYNC TO DO: pass in any needed values, since we're not guaranteed the objects will still be in the DB.
 	# 	task_deleted_update_cost(instance)
 
 
@@ -63,7 +64,7 @@ def input_changed(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Input)
 def input_deleted_pre_delete(sender, instance, **kwargs):
-	kwargs2 = get_input_kwargs(instance)
+	kwargs2 = get_input_kwargs(instance, actual_amount=True)
 	print('pre_delete', kwargs2)
 	input_update(**kwargs2)
 
@@ -94,12 +95,26 @@ def ingredient_updated(sender, instance, **kwargs):
 
 # HELPER FUNCTIONS
 
-def get_input_kwargs(instance, added=False):
+def get_input_kwargs(instance, added=False, actual_amount=False):
+	task_ingredient__actual_amount = None
+	ingredientID = None
+	if actual_amount:
+		task_ingredient = TaskIngredient.objects.get(
+																				task=instance.task.id,
+																				ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
+																				ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
+																			)
+
+		task_ingredient__actual_amount = task_ingredient.actual_amount
+		ingredientID = task_ingredient.ingredient.id
+
 	return {
 		'taskID': instance.task.id,
 		'creatingTaskID': instance.input_item.creating_task.id,
 		'added': added,
 		'recipe': instance.task.recipe,
+		'ingredientID': ingredientID,
+		'task_ingredient__actual_amount': task_ingredient__actual_amount,
 		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
 		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id
 	}
