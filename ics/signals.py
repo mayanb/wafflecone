@@ -66,7 +66,8 @@ def input_changed(sender, instance, **kwargs):
 def input_deleted_pre_delete(sender, instance, **kwargs):
 	kwargs2 = get_input_kwargs(instance)
 	print('pre_delete', kwargs2)
-	input_update(**kwargs2)
+	if kwargs['created']:
+		input_update(**kwargs2)
 
 	update_task_ingredient_after_input_delete(instance)
 	kwargs = { 'pk' : instance.task.id }
