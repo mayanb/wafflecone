@@ -15,11 +15,11 @@ def update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descenda
 	# iterate through each child of the updated task and propagate data
 	for child in tasks[updated_task]['children']:
 		if child is not None:
-			new_difference = update_cost(updated_task, child, unit_cost_diff, tasks, descendant_ingredients)
+			prev_unit_cost, new_unit_cost = update_cost(updated_task, child, prev_unit_cost, new_unit_cost, tasks, descendant_ingredients)
 			# call rec_cost() to propagate values to children of child task if it is present in tasks list
 			if child in tasks:
 				visited = {}  # handles tasks with circular dependencies
-				rec_cost(child, new_difference, tasks, visited, descendant_ingredients)
+				rec_cost(child, prev_unit_cost, new_unit_cost, tasks, visited, descendant_ingredients)
 
 
 # Make-shift solution: we're unable to filter out rashed tasks in ArrayAggs, so we just have to skip em
@@ -31,20 +31,54 @@ def task_is_trashed(task, maps_of_non_trashed_tasks):
 
 
 # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
-def update_cost(task, child, unit_cost_diff, tasks, descendant_ingredients):
-	# if task_is_trashed(task, [descendant_ingredients, tasks]) or task_is_trashed(child, [descendant_ingredients, tasks]):
-	# 	return 0  # @Aditya, does zero work?
+def update_cost(parent, child, prev_unit_cost, new_unit_cost, tasks, descendant_ingredients):
 	# find number of parent contributing same ingredient to the child task
-	num_parents = len(descendant_ingredients[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['parent_tasks'])
+	process_type = tasks[parent]['process_type']
+	product_type = tasks[parent]['product_type']
+	num_parents = len(descendant_ingredients[child]['task_ing_map'][(process_type, product_type)]['parent_tasks'])
 	# total amount of ingredient associated with the child task
-	total_amount = descendant_ingredients[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['amount']
+	total_amount = descendant_ingredients[child]['task_ing_map'][(tasks[parent]['process_type'], tasks[parent]['product_type'])]['amount']
 	# actual amount to be transferred to the child
 	actual_amount = float(total_amount / num_parents)
-	new_difference = unit_cost_diff * actual_amount
-	print('new_difference', new_difference, 'parent task', task)
+	cost_now = new_unit_cost * actual_amount
+	cost_previously = prev_unit_cost * actual_amount
+	parent_remaining_worth = float(tasks[parent]['remaining_worth'])
+	parent_cost = float(tasks[parent]['cost'])
+	new_difference = get_capped_new_difference(cost_now, cost_previously, parent_remaining_worth, parent_cost, actual_amount, tasks[parent]['batch_size'])
+	print('new_difference', new_difference, 'parent task', parent)
 	update_cost_and_remaining_worth_of_child(child, tasks, new_difference)
-	update_remaining_worth_of_parent(task, tasks, new_difference)
-	return new_difference
+	update_remaining_worth_of_parent(parent, tasks, new_difference)
+
+	return get_prev_and_new_unit_costs_for_child(tasks[child], new_difference)
+
+
+def get_prev_and_new_unit_costs_for_child(child, new_difference):
+	cost = child['cost']
+	batch_size = child['batch_size']
+	prev_unit_cost = get_unit_cost(cost, batch_size)
+	new_unit_cost = get_unit_cost(cost + new_difference, batch_size)
+	return prev_unit_cost, new_unit_cost
+
+
+def get_capped_new_difference(cost_now, cost_previously, parent_remaining_worth, parent_cost, actual_amount, parent_batch_size):
+	print(cost_now, cost_previously, parent_remaining_worth, parent_cost)
+	new_difference = cost_now - cost_previously
+	if new_difference >= 0:
+		if cost_now <= parent_remaining_worth:
+			return cost_now - cost_previously
+		else:  # cap
+			return parent_remaining_worth
+	else:  # We're returning value to parent
+		if actual_amount > parent_batch_size:
+			return 0  # We can't return any value since the parent isn't even giving us our full expected amount
+		elif parent_has_capacity_to_receive_returned_value(new_difference, parent_remaining_worth, parent_cost):
+			return cost_now - cost_previously
+		else:  # cap in the case that new_difference would make remaining_worth exceed cost
+			return parent_remaining_worth - parent_cost
+
+
+def parent_has_capacity_to_receive_returned_value(new_difference, parent_remaining_worth, parent_cost):
+	return parent_remaining_worth - parent_cost >= new_difference
 
 
 def update_cost_and_remaining_worth_of_child(child, tasks, new_difference):
@@ -69,15 +103,13 @@ def zero_or_greater(number):
 
 
 # function to recursively propagate data
-def rec_cost(parent, new_difference, tasks, visited, descendant_ingredients):
-	# batch_size should not be 0 (when you run script again)
-	unit_cost_diff = get_unit_cost(new_difference, float(tasks[parent]['batch_size']))
+def rec_cost(parent, prev_unit_cost, new_unit_cost, tasks, visited, descendant_ingredients):
 	for child in tasks[parent]['children']:
 		if child is not None and child not in visited:
 			visited[child] = child
-			new_difference = update_cost(parent, child, unit_cost_diff, tasks, descendant_ingredients)
+			prev_unit_cost, new_unit_cost = update_cost(parent, child, prev_unit_cost, new_unit_cost, tasks, descendant_ingredients)
 			if child in tasks:
-				rec_cost(child, new_difference, tasks, visited, descendant_ingredients)
+				rec_cost(child, prev_unit_cost, new_unit_cost, tasks, visited, descendant_ingredients)
 
 
 # fetch parents and children for list of related tasks
@@ -156,7 +188,7 @@ def get_prev_and_new_unit_costs(task, kwargs):
 
 
 def get_unit_cost(cost, batch_size):
-	return float(round(cost / batch_size, 2))
+	return float(cost) / float(batch_size)
 
 
 # DELETED TASK HELPERS:
