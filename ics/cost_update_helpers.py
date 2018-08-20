@@ -119,15 +119,20 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 		descendant_ingredients[key] = {}
 		task_ing_map = {}
 		for task_ing in tasks[key]['ingredients']:
+			if task_ing is None:
+				continue
 			ingredient_details = TaskIngredient.objects.filter(task_id=key, ingredient_id=task_ing).values('actual_amount',
 																						'ingredient__process_type', 'ingredient__product_type')[0]
-			task_ing_map[(ingredient_details['ingredient__process_type'], ingredient_details['ingredient__product_type'])] = {
-								'amount': ingredient_details['actual_amount'], 'parent_tasks': set()}
+			process_type = ingredient_details['ingredient__process_type']
+			product_type = ingredient_details['ingredient__product_type']
+			task_ing_map[(process_type, product_type)] = {'amount': ingredient_details['actual_amount'], 'parent_tasks': set()}
+
 		for parent in tasks[key]['parents']:
 			if task_is_trashed(parent, [tasks]):
 				continue
-			task_ing_map[(tasks[parent]['process_type'], tasks[parent]['product_type'])]['parent_tasks'].add(
-				parent)
+			process_type = tasks[parent]['process_type']
+			product_type = tasks[parent]['product_type']
+			task_ing_map[(process_type, product_type)]['parent_tasks'].add(parent)
 		descendant_ingredients[key]['task_ing_map'] = task_ing_map
 	return descendant_ingredients
 
