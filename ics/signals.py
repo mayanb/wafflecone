@@ -55,19 +55,19 @@ def item_changed(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Input)
-def input_changed(sender, instance, **kwargs):
+def input_changed(sender, instance, created, **kwargs):
 	update_task_ingredient_for_new_input(instance)
 	kwargs = get_input_kwargs(instance, added=True)
 	check_anomalous_inputs_alerts(**kwargs)
-	input_update(**kwargs)
+	if created:
+		input_update(**kwargs)
 
 
 @receiver(pre_delete, sender=Input)
 def input_deleted_pre_delete(sender, instance, **kwargs):
 	kwargs2 = get_input_kwargs(instance)
 	print('pre_delete', kwargs2)
-	if kwargs['created']:
-		input_update(**kwargs2)
+	input_update(**kwargs2)
 
 	update_task_ingredient_after_input_delete(instance)
 	kwargs = { 'pk' : instance.task.id }
