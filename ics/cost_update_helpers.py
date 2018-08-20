@@ -198,18 +198,16 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 			return
 
 		unit_cost = parent.cost / parent.batch_size
-		deleted_parent = 1 if input_deleted and num_parents is not 1 else 0
-		adjusted_num_parents = num_parents - deleted_parent
 		if task == creating_task_of_changed_input and input_added:
 			cost_of_ingredient_used_previously = 0
 		else:
-			old_avg_amount = old_amount / adjusted_num_parents
+			old_avg_amount = old_amount / get_adjusted_num_parents(num_parents, input_added, input_deleted, for_old_amount=True)
 			cost_of_ingredient_used_previously = old_avg_amount * unit_cost
 
 		if task == creating_task_of_changed_input and input_deleted:
 			cost_of_ingredient_used_now = 0
 		else:
-			new_avg_amount = new_amount / adjusted_num_parents
+			new_avg_amount = new_amount / get_adjusted_num_parents(num_parents, input_added, input_deleted, for_old_amount=False)
 			cost_of_ingredient_used_now = new_avg_amount * unit_cost
 
 		utilization_diff = get_capped_utilization_diff(cost_of_ingredient_used_now, cost_of_ingredient_used_previously, parent.cost)
@@ -221,6 +219,16 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 		Task.objects.filter(pk=task).update(remaining_worth=new_remaining_worth)
 		print("new remaining", new_remaining_worth, "total diff", total_change_in_value_from_all_parents)
 	return total_change_in_value_from_all_parents
+
+
+def get_adjusted_num_parents(num_parents, input_added, input_deleted, for_old_amount):
+	if input_deleted:  # Delete input is calculated pre_delete, where all parents still exist.
+		adjusted_num_parents = num_parents if for_old_amount else num_parents - 1
+	elif input_added:  # New input is calculated post_save, where all parents exist.
+		adjusted_num_parents = num_parents - 1 if for_old_amount else num_parents
+	else:
+		adjusted_num_parents = num_parents
+	return adjusted_num_parents if adjusted_num_parents > 0 else 1
 
 
 # utilization_diff + remaining_worth must remain with the range of 0 to cost (inclusive).
@@ -275,44 +283,47 @@ def update_children_of_deleted_task(deleted_task):
 
 # UPDATE INPUT HELPERS
 
-def handle_input_change_with_no_recipe(kwargs, updated_task, updated_task_id):
+# This is nearly identical to async_action.py/ingredient_amount_update(...), except with special flags to handle
+# special cases of introducing or exiting an input.
+def handle_input_change_with_no_recipe(kwargs, updated_task_id):
 	creating_task_of_changed_input_id = kwargs['creatingTaskID']
 	input_added = kwargs['added']
+	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
+	ingredient_id = kwargs['ingredientID']
 	creating_task_of_changed_input = Task.objects.filter(is_trashed=False, pk=creating_task_of_changed_input_id).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))[0]
+
 	if creating_task_of_changed_input.cost is None:
 		return
 
-	if input_added:
-		print('input added...')
-		new_updated_task_cost = updated_task.cost + creating_task_of_changed_input.remaining_worth
-		new_updated_task_remaining_worth = updated_task.remaining_worth + creating_task_of_changed_input.remaining_worth
-		parent_remaining_worth = 0
-
-		Task.objects.filter(pk=creating_task_of_changed_input.id).update(remaining_worth=parent_remaining_worth)
-		Task.objects.filter(pk=updated_task_id).update(cost=new_updated_task_cost, remaining_worth=new_updated_task_remaining_worth)
-
-	else:
-		handle_input_delete_with_no_recipe(kwargs, updated_task, creating_task_of_changed_input)
-
-
-# This is nearly identical to ingredient_amount_update(new amount is 0). We do it pre-delete to access the
-# TaskIngredient.actual_amount which will no longer exists post-deletion of the final input.
-def handle_input_delete_with_no_recipe(kwargs, updated_task, creating_task_of_changed_input):
-	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
-	ingredient_id = kwargs['ingredientID']
-
-	old_amount = task_ingredient__actual_amount
-	# Deleting inputs subtracts the its batch size. Note: can produce negative amounts in special cases, matching codebase
-	new_amount = old_amount - creating_task_of_changed_input.batch_size
+	# Adding inputs adds its batch size.
+	# Deleting inputs subtracts its batch size. Note: can produce negative amounts in special cases, matching codebase.
+	old_amount, new_amount = get_amounts(task_ingredient__actual_amount, creating_task_of_changed_input.batch_size, input_added)
 	update_parents_for_ingredient_and_then_child(
-		updated_task.id,
+		updated_task_id,
 		old_amount,
 		new_amount,
 		ingredient_id,
 		creating_task_of_changed_input=creating_task_of_changed_input.id,
-		input_deleted=True,
+		input_added=input_added,
+		input_deleted=not input_added,
 	)
+
+
+def get_amounts(task_ingredient__actual_amount, batch_size, input_added):
+	print('input_added', input_added)
+	if input_added:  # which happens post_save
+		new_amount = task_ingredient__actual_amount  # we've already updated TaskIngredient
+		old_amount = new_amount - batch_size
+	else:
+		old_amount = task_ingredient__actual_amount  # we've yet to update TaskIngredient
+		new_amount = old_amount - batch_size
+	print('old amount', old_amount, 'new_amount', new_amount)
+	return old_amount, new_amount
+
+
+def handle_input_change_with_recipe(kwargs, updated_task_id):
+	print('Input change with recipe', kwargs['recipe'])
 
 
 # UPDATE INGREDIENT HELPERS
