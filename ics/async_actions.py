@@ -69,6 +69,6 @@ def batch_size_update(**kwargs):
 
 
 @task
-def task_deleted_update_cost(deleted_task):
-	update_parents_of_deleted_task(deleted_task.id)
-	update_children_of_deleted_task(deleted_task.id)
+def task_deleted_update_cost(deleted_task_id):
+	update_parents_of_deleted_task(deleted_task_id)
+	update_children_of_deleted_task(deleted_task_id)

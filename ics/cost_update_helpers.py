@@ -184,6 +184,22 @@ def get_unit_cost(cost, batch_size):
 
 # DELETED TASK HELPERS:
 
+def update_children_of_deleted_task(deleted_task):
+	# fetch all the descendants of deleted task
+	deleted_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=deleted_task)[0])
+	if not deleted_task_descendants:
+		print ("No descendents")
+		return
+	tasks = task_details(deleted_task_descendants)
+	descendant_ingredients = descendant_ingredient_details(deleted_task_descendants, tasks)
+	if tasks[deleted_task]['children'] != {None}:
+		batch_size = tasks[deleted_task]['batch_size']
+		cost = tasks[deleted_task]['cost']
+		prev_unit_cost = get_unit_cost(cost, batch_size)
+		new_unit_cost = 0
+		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
+
+
 def update_parents_of_deleted_task(updated_task_id):
 	# get all the ids of ingredients used and parents who contribute those ingredients
 	qs = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
@@ -293,22 +309,6 @@ def child_gives_back_more_than_it_took(utilization_diff, parent):
 	return parent.remaining_worth - utilization_diff > parent.cost
 
 
-def update_children_of_deleted_task(deleted_task):
-	# fetch all the descendants of deleted task
-	deleted_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=deleted_task)[0])
-	if not deleted_task_descendants:
-		print ("No descendents")
-		return
-	tasks = task_details(deleted_task_descendants)
-	descendant_ingredients = descendant_ingredient_details(deleted_task_descendants, tasks)
-	if tasks[deleted_task]['children'] != set([None]):
-		batch_size = tasks[deleted_task]['batch_size']
-		cost = tasks[deleted_task]['cost']
-		prev_unit_cost = get_unit_cost(cost, batch_size)
-		new_unit_cost = 0
-		update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
-
-
 # UPDATE INPUT HELPERS
 
 # This is nearly identical to async_action.py/ingredient_amount_update(...), except with special flags to handle
@@ -318,10 +318,9 @@ def handle_input_change_with_no_recipe(kwargs, updated_task_id):
 	input_added = kwargs['added']
 	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
 	ingredient_id = kwargs['ingredientID']
-	creating_task_of_changed_input = Task.objects.filter(is_trashed=False, pk=creating_task_of_changed_input_id).annotate(
-		batch_size=Coalesce(Sum('items__amount'), 0))[0]
+	creating_task_of_changed_input = get_creating_task_of_changed_input(creating_task_of_changed_input_id)
 
-	if creating_task_of_changed_input.cost is None:
+	if not creating_task_of_changed_input or creating_task_of_changed_input.cost is None:
 		return
 
 	# Adding inputs adds its batch size.
@@ -336,6 +335,12 @@ def handle_input_change_with_no_recipe(kwargs, updated_task_id):
 		input_added=input_added,
 		input_deleted=not input_added,
 	)
+
+
+def get_creating_task_of_changed_input(creating_task_of_changed_input_id):
+	query_set = Task.objects.filter(is_trashed=False, pk=creating_task_of_changed_input_id).annotate(
+		batch_size=Coalesce(Sum('items__amount'), 0))
+	return False if query_set.count() == 0 else query_set[0]  # It's possible the parent is a deleted tasks.
 
 
 def get_amounts(task_ingredient__actual_amount, batch_size, input_added):
