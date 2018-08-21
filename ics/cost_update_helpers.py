@@ -22,7 +22,7 @@ def update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descenda
 				rec_cost(child, prev_unit_cost, new_unit_cost, tasks, visited, descendant_ingredients)
 
 
-# Make-shift solution: we're unable to filter out rashed tasks in ArrayAggs, so we just have to skip em
+# Make-shift solution: we're unable to filter out rashed tasks in Array Aggs, so we just have to skip em
 def task_is_trashed(task, maps_of_non_trashed_tasks):
 	for map in maps_of_non_trashed_tasks:
 		if task not in map:
@@ -105,6 +105,8 @@ def task_details(updated_task_descendants):
 	for parent in parents:
 		related_tasks = related_tasks.union(parent.task_parent_ids)
 
+	trashed_task_ids_set = get_trashed_task_ids_set()
+
 	related_tasks_batch_size = Task.objects.filter(is_trashed=False, pk__in=related_tasks).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
 	related_tasks_with_parents_children = Task.objects.filter(is_trashed=False, pk__in=related_tasks).annotate(
@@ -113,13 +115,22 @@ def task_details(updated_task_descendants):
 		ingredients=ArrayAgg('task_ingredients__ingredient'))
 	tasks = {}
 	for x in range(0, related_tasks_with_parents_children.count()):
-		tasks[related_tasks_with_parents_children[x].id] = {'children': set(related_tasks_with_parents_children[x].children_list),
-						'process_type': related_tasks_batch_size[x].process_type_id,
-						'ingredients': set(related_tasks_with_parents_children[x].ingredients),
-						'product_type': related_tasks_batch_size[x].product_type_id, 'cost': related_tasks_batch_size[x].cost,
-					    'parents': set(related_tasks_with_parents_children[x].task_parent_ids),
-				    	'remaining_worth': related_tasks_batch_size[x].remaining_worth, 'batch_size': related_tasks_batch_size[x].batch_size}
+		tasks[related_tasks_with_parents_children[x].id] = {
+			'children': set(related_tasks_with_parents_children[x].children_list) - trashed_task_ids_set,
+			'process_type': related_tasks_batch_size[x].process_type_id,
+			'ingredients': set(related_tasks_with_parents_children[x].ingredients),
+			'product_type': related_tasks_batch_size[x].product_type_id,
+			'cost': related_tasks_batch_size[x].cost,
+			'parents': set(related_tasks_with_parents_children[x].task_parent_ids) - trashed_task_ids_set,
+			'remaining_worth': related_tasks_batch_size[x].remaining_worth,
+			'batch_size': related_tasks_batch_size[x].batch_size
+		}
 	return tasks
+
+
+#  Not a scalable solution, but even if we doubled our task count we'd likely still have only 3k deleted tasks
+def get_trashed_task_ids_set():
+	return set(Task.objects.filter(is_trashed=True).values_list('pk', flat=True))
 
 
 # returns ingredient used by each descendant
@@ -346,7 +357,7 @@ def handle_input_change_with_recipe(kwargs, updated_task_id):
 # UPDATE INGREDIENT HELPERS
 
 def get_parents_contributing_ingredient(parent_ids, ingredient_id):
-	updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
+	updated_task_parents = Task.objects.filter(pk__in=set(parent_ids), is_trashed=False).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
 	ingredient = Ingredient.objects.get(pk=ingredient_id)
 	parents_contributing_ingredient = {}
