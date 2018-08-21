@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Count, Sum
 from ics.models import *
 from django.db.models.functions import Coalesce
+from ics.cost_update_helpers import get_unit_cost
 
 """
 from django.db import connection
@@ -22,9 +23,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         final_costs = self.propagate_data()
         # update data in task table
-        # for task in final_costs:
-        #     if final_costs[task]['cost'] is not None and final_costs[task]['remaining_worth'] is not None:
-        #         Task.objects.filter(pk=task).update(cost=final_costs[task]['cost'], remaining_worth=final_costs[task]['remaining_worth'])
+        print('# of tasks to update in DB:', len(final_costs))
+        for task in final_costs:
+            if final_costs[task]['cost'] is not None and final_costs[task]['remaining_worth'] is not None:
+                Task.objects.filter(pk=task).update(cost=final_costs[task]['cost'], remaining_worth=final_costs[task]['remaining_worth'])
 
     # to get the list of tasks which are parent to some tasks and populate data in tasks
     def parents_list(self, tasks_with_child, tasks):
@@ -46,11 +48,12 @@ class Command(BaseCommand):
         try:
             print "Started propagating data"
             # query to fetch tasks which are parent to atleast one task and their children
-            tasks_with_child = Task.objects.filter(is_trashed=False).annotate(num_children=Count(F('items__inputs')), children_list=ArrayAgg('items__inputs__task'), batch_size=Coalesce(Sum('items__amount'), 0)).filter(num_children__gt=0)
+            tasks_with_child = Task.objects.filter(is_trashed=False).annotate(num_children=Count(F('items__inputs')), children_list=ArrayAgg('items__inputs__task'), batch_size=Coalesce(Sum('items__amount'), 0)).filter(num_children__gt=0) \
+                .filter(is_trashed=False, process_type__team_created_by=24)  # FILTERS FOR JUST TOY GRAPH
             tasks = {}
             self.parents_list(tasks_with_child, tasks)
 
-            ids = Task.objects.values('id')
+            ids = Task.objects.filter(is_trashed=False, process_type__team_created_by=24).values('id')
             # query to fetch tasks along with their parent tasks
             parents = Task.objects.filter(is_trashed=False, pk__in=ids).annotate(task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))
             faulty_tasks = {}  # stores tasks which are not available in taskingredient table
@@ -68,7 +71,7 @@ class Command(BaseCommand):
                 list_parents[key]['task_ing_map'] = task_ing_map
 
             # stores intermediate results of cost and remaining_worth for all tasks to avoid recursive db calls
-            initial_costs = Task.objects.filter(is_trashed=False).all()
+            initial_costs = Task.objects.filter(is_trashed=False, process_type__team_created_by=24).all()
             final_costs = {}
             for task in initial_costs:
                 final_costs[task.id] = {'id': task.id, 'cost': task.cost, 'remaining_worth': task.remaining_worth}
@@ -80,7 +83,7 @@ class Command(BaseCommand):
                     # unit_cost of the task is total cost associated with the task divided by batch size of the task
                     # batch_size should not be 0 (when you run script again)
                     # if tasks[task]['batch_size'] != 0:
-                    unit_cost = float(round(tasks[task]['cost']/tasks[task]['batch_size'], 2))
+                    unit_cost = get_unit_cost(tasks[task]['cost'], tasks[task]['batch_size'])
                     # initially remaining worth of the task will be same as the total cost
                     final_costs[task]['remaining_worth'] = tasks[task]['cost']
                     # iterate through each child of the current task and propagate data
@@ -98,11 +101,14 @@ class Command(BaseCommand):
         except Exception as e:
             print "except block"
             print(str(e))
+            raise
 
     # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
     def update_cost(self, task, child, unit_cost, tasks, list_parents, final_costs):
         # find number of parent contributing same ingredient to the child task
-        num_parents = len(list_parents[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['parent_tasks'])
+        process_type = tasks[task]['process_type']
+        product_type = tasks[task]['product_type']
+        num_parents = len(list_parents[child]['task_ing_map'][(process_type, product_type)]['parent_tasks'])
         # total amount of ingredient associated with the child task
         total_amount = list_parents[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['amount']
         # actual amount to be transferred to the child
@@ -123,7 +129,7 @@ class Command(BaseCommand):
     def rec_cost(self, parent, proportional_cost, final_costs, tasks, faulty_tasks, list_parents, visited):
         # batch_size should not be 0 (when you run script again)
         # if tasks[parent]['batch_size'] != 0:
-        unit_cost = float(round(proportional_cost / float(tasks[parent]['batch_size']), 2))
+        unit_cost = get_unit_cost(proportional_cost, float(tasks[parent]['batch_size']))
         for child in tasks[parent]['list_children']:
             if child is not None and child not in faulty_tasks and child in final_costs and child not in visited:
                 visited[child] = child
