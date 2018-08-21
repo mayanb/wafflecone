@@ -213,6 +213,9 @@ def update_parents_of_deleted_task(updated_task_id):
 	updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
 
+	if updated_task_parents.count() == 0:
+		return
+
 	# map ingredients with parents
 	ingredients_to_parents_map = {}
 	print(updated_task.ingredients)
@@ -255,6 +258,8 @@ def update_parents_for_ingredient(parents_contributing_ingredient, old_amount, n
 			cost_of_ingredient_used_now = new_avg_amount * unit_cost
 
 		utilization_diff = get_capped_utilization_diff(cost_of_ingredient_used_now, cost_of_ingredient_used_previously, parent.cost)
+		if utilization_diff > parent.remaining_worth:
+			utilization_diff = parent.remaining_worth
 		print("parent cost", parent.cost, "parent batch size", parent.batch_size, "prev util", cost_of_ingredient_used_previously, "new util", cost_of_ingredient_used_now, "utilization diff", utilization_diff)
 
 		new_remaining_worth = parent.remaining_worth - utilization_diff
