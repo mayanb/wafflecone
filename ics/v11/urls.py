@@ -69,8 +69,8 @@ urlpatterns = [
     url(r'^inventory/$', views.InventoryList.as_view()),
     url(r'^inventory/detail/$', views.InventoryDetail.as_view()),
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
-    url(r'^inventory/ancestors/$', views.InventoryAncestors.as_view(), name='inventory_ancestors'),
-    url(r'^inventory/remaining/$', views.InventoryRemaining.as_view(), name='inventory_remaining'),
+    url(r'^inventory/ancestors/$', views.InventoryInProgress.as_view(), name='inventory_ancestors'),
+    url(r'^inventory/remaining/$', views.InventoryRemainingRawMaterials.as_view(), name='inventory_remaining'),
 
     url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 

@@ -590,8 +590,8 @@ class InventoryDetail(generics.ListAPIView):
     process = self.request.query_params.get('process', '')
     return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
 
-class InventoryAncestors(generics.ListAPIView):
-  serializer_class = InventoryAncestorsSerializer
+class InventoryInProgress(generics.ListAPIView):
+  serializer_class = InventoryInProgressSerializer
 
   def get_queryset(self):
     queryset = Item.objects.none()
@@ -640,8 +640,8 @@ class InventoryAncestors(generics.ListAPIView):
 
     return queryset
 
-class InventoryRemaining(generics.ListAPIView):
-  serializer_class = InventoryRemainingSerializer
+class InventoryRemainingRawMaterials(generics.ListAPIView):
+  serializer_class = InventoryRemainingRawMaterialsSerializer
 
   def get_queryset(self):
     queryset = Item.objects.none()

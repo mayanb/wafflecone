@@ -383,10 +383,11 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 		model = Task
 		fields = ('id', 'items', 'display')
 
-class InventoryAncestorsSerializer(serializers.Serializer):
+class InventoryInProgressSerializer(serializers.Serializer):
 	process_type = serializers.SerializerMethodField()
 	product_type = serializers.SerializerMethodField()
 	adjusted_amount = serializers.SerializerMethodField()
+	can_make = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
 		process = ProcessType.objects.get(id=item_summary['creating_task__process_type'])
@@ -412,10 +413,16 @@ class InventoryAncestorsSerializer(serializers.Serializer):
 		product_type = item_summary['creating_task__product_type']
 		return get_adjusted_item_amount(process_type, product_type)
 
-class InventoryRemainingSerializer(serializers.Serializer):
+	def get_can_make(self, item_summary):
+
+		return 0
+
+class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 	process_type = serializers.SerializerMethodField()
 	product_type = serializers.SerializerMethodField()
 	date_exhausted = serializers.SerializerMethodField()
+	adjusted_amount = serializers.SerializerMethodField()
+	warning = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
 		process = ProcessType.objects.get(id=item_summary['creating_task__process_type'])
@@ -451,6 +458,17 @@ class InventoryRemainingSerializer(serializers.Serializer):
 		delta = timedelta(seconds=secondsUntilExhaused)
 		futureDate = datetime.now() + delta
 		return futureDate
+
+	def get_warning(self, item_summary):
+		dateExhausted = self.get_date_exhausted(item_summary)
+		if dateExhausted < datetime.now() + timedelta(days=30):
+			return True
+		return False
+
+	def get_adjusted_amount(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_type = item_summary['creating_task__product_type']
+		return get_adjusted_item_amount(process_type, product_type)
 
 
 class ActivityListSerializer(serializers.ModelSerializer):
