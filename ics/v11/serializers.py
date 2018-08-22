@@ -184,7 +184,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost', 'cost_set_by_user')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -210,7 +210,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost', 'cost_set_by_user')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')

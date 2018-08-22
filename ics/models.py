@@ -266,6 +266,7 @@ class Task(models.Model):
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
 	cost = models.DecimalField(max_digits=10, decimal_places=3, null=True)
+	cost_set_by_user = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 	remaining_worth = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 
 	objects = TaskManager()
