@@ -14,6 +14,7 @@ import pytz
 import re
 from datetime import datetime, timedelta
 from ics.v11.queries.inventory import *
+from ics.v11.queries.production_planning import *
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.constants import POSITIVE_SMALL_INTEGER_FIELD_MAX
 
@@ -414,8 +415,17 @@ class InventoryInProgressSerializer(serializers.Serializer):
 		return get_adjusted_item_amount(process_type, product_type)
 
 	def get_can_make(self, item_summary):
+		conversion_rates = self.context.get('conversion_rates', None)
+		process_type = item_summary['creating_task__process_type']
+		product_type = item_summary['creating_task__product_type']
 
-		return 0
+		if (process_type, product_type) in conversion_rates:
+			conversion_rate = conversion_rates[(process_type, product_type)]
+		else:
+			conversion_rate = 0
+		amount = get_adjusted_item_amount(process_type, product_type)
+		print('{} * {} = {}'.format(amount, conversion_rate, amount * conversion_rate))
+		return amount * conversion_rate
 
 class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 	process_type = serializers.SerializerMethodField()

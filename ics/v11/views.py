@@ -1,6 +1,10 @@
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.db.models.functions import Coalesce, Concat
+from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db.models.functions import Coalesce, Concat
+from django.http import HttpResponse, HttpResponseForbidden, QueryDict
+from django.utils import timezone
 from ics.v11.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
@@ -10,15 +14,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
 from ics.v11.queries.tasks import *
 from ics.v11.queries.processes_and_products import *
+from ics.v11.queries.production_planning import *
+from ics.v11.queries.inventory import inventory_amounts
 from datetime import datetime, timedelta
-from django.http import HttpResponse, HttpResponseForbidden, QueryDict
 import pytz
-from django.utils import timezone
 from ics import constants
 import json
-from rest_framework.decorators import api_view
-from ics.v11.queries.inventory import inventory_amounts
-from django.conf import settings
 import uuid
 import boto3
 import os
@@ -590,6 +591,7 @@ class InventoryDetail(generics.ListAPIView):
     process = self.request.query_params.get('process', '')
     return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
 
+# inventory/ancestors/
 class InventoryInProgress(generics.ListAPIView):
   serializer_class = InventoryInProgressSerializer
 
@@ -600,7 +602,6 @@ class InventoryInProgress(generics.ListAPIView):
     product = self.request.query_params.get('product', None)
     ancestor_category = self.request.query_params.get('ancestor_category', None)
     ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
-    print('process={}, product={}'.format(process, product))
     if process is not None and product is not None and ancestor_category is not None:
       print('IN IF STATEMENT')
       # take a sample of the 10 most recent tasks with the same process and product types
@@ -640,6 +641,22 @@ class InventoryInProgress(generics.ListAPIView):
 
     return queryset
 
+  def get_serializer_context(self):
+    # get process and product type as an int instead of unicode
+    process = int(self.request.query_params.get('process', None))
+    product = int(self.request.query_params.get('product', None))
+
+    conversion_map = get_conversion_map(process, product)
+    if (process, product) in conversion_map:
+      conversion_rates = get_conversion_rates(conversion_map, (process, product))
+    else:
+      conversion_rates = {}
+
+    return {
+      'conversion_rates': conversion_rates
+    }
+
+# inventory/remaining/
 class InventoryRemainingRawMaterials(generics.ListAPIView):
   serializer_class = InventoryRemainingRawMaterialsSerializer
 
@@ -650,7 +667,6 @@ class InventoryRemainingRawMaterials(generics.ListAPIView):
     product = self.request.query_params.get('product', None)
     ancestor_category = self.request.query_params.get('ancestor_category', None)
     ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
-    print('process={}, product={}'.format(process, product))
     if process is not None and product is not None and ancestor_category is not None:
       # take a sample of the 10 most recent tasks with the same process and product types
       sampleTasks = Task.objects.filter(
@@ -692,7 +708,6 @@ class InventoryRemainingRawMaterials(generics.ListAPIView):
         .annotate(
           amount_used = Sum('amount'),
         )
-      print(queryset)
 
     return queryset
 
