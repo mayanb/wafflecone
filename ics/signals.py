@@ -49,7 +49,16 @@ def item_changed(sender, instance, **kwargs):
 	previous_amount = instance.tracker.previous('amount')
 	kwargs = { 'pk' : instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
 	check_goals_alerts(**kwargs)
-	# updates costs of children when batch size changed
+
+	# No costs to update if amount hasn't changed.
+	if previous_amount == instance.amount:
+		return
+	# Don't update costs twice on create and save
+	if 'created' in kwargs and kwargs['created']:
+			return
+	print("instance, instance.tracker.previous")
+	print(instance.amount, previous_amount)
+
 	batch_size_update(**kwargs)
 
 

@@ -64,8 +64,7 @@ def batch_size_update(**kwargs):
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
 	prev_unit_cost, new_unit_cost = get_prev_and_new_unit_costs(tasks[updated_task], kwargs)
-
-	update_children(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients)
+	update_children_after_batch_size_change(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, kwargs)
 
 
 @task
