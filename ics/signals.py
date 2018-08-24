@@ -56,9 +56,6 @@ def item_changed(sender, instance, **kwargs):
 	# Don't update costs twice on create and save
 	if 'created' in kwargs and kwargs['created']:
 			return
-	print("instance, instance.tracker.previous")
-	print(instance.amount, previous_amount)
-
 	batch_size_update(**kwargs)
 
 
