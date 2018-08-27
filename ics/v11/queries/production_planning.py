@@ -6,7 +6,7 @@ from django.contrib.postgres.aggregates.general import ArrayAgg
 
 def get_conversion_map(base_process_type, base_product_type):
 	conversion_map = {}
-	# sample the most recent 5 tasks
+	# sample the 5 most recent tasks
 	tasks = Task.objects.filter(
 		process_type=base_process_type,
 		product_type=base_product_type
