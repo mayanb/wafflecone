@@ -1,139 +1,140 @@
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.management.base import BaseCommand
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F
 from ics.models import *
 from django.db.models.functions import Coalesce
-from ics.cost_update_helpers import get_unit_cost
-
-"""
-from django.db import connection
-cursor = connection.cursor()
-To update category for the process Label, Bag Intake, Package & Foil/Unfoil
-update ics_processtype set category=rm where name like Label or name like %ag% or name like %oil%
-To insert cost for Bag Intake tasks
-update ics_task set cost=1000 where id in(select t.id from ics_task t, ics_processtype p where p.category=rm and (p.name like %Bag% or p.name like %bag%) and t.process_type_id=p.id)
-To insert cost for Label tasks
-update ics_task set cost='10' where id in(select t.id from ics_task t, ics_processtype p where p.category='rm' and p.name like 'Label' and t.process_type_id=p.id)
-"""
+from datetime import datetime, timedelta, date
 
 
 class Command(BaseCommand):
     help = 'Propagates data to tasks'
 
     def handle(self, *args, **options):
-        final_costs = self.propagate_data()
-        # update data in task table
-        print('# of tasks to update in DB:', len(final_costs))
-        for task in final_costs:
-            if final_costs[task]['cost'] is not None and final_costs[task]['remaining_worth'] is not None:
-                Task.objects.filter(pk=task).update(cost=final_costs[task]['cost'], remaining_worth=final_costs[task]['remaining_worth'])
+        team_id = 24
+        # To reset before re-seeding:
+        Task.objects.filter(process_type__team_created_by__id=team_id).update(cost=0.000, remaining_worth=0.000)
+        Task.objects.filter(process_type__team_created_by__id=team_id, cost_set_by_user__isnull=False) \
+            .update(cost=F('cost_set_by_user'), remaining_worth=F('cost_set_by_user'))
+        print(top_sort(team_id))
 
-    # to get the list of tasks which are parent to some tasks and populate data in tasks
-    def parents_list(self, tasks_with_child, tasks):
-        for task in tasks_with_child:
-            children = set(task.children_list)
-            tasks[task.id] = {'list_children': children, 'visited': False, 'process_type': task.process_type_id, 'product_type': task.product_type_id, 'cost': task.cost, 'batch_size': task.batch_size}
 
-    # creates list of all the taskingredients used by each task
-    def get_ingredients(self, faulty_tasks, list_parents, parents):
-        for child in parents:
-            if child.task_parent_ids != [None]:
-                list_parents[child.id] = {'parents': set(child.task_parent_ids)}
-                list_parents[child.id]['task_ings'] = TaskIngredient.objects.filter(task=child.id)
-                if len(list_parents[child.id]['task_ings']) == 0:
-                    list_parents.pop(child.id)
-                    faulty_tasks[child.id] = child.id
+def make_unique(myList):
+  newList = []
+  for item in myList:
+    if item not in newList:
+      newList.append(item)
+  return newList
 
-    def propagate_data(self):
-        try:
-            print "Started propagating data"
-            # query to fetch tasks which are parent to atleast one task and their children
-            tasks_with_child = Task.objects.filter(is_trashed=False).annotate(num_children=Count(F('items__inputs')), children_list=ArrayAgg('items__inputs__task'), batch_size=Coalesce(Sum('items__amount'), 0)).filter(num_children__gt=0) \
-                .filter(is_trashed=False, process_type__team_created_by=24)  # FILTERS FOR JUST TOY GRAPH
-            tasks = {}
-            self.parents_list(tasks_with_child, tasks)
 
-            ids = Task.objects.filter(is_trashed=False, process_type__team_created_by=24).values('id')
-            # query to fetch tasks along with their parent tasks
-            parents = Task.objects.filter(is_trashed=False, pk__in=ids).annotate(task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))
-            faulty_tasks = {}  # stores tasks which are not available in taskingredient table
-            list_parents = {}
+def top_sort(team_id):
+  cachedTaskSizeRemaining = {}
+  level = 0
+  CUTOFF = 200
+  start = datetime.utcnow() - timedelta(days=100)
+  possibleNextLevel = set(list(Task.objects.filter(is_trashed=False, process_type__team_created_by__id=team_id, created_at__gte=start).annotate(num_parents=Count(F('inputs__input_item__creating_task__id'))).filter(num_parents__lte=0).values_list('id', flat=True).distinct()))
+  nextLevel = set()
+  # only propagate the DAG's that don't have cycles
+  print("removing graphs with cycles")
+  for x in possibleNextLevel:
+    if not check_for_cycles(x):
+        nextLevel.add(x)
+  path = []
+  while len(nextLevel) > 0:
+    currLevel = nextLevel
+    nextLevel = set()
+    print("level: " + str(level))
+    for node in currLevel:
+      if node:
+        if node not in path:
+          path.append(node)
+        else:
+          path.remove(node)
+          path.append(node)
+        matching_task = Task.objects.filter(pk=node).annotate(children_list=ArrayAgg('items__inputs__task__id'))
+        if matching_task.count() > 0:
+          children = set(matching_task[0].children_list)
+        else:
+          children = set()
+        nextLevel = nextLevel.union(children)
+        print("updating costs for children of " + str(node))
+        currTask = Task.objects.filter(pk=node).annotate(batch_size=Coalesce(Sum('items__amount'), 0))[0]
+        # get the children in order
+        childrenInOrder =  Input.objects.filter(task__in=list(children)).order_by('id').values_list('task', flat=True)
+        childrenInOrder = make_unique(childrenInOrder)
+        print("children: ")
+        print(childrenInOrder)
+        if currTask.id not in cachedTaskSizeRemaining:
+          cachedTaskSizeRemaining[currTask.id] = currTask.batch_size
+        currTaskRemainingWorth = currTask.remaining_worth
+        for child in childrenInOrder:
+          childTaskObj = Task.objects.get(pk=child)
+          task_ing = TaskIngredient.objects.filter(task__id=child, ingredient__process_type=currTask.process_type, ingredient__product_type=currTask.product_type)
+          if task_ing.count() > 0:
+            task_ing = task_ing[0]
+            # get the parents of the child that have the same ingredient type as currTask to get the number of matching parent tasks
+            matchingParents = set(Input.objects.filter(task__id=child, input_item__creating_task__process_type=currTask.process_type, input_item__creating_task__product_type=currTask.product_type).values_list('input_item__creating_task__id', flat=True))
+            amountToGive = task_ing.actual_amount/len(matchingParents)
+            amountGiven = min(cachedTaskSizeRemaining[currTask.id], amountToGive)
+            # keep track of how much this task actually has left to give
+            cachedTaskSizeRemaining[currTask.id] -= amountGiven
+            costGiven = (amountGiven/currTask.batch_size)*currTask.cost
+            # add to the child's cost and remaining worth
+            childTaskObj.cost = childTaskObj.cost + costGiven
+            childTaskObj.remaining_worth = childTaskObj.remaining_worth + costGiven
+            childTaskObj.save()
+            # subtract from the current tasks's remaining worth
+            currTask.remaining_worth = currTask.remaining_worth - costGiven
+            currTask.save()
+    level += 1
+    if CUTOFF <= level:
+      print("oh-no")
+      break
+  return(path)
 
-            self.get_ingredients(faulty_tasks, list_parents, parents)
-            # populate task_ing_map with taskingredients along with all the parents contributing that ingredient for each task
-            for key in list_parents:
-                task_ing_map = {}
-                for task_ing in list_parents[key]['task_ings']:
-                    task_ing_map[(task_ing.ingredient.process_type_id, task_ing.ingredient.product_type_id)] = {'amount': task_ing.actual_amount, 'parent_tasks': set()}
-                for parent in list_parents[key]['parents']:
-                    if parent in tasks:
-                        task_ing_map[(tasks[parent]['process_type'], tasks[parent]['product_type'])]['parent_tasks'].add(parent)
-                list_parents[key]['task_ing_map'] = task_ing_map
 
-            # stores intermediate results of cost and remaining_worth for all tasks to avoid recursive db calls
-            initial_costs = Task.objects.filter(is_trashed=False, process_type__team_created_by=24).all()
-            final_costs = {}
-            for task in initial_costs:
-                final_costs[task.id] = {'id': task.id, 'cost': task.cost, 'remaining_worth': task.remaining_worth}
+def has_cycle(time, u, low, disc, stackMember, st):
+  disc[u] = time
+  low[u] = time
+  time += 1
+  stackMember[u] = True
+  st.append(u)
+  matching_task = Task.objects.filter(pk=u).annotate(children_list=ArrayAgg('items__inputs__task__id'))
+  if matching_task.count() > 0:
+    children = list(set(matching_task[0].children_list))
+  else:
+    children = []
+  for v in children:
+    if v not in disc:
+      disc[v] = -1
+    if u not in low:
+      low[u] = -1
+    if v not in low:
+      low[v] = -1
+    if u not in disc:
+      disc[u] = -1
+    if v not in stackMember:
+      stackMember[v] = False
+    if disc[v] == -1:
+      has_cycle(time, v, low, disc, stackMember, st)
+      low[u] = min(low[u], low[v])
+    elif stackMember[v] == True:
+      low[u] = min(low[u], disc[v])
+  w = -1
+  if low[u] == disc[u]:
+    count = 0
+    while w != u:
+      if count > 0:
+        return True
+      w = st.pop()
+      stackMember[w] = False
+      count += 1
+  return False
 
-            # iterate through each task and update values in final_costs
-            for task in tasks:
-                # don't iterate if cost is None or task has been visited already
-                if tasks[task]['visited'] is False and tasks[task]['cost'] is not None:
-                    # unit_cost of the task is total cost associated with the task divided by batch size of the task
-                    # batch_size should not be 0 (when you run script again)
-                    # if tasks[task]['batch_size'] != 0:
-                    unit_cost = get_unit_cost(tasks[task]['cost'], tasks[task]['batch_size'])
-                    # initially remaining worth of the task will be same as the total cost
-                    final_costs[task]['remaining_worth'] = tasks[task]['cost']
-                    # iterate through each child of the current task and propagate data
-                    for child in tasks[task]['list_children']:
-                        if child is not None and child not in faulty_tasks and child in final_costs:
-                            new_difference = self.update_cost(task, child, unit_cost, tasks, list_parents, final_costs)
-                            # call rec_cost to propagate values to children of child task if it is present in tasks list
-                            if child in tasks:
-                                visited = {}  # handles tasks with circular dependencies
-                                self.rec_cost(child, new_difference, final_costs, tasks, faulty_tasks, list_parents, visited)
 
-            print "Tasks successfully updated"
-            return final_costs
-
-        except Exception as e:
-            print "except block"
-            print(str(e))
-            raise
-
-    # updates cost and remaining worth of tasks and returns new_difference which will be passed to child task
-    def update_cost(self, task, child, unit_cost, tasks, list_parents, final_costs):
-        # find number of parent contributing same ingredient to the child task
-        process_type = tasks[task]['process_type']
-        product_type = tasks[task]['product_type']
-        num_parents = len(list_parents[child]['task_ing_map'][(process_type, product_type)]['parent_tasks'])
-        # total amount of ingredient associated with the child task
-        total_amount = list_parents[child]['task_ing_map'][(tasks[task]['process_type'], tasks[task]['product_type'])]['amount']
-        # actual amount to be transferred to the child
-        actual_amount = float(total_amount / num_parents)
-        new_difference = unit_cost * actual_amount
-        # initially cost and remaining_worth can be None for tasks
-        final_costs[child]['cost'] = final_costs[child]['cost'] or 0
-        final_costs[child]['remaining_worth'] = final_costs[child]['remaining_worth'] or 0
-        # updated total cost associated with the child
-        final_costs[child]['cost'] = float(final_costs[child]['cost']) + new_difference
-        # updated remaining worth of the child
-        final_costs[child]['remaining_worth'] = float(final_costs[child]['remaining_worth']) + new_difference
-        # updated remaining worth of parent after transferring some part to current child
-        final_costs[task]['remaining_worth'] = float(final_costs[task]['remaining_worth']) - new_difference
-        return new_difference
-
-    # function to recursively propagate data
-    def rec_cost(self, parent, proportional_cost, final_costs, tasks, faulty_tasks, list_parents, visited):
-        # batch_size should not be 0 (when you run script again)
-        # if tasks[parent]['batch_size'] != 0:
-        unit_cost = get_unit_cost(proportional_cost, float(tasks[parent]['batch_size']))
-        for child in tasks[parent]['list_children']:
-            if child is not None and child not in faulty_tasks and child in final_costs and child not in visited:
-                visited[child] = child
-                new_difference = self.update_cost(parent, child, unit_cost, tasks, list_parents, final_costs)
-                if child in tasks:
-                    tasks[child]['visited'] = True
-                    self.rec_cost(child, new_difference, final_costs, tasks, faulty_tasks, list_parents, visited)
+def check_for_cycles(root):
+  disc = {}
+  low = {}
+  stackMember = {}
+  st = []
+  disc[root] = -1
+  return has_cycle(0, root, low, disc, stackMember, st)
