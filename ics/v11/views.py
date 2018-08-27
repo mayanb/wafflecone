@@ -603,7 +603,6 @@ class InventoryInProgress(generics.ListAPIView):
     ancestor_category = self.request.query_params.get('ancestor_category', None)
     ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
     if process is not None and product is not None and ancestor_category is not None:
-      print('IN IF STATEMENT')
       # take a sample of the 10 most recent tasks with the same process and product types
       sampleTasks = Task.objects.filter(
         is_trashed=False,

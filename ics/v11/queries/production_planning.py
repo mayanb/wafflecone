@@ -24,7 +24,6 @@ def get_conversion_map(base_process_type, base_product_type):
 		product_type=base_product_type
 	).order_by('-created_at')[:5]
 	
-	print('calculating conversion map for ({}, {})'.format(base_process_type, base_product_type))
 	for task in tasks:
 		print('sampling task {}'.format(task.id))
 		ancestors = task.ancestors() | Task.objects.filter(pk=task.pk)

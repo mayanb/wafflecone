@@ -424,7 +424,6 @@ class InventoryInProgressSerializer(serializers.Serializer):
 		else:
 			conversion_rate = 0
 		amount = get_adjusted_item_amount(process_type, product_type)
-		print('{} * {} = {}'.format(amount, conversion_rate, amount * conversion_rate))
 		return amount * conversion_rate
 
 class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
@@ -698,6 +697,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
+	total_inventory_amount = serializers.SerializerMethodField()
 	userprofile_name = serializers.SerializerMethodField()
 
 	def get_userprofile_name(self, goal):
@@ -736,9 +736,20 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
 
+	def get_total_inventory_amount(self, goal):
+		process = goal.process_type
+		products = self.get_product_types(goal)
+
+		total_adjusted_amount = 0
+		for product in products:
+			total_adjusted_amount += get_adjusted_item_amount(process.id, product['id'])
+		return total_adjusted_amount
+
+
+
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'userprofile')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'userprofile', 'total_inventory_amount')
 
 
 class GoalCreateSerializer(serializers.ModelSerializer):
