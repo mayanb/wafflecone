@@ -11,12 +11,16 @@ def get_conversion_map(base_process_type, base_product_type):
 		process_type=base_process_type,
 		product_type=base_product_type
 	).order_by('-created_at')[:5]
-	
+
+	# The more tasks you sample, the more robust and accurate your conversion map will be. However, it can take a while
+	# to get all the ancestors of a task.
 	for task in tasks:
 		print('sampling task {}'.format(task.id))
 		ancestors = task.ancestors() | Task.objects.filter(pk=task.pk)
 		for a in ancestors:
+			# get all the children of ancestors who are also ancestors themselves
 			children = ancestors.filter(inputs__input_item__creating_task=a)
+			# get all the task ingredients of those children
 			task_ingredients = TaskIngredient.objects.filter(
 				task__in=children,
 				ingredient__process_type=a.process_type,
@@ -27,8 +31,11 @@ def get_conversion_map(base_process_type, base_product_type):
 				conversion_rate = batch_size / ti.actual_amount
 				childKey = (a.process_type.id, a.product_type.id)
 				parentKey = (ti.task.process_type.id, ti.task.product_type.id)
+				# prevents some loops
 				if parentKey == childKey:
 					continue
+
+				# adds parentKey to the conversion map
 				if parentKey not in conversion_map:
 					conversion_map[parentKey] = {
 						childKey: {
@@ -50,6 +57,7 @@ def get_conversion_map(base_process_type, base_product_type):
 					total_conversion_rate = conversion_map[parentKey][childKey]['total_conversion_rate']
 					conversion_map[parentKey][childKey]['conversion_rate'] = total_conversion_rate / count
 
+				# adds childKey to the conversion map (necessary for calculating rates)
 				if childKey not in conversion_map:
 					conversion_map[childKey] = {}
 	return conversion_map

@@ -591,7 +591,7 @@ class InventoryDetail(generics.ListAPIView):
     process = self.request.query_params.get('process', '')
     return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
 
-# inventory/ancestors/
+# inventory/in-progress/
 class InventoryInProgress(generics.ListAPIView):
   serializer_class = InventoryInProgressSerializer
 
@@ -655,7 +655,7 @@ class InventoryInProgress(generics.ListAPIView):
       'conversion_rates': conversion_rates
     }
 
-# inventory/remaining/
+# inventory/remaining-raw-materials/
 class InventoryRemainingRawMaterials(generics.ListAPIView):
   serializer_class = InventoryRemainingRawMaterialsSerializer
 
