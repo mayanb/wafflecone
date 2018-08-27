@@ -296,7 +296,7 @@ class NestedTaskAttributeSerializer(serializers.ModelSerializer):
 class TaskFileSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = TaskFile
-		fields = ('id', 'name', 'url', 'task')
+		fields = ('id', 'name', 'extension', 'url', 'task')
 
 
 class RecommendedInputsSerializer(serializers.ModelSerializer):

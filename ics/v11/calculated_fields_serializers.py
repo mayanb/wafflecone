@@ -7,6 +7,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	items = BasicItemSerializer(many=True)
 	inputs = BasicInputSerializer(many=True, read_only=True)
 	input_unit = serializers.CharField(read_only=True)
+	files = TaskFileSerializer(many=True)
 	attribute_values = BasicTaskAttributeSerializer(read_only=True, many=True)
 
 	product_type = ProductTypeWithUserSerializer(many=False, read_only=True)
@@ -34,7 +35,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'process_type',
 			'product_type',
 			'label', 
-			'input_unit', 
+			'input_unit',
+			'files',
 			'is_open', 
 			'is_flagged', 
 			'flag_update_time', 
