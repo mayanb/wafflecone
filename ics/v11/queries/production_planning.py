@@ -4,18 +4,6 @@ from django.db.models import Sum
 from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
-"""
-For some final task t e.g. Package Tum
-
-Get all its ancestors x
-For each ancestor a in x:
-	get its direct children c that are in x
-	get all the task ingredients with task in c and ingredient prod/proc matching a
-	for each task ingredient ti:
-		count += 1
-		total conversion factor += ti. actual amount / ti.task.batch_size
-	store conversion_map[(a.prod, a.proc), (ti.task.prod, ti.task.proc)] = total conversion factor / count
-"""
 def get_conversion_map(base_process_type, base_product_type):
 	conversion_map = {}
 	# sample the most recent 5 tasks
