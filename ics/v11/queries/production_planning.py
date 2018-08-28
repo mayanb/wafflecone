@@ -28,7 +28,10 @@ def get_conversion_map(base_process_type, base_product_type):
 			)
 			for ti in task_ingredients:
 				batch_size = ti.task.items.aggregate(amount=Coalesce(Sum('amount'), 0))['amount']
-				conversion_rate = batch_size / ti.actual_amount
+				if (ti.actual_amount != 0):
+					conversion_rate = batch_size / ti.actual_amount
+				else:
+					conversion_rate = 0
 				childKey = (a.process_type.id, a.product_type.id)
 				parentKey = (ti.task.process_type.id, ti.task.product_type.id)
 				# prevents some loops

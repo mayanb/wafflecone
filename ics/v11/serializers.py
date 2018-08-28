@@ -419,6 +419,8 @@ class InventoryInProgressSerializer(serializers.Serializer):
 		else:
 			conversion_rate = 0
 		amount = item_summary['adjusted_amount']
+		if (amount < 0):
+			return 0
 		return amount * conversion_rate
 
 class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
