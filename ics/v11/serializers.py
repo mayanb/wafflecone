@@ -387,7 +387,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 class InventoryInProgressSerializer(serializers.Serializer):
 	process_type = serializers.SerializerMethodField()
 	product_type = serializers.SerializerMethodField()
-	adjusted_amount = serializers.SerializerMethodField()
+	adjusted_amount = serializers.DecimalField(max_digits=10, decimal_places=3)
 	can_make = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
@@ -409,11 +409,6 @@ class InventoryInProgressSerializer(serializers.Serializer):
 			'code': product.code,
 		}
 
-	def get_adjusted_amount(self, item_summary):
-		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
-		return get_adjusted_item_amount(process_type, product_type)
-
 	def get_can_make(self, item_summary):
 		conversion_rates = self.context.get('conversion_rates', None)
 		process_type = item_summary['creating_task__process_type']
@@ -423,14 +418,14 @@ class InventoryInProgressSerializer(serializers.Serializer):
 			conversion_rate = conversion_rates[(process_type, product_type)]
 		else:
 			conversion_rate = 0
-		amount = get_adjusted_item_amount(process_type, product_type)
+		amount = item_summary['adjusted_amount']
 		return amount * conversion_rate
 
 class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 	process_type = serializers.SerializerMethodField()
 	product_type = serializers.SerializerMethodField()
 	date_exhausted = serializers.SerializerMethodField()
-	adjusted_amount = serializers.SerializerMethodField()
+	adjusted_amount = serializers.DecimalField(max_digits=10, decimal_places=3)
 	warning = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
@@ -460,7 +455,7 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 		# find the amount still remaining
 		process_type = item_summary['creating_task__process_type']
 		product_type = item_summary['creating_task__product_type']
-		amount_remaining = float(get_adjusted_item_amount(process_type, product_type))
+		amount_remaining = float(item_summary['adjusted_amount'])
 
 		# calculate the date in the future in which the amount will be exhausted
 		secondsUntilExhaused = amount_remaining * rateOfConsumption
@@ -473,11 +468,6 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 		if dateExhausted < datetime.now() + timedelta(days=30):
 			return True
 		return False
-
-	def get_adjusted_amount(self, item_summary):
-		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
-		return get_adjusted_item_amount(process_type, product_type)
 
 
 class ActivityListSerializer(serializers.ModelSerializer):

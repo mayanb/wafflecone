@@ -640,7 +640,17 @@ class InventoryInProgress(generics.ListAPIView):
         creating_task__product_type__in=ancestorProducts,
       ).order_by(*ordering_values).values(*queryset_values).distinct()
 
-    return queryset
+    returnobj = []
+    for x in queryset:
+      proc = x['creating_task__process_type']
+      prod = x['creating_task__product_type']
+      adj_amt = get_adjusted_item_amount(proc, prod)
+      returnobj.append({
+        'creating_task__process_type': proc,
+        'creating_task__product_type': prod,
+        'adjusted_amount': adj_amt
+      })
+    return returnobj
 
   def get_serializer_context(self):
     # get process and product type as an int instead of unicode
@@ -710,7 +720,22 @@ class InventoryRemainingRawMaterials(generics.ListAPIView):
           amount_used = Sum('amount'),
         )
 
-    return queryset
+    returnobj = []
+    for x in queryset:
+      proc = x['creating_task__process_type']
+      prod = x['creating_task__product_type']
+      amt = x['amount_used']
+      adj_amt = get_adjusted_item_amount(proc, prod)
+      returnobj.append({
+        'creating_task__process_type': proc,
+        'creating_task__product_type': prod,
+        'amount_used': amt,
+        'adjusted_amount': adj_amt
+      })
+    return returnobj
+
+
+
 
 ##################
 # ACTIVITY VIEWS #
