@@ -4,15 +4,14 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from smtplib import SMTPException
 from uuid import uuid4
-from django.db.models import F, Q, Sum, Max, When, Case, Count
-from django.db.models.functions import Coalesce
+from django.db.models import Count, F, Q, Sum
 from datetime import date, datetime, timedelta
 from django.core.mail import send_mail
 from ics.utilities import *
 import operator
 import pytz
 import re
-from ics.v11.queries.inventory import inventory_amounts, old_inventory_created_amount, old_inventory_used_amount
+from ics.v11.queries.inventory import *
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.constants import POSITIVE_SMALL_INTEGER_FIELD_MAX
 
@@ -170,27 +169,6 @@ class BasicInputSerializerWithoutAmount(serializers.ModelSerializer):
 	def get_input_task_ingredients(self, input):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=input.task), many=True, read_only=True).data
 
-	def create(self, validated_data):
-		# can fix this when we remove the amount field from inputs later
-		new_input = Input.objects.create(**validated_data)
-		input_creating_product = new_input.input_item.creating_task.product_type
-		input_creating_process = new_input.input_item.creating_task.process_type
-		matching_task_ings = TaskIngredient.objects.filter(task=new_input.task, ingredient__product_type=input_creating_product, ingredient__process_type=input_creating_process)
-		if matching_task_ings.count() == 0:
-			# if there isn't already a taskIngredient and ingredient for this input's creating task, then make a new one
-			ing_query = Ingredient.objects.filter(product_type=input_creating_product, process_type=input_creating_process, recipe=None)
-			if(ing_query.count() == 0):
-				new_ing = Ingredient.objects.create(recipe=None, product_type=input_creating_product, process_type=input_creating_process, amount=0)
-			else:
-				new_ing = ing_query[0]
-			TaskIngredient.objects.create(ingredient=new_ing, task=new_input.task, actual_amount=new_input.input_item.amount)
-		else:
-			# when creating an input, if there is already a corresponding task ingredient
-			# if the task ingredient has a recipe, set the ingredient's actual_amount to its scaled_amount
-			matching_task_ings.exclude(ingredient__recipe=None).update(actual_amount=F('scaled_amount'))
-			# if the task ingredient doesn't have a recipe, add the new input's amount to the actual_amount
-			matching_task_ings.filter(ingredient__recipe=None).update(actual_amount=F('actual_amount')+new_input.input_item.amount)
-		return new_input
 
 	class Meta:
 		model = Input
@@ -207,7 +185,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost', 'cost_set_by_user', 'remaining_worth')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -233,7 +211,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost', 'cost_set_by_user', 'remaining_worth')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')
@@ -744,7 +722,7 @@ class ReorderAttributeSerializer(serializers.ModelSerializer):
 	def update(self, instance, validated_data):
 		if validated_data['new_rank'] == -1:
 			instance.is_trashed = True  # instance.save() called in reorder()
-			validated_data['new_rank'] = POSITIVE_SMALL_INTEGER_FIELD_MAX  # Assumes attribute won't have 32767 attributes
+			validated_data['new_rank'] = POSITIVE_SMALL_INTEGER_FIELD_MAX  # Assumes attribute won't have 36,000 attributes
 		return reorder(
 			instance,
 			validated_data,
@@ -754,7 +732,7 @@ class ReorderAttributeSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Attribute
 		fields = ('id', 'new_rank')
-		extra_kwargs = {'new_rank': {'write_only': True} }
+		extra_kwargs = {'new_rank': {'write_only': True}}
 
 
 class ReorderGoalSerializer(serializers.ModelSerializer):
@@ -911,65 +889,65 @@ class ClearUserProfileTokenSerializer(serializers.ModelSerializer):
 class AdjustmentSerializer(serializers.ModelSerializer):
 	created_at = serializers.DateTimeField(read_only=True)
 	amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+	cost = serializers.SerializerMethodField()
+
+	def get_cost(self, adjustment):
+		process_type = adjustment.process_type_id
+		product_type = adjustment.product_type_id
+		return get_adjusted_item_cost(process_type, product_type)
 
 	class Meta:
 		model = Adjustment
-		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount', 'explanation')
+		fields = ('userprofile', 'created_at', 'process_type', 'product_type', 'amount', 'cost', 'explanation')
 
 
 class InventoryList2Serializer(serializers.Serializer):
-	process_id = serializers.CharField(source='creating_task__process_type')
-	process_name = serializers.CharField(source='creating_task__process_type__name')
-	process_unit = serializers.CharField(source='creating_task__process_type__unit')
-	process_code = serializers.CharField(source='creating_task__process_type__code')
-	process_icon = serializers.CharField(source='creating_task__process_type__icon')
-	product_id = serializers.CharField(source='creating_task__product_type')
-	product_name = serializers.CharField(source='creating_task__product_type__name')
-	product_code = serializers.CharField(source='creating_task__product_type__code')
-	adjusted_amount = serializers.SerializerMethodField(source='get_adjusted_amount')
+	category = serializers.SerializerMethodField()
+	process_type = serializers.SerializerMethodField()
+	product_types = serializers.SerializerMethodField()
+	adjusted_amount = serializers.SerializerMethodField()
+	adjusted_cost = serializers.SerializerMethodField()
 
-	def old_get_adjusted_amount(self, item_summary):
-		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
+	def get_category(self, item_summary):
+		return item_summary['creating_task__process_type__category']
 
-		starting_total = 0
-
-		latest_adjustment = Adjustment.objects \
-			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
-			.order_by('-created_at').first()
-
-		items_query = Item.active_objects.exclude(creating_task__process_type__code__in=['SH','D']).filter(
-			creating_task__process_type=process_type,
-			creating_task__product_type=product_type,
-			team_inventory=item_summary['team_inventory'],
-		)
-
-		if latest_adjustment:
-			start_time = latest_adjustment.created_at
-			items_query = items_query.filter(created_at__gt=start_time)
-			starting_total = latest_adjustment.amount
-
-		created_amount = old_inventory_created_amount(items_query)
-		used_amount = old_inventory_used_amount(items_query)
-
-		return starting_total + created_amount - used_amount
+	def get_process_type(self, item_summary):
+		return {
+			'id': item_summary['creating_task__process_type'],
+			'name': item_summary['creating_task__process_type__name'],
+			'code': item_summary['creating_task__process_type__code'],
+			'unit': item_summary['creating_task__process_type__unit'],
+			'icon': item_summary['creating_task__process_type__icon'],
+			'category': item_summary['creating_task__process_type__category'],
+		}
+	
+	def get_product_types(self, item_summary):
+		product_types_dict = {}
+		for i, id in enumerate(item_summary['product_type_ids']):
+			product_types_dict[id] = {
+				'id': id,
+				'name': item_summary['product_type_names'][i],
+				'code': item_summary['product_type_codes'][i],
+			}
+		return product_types_dict.values()
 
 	def get_adjusted_amount(self, item_summary):
 		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
-		start_time = None
-		starting_amount = 0
+		product_types = list(set(item_summary['product_type_ids']))
+		total_adjusted_amount = 0
 
-		latest_adjustment = Adjustment.objects \
-			.filter(process_type=process_type, product_type=product_type, userprofile__team=item_summary['team_inventory']) \
-			.order_by('-created_at').first()
+		for product_type in product_types:
+			total_adjusted_amount += get_adjusted_item_amount(process_type, product_type)
+		return total_adjusted_amount
 
-		if latest_adjustment:
-			start_time = latest_adjustment.created_at
-			starting_amount = latest_adjustment.amount
+	def get_adjusted_cost(self, item_summary):
+		process_type = item_summary['creating_task__process_type']
+		product_types = list(set(item_summary['product_type_ids']))
+		total_cost = 0
 
-		data = inventory_amounts(process_type, product_type, start_time, None)
-		return starting_amount + data['created_amount'] - data['used_amount']
+		for product_type in product_types:
+			total_cost += get_adjusted_item_cost(process_type, product_type)
+		return total_cost
 
 
 class ItemSummarySerializer(serializers.Serializer):

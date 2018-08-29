@@ -1,6 +1,5 @@
-from django.contrib.auth.models import User
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.db.models import Case, DecimalField, F, OuterRef, Q, Subquery, Sum, Value, When
+from django.contrib.postgres.search import SearchQuery
 from ics.models import *
 import datetime
 import pytz
