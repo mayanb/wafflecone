@@ -73,7 +73,6 @@ def get_conversion_map(base_process_type, base_product_type):
 # Link: https://networkx.github.io/documentation/networkx-1.9/reference/generated/networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path.html?highlight=single_source_shortest_path#networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path
 def get_queryset_info(conversion_map, source):
 	# calculate the shortest paths from source to each node
-	level = 0
 	nextlevel = {source: 1}
 	paths = {source: [source]}
 	while nextlevel:
@@ -84,7 +83,6 @@ def get_queryset_info(conversion_map, source):
 				if w not in paths:
 					paths[w] = paths[v] + [w]
 					nextlevel[w] = 1
-		level = level + 1
 
 	info = {}
 	for pathKey in paths:
