@@ -57,6 +57,8 @@ def update_children_after_batch_size_or_child_ingredient_amount_change(
 		print('____NEW DIRECT_CHILD: %d, PARENT: %d' % (direct_child, parent_task))
 		is_a_deleted_input = child_is_a_deleted_input(direct_child, child_with_changed_ingredient_amount, input_deleted)
 		is_a_new_input = child_is_a_new_input(direct_child, child_with_changed_ingredient_amount, input_added)
+		adding_this_parent_as_input = is_a_new_input and an_input_was_added_from_this_parent
+		deleting_this_parent_as_input = is_a_deleted_input and an_input_was_deleted_from_this_parent
 		print('is_a_new_input', is_a_new_input, 'is_a_deleted_input', is_a_deleted_input)
 		num_parents = {
 			'previous': get_adjusted_num_parents(parent, direct_child, descendant_ingredients, is_a_new_input, is_a_deleted_input, previous=True),
@@ -72,12 +74,9 @@ def update_children_after_batch_size_or_child_ingredient_amount_change(
 
 		cost_previously, cost_now, parent_previous_batch_size, parent_new_batch_size = get_previous_and_new_cost_for_child(
 			parent_task, direct_child, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size,
-			new_unit_cost, prev_unit_cost, previous_total_amount_of_ingredient, new_total_amount_of_ingredient, num_parents)
-
-		if is_a_deleted_input and an_input_was_deleted_from_this_parent:
-			cost_now = 0
-		elif is_a_new_input and an_input_was_added_from_this_parent:
-			cost_previously = 0
+			new_unit_cost, prev_unit_cost, previous_total_amount_of_ingredient, new_total_amount_of_ingredient, num_parents,
+			deleting_this_parent_as_input, adding_this_parent_as_input
+		)
 
 		print('cost_previously', cost_previously, 'cost_now', cost_now, 'parent_previous_batch_size', parent_previous_batch_size,'parent_new_batch_size', parent_new_batch_size)
 		parent['remaining_worth'] = float(parent['remaining_worth']) - cost_previously
@@ -116,10 +115,16 @@ def child_is_a_new_input(direct_child, child_with_changed_ingredient_amount, inp
 
 # Takes into account the fact that the child can only receive up to the amount the parent has remaining
 # in its batch_size (that is, not already used by earlier inputs).
-def get_previous_and_new_cost_for_child(updated_task, direct_child, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size, new_unit_cost, prev_unit_cost, previous_total_amount_of_ingredient, new_total_amount_of_ingredient, num_parents):
+def get_previous_and_new_cost_for_child(updated_task, direct_child, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size, new_unit_cost, prev_unit_cost, previous_total_amount_of_ingredient, new_total_amount_of_ingredient, num_parents, deleting_this_parent_as_input, adding_this_parent_as_input):
 	# Calculate new/previous amount used by child
 	previous_actual_amount_used_by_child = get_actual_amount_used_by_child(updated_task, direct_child, tasks, descendant_ingredients, parent_previous_batch_size, num_parents['previous'], previous_total_amount_of_ingredient)
 	new_actual_amount_used_by_child = get_actual_amount_used_by_child(updated_task, direct_child, tasks, descendant_ingredients, parent_new_batch_size, num_parents['now'], new_total_amount_of_ingredient)
+
+	if deleting_this_parent_as_input:
+		new_actual_amount_used_by_child = 0
+	elif adding_this_parent_as_input:
+		previous_actual_amount_used_by_child = 0
+
 	parent_previous_batch_size -= previous_actual_amount_used_by_child
 	parent_new_batch_size -= new_actual_amount_used_by_child
 
@@ -132,6 +137,8 @@ def get_previous_and_new_cost_for_child(updated_task, direct_child, tasks, desce
 
 def get_actual_amount_used_by_child(updated_task, direct_child, tasks, descendant_ingredients, parent_remaining_batch_size, num_parents_for_ingredient, total_amount_of_ingredient=None):
 	child_desired_ingredient_amount = get_child_desired_ingredient_amount(updated_task, direct_child, tasks, descendant_ingredients, num_parents_for_ingredient, total_amount_of_ingredient)
+	print(direct_child, 'parent_remaining_batch_size, child_desired_ingredient_amount')
+	print(parent_remaining_batch_size, child_desired_ingredient_amount)
 	return float(min(parent_remaining_batch_size, child_desired_ingredient_amount))
 
 
