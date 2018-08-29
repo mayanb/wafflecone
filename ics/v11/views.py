@@ -609,13 +609,13 @@ class ProductionPlanning(generics.ListAPIView):
     selected_product = int(self.request.query_params.get('product', None))
     conversion_map = get_conversion_map(selected_process, selected_product)
     if (selected_process, selected_product) in conversion_map:
-      info = get_queryset_info(conversion_map, (selected_process, selected_product))
+      queryset_info = get_queryset_info(conversion_map, (selected_process, selected_product))
     else:
-      info = {}
+      queryset_info = {}
 
     returnobj = []
-    for key in info:
-      x = info[key]
+    for key in queryset_info:
+      x = queryset_info[key]
       process_type = key[0]
       product_type = key[1]
       category = ProcessType.objects.get(id=process_type).category
