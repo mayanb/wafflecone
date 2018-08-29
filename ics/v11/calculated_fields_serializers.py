@@ -49,7 +49,8 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'task_ingredients',
 			'num_flagged_ancestors',
 			'recipe_instructions',
-			'cost'
+			'cost',
+			'remaining_worth'
 		)
 
 

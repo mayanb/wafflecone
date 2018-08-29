@@ -64,7 +64,7 @@ def get_adjusted_item_cost(process_type, product_type):
 			creating_task__process_type=process_type,
 			creating_task__product_type=product_type,
 		).annotate(
-			cost=Coalesce(F('creating_task__cost'), 0),
+			cost=Coalesce(F('creating_task__remaining_worth'), 0),
 		).annotate(
 			# Item amount plus all items' amounts that come after it
 			# (most recent item will have the smallest cumulative_amount)
