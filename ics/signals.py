@@ -94,7 +94,7 @@ def ingredient_updated(sender, instance, **kwargs):
 	# get the previous value
 	previous_amount = instance.tracker.previous('actual_amount')
 	if instance.was_amount_changed:
-		kwargs = {'taskID': instance.task.id, 'ingredientID': instance.ingredient_id,
+		kwargs = {'taskID': instance.task.id, 'process_type': instance.ingredient.process_type.id, 'product_type': instance.ingredient.product_type.id,
 				  'actual_amount': instance.actual_amount, 'task_ing_id': instance.id, 'previous_amount': previous_amount}
 		ingredient_amount_update(**kwargs)
 
@@ -103,7 +103,8 @@ def ingredient_updated(sender, instance, **kwargs):
 
 def get_input_kwargs(instance, added=False, actual_amount=True):
 	task_ingredient__actual_amount = None
-	ingredientID = None
+	process_type = None
+	product_type = None
 	if actual_amount:
 		task_ingredient = TaskIngredient.objects.get(
 																				task=instance.task.id,
@@ -112,14 +113,16 @@ def get_input_kwargs(instance, added=False, actual_amount=True):
 																			)
 
 		task_ingredient__actual_amount = task_ingredient.actual_amount
-		ingredientID = task_ingredient.ingredient.id
+		process_type = task_ingredient.ingredient.process_type.id
+		product_type = task_ingredient.ingredient.product_type.id
 
 	return {
 		'taskID': instance.task.id,
 		'creatingTaskID': instance.input_item.creating_task.id,
 		'added': added,
 		'recipe': instance.task.recipe,
-		'ingredientID': ingredientID,
+		'process_type': process_type,
+		'product_type': product_type,
 		'task_ingredient__actual_amount': task_ingredient__actual_amount,
 		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
 		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id

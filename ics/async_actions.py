@@ -50,8 +50,9 @@ def ingredient_amount_update(**kwargs):
 	updated_task_id = kwargs['taskID']
 	old_amount = kwargs['previous_amount']
 	new_amount = kwargs['actual_amount']
-	ingredient_id = kwargs['ingredientID']
-	update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, ingredient_id)
+	process_type = kwargs['process_type']
+	product_type = kwargs['product_type']
+	update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, process_type, product_type)
 
 
 @task
@@ -66,7 +67,7 @@ def batch_size_update(**kwargs):
 	prev_unit_cost, new_unit_cost = get_prev_and_new_unit_costs(tasks[updated_task], kwargs)
 	parent_previous_batch_size = float(kwargs['previous_amount'])
 	parent_new_batch_size = float(kwargs['new_amount'])
-	update_children_after_batch_size_change_or_child_input_deleted(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size)
+	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size)
 
 
 @task
