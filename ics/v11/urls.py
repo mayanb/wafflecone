@@ -69,10 +69,10 @@ urlpatterns = [
     url(r'^inventory/$', views.InventoryList.as_view()),
     url(r'^inventory/detail/$', views.InventoryDetail.as_view()),
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
-    url(r'^inventory/in-progress/$', views.InventoryInProgress.as_view(), name='inventory_ancestors'),
-    url(r'^inventory/remaining-raw-materials/$', views.InventoryRemainingRawMaterials.as_view(), name='inventory_remaining'),
 
     url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
+
+    url(r'^production-planning/$', views.ProductionPlanning.as_view(), name='production_planning'),
 
     url(r'^activity/$', views.ActivityList.as_view(), name='activity_log'),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),

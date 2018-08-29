@@ -391,7 +391,7 @@ class InventoryInProgressSerializer(serializers.Serializer):
 	can_make = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
-		process = ProcessType.objects.get(id=item_summary['creating_task__process_type'])
+		process = ProcessType.objects.get(id=item_summary['process_type'])
 		return {
 			'id': process.id,
 			'name': process.name,
@@ -402,7 +402,7 @@ class InventoryInProgressSerializer(serializers.Serializer):
 		}
 
 	def get_product_type(self, item_summary):
-		product = ProductType.objects.get(id=item_summary['creating_task__product_type'])
+		product = ProductType.objects.get(id=item_summary['product_type'])
 		return {
 			'id': product.id,
 			'name': product.name,
@@ -410,14 +410,7 @@ class InventoryInProgressSerializer(serializers.Serializer):
 		}
 
 	def get_can_make(self, item_summary):
-		conversion_rates = self.context.get('conversion_rates', None)
-		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
-
-		if (process_type, product_type) in conversion_rates:
-			conversion_rate = conversion_rates[(process_type, product_type)]
-		else:
-			conversion_rate = 0
+		conversion_rate = item_summary['conversion_rate']
 		amount = item_summary['adjusted_amount']
 		if (amount < 0):
 			return 0
@@ -431,7 +424,7 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 	warning = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
-		process = ProcessType.objects.get(id=item_summary['creating_task__process_type'])
+		process = ProcessType.objects.get(id=item_summary['process_type'])
 		return {
 			'id': process.id,
 			'name': process.name,
@@ -442,7 +435,7 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 		}
 
 	def get_product_type(self, item_summary):
-		product = ProductType.objects.get(id=item_summary['creating_task__product_type'])
+		product = ProductType.objects.get(id=item_summary['product_type'])
 		return {
 			'id': product.id,
 			'name': product.name,
@@ -451,23 +444,21 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 
 	def get_date_exhausted(self, item_summary):
 		# compute the rate of consumption
-		timeElapsed = constants.THIRTY_DAYS.total_seconds()
-		rateOfConsumption = timeElapsed / float(item_summary['amount_used'])
-
-		# find the amount still remaining
-		process_type = item_summary['creating_task__process_type']
-		product_type = item_summary['creating_task__product_type']
+		amount_used_per_second = item_summary['amount_used_per_second']
 		amount_remaining = float(item_summary['adjusted_amount'])
 
 		# calculate the date in the future in which the amount will be exhausted
-		secondsUntilExhaused = amount_remaining * rateOfConsumption
+		if amount_used_per_second != 0:
+			secondsUntilExhaused = amount_remaining / amount_used_per_second
+		else:
+			secondsUntilExhaused = 0
 		delta = timedelta(seconds=secondsUntilExhaused)
-		futureDate = datetime.now() + delta
+		futureDate = timezone.now() + delta
 		return futureDate
 
 	def get_warning(self, item_summary):
 		dateExhausted = self.get_date_exhausted(item_summary)
-		if dateExhausted < datetime.now() + constants.THIRTY_DAYS:
+		if dateExhausted < timezone.now() + constants.THIRTY_DAYS:
 			return True
 		return False
 

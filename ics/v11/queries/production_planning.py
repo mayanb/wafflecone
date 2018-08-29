@@ -1,8 +1,11 @@
-from ics.models import *
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models.functions import Coalesce
 from django.db.models import Sum
+from django.utils import timezone
 from ics.constants import BEGINNING_OF_TIME, END_OF_TIME
-from django.contrib.postgres.aggregates.general import ArrayAgg
+from ics.models import *
+from ics.v11.queries.inventory import *
+from datetime import datetime
 
 def get_conversion_map(base_process_type, base_product_type):
 	conversion_map = {}
@@ -68,11 +71,11 @@ def get_conversion_map(base_process_type, base_product_type):
 # Source: NetworkX v1.9
 # Author: Aric Hagberg (hagberg@lanl.gov)
 # Link: https://networkx.github.io/documentation/networkx-1.9/reference/generated/networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path.html?highlight=single_source_shortest_path#networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path
-def get_conversion_rates(conversion_map, source):
+def get_queryset_info(conversion_map, source):
 	# calculate the shortest paths from source to each node
 	level = 0
-	nextlevel = { source: 1 }
-	paths = { source: [source] }
+	nextlevel = {source: 1}
+	paths = {source: [source]}
 	while nextlevel:
 		thislevel = nextlevel
 		nextlevel = {}
@@ -83,44 +86,32 @@ def get_conversion_rates(conversion_map, source):
 					nextlevel[w] = 1
 		level = level + 1
 
-	# calculate the conversion rates of each path
-	rates = {}
+	info = {}
 	for pathKey in paths:
-		rate = 1.0
+		process = pathKey[0]
+		product = pathKey[1]
+		rate = 1
 		path = paths[pathKey]
 		for i in range(len(path) - 1):
 			parentKey = path[i]
 			childKey = path[i+1]
 			rate *= conversion_map[parentKey][childKey]['conversion_rate']
-		rates[pathKey] = rate
-	return rates
+		info[pathKey] = {}
+		info[pathKey]['conversion_rate'] = rate
+		info[pathKey]['adjusted_amount'] = get_adjusted_item_amount(process, product)
 
-def getUniqueAncestors(process, product, categories):
-	queryset = Item.objects.none()
+		last_month = timezone.now() - constants.THIRTY_DAYS
+		amount_used = TaskIngredient.objects.filter(
+			ingredient__process_type=process,
+			ingredient__product_type=product,
+			task__created_at__gte=last_month
+		).aggregate(amount_used=Coalesce(Sum('actual_amount'), 0))['amount_used']
 
-	if process is not None and product is not None and categories is not None:
-		# take a sample of the 10 most recent tasks with the same process and product types
-		sampleTasks = Task.objects.filter(
-			is_trashed=False,
-			process_type=process,
-			product_type=product
-		).order_by('-created_at')[:10]
+		timeElapsed = constants.THIRTY_DAYS.total_seconds()
+		if amount_used != 0:
+			amount_used_per_second = float(amount_used) / timeElapsed
+		else:
+			amount_used_per_second = float(0)
+		info[pathKey]['amount_used_per_second'] = amount_used_per_second
 
-		# extract all unique ancestors of specified category (i.e raw material, work in progress, finished goods)
-		ancestorProcesses = []
-		ancestorProducts = []
-		for sampleTask in sampleTasks:
-			# gets all ancestors of a task
-			ancestors = sampleTask.ancestors().filter(process_type__category__in=categories)
-			for ancestor in ancestors:
-				# prevents adding duplicates
-				if not (ancestor.process_type in ancestorProcesses and ancestor.product_type in ancestorProducts):
-					ancestorProcesses.append(ancestor.process_type)
-					ancestorProducts.append(ancestor.product_type)
-
-		queryset = Item.objects.filter(
-			creating_task__is_trashed=False,
-			creating_task__process_type__in=ancestorProcesses,
-			creating_task__product_type__in=ancestorProducts,
-		)
-	return queryset
+	return info

@@ -593,99 +593,58 @@ class InventoryDetail(generics.ListAPIView):
     process = self.request.query_params.get('process', '')
     return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
 
-# inventory/in-progress/
-class InventoryInProgress(generics.ListAPIView):
-  serializer_class = InventoryInProgressSerializer
+# production-planning/
+class ProductionPlanning(generics.ListAPIView):
 
   def get_queryset(self):
-    process = self.request.query_params.get('process', None)
-    product = self.request.query_params.get('product', None)
-    queryset = getUniqueAncestors(process, product, ['rm', 'wip'])
-
-    ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
-    if process is not None and product is not None:
-      # get aggregate of ancestorProcesses and ancestorProducts
-      queryset_values = [
-        'creating_task__process_type',
-        'creating_task__product_type',
-      ]
-
-      ordering_values = []
-      if ordering is not None:
-        ordering_values.append(ordering)
-
-      queryset = queryset.order_by(*ordering_values).values(*queryset_values).distinct()
-
-    returnobj = []
-    for x in queryset:
-      proc = x['creating_task__process_type']
-      prod = x['creating_task__product_type']
-      adj_amt = get_adjusted_item_amount(proc, prod)
-      returnobj.append({
-        'creating_task__process_type': proc,
-        'creating_task__product_type': prod,
-        'adjusted_amount': adj_amt
-      })
-    return returnobj
-
-  def get_serializer_context(self):
+    type = self.request.query_params.get('type', None)
     # get process and product type as an int instead of unicode
-    process = int(self.request.query_params.get('process', None))
-    product = int(self.request.query_params.get('product', None))
-
-    conversion_map = get_conversion_map(process, product)
-    if (process, product) in conversion_map:
-      conversion_rates = get_conversion_rates(conversion_map, (process, product))
+    selected_process = int(self.request.query_params.get('process', None))
+    selected_product = int(self.request.query_params.get('product', None))
+    conversion_map = get_conversion_map(selected_process, selected_product)
+    if (selected_process, selected_product) in conversion_map:
+      info = get_queryset_info(conversion_map, (selected_process, selected_product))
     else:
-      conversion_rates = {}
-
-    return {
-      'conversion_rates': conversion_rates
-    }
-
-# inventory/remaining-raw-materials/
-class InventoryRemainingRawMaterials(generics.ListAPIView):
-  serializer_class = InventoryRemainingRawMaterialsSerializer
-
-  def get_queryset(self):
-    process = self.request.query_params.get('process', None)
-    product = self.request.query_params.get('product', None)
-    queryset = getUniqueAncestors(process, product, ['rm'])
-
-    ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
-    if process is not None and product is not None:
-      # get aggregate of ancestorProcesses and ancestorProducts
-      queryset_values = [
-        'creating_task__process_type',
-        'creating_task__product_type',
-      ]
-
-      ordering_values = []
-      if ordering is not None:
-        ordering_values.append(ordering)
-
-      last_month = datetime.today() - constants.THIRTY_DAYS
-      queryset = queryset.filter(
-        inputs__task__created_at__gte=last_month,
-        inputs__task__is_trashed=False,
-      ).values(*queryset_values).order_by(*ordering_values)\
-        .annotate(
-          amount_used = Sum('amount'),
-        )
+      info = {}
 
     returnobj = []
-    for x in queryset:
-      proc = x['creating_task__process_type']
-      prod = x['creating_task__product_type']
-      amt = x['amount_used']
-      adj_amt = get_adjusted_item_amount(proc, prod)
-      returnobj.append({
-        'creating_task__process_type': proc,
-        'creating_task__product_type': prod,
-        'amount_used': amt,
-        'adjusted_amount': adj_amt
-      })
+    for key in info:
+      x = info[key]
+      process_type = key[0]
+      product_type = key[1]
+      category = ProcessType.objects.get(id=process_type).category
+
+      inProgressCondition = not (selected_process == process_type and selected_product == product_type) and (category == 'rm' or category == 'wip')
+      rawMaterialsCondition = category == 'rm'
+
+      if type == 'in-progress':
+        condition = inProgressCondition
+      elif type == 'raw-materials':
+        condition = rawMaterialsCondition
+      else:
+        print('unknown type {}'.format(type))
+        condition = False
+
+      if condition:
+        returnobj.append({
+          'process_type': process_type,
+          'product_type': product_type,
+          'category': category,
+          'adjusted_amount': x['adjusted_amount'],
+          'conversion_rate': x['conversion_rate'],
+          'amount_used_per_second': x['amount_used_per_second'],
+        })
     return returnobj
+
+  def get_serializer_class(self):
+    type = self.request.query_params.get('type', None)
+    if type == 'in-progress':
+      return InventoryInProgressSerializer
+    elif type == 'raw-materials':
+      return InventoryRemainingRawMaterialsSerializer
+    else:
+      print('No serializer found for type {}'.format(type))
+    return None
 
 
 
