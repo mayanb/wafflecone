@@ -451,7 +451,7 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 
 	def get_date_exhausted(self, item_summary):
 		# compute the rate of consumption
-		timeElapsed = timedelta(days=30).total_seconds()
+		timeElapsed = constants.THIRTY_DAYS.total_seconds()
 		rateOfConsumption = timeElapsed / float(item_summary['amount_used'])
 
 		# find the amount still remaining
@@ -467,7 +467,7 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 
 	def get_warning(self, item_summary):
 		dateExhausted = self.get_date_exhausted(item_summary)
-		if dateExhausted < datetime.now() + timedelta(days=30):
+		if dateExhausted < datetime.now() + constants.THIRTY_DAYS:
 			return True
 		return False
 

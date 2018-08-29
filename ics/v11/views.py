@@ -598,32 +598,12 @@ class InventoryInProgress(generics.ListAPIView):
   serializer_class = InventoryInProgressSerializer
 
   def get_queryset(self):
-    queryset = Item.objects.none()
-
     process = self.request.query_params.get('process', None)
     product = self.request.query_params.get('product', None)
-    ancestor_category = self.request.query_params.get('ancestor_category', None)
+    queryset = getUniqueAncestors(process, product, ['rm', 'wip'])
+
     ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
-    if process is not None and product is not None and ancestor_category is not None:
-      # take a sample of the 10 most recent tasks with the same process and product types
-      sampleTasks = Task.objects.filter(
-        is_trashed=False,
-        process_type=process,
-        product_type=product
-      ).order_by('-created_at')[:10]
-
-      # extract all unique ancestors of specified category (i.e raw material, work in progress, finished goods)
-      ancestorProcesses = []
-      ancestorProducts = []
-      for sampleTask in sampleTasks:
-        # gets all ancestors of a task
-        ancestors = sampleTask.ancestors().filter(process_type__category=ancestor_category)
-        for ancestor in ancestors:
-          # prevents adding duplicates
-          if not (ancestor.process_type in ancestorProcesses and ancestor.product_type in ancestorProducts):
-            ancestorProcesses.append(ancestor.process_type)
-            ancestorProducts.append(ancestor.product_type)
-
+    if process is not None and product is not None:
       # get aggregate of ancestorProcesses and ancestorProducts
       queryset_values = [
         'creating_task__process_type',
@@ -634,11 +614,7 @@ class InventoryInProgress(generics.ListAPIView):
       if ordering is not None:
         ordering_values.append(ordering)
 
-      queryset = Item.objects.filter(
-        creating_task__is_trashed=False,
-        creating_task__process_type__in=ancestorProcesses,
-        creating_task__product_type__in=ancestorProducts,
-      ).order_by(*ordering_values).values(*queryset_values).distinct()
+      queryset = queryset.order_by(*ordering_values).values(*queryset_values).distinct()
 
     returnobj = []
     for x in queryset:
@@ -672,32 +648,12 @@ class InventoryRemainingRawMaterials(generics.ListAPIView):
   serializer_class = InventoryRemainingRawMaterialsSerializer
 
   def get_queryset(self):
-    queryset = Item.objects.none()
-
     process = self.request.query_params.get('process', None)
     product = self.request.query_params.get('product', None)
-    ancestor_category = self.request.query_params.get('ancestor_category', None)
+    queryset = getUniqueAncestors(process, product, ['rm'])
+
     ordering = self.request.query_params.get('ordering', 'creating_task__process_type__code')
-    if process is not None and product is not None and ancestor_category is not None:
-      # take a sample of the 10 most recent tasks with the same process and product types
-      sampleTasks = Task.objects.filter(
-        is_trashed=False,
-        process_type=process,
-        product_type=product
-      ).order_by('-created_at')[:10]
-
-      # extract all unique ancestors of specified category (i.e raw material, work in progress, finished goods)
-      ancestorProcesses = []
-      ancestorProducts = []
-      for sampleTask in sampleTasks:
-        # gets all ancestors of a task
-        ancestors = sampleTask.ancestors().filter(process_type__category=ancestor_category)
-        for ancestor in ancestors:
-          # prevents adding duplicates
-          if not (ancestor.process_type in ancestorProcesses and ancestor.product_type in ancestorProducts):
-            ancestorProcesses.append(ancestor.process_type)
-            ancestorProducts.append(ancestor.product_type)
-
+    if process is not None and product is not None:
       # get aggregate of ancestorProcesses and ancestorProducts
       queryset_values = [
         'creating_task__process_type',
@@ -708,11 +664,8 @@ class InventoryRemainingRawMaterials(generics.ListAPIView):
       if ordering is not None:
         ordering_values.append(ordering)
 
-      last_month = datetime.today() - timedelta(days=30)
-      queryset = Item.objects.filter(
-        creating_task__is_trashed=False,
-        creating_task__process_type__in=ancestorProcesses,
-        creating_task__product_type__in=ancestorProducts,
+      last_month = datetime.today() - constants.THIRTY_DAYS
+      queryset = queryset.filter(
         inputs__task__created_at__gte=last_month,
         inputs__task__is_trashed=False,
       ).values(*queryset_values).order_by(*ordering_values)\
