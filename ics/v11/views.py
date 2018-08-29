@@ -1233,6 +1233,10 @@ class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
       .select_related('ingredient')
   serializer_class = BasicTaskIngredientSerializer
 
+  def patch(self, request, *args, **kwargs):
+    TaskIngredient.objects.filter(pk=kwargs['pk']).update(was_amount_changed=True)
+    return super(TaskIngredientDetail, self).patch(request, *args, **kwargs)
+
 
 @api_view(['POST'])
 def ingredient_bulk_create(request):

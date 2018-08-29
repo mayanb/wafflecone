@@ -169,27 +169,6 @@ class BasicInputSerializerWithoutAmount(serializers.ModelSerializer):
 	def get_input_task_ingredients(self, input):
 		return BasicTaskIngredientSerializer(TaskIngredient.objects.filter(task=input.task), many=True, read_only=True).data
 
-	def create(self, validated_data):
-		# can fix this when we remove the amount field from inputs later
-		new_input = Input.objects.create(**validated_data)
-		input_creating_product = new_input.input_item.creating_task.product_type
-		input_creating_process = new_input.input_item.creating_task.process_type
-		matching_task_ings = TaskIngredient.objects.filter(task=new_input.task, ingredient__product_type=input_creating_product, ingredient__process_type=input_creating_process)
-		if matching_task_ings.count() == 0:
-			# if there isn't already a taskIngredient and ingredient for this input's creating task, then make a new one
-			ing_query = Ingredient.objects.filter(product_type=input_creating_product, process_type=input_creating_process, recipe=None)
-			if(ing_query.count() == 0):
-				new_ing = Ingredient.objects.create(recipe=None, product_type=input_creating_product, process_type=input_creating_process, amount=0)
-			else:
-				new_ing = ing_query[0]
-			TaskIngredient.objects.create(ingredient=new_ing, task=new_input.task, actual_amount=new_input.input_item.amount)
-		else:
-			# when creating an input, if there is already a corresponding task ingredient
-			# if the task ingredient has a recipe, set the ingredient's actual_amount to its scaled_amount
-			matching_task_ings.exclude(ingredient__recipe=None).update(actual_amount=F('scaled_amount'))
-			# if the task ingredient doesn't have a recipe, add the new input's amount to the actual_amount
-			matching_task_ings.filter(ingredient__recipe=None).update(actual_amount=F('actual_amount')+new_input.input_item.amount)
-		return new_input
 
 	class Meta:
 		model = Input
@@ -206,7 +185,7 @@ class BasicTaskSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Task
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'cost', 'cost_set_by_user')
 
 	def create(self, validated_data):
 		new_task = Task.objects.create(**validated_data)
@@ -232,7 +211,7 @@ class BasicTaskSerializerWithOutput(serializers.ModelSerializer):
 	class Meta:
 		model = Task
 		extra_kwargs = {'batch_size': {'write_only': True}}
-		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost')
+		fields = ('id', 'process_type', 'product_type', 'label', 'is_open', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'created_at', 'updated_at', 'label_index', 'custom_display', 'is_trashed', 'display', 'items', 'inputs', 'task_ingredients', 'batch_size', 'recipe_instructions', 'cost', 'cost_set_by_user')
 
 	def create(self, validated_data):
 		actual_batch_size = validated_data.pop('batch_size')
