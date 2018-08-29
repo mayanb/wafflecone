@@ -593,11 +593,17 @@ class InventoryDetail(generics.ListAPIView):
     process = self.request.query_params.get('process', '')
     return queryset.filter(creating_task__process_type=process).order_by('creating_task__created_at')
 
+
+
+#############################
+# PRODUCTION PLANNING VIEWS #
+#############################
+
 # production-planning/
 class ProductionPlanning(generics.ListAPIView):
+  serializer_class = ProductionPlanningSerializer
 
   def get_queryset(self):
-    type = self.request.query_params.get('type', None)
     # get process and product type as an int instead of unicode
     selected_process = int(self.request.query_params.get('process', None))
     selected_product = int(self.request.query_params.get('product', None))
@@ -614,18 +620,7 @@ class ProductionPlanning(generics.ListAPIView):
       product_type = key[1]
       category = ProcessType.objects.get(id=process_type).category
 
-      inProgressCondition = not (selected_process == process_type and selected_product == product_type) and (category == 'rm' or category == 'wip')
-      rawMaterialsCondition = category == 'rm'
-
-      if type == 'in-progress':
-        condition = inProgressCondition
-      elif type == 'raw-materials':
-        condition = rawMaterialsCondition
-      else:
-        print('unknown type {}'.format(type))
-        condition = False
-
-      if condition:
+      if not (selected_process == process_type and selected_product == product_type) and (category == 'rm' or category == 'wip'):
         returnobj.append({
           'process_type': process_type,
           'product_type': product_type,
@@ -635,17 +630,6 @@ class ProductionPlanning(generics.ListAPIView):
           'amount_used_per_second': x['amount_used_per_second'],
         })
     return returnobj
-
-  def get_serializer_class(self):
-    type = self.request.query_params.get('type', None)
-    if type == 'in-progress':
-      return InventoryInProgressSerializer
-    elif type == 'raw-materials':
-      return InventoryRemainingRawMaterialsSerializer
-    else:
-      print('No serializer found for type {}'.format(type))
-    return None
-
 
 
 

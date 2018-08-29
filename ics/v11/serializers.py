@@ -384,11 +384,19 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 		model = Task
 		fields = ('id', 'items', 'display')
 
-class InventoryInProgressSerializer(serializers.Serializer):
+
+
+###################################
+# PRODUCTION PLANNING SERIALIZERS #
+###################################
+
+class ProductionPlanningSerializer(serializers.Serializer):
 	process_type = serializers.SerializerMethodField()
 	product_type = serializers.SerializerMethodField()
 	adjusted_amount = serializers.DecimalField(max_digits=10, decimal_places=3)
 	can_make = serializers.SerializerMethodField()
+	date_exhausted = serializers.SerializerMethodField()
+	warning = serializers.SerializerMethodField()
 
 	def get_process_type(self, item_summary):
 		process = ProcessType.objects.get(id=item_summary['process_type'])
@@ -416,32 +424,6 @@ class InventoryInProgressSerializer(serializers.Serializer):
 			return 0
 		return amount * conversion_rate
 
-class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
-	process_type = serializers.SerializerMethodField()
-	product_type = serializers.SerializerMethodField()
-	date_exhausted = serializers.SerializerMethodField()
-	adjusted_amount = serializers.DecimalField(max_digits=10, decimal_places=3)
-	warning = serializers.SerializerMethodField()
-
-	def get_process_type(self, item_summary):
-		process = ProcessType.objects.get(id=item_summary['process_type'])
-		return {
-			'id': process.id,
-			'name': process.name,
-			'code': process.code,
-			'unit': process.unit,
-			'icon': process.icon,
-			'category': process.category,
-		}
-
-	def get_product_type(self, item_summary):
-		product = ProductType.objects.get(id=item_summary['product_type'])
-		return {
-			'id': product.id,
-			'name': product.name,
-			'code': product.code,
-		}
-
 	def get_date_exhausted(self, item_summary):
 		# compute the rate of consumption
 		amount_used_per_second = item_summary['amount_used_per_second']
@@ -462,6 +444,11 @@ class InventoryRemainingRawMaterialsSerializer(serializers.Serializer):
 			return True
 		return False
 
+
+
+########################
+# ACTIVITY SERIALIZERS #
+########################
 
 class ActivityListSerializer(serializers.ModelSerializer):
 	process_type = serializers.SerializerMethodField()
