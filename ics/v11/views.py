@@ -208,7 +208,7 @@ class TeamCreate(generics.CreateAPIView):
 ######################
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
-  created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
+  created_at = django_filters.DateTimeFilter(name="created_at", lookup_expr="startswith")
   class Meta:
       model = Task
       fields = ['created_at', 'is_open']
@@ -322,13 +322,14 @@ class FileList(generics.ListCreateAPIView):
     if team_id is None:
       raise serializers.ValidationError('Request must include "team" data')
       
-    _, file_ext = os.path.splitext(original_filename)
+    file_name, file_ext = os.path.splitext(original_filename)
     file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
     bucket = settings.AWS_S3_FILE_UPLOAD_BUCKET
     obj = client.put_object(
       Body=file_binary, 
       Key=file_path, 
       Bucket=bucket,
+      # we use ContentDisposition so that the user can download the file with its original filename
       ContentDisposition='attachment; filename="' + original_filename + '"'
       )
 
@@ -337,7 +338,8 @@ class FileList(generics.ListCreateAPIView):
     task_id = request.data.get('task')
     new_file = TaskFile.objects.create(
       url=link, 
-      name=original_filename, 
+      name=file_name,
+      extension=file_ext,
       task=Task.objects.get(id=task_id)
       )
     serializer = TaskFileSerializer(new_file)
@@ -606,13 +608,7 @@ class ActivityList(generics.ListAPIView):
     queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team)\
       .select_related('process_type', 'product_type')
 
-    start = self.request.query_params.get('start', None)
-    end = self.request.query_params.get('end', None)
-    if start is not None and end is not None:
-      dt = datetime.datetime
-      start_date = pytz.utc.localize(dt.strptime(start, constants.DATE_FORMAT))
-      end_date = pytz.utc.localize(dt.strptime(end, constants.DATE_FORMAT))
-      queryset = queryset.filter(created_at__range=(start_date, end_date))
+    queryset = filter_by_created_at_range(self.request.query_params, queryset)
 
     flagged = self.request.query_params.get('flagged', None)
     if flagged and flagged.lower() == 'true':

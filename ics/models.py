@@ -419,7 +419,8 @@ class Task(models.Model):
 class TaskFile(models.Model):
 	url = models.CharField(max_length=150, unique=True)
 	name = models.CharField(max_length=100)
-	task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	extension = models.CharField(max_length=10, null=True)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
