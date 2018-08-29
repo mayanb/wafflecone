@@ -9,13 +9,26 @@ from datetime import datetime, timedelta, date
 class Command(BaseCommand):
     help = 'Propagates data to tasks'
 
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument('team_name', nargs='+', type=str)
+        parser.add_argument('days_ago', nargs='+', type=int)
+
     def handle(self, *args, **options):
         team_id = 24
+        days_ago = 100
+        if options['team_name']:
+          team_name = options['team_name'][0]
+          team_id = Team.objects.filter(name=team_name)[0].id
+        if options['days_ago']:
+          days_ago = options['days_ago'][0]
+
+        print("Propagating costs for team: " + team_name + " (id=" + str(team_id) + ") for trees that began in the last " + str(days_ago) + " days.")
         # To reset before re-seeding:
         Task.objects.filter(process_type__team_created_by__id=team_id).update(cost=0.000, remaining_worth=0.000)
         Task.objects.filter(process_type__team_created_by__id=team_id, cost_set_by_user__isnull=False) \
             .update(cost=F('cost_set_by_user'), remaining_worth=F('cost_set_by_user'))
-        print(top_sort(team_id))
+        print(top_sort(team_id, days_ago))
 
 
 def make_unique(myList):
@@ -26,11 +39,11 @@ def make_unique(myList):
   return newList
 
 
-def top_sort(team_id):
+def top_sort(team_id, days_ago):
   cachedTaskSizeRemaining = {}
   level = 0
   CUTOFF = 200
-  start = datetime.utcnow() - timedelta(days=100)
+  start = datetime.utcnow() - timedelta(days=days_ago)
   possibleNextLevel = set(list(Task.objects.filter(is_trashed=False, process_type__team_created_by__id=team_id, created_at__gte=start).annotate(num_parents=Count(F('inputs__input_item__creating_task__id'))).filter(num_parents__lte=0).values_list('id', flat=True).distinct()))
   nextLevel = set()
   # only propagate the DAG's that don't have cycles
