@@ -71,6 +71,7 @@ urlpatterns = [
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
 
     url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
+    url(r'^inventories/aggregate/$', views.InventoryList2Aggregate.as_view(), name='inventories-aggregate'),
 
     url(r'^production-planning/$', views.ProductionPlanning.as_view(), name='production_planning'),
 

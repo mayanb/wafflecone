@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from django.apps import AppConfig
 
 
-class QrConfig(AppConfig):
-    name = 'qr'
+class BasicConfig(AppConfig):
+    name = 'basic'

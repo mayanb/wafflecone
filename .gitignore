@@ -5,6 +5,7 @@ staticfiles
 .expo
 db.sqlite3
 node_modules/
+.vscode
 .DS_Store
 .idea
 dump.sql
@@ -13,3 +14,4 @@ local-env
 
 local-env.sh
 local-env.env
+.pycharmrc

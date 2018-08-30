@@ -506,7 +506,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
-      ).annotate(oldest=Min('creating_task__created_at'))
+        ).annotate(oldest=Min('creating_task__created_at'))
 
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
@@ -647,8 +647,7 @@ class ActivityList(generics.ListAPIView):
     category_types = self.request.query_params.get('category_types', None)
     if category_types is not None:
       category_codes = category_types.strip().split(',')
-      process_ids = ProcessType.objects.filter(category__in=category_codes)
-      queryset = queryset.filter(process_type__in=process_ids)
+      queryset = queryset.filter(process_type__category__in=category_codes)
 
     label = self.request.query_params.get('label', None)
     if label is not None:
@@ -1058,20 +1057,94 @@ class InventoryList2(generics.ListAPIView):
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
 
-    return queryset.values(
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
+
+    aggregate_products = self.request.query_params.get('aggregate_products', None)
+
+    queryset_values = [
       'creating_task__process_type',
       'creating_task__process_type__name',
       'creating_task__process_type__unit',
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
-      'creating_task__product_type',
-      'creating_task__product_type__name',
-      'creating_task__product_type__code',
+      'creating_task__process_type__category',
       'team_inventory'
-    ).annotate(
-      total_amount=Sum('amount'),
-    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
+    ] 
 
+    ordering_values = ['creating_task__process_type__name']
+
+    # Unless aggregate product param is true, return a separate row for each product type
+    if not aggregate_products or aggregate_products.lower() != 'true':
+      queryset_values.append('creating_task__product_type')
+      ordering_values.append('creating_task__product_type__name')
+
+    return queryset.values(*queryset_values).annotate(
+      product_type_ids=ArrayAgg('creating_task__product_type'),
+      product_type_names=ArrayAgg('creating_task__product_type__name'),
+      product_type_codes=ArrayAgg('creating_task__product_type__code'),
+    ).order_by(*ordering_values)
+
+class InventoryList2Aggregate(generics.ListAPIView):
+  serializer_class = InventoryList2Serializer
+
+  def get_queryset(self):
+    queryset = Item.active_objects.filter(creating_task__is_trashed=False)
+
+    team = self.request.query_params.get('team', None)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    # filter by team
+    queryset = queryset.filter(team_inventory=team)
+
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
+
+    process_types = self.request.query_params.get('process_types', None)
+    if process_types is not None:
+      process_ids = process_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__in=process_ids)
+
+    product_types = self.request.query_params.get('product_types', None)
+    if product_types is not None:
+      product_ids = product_types.strip().split(',')
+      queryset = queryset.filter(creating_task__product_type__in=product_ids)
+
+    aggregate_products = self.request.query_params.get('aggregate_products', None)
+
+    queryset_values = [
+      'creating_task__process_type',
+      'creating_task__process_type__name',
+      'creating_task__process_type__unit',
+      'creating_task__process_type__code',
+      'creating_task__process_type__icon',
+      'creating_task__process_type__category',
+      'team_inventory',
+    ]
+    ordering_values = ['category_order', 'creating_task__process_type__name']
+
+    if process_types is not None or process_types is not None:
+      queryset_values.append('creating_task__product_type')
+      ordering_values.append('creating_task__product_type__name')
+    
+    return queryset.values(*queryset_values).annotate(
+      product_type_ids=ArrayAgg('creating_task__product_type'),
+      product_type_names=ArrayAgg('creating_task__product_type__name'),
+      product_type_codes=ArrayAgg('creating_task__product_type__code'),
+    ).annotate(
+      category_order=Case( 
+        When(creating_task__process_type__category='rm', then=Value(0)), 
+        When(creating_task__process_type__category='wip', then=Value(1)), 
+        When(creating_task__process_type__category='fg', then=Value(2)),
+        default=Value(3),
+        output_field=models.IntegerField(),
+      )
+    ).order_by(*ordering_values)
 
 class AdjustmentHistory(APIView):
   def set_params(self):
@@ -1089,7 +1162,7 @@ class AdjustmentHistory(APIView):
 
   def get_adjustments(self):
     queryset = Adjustment.objects\
-      .filter(process_type=self.process_type, product_type=self.product_type, userprofile__team=self.team)\
+      .filter(process_type=self.process_type, product_type=self.product_type)\
       .order_by('-created_at')
     return queryset.all()
 
@@ -1175,6 +1248,10 @@ class TaskIngredientDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = TaskIngredient.objects.all()\
       .select_related('ingredient')
   serializer_class = BasicTaskIngredientSerializer
+
+  def patch(self, request, *args, **kwargs):
+    TaskIngredient.objects.filter(pk=kwargs['pk']).update(was_amount_changed=True)
+    return super(TaskIngredientDetail, self).patch(request, *args, **kwargs)
 
 
 @api_view(['POST'])
