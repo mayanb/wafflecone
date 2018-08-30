@@ -685,7 +685,7 @@ class ActivityListDetail(generics.ListAPIView):
   serializer_class = ActivityListDetailSerializer
 
   def get_queryset(self):
-    dt = datetime.datetime
+    dt = datetime
     queryset = Task.objects.filter(is_trashed=False)
 
     team = self.request.query_params.get('team', None)
@@ -815,7 +815,7 @@ class GetRecentlyFlaggedTasks(generics.ListAPIView):
   def get_queryset(self):
     queryset = Task.objects.filter(is_flagged=True)
     team = self.request.query_params.get('team', None)
-    dt = datetime.datetime
+    dt = datetime
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
 
@@ -835,7 +835,7 @@ class GetRecentlyUnflaggedTasks(generics.ListAPIView):
   def get_queryset(self):
     queryset = Task.objects.filter(is_flagged=False)
     team = self.request.query_params.get('team', None)
-    dt = datetime.datetime
+    dt = datetime
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
 
@@ -870,7 +870,7 @@ class GetIncompleteGoals(generics.ListAPIView):
     # get the goals that are either not trashed and were created before the start time
     # are trashed and were created before the start time and trashed after the end time
     # that were not fulfilled during that time period
-    dt = datetime.datetime
+    dt = datetime
     base = dt.utcnow() - timedelta(days=7)
 
     start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
@@ -909,7 +909,7 @@ class GetRecentAnomolousInputs(generics.ListAPIView):
   def get_queryset(self):
     queryset = Input.objects.filter(task__is_trashed=False, input_item__creating_task__is_trashed=False)
     team = self.request.query_params.get('team', None)
-    dt = datetime.datetime
+    dt = datetime
     if team is not None:
       queryset = queryset.filter(task__process_type__team_created_by=team)
 
@@ -944,7 +944,7 @@ class GetCompleteGoals(generics.ListAPIView):
     queryset = queryset.filter(timerange='w')
 
     complete_goals = []
-    dt = datetime.datetime
+    dt = datetime
     base = dt.utcnow() - timedelta(days=7)
 
     start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
@@ -993,7 +993,7 @@ class AlertList(generics.ListAPIView):
     if userprofile is not None:
       queryset = queryset.filter(userprofile=userprofile)
 
-    dt = datetime.datetime
+    dt = datetime
 
     endDate = dt.today() + timedelta(days=1)
     startDate = dt.today() - timedelta(days=1)

@@ -68,16 +68,18 @@ def get_conversion_map(base_process_type, base_product_type):
 					conversion_map[childKey] = {}
 	return conversion_map
 
-# Source: NetworkX v1.9
-# Author: Aric Hagberg (hagberg@lanl.gov)
-# Link: https://networkx.github.io/documentation/networkx-1.9/reference/generated/networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path.html?highlight=single_source_shortest_path#networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path
 def get_queryset_info(conversion_map, source):
 	if not source in conversion_map:
 		return []
 
-	selected_process_type = source[0]
-	selected_product_type = source[1]
-	# calculate the shortest paths from source to each node
+	paths = get_shortest_paths(conversion_map, source)
+	return build_queryset_info_list(conversion_map, source, paths)
+
+# Source: NetworkX v1.9
+# Author: Aric Hagberg (hagberg@lanl.gov)
+# Link: https://networkx.github.io/documentation/networkx-1.9/reference/generated/networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path.html?highlight=single_source_shortest_path#networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path
+# Description: calculates the shortest paths from source to each node
+def get_shortest_paths(conversion_map, source):
 	nextlevel = {source: 1}
 	paths = {source: [source]}
 	while nextlevel:
@@ -88,7 +90,10 @@ def get_queryset_info(conversion_map, source):
 				if w not in paths:
 					paths[w] = paths[v] + [w]
 					nextlevel[w] = 1
+	return paths
 
+# builds a list of querset information
+def build_queryset_info_list(conversion_map, source, paths):
 	queryset_info = []
 	for pathKey in paths:
 		process_type = pathKey[0]
@@ -97,21 +102,10 @@ def get_queryset_info(conversion_map, source):
 		if source == pathKey or not category in ['rm', 'wip']:
 			continue
 
-		# calculate conversion rate
-		conversion_rate = 1
 		path = paths[pathKey]
-		for i in range(len(path) - 1):
-			parentKey = path[i]
-			childKey = path[i+1]
-			conversion_rate *= conversion_map[parentKey][childKey]['conversion_rate']
+		conversion_rate = calculate_conversion_rate(conversion_map, path)
 
-		# calculate amount used
-		last_month = timezone.now() - constants.THIRTY_DAYS
-		amount_used = TaskIngredient.objects.filter(
-			ingredient__process_type=process_type,
-			ingredient__product_type=product_type,
-			task__created_at__gte=last_month
-		).aggregate(amount_used=Coalesce(Sum('actual_amount'), 0))['amount_used']
+		amount_used = calculate_amount_used(process_type, product_type)
 
 		# calculate amount used per second
 		secondsElapsed = constants.THIRTY_DAYS.total_seconds()
@@ -126,5 +120,23 @@ def get_queryset_info(conversion_map, source):
 			'active_in_last_month': True if amount_used != 0 else False,
 			'amount_used_per_second': amount_used_per_second,
 		})
-
 	return queryset_info
+
+# calculates the conversion rate for a single path
+def calculate_conversion_rate(conversion_map, path):
+	conversion_rate = 1
+	for i in range(len(path) - 1):
+		parentKey = path[i]
+		childKey = path[i + 1]
+		conversion_rate *= conversion_map[parentKey][childKey]['conversion_rate']
+	return conversion_rate
+
+# calculates the amount used in the last month
+def calculate_amount_used(process_type, product_type):
+	last_month = timezone.now() - constants.THIRTY_DAYS
+	amount_used = TaskIngredient.objects.filter(
+		ingredient__process_type=process_type,
+		ingredient__product_type=product_type,
+		task__created_at__gte=last_month
+	).aggregate(amount_used=Coalesce(Sum('actual_amount'), 0))['amount_used']
+	return amount_used
