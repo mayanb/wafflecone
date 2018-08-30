@@ -22,7 +22,6 @@ def taskattribute_changed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Task)
 def task_changed(sender, instance, **kwargs):
-	print('taskchanged')
 	kwargs = { 'pk' : instance.id }
 	update_task_descendents_flag_number(**kwargs)
 
