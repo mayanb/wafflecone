@@ -83,14 +83,18 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+	has_recipes = serializers.SerializerMethodField(source='get_has_recipes', read_only=True)
 
 	def get_username(self, product):
 		username = product.created_by.username
 		return re.sub('_\w+$', '', username)
 
+	def get_has_recipes(self, product):
+		return product.recipes.count() > 0
+
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search', 'has_recipes')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):

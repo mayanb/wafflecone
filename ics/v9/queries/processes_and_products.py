@@ -16,7 +16,7 @@ def product_search(query_params):
 		query_params
 	).annotate(
 		last_used=Max('task__created_at')
-	).select_related('created_by')
+	).select_related('created_by').prefetch_related('recipes')
 
 def filter_results(queryset, query_params):
 	queryset = queryset.filter(is_trashed=False)
