@@ -208,7 +208,7 @@ class TeamCreate(generics.CreateAPIView):
 ######################
 
 class TaskFilter(django_filters.rest_framework.FilterSet):
-  created_at = django_filters.DateFilter(name="created_at", lookup_expr="startswith")
+  created_at = django_filters.DateTimeFilter(name="created_at", lookup_expr="startswith")
   class Meta:
       model = Task
       fields = ['created_at', 'is_open']
@@ -322,13 +322,14 @@ class FileList(generics.ListCreateAPIView):
     if team_id is None:
       raise serializers.ValidationError('Request must include "team" data')
       
-    _, file_ext = os.path.splitext(original_filename)
+    file_name, file_ext = os.path.splitext(original_filename)
     file_path = environment + '/team '+ team_id + '/' + str(uuid.uuid4()) + file_ext
     bucket = settings.AWS_S3_FILE_UPLOAD_BUCKET
     obj = client.put_object(
       Body=file_binary, 
       Key=file_path, 
       Bucket=bucket,
+      # we use ContentDisposition so that the user can download the file with its original filename
       ContentDisposition='attachment; filename="' + original_filename + '"'
       )
 
@@ -337,7 +338,8 @@ class FileList(generics.ListCreateAPIView):
     task_id = request.data.get('task')
     new_file = TaskFile.objects.create(
       url=link, 
-      name=original_filename, 
+      name=file_name,
+      extension=file_ext,
       task=Task.objects.get(id=task_id)
       )
     serializer = TaskFileSerializer(new_file)
@@ -501,7 +503,7 @@ class InventoryList(generics.ListAPIView):
       'creating_task__process_type__created_by__username',
       'creating_task__process_type__created_by',).annotate(
         count=Sum('amount'),
-      ).annotate(oldest=Min('creating_task__created_at'))
+        ).annotate(oldest=Min('creating_task__created_at'))
 
 # inventory/detail-test/
 class InventoryDetailTest2(generics.ListAPIView):
@@ -606,13 +608,7 @@ class ActivityList(generics.ListAPIView):
     queryset = Task.objects.filter(is_trashed=False, process_type__team_created_by=team)\
       .select_related('process_type', 'product_type')
 
-    start = self.request.query_params.get('start', None)
-    end = self.request.query_params.get('end', None)
-    if start is not None and end is not None:
-      dt = datetime.datetime
-      start_date = pytz.utc.localize(dt.strptime(start, constants.DATE_FORMAT))
-      end_date = pytz.utc.localize(dt.strptime(end, constants.DATE_FORMAT))
-      queryset = queryset.filter(created_at__range=(start_date, end_date))
+    queryset = filter_by_created_at_range(self.request.query_params, queryset)
 
     flagged = self.request.query_params.get('flagged', None)
     if flagged and flagged.lower() == 'true':
@@ -1046,21 +1042,89 @@ class InventoryList2(generics.ListAPIView):
       category_codes = category_types.strip().split(',')
       queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
 
-    return queryset.values(
+    aggregate_products = self.request.query_params.get('aggregate_products', None)
+
+    queryset_values = [
       'creating_task__process_type',
       'creating_task__process_type__name',
       'creating_task__process_type__unit',
       'creating_task__process_type__code',
       'creating_task__process_type__icon',
       'creating_task__process_type__category',
-      'creating_task__product_type',
-      'creating_task__product_type__name',
-      'creating_task__product_type__code',
       'team_inventory'
-    ).annotate(
-      total_amount=Sum('amount'),
-    ).order_by('creating_task__process_type__name', 'creating_task__product_type__name')
+    ] 
 
+    ordering_values = ['creating_task__process_type__name']
+
+    # Unless aggregate product param is true, return a separate row for each product type
+    if not aggregate_products or aggregate_products.lower() != 'true':
+      queryset_values.append('creating_task__product_type')
+      ordering_values.append('creating_task__product_type__name')
+
+    return queryset.values(*queryset_values).annotate(
+      product_type_ids=ArrayAgg('creating_task__product_type'),
+      product_type_names=ArrayAgg('creating_task__product_type__name'),
+      product_type_codes=ArrayAgg('creating_task__product_type__code'),
+    ).order_by(*ordering_values)
+
+class InventoryList2Aggregate(generics.ListAPIView):
+  serializer_class = InventoryList2Serializer
+
+  def get_queryset(self):
+    queryset = Item.active_objects.filter(creating_task__is_trashed=False)
+
+    team = self.request.query_params.get('team', None)
+    if team is None:
+      raise serializers.ValidationError('Request must include "team" query param')
+
+    # filter by team
+    queryset = queryset.filter(team_inventory=team)
+
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
+
+    process_types = self.request.query_params.get('process_types', None)
+    if process_types is not None:
+      process_ids = process_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__in=process_ids)
+
+    product_types = self.request.query_params.get('product_types', None)
+    if product_types is not None:
+      product_ids = product_types.strip().split(',')
+      queryset = queryset.filter(creating_task__product_type__in=product_ids)
+
+    aggregate_products = self.request.query_params.get('aggregate_products', None)
+
+    queryset_values = [
+      'creating_task__process_type',
+      'creating_task__process_type__name',
+      'creating_task__process_type__unit',
+      'creating_task__process_type__code',
+      'creating_task__process_type__icon',
+      'creating_task__process_type__category',
+      'team_inventory',
+    ]
+    ordering_values = ['category_order', 'creating_task__process_type__name']
+
+    if process_types is not None or process_types is not None:
+      queryset_values.append('creating_task__product_type')
+      ordering_values.append('creating_task__product_type__name')
+    
+    return queryset.values(*queryset_values).annotate(
+      product_type_ids=ArrayAgg('creating_task__product_type'),
+      product_type_names=ArrayAgg('creating_task__product_type__name'),
+      product_type_codes=ArrayAgg('creating_task__product_type__code'),
+    ).annotate(
+      category_order=Case( 
+        When(creating_task__process_type__category='rm', then=Value(0)), 
+        When(creating_task__process_type__category='wip', then=Value(1)), 
+        When(creating_task__process_type__category='fg', then=Value(2)),
+        default=Value(3),
+        output_field=models.IntegerField(),
+      )
+    ).order_by(*ordering_values)
 
 class AdjustmentHistory(APIView):
   def set_params(self):
@@ -1078,7 +1142,7 @@ class AdjustmentHistory(APIView):
 
   def get_adjustments(self):
     queryset = Adjustment.objects\
-      .filter(process_type=self.process_type, product_type=self.product_type, userprofile__team=self.team)\
+      .filter(process_type=self.process_type, product_type=self.product_type)\
       .order_by('-created_at')
     return queryset.all()
 

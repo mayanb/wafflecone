@@ -31,8 +31,7 @@ def task_changed(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=Task)
-def task_changed(sender, instance, **kwargs):
-	print("pre_save called on Task")
+def task_changed_pre_save(sender, instance, **kwargs):
 	if instance.is_trashed:
 		task_deleted_update_cost(instance.id)
 
@@ -55,8 +54,8 @@ def item_changed(sender, instance, **kwargs):
 		return
 	# Don't update costs twice on create and save
 	if 'created' in kwargs and kwargs['created']:
-			return
-	kwargs3 = {'pk': instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
+		return
+	kwargs3 = {'pk': instance.creating_task.id, 'new_amount': float(instance.amount), 'previous_amount': float(previous_amount)}
 	batch_size_update(**kwargs3)
 
 
@@ -91,10 +90,10 @@ def input_deleted(sender, instance, **kwargs):
 @receiver(post_save, sender=TaskIngredient)
 def ingredient_updated(sender, instance, **kwargs):
 	# get the previous value
-	previous_amount = instance.tracker.previous('actual_amount')
+	previous_amount = instance.tracker.previous('actual_amount') and float(instance.tracker.previous('actual_amount'))
 	if instance.was_amount_changed:
 		kwargs = {'taskID': instance.task.id, 'process_type': instance.ingredient.process_type.id, 'product_type': instance.ingredient.product_type.id,
-				  'actual_amount': instance.actual_amount, 'task_ing_id': instance.id, 'previous_amount': previous_amount}
+				  'actual_amount': float(instance.actual_amount), 'task_ing_id': instance.id, 'previous_amount': previous_amount}
 		ingredient_amount_update(**kwargs)
 
 
@@ -111,7 +110,7 @@ def get_input_kwargs(instance, added=False, actual_amount=True):
 																				ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
 																			)
 
-		task_ingredient__actual_amount = task_ingredient.actual_amount
+		task_ingredient__actual_amount = float(task_ingredient.actual_amount)
 		process_type = task_ingredient.ingredient.process_type.id
 		product_type = task_ingredient.ingredient.product_type.id
 
@@ -119,7 +118,7 @@ def get_input_kwargs(instance, added=False, actual_amount=True):
 		'taskID': instance.task.id,
 		'creatingTaskID': instance.input_item.creating_task.id,
 		'added': added,
-		'recipe': instance.task.recipe,
+		'recipe': instance.task.recipe and instance.task.recipe.id,
 		'process_type': process_type,
 		'product_type': product_type,
 		'task_ingredient__actual_amount': task_ingredient__actual_amount,
@@ -142,9 +141,6 @@ def update_task_ingredient_after_input_delete(instance):
 		if task_ings_without_recipe.count() > 0:
 			if task_ings_without_recipe[0].ingredient:
 				if not task_ings_without_recipe[0].ingredient.recipe:
-					print('Weee, deleting TaskIngredients w/out a recipe: ')
-					for ti in task_ings_without_recipe:
-						print(ti.id)
 					task_ings_without_recipe.delete()
 		# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
 		if task_ings_with_recipe.count > 0:

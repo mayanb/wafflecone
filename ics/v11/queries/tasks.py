@@ -2,10 +2,21 @@ from django.db.models import Case, DecimalField, F, OuterRef, Q, Subquery, Sum, 
 from django.contrib.postgres.search import SearchQuery
 from ics.models import *
 import datetime
+import pytz
+
+
+def filter_by_created_at_range(query_params, queryset):
+	start = query_params.get('start', None)
+	end = query_params.get('end', None)
+	if start is not None and end is not None:
+		dt = datetime.datetime
+		start_date = pytz.utc.localize(dt.strptime(start, constants.DATE_FORMAT))
+		end_date = pytz.utc.localize(dt.strptime(end, constants.DATE_FORMAT))
+		return queryset.filter(created_at__range=(start_date, end_date))
+	return queryset
 
 
 def tasks(query_params):
-	dt = datetime.datetime
 	queryset = Task.objects.filter(is_trashed=False).order_by('process_type__x').annotate(
 		total_amount=Sum(Case(
 			When(items__is_virtual=True, then=Value(0)),
@@ -52,15 +63,7 @@ def tasks(query_params):
 	if flagged and flagged.lower() == 'true':
 		queryset = queryset.filter(is_flagged=True)
 
-	# filter according to date creation, based on parameters
-	start = query_params.get('start', None)
-	end = query_params.get('end', None)
-	if start is not None and end is not None:
-		start = start.strip().split('-')
-		end = end.strip().split('-')
-		startDate = datetime.date(int(start[0]), int(start[1]), int(start[2]))
-		endDate = datetime.date(int(end[0]), int(end[1]), int(end[2]))
-		queryset = queryset.filter(created_at__date__range=(startDate, endDate))
+	queryset = filter_by_created_at_range(query_params, queryset)
 
 
 	# make sure that we get at least one input unit and return it along with the task

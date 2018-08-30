@@ -213,7 +213,7 @@ class Attribute(models.Model):
 				is_trashed=False
 			).aggregate(Max('rank'))['rank__max']
 			if prev_rank is None:
-				prev_rank = 0
+				prev_rank = -1
 			self.rank = prev_rank + 1
 		super(Attribute, self).save(*args, **kwargs)
 
@@ -419,7 +419,8 @@ class Task(models.Model):
 class TaskFile(models.Model):
 	url = models.CharField(max_length=150, unique=True)
 	name = models.CharField(max_length=100)
-	task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	extension = models.CharField(max_length=10, null=True)
+	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
 
 class ActiveItemsManager(models.Manager):
 	def get_queryset(self):
