@@ -308,7 +308,7 @@ def get_non_trashed_descendants(task):
 # BATCH SIZE UPDATE HELPERS
 
 def get_prev_and_new_unit_costs(task, kwargs):
-	new_batch_size = task['batch_size']
+	new_batch_size = float(task['batch_size'])
 	amount_diff = kwargs['new_amount'] - kwargs['previous_amount']
 	old_batch_size = new_batch_size - amount_diff
 	cost = task['cost']
@@ -418,7 +418,7 @@ def handle_input_change_with_no_recipe(kwargs, updated_task_id):
 
 	# Adding inputs adds its batch size.
 	# Deleting inputs subtracts its batch size. Note: can produce negative amounts in special cases, matching codebase.
-	old_amount, new_amount = get_amounts(task_ingredient__actual_amount, creating_task_of_changed_input.batch_size, input_added)
+	old_amount, new_amount = get_amounts(task_ingredient__actual_amount, float(creating_task_of_changed_input.batch_size), input_added)
 	update_parents_for_ingredient_and_then_child(
 		updated_task_id,
 		old_amount,
