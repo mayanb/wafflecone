@@ -46,27 +46,30 @@ def task_deleted(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Item)
 def item_changed(sender, instance, **kwargs):
-	previous_amount = instance.tracker.previous('amount')
-	kwargs = { 'pk' : instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
 	kwargs2 = { 'pk': instance.creating_task.id }
 	check_goals_alerts(**kwargs2)
 
 	# No costs to update if amount hasn't changed.
+	previous_amount = instance.tracker.previous('amount')
 	if previous_amount == instance.amount:
+		print('amounts equel')
 		return
 	# Don't update costs twice on create and save
 	if 'created' in kwargs and kwargs['created']:
-			return
-	batch_size_update(**kwargs)
+		print('creating/saving, skip')
+		return
+	kwargs3 = {'pk': instance.creating_task.id, 'new_amount': float(instance.amount), 'previous_amount': float(previous_amount)}
+	batch_size_update(**kwargs3)
 
 
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, created, **kwargs):
 	update_task_ingredient_for_new_input(instance)
-	kwargs = get_input_kwargs(instance, added=True)
+	kwargs = {'taskID': instance.task.id, 'creatingTaskID': instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs)
 	if created:
-		input_update(**kwargs)
+		kwargs2 = get_input_kwargs(instance, added=True)
+		input_update(**kwargs2)
 
 
 @receiver(pre_delete, sender=Input)
@@ -76,9 +79,6 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 	input_update(**kwargs2)
 
 	update_task_ingredient_after_input_delete(instance)
-	kwargs = { 'pk' : instance.task.id }
-	unflag_task_descendants(**kwargs)
-	check_anomalous_inputs_alerts(**kwargs2)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -86,17 +86,17 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 def input_deleted(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.task.id }
 	unflag_task_descendants(**kwargs)
-	kwargs2 = get_input_kwargs(instance, actual_amount=False)
+	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs2)
 
 
 @receiver(post_save, sender=TaskIngredient)
 def ingredient_updated(sender, instance, **kwargs):
 	# get the previous value
-	previous_amount = instance.tracker.previous('actual_amount')
+	previous_amount = instance.tracker.previous('actual_amount') and float(instance.tracker.previous('actual_amount'))
 	if instance.was_amount_changed:
 		kwargs = {'taskID': instance.task.id, 'process_type': instance.ingredient.process_type.id, 'product_type': instance.ingredient.product_type.id,
-				  'actual_amount': instance.actual_amount, 'task_ing_id': instance.id, 'previous_amount': previous_amount}
+				  'actual_amount': float(instance.actual_amount), 'task_ing_id': instance.id, 'previous_amount': previous_amount}
 		ingredient_amount_update(**kwargs)
 
 
@@ -113,7 +113,7 @@ def get_input_kwargs(instance, added=False, actual_amount=True):
 																				ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
 																			)
 
-		task_ingredient__actual_amount = task_ingredient.actual_amount
+		task_ingredient__actual_amount = float(task_ingredient.actual_amount)
 		process_type = task_ingredient.ingredient.process_type.id
 		product_type = task_ingredient.ingredient.product_type.id
 
@@ -121,7 +121,7 @@ def get_input_kwargs(instance, added=False, actual_amount=True):
 		'taskID': instance.task.id,
 		'creatingTaskID': instance.input_item.creating_task.id,
 		'added': added,
-		'recipe': instance.task.recipe,
+		'recipe': instance.task.recipe and instance.task.recipe.id,
 		'process_type': process_type,
 		'product_type': product_type,
 		'task_ingredient__actual_amount': task_ingredient__actual_amount,
@@ -144,9 +144,6 @@ def update_task_ingredient_after_input_delete(instance):
 		if task_ings_without_recipe.count() > 0:
 			if task_ings_without_recipe[0].ingredient:
 				if not task_ings_without_recipe[0].ingredient.recipe:
-					print('Weee, deleting TaskIngredients w/out a recipe: ')
-					for ti in task_ings_without_recipe:
-						print(ti.id)
 					task_ings_without_recipe.delete()
 		# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
 		if task_ings_with_recipe.count > 0:
