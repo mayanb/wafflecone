@@ -22,6 +22,7 @@ def taskattribute_changed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Task)
 def task_changed(sender, instance, **kwargs):
+	print('taskchanged')
 	kwargs = { 'pk' : instance.id }
 	update_task_descendents_flag_number(**kwargs)
 
@@ -31,8 +32,7 @@ def task_changed(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=Task)
-def task_changed(sender, instance, **kwargs):
-	print("pre_save called on Task")
+def task_changed_pre_save(sender, instance, **kwargs):
 	if instance.is_trashed:
 		task_deleted_update_cost(instance.id)
 
