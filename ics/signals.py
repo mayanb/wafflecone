@@ -46,27 +46,28 @@ def task_deleted(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Item)
 def item_changed(sender, instance, **kwargs):
-	previous_amount = instance.tracker.previous('amount')
-	kwargs = { 'pk' : instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
 	kwargs2 = { 'pk': instance.creating_task.id }
 	check_goals_alerts(**kwargs2)
 
 	# No costs to update if amount hasn't changed.
+	previous_amount = instance.tracker.previous('amount')
 	if previous_amount == instance.amount:
 		return
 	# Don't update costs twice on create and save
 	if 'created' in kwargs and kwargs['created']:
 			return
-	batch_size_update(**kwargs)
+	kwargs3 = {'pk': instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
+	batch_size_update(**kwargs3)
 
 
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, created, **kwargs):
 	update_task_ingredient_for_new_input(instance)
-	kwargs = get_input_kwargs(instance, added=True)
+	kwargs = {'taskID': instance.task.id, 'creatingTaskID': instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs)
 	if created:
-		input_update(**kwargs)
+		kwargs2 = get_input_kwargs(instance, added=True)
+		input_update(**kwargs2)
 
 
 @receiver(pre_delete, sender=Input)
@@ -76,9 +77,6 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 	input_update(**kwargs2)
 
 	update_task_ingredient_after_input_delete(instance)
-	kwargs = { 'pk' : instance.task.id }
-	unflag_task_descendants(**kwargs)
-	check_anomalous_inputs_alerts(**kwargs2)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -86,7 +84,7 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 def input_deleted(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.task.id }
 	unflag_task_descendants(**kwargs)
-	kwargs2 = get_input_kwargs(instance, actual_amount=False)
+	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs2)
 
 
