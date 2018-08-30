@@ -72,6 +72,11 @@ def get_conversion_map(base_process_type, base_product_type):
 # Author: Aric Hagberg (hagberg@lanl.gov)
 # Link: https://networkx.github.io/documentation/networkx-1.9/reference/generated/networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path.html?highlight=single_source_shortest_path#networkx.algorithms.shortest_paths.unweighted.single_source_shortest_path
 def get_queryset_info(conversion_map, source):
+	if not source in conversion_map:
+		return []
+
+	selected_process_type = source[0]
+	selected_product_type = source[1]
 	# calculate the shortest paths from source to each node
 	nextlevel = {source: 1}
 	paths = {source: [source]}
@@ -84,34 +89,42 @@ def get_queryset_info(conversion_map, source):
 					paths[w] = paths[v] + [w]
 					nextlevel[w] = 1
 
-	info = {}
+	queryset_info = []
 	for pathKey in paths:
-		process = pathKey[0]
-		product = pathKey[1]
-		rate = 1
+		process_type = pathKey[0]
+		product_type = pathKey[1]
+		category = ProcessType.objects.get(id=process_type).category
+		if source == pathKey or not category in ['rm', 'wip']:
+			continue
+
+		# calculate conversion rate
+		conversion_rate = 1
 		path = paths[pathKey]
 		for i in range(len(path) - 1):
 			parentKey = path[i]
 			childKey = path[i+1]
-			rate *= conversion_map[parentKey][childKey]['conversion_rate']
-		info[pathKey] = {}
-		info[pathKey]['conversion_rate'] = rate
-		info[pathKey]['adjusted_amount'] = get_adjusted_item_amount(process, product)
+			conversion_rate *= conversion_map[parentKey][childKey]['conversion_rate']
 
+		# calculate amount used
 		last_month = timezone.now() - constants.THIRTY_DAYS
 		amount_used = TaskIngredient.objects.filter(
-			ingredient__process_type=process,
-			ingredient__product_type=product,
+			ingredient__process_type=process_type,
+			ingredient__product_type=product_type,
 			task__created_at__gte=last_month
 		).aggregate(amount_used=Coalesce(Sum('actual_amount'), 0))['amount_used']
 
-		if amount_used != 0:
-			info[pathKey]['active_in_last_month'] = True
-		else:
-			info[pathKey]['active_in_last_month'] = False
+		# calculate amount used per second
+		secondsElapsed = constants.THIRTY_DAYS.total_seconds()
+		amount_used_per_second = float(amount_used) / secondsElapsed
 
-		timeElapsed = constants.THIRTY_DAYS.total_seconds()
-		amount_used_per_second = float(amount_used) / timeElapsed
-		info[pathKey]['amount_used_per_second'] = amount_used_per_second
+		queryset_info.append({
+			'process_type': process_type,
+			'product_type': product_type,
+			'category': category,
+			'adjusted_amount': get_adjusted_item_amount(process_type, product_type),
+			'conversion_rate': conversion_rate,
+			'active_in_last_month': True if amount_used != 0 else False,
+			'amount_used_per_second': amount_used_per_second,
+		})
 
-	return info
+	return queryset_info

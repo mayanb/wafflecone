@@ -605,32 +605,10 @@ class ProductionPlanning(generics.ListAPIView):
 
   def get_queryset(self):
     # get process and product type as an int instead of unicode
-    selected_process = int(self.request.query_params.get('process', None))
-    selected_product = int(self.request.query_params.get('product', None))
-    conversion_map = get_conversion_map(selected_process, selected_product)
-    if (selected_process, selected_product) in conversion_map:
-      queryset_info = get_queryset_info(conversion_map, (selected_process, selected_product))
-    else:
-      queryset_info = {}
-
-    returnobj = []
-    for key in queryset_info:
-      x = queryset_info[key]
-      process_type = key[0]
-      product_type = key[1]
-      category = ProcessType.objects.get(id=process_type).category
-
-      if not (selected_process == process_type and selected_product == product_type) and (category == 'rm' or category == 'wip'):
-        returnobj.append({
-          'process_type': process_type,
-          'product_type': product_type,
-          'category': category,
-          'adjusted_amount': x['adjusted_amount'],
-          'conversion_rate': x['conversion_rate'],
-          'amount_used_per_second': x['amount_used_per_second'],
-          'active_in_last_month': x['active_in_last_month'],
-        })
-    return returnobj
+    selected_process_type = int(self.request.query_params.get('process', None))
+    selected_product_type = int(self.request.query_params.get('product', None))
+    conversion_map = get_conversion_map(selected_process_type, selected_product_type)
+    return get_queryset_info(conversion_map, (selected_process_type, selected_product_type))
 
 
 
