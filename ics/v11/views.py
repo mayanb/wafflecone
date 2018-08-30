@@ -628,6 +628,7 @@ class ProductionPlanning(generics.ListAPIView):
           'adjusted_amount': x['adjusted_amount'],
           'conversion_rate': x['conversion_rate'],
           'amount_used_per_second': x['amount_used_per_second'],
+          'active_in_last_month': x['active_in_last_month'],
         })
     return returnobj
 

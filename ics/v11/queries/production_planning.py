@@ -105,11 +105,13 @@ def get_queryset_info(conversion_map, source):
 			task__created_at__gte=last_month
 		).aggregate(amount_used=Coalesce(Sum('actual_amount'), 0))['amount_used']
 
-		timeElapsed = constants.THIRTY_DAYS.total_seconds()
 		if amount_used != 0:
-			amount_used_per_second = float(amount_used) / timeElapsed
+			info[pathKey]['active_in_last_month'] = True
 		else:
-			amount_used_per_second = float(0)
+			info[pathKey]['active_in_last_month'] = False
+
+		timeElapsed = constants.THIRTY_DAYS.total_seconds()
+		amount_used_per_second = float(amount_used) / timeElapsed
 		info[pathKey]['amount_used_per_second'] = amount_used_per_second
 
 	return info

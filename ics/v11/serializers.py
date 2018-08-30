@@ -425,6 +425,9 @@ class ProductionPlanningSerializer(serializers.Serializer):
 		return amount * conversion_rate
 
 	def get_date_exhausted(self, item_summary):
+
+		if not item_summary['active_in_last_month']:
+			return None
 		# compute the rate of consumption
 		amount_used_per_second = item_summary['amount_used_per_second']
 		amount_remaining = float(item_summary['adjusted_amount'])
@@ -440,6 +443,8 @@ class ProductionPlanningSerializer(serializers.Serializer):
 
 	def get_warning(self, item_summary):
 		dateExhausted = self.get_date_exhausted(item_summary)
+		if dateExhausted is None:
+			return False
 		if dateExhausted < timezone.now() + constants.THIRTY_DAYS:
 			return True
 		return False
