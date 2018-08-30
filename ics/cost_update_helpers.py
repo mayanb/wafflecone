@@ -76,7 +76,6 @@ def get_adjusted_num_parents(parent_obj, child_id, descendant_ingredients, is_a_
 	product_type = parent_obj['product_type']
 	task_ing_map = descendant_ingredients[child_id]['task_ing_map']
 	num_parents = len(task_ing_map[(process_type, product_type)]['parent_tasks'])
-	print('nOT adjusted NUM_PARENTS:', num_parents)
 	if is_a_deleted_input:  # Delete input is calculated pre_delete, where all parents still exist.
 		adjusted_num_parents = num_parents if previous else num_parents - 1
 	elif is_a_new_input:  # New input is calculated post_save, where all parents exist.
@@ -385,48 +384,27 @@ def update_parents_for_ingredient(updated_child, parents_contributing_ingredient
 
 # UPDATE INPUT HELPERS
 
-# This is nearly identical to async_action.py/ingredient_amount_update(...), except with special flags to handle
-# special cases of introducing or exiting an input, since one is done post_save and the other pre_delete.
-def handle_input_change_with_no_recipe(kwargs, updated_task_id):
-	creating_task_of_changed_input_id = kwargs['creatingTaskID']
-	input_added = kwargs['added']
-	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
-	process_type = kwargs['process_type']
-	product_type = kwargs['product_type']
-	creating_task_of_changed_input = get_creating_task_of_changed_input(creating_task_of_changed_input_id)
-
-	if not creating_task_of_changed_input or creating_task_of_changed_input.cost is None:
-		return
-
-	# Adding inputs adds its batch size.
-	# Deleting inputs subtracts its batch size. Note: can produce negative amounts in special cases, matching codebase.
-	old_amount, new_amount = get_amounts(task_ingredient__actual_amount, float(creating_task_of_changed_input.batch_size), input_added)
-	update_parents_for_ingredient_and_then_child(
-		updated_task_id,
-		old_amount,
-		new_amount,
-		process_type,
-		product_type,
-		creating_task_of_changed_input=creating_task_of_changed_input.id,
-		input_added=input_added,
-		input_deleted=not input_added,  # Function is only ever called with input add/delete
-	)
-
-
 def get_creating_task_of_changed_input(creating_task_of_changed_input_id):
 	query_set = Task.objects.filter(is_trashed=False, pk=creating_task_of_changed_input_id).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
 	return False if query_set.count() == 0 else query_set[0]  # It's possible the parent is a deleted tasks.
 
 
-def get_amounts(task_ingredient__actual_amount, creating_task_batch_size, input_added):
-	print('input_added', input_added)
+# Adding inputs adds its batch size. Deleting inputs subtracts its batch size.
+# Note: this can produce negative amounts in special cases, matching codebase.
+def get_amounts(task_ingredient__actual_amount, creating_task_batch_size, input_added, recipe_exists_for_ingredient, adding_first_or_deleting_last_input):
 	if input_added:  # which happens post_save
 		new_amount_of_ingredient = task_ingredient__actual_amount  # we've already updated TaskIngredient
 		old_amount_of_ingredient = new_amount_of_ingredient - creating_task_batch_size  # New inputs add full batch_size
+		if recipe_exists_for_ingredient:
+			old_amount_of_ingredient = 0 if adding_first_or_deleting_last_input else new_amount_of_ingredient
+
 	else:  # Input Deleted, which happens pre_delete (so the TaskIngredient still exists)
 		old_amount_of_ingredient = task_ingredient__actual_amount  # We've yet to update TaskIngredient
 		new_amount_of_ingredient = old_amount_of_ingredient - creating_task_batch_size  # Deleting subtracts full batch_size
+		if recipe_exists_for_ingredient:
+			new_amount_of_ingredient = 0 if adding_first_or_deleting_last_input else old_amount_of_ingredient
+
 	return old_amount_of_ingredient, new_amount_of_ingredient
 
 
@@ -453,10 +431,6 @@ def update_creating_task_and_all_its_children(updated_task, creating_task_of_cha
 			input_added=input_added,
 			creating_task_of_changed_input=creating_task_of_changed_input,
 	)
-
-
-def handle_input_change_with_recipe(kwargs, updated_task_id):
-	print('Input change with recipe', kwargs['recipe'])
 
 
 # UPDATE INGREDIENT HELPERS

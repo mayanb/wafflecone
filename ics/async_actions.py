@@ -32,15 +32,42 @@ def unflag_task_descendants(**kwargs):
 		task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
 
 
+# This is nearly identical to ingredient_amount_update(), except with special flags to handle
+# special cases of introducing or exiting an input, since one is done post_save and the other pre_delete.
+# It also handles of tasks with recipes.
 @task
 def input_update(**kwargs):
-	recipe = kwargs['recipe']
 	updated_task_id = kwargs['taskID']
+	creating_task_of_changed_input_id = kwargs['creatingTaskID']
+	input_added = kwargs['added']
+	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
+	process_type = kwargs['process_type']
+	product_type = kwargs['product_type']
+	recipe_exists_for_ingredient = kwargs['recipe_exists_for_ingredient']
+	adding_first_or_deleting_last_input = kwargs['adding_first_or_deleting_last_input']
+	creating_task_of_changed_input = get_creating_task_of_changed_input(creating_task_of_changed_input_id)
 
-	if recipe:
-		handle_input_change_with_recipe(kwargs, updated_task_id)
-	else:
-		handle_input_change_with_no_recipe(kwargs, updated_task_id)
+	if not creating_task_of_changed_input or creating_task_of_changed_input.cost is None:
+		return
+
+	old_amount, new_amount = get_amounts(
+		task_ingredient__actual_amount,
+		float(creating_task_of_changed_input.batch_size),
+		input_added,
+		recipe_exists_for_ingredient,
+		adding_first_or_deleting_last_input,
+	)
+
+	update_parents_for_ingredient_and_then_child(
+		updated_task_id,
+		old_amount,
+		new_amount,
+		process_type,
+		product_type,
+		creating_task_of_changed_input=creating_task_of_changed_input.id,
+		input_added=input_added,
+		input_deleted=not input_added,  # Function is only ever called with input add/delete
+	)
 
 
 @task

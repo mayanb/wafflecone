@@ -99,31 +99,39 @@ def ingredient_updated(sender, instance, **kwargs):
 
 # HELPER FUNCTIONS
 
-def get_input_kwargs(instance, added=False, actual_amount=True):
-	task_ingredient__actual_amount = None
-	process_type = None
-	product_type = None
-	if actual_amount:
-		task_ingredient = TaskIngredient.objects.get(
-																				task=instance.task.id,
-																				ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
-																				ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
-																			)
+def get_input_kwargs(instance, added=False):
+	task_ingredient = TaskIngredient.objects.get(
+																			task=instance.task.id,
+																			ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
+																			ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
+																		)
 
-		task_ingredient__actual_amount = float(task_ingredient.actual_amount)
-		process_type = task_ingredient.ingredient.process_type.id
-		product_type = task_ingredient.ingredient.product_type.id
+	task_ingredient__actual_amount = float(task_ingredient.actual_amount)
+	process_type = task_ingredient.ingredient.process_type.id
+	product_type = task_ingredient.ingredient.product_type.id
+	recipe_exists_for_ingredient = instance.task.recipe and Ingredient.objects.filter(
+		recipe=instance.task.recipe,
+		process_type=process_type,
+		product_type=product_type,
+	).count()
+	num_similar_inputs = Input.objects.filter(
+		task=instance.task,
+		input_item__creating_task__product_type=instance.input_item.creating_task.product_type,
+		input_item__creating_task__process_type=instance.input_item.creating_task.process_type,
+	).count()
+	adding_first_or_deleting_last_input = num_similar_inputs == 1  # both cases same since we use pre_delete and post_save
 
 	return {
 		'taskID': instance.task.id,
 		'creatingTaskID': instance.input_item.creating_task.id,
 		'added': added,
-		'recipe': instance.task.recipe and instance.task.recipe.id,
 		'process_type': process_type,
 		'product_type': product_type,
 		'task_ingredient__actual_amount': task_ingredient__actual_amount,
 		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
-		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id
+		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id,
+		'recipe_exists_for_ingredient': recipe_exists_for_ingredient,
+		'adding_first_or_deleting_last_input': adding_first_or_deleting_last_input,
 	}
 
 
