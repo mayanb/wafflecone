@@ -48,7 +48,8 @@ def task_deleted(sender, instance, **kwargs):
 def item_changed(sender, instance, **kwargs):
 	previous_amount = instance.tracker.previous('amount')
 	kwargs = { 'pk' : instance.creating_task.id, 'new_amount': instance.amount, 'previous_amount': previous_amount}
-	check_goals_alerts(**kwargs)
+	kwargs2 = { 'pk': instance.creating_task.id }
+	check_goals_alerts(**kwargs2)
 
 	# No costs to update if amount hasn't changed.
 	if previous_amount == instance.amount:
