@@ -90,7 +90,9 @@ def top_sort(team_id, days_ago):
             amountGiven = min(cachedTaskSizeRemaining[currTask.id], amountToGive)
             # keep track of how much this task actually has left to give
             cachedTaskSizeRemaining[currTask.id] -= amountGiven
-            costGiven = (amountGiven/currTask.batch_size)*currTask.cost
+            costGiven = 0
+            if currTask.batch_size != 0:
+              costGiven = (amountGiven/currTask.batch_size)*currTask.cost
             # add to the child's cost and remaining worth
             childTaskObj.cost = childTaskObj.cost + costGiven
             childTaskObj.remaining_worth = childTaskObj.remaining_worth + costGiven
