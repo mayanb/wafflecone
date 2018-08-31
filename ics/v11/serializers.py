@@ -650,7 +650,6 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
 	process_icon = serializers.CharField(source='process_type.icon', read_only=True)
 	product_code = serializers.SerializerMethodField('get_product_types')
-	total_inventory_amount = serializers.SerializerMethodField()
 	userprofile_name = serializers.SerializerMethodField()
 
 	def get_userprofile_name(self, goal):
@@ -688,15 +687,6 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			creating_task__created_at__range=(start, end),
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
-
-	def get_total_inventory_amount(self, goal):
-		process = goal.process_type
-		products = self.get_product_types(goal)
-
-		total_adjusted_amount = 0
-		for product in products:
-			total_adjusted_amount += get_adjusted_item_amount(process.id, product['id'])
-		return total_adjusted_amount
 
 
 
