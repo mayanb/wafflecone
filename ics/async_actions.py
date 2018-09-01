@@ -58,7 +58,7 @@ def input_update(**kwargs):
 		adding_first_or_deleting_last_input,
 	)
 
-	update_parents_for_ingredient_and_then_child(
+	update_parents_for_ingredient_and_their_children(
 		updated_task_id,
 		old_amount,
 		new_amount,
@@ -79,7 +79,7 @@ def ingredient_amount_update(**kwargs):
 	new_amount = kwargs['actual_amount']
 	process_type = kwargs['process_type']
 	product_type = kwargs['product_type']
-	update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, process_type, product_type)
+	update_parents_for_ingredient_and_their_children(updated_task_id, old_amount, new_amount, process_type, product_type)
 
 
 @task
@@ -99,5 +99,17 @@ def batch_size_update(**kwargs):
 
 @task
 def task_deleted_update_cost(deleted_task_id):
-	update_parents_of_deleted_task(deleted_task_id)
-	update_children_of_deleted_task(deleted_task_id)
+	task_ingredients = TaskIngredient.objects.filter(task=deleted_task_id).annotate(batch_size=Coalesce(Sum('task__items__amount'), 0)) \
+		.values('actual_amount', 'ingredient__process_type__id', 'ingredient__product_type__id')
+
+	for task_ingredient in task_ingredients:
+		update_parents_for_ingredient_and_their_children(  # use this to delete input from all parents
+			deleted_task_id,
+			old_amount=float(task_ingredient['actual_amount']),
+			new_amount=0,  # return worth to all inputs
+			process_type=task_ingredient['ingredient__process_type__id'],
+			product_type=task_ingredient['ingredient__product_type__id'],
+			input_added=False,
+			input_deleted=True,
+			child_task_is_being_deleted_entirely=True,  # Flag signals removal of ALL parents as inputs to deleted_task
+		)

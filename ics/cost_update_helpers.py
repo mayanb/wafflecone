@@ -2,7 +2,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models.functions import Coalesce
 
 from ics.models import *
-from django.db.models import F, Count, Sum
+from django.db.models import F, Count, Sum, Q
 
 
 # Iterate over each direct child in the order inputs were added, calculating how much worth they were given previously
@@ -214,14 +214,15 @@ def rec_cost(parent, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, v
 				rec_cost(child, prev_unit_cost_of_child, new_unit_cost_of_child, tasks, visited, descendant_ingredients)
 
 
-# fetch parents and children for list of related tasks
+# Fetch parents and children related tasks. Don't filter out trashed tasks, since we may be updating cost
+# for a newly deleted task, and we've already carefully filtered out unwanted tasks from updated_task_descendants.
 def task_details(updated_task_descendants):
 	# contains task ids of descendants and ids of parents of descendants
 	related_tasks = set()
 	for task in list(updated_task_descendants):
 		related_tasks.add(task.id)
 	# for each descendant get parent id
-	parents = Task.objects.filter(is_trashed=False, pk__in=related_tasks).annotate(
+	parents = Task.objects.filter(pk__in=related_tasks).annotate(
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'))
 
 	for parent in parents:
@@ -229,9 +230,9 @@ def task_details(updated_task_descendants):
 
 	trashed_task_ids_set = get_trashed_task_ids_set()
 
-	related_tasks_batch_size = Task.objects.filter(is_trashed=False, pk__in=related_tasks).annotate(
+	related_tasks_batch_size = Task.objects.filter(pk__in=related_tasks).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
-	related_tasks_with_parents_children = Task.objects.filter(is_trashed=False, pk__in=related_tasks).annotate(
+	related_tasks_with_parents_children = Task.objects.filter(pk__in=related_tasks).annotate(
 		children_list=ArrayAgg('items__inputs__task'),
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'),
 		ingredients=ArrayAgg('task_ingredients__ingredient'))
@@ -282,8 +283,9 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 	return descendant_ingredients
 
 
-def get_non_trashed_descendants(task):
-	return Task.descendants(task).filter(is_trashed=False)
+def get_non_trashed_descendants(task, include_even_if_deleted=-1):
+	descendants = Task.descendants(task)
+	return descendants.filter(Q(is_trashed=False) | Q(id=include_even_if_deleted))
 
 
 # BATCH SIZE UPDATE HELPERS
@@ -304,82 +306,6 @@ def get_unit_cost(cost, batch_size):
 	print('cost, batch_size')
 	print(cost, batch_size)
 	return float(cost) / float(batch_size)
-
-
-# DELETED TASK HELPERS:
-
-def update_children_of_deleted_task(deleted_task):
-	return
-	# # fetch all the descendants of deleted task
-	# deleted_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=deleted_task)[0])
-	# if not deleted_task_descendants:
-	# 	print ("No descendents")
-	# 	return
-	# tasks = task_details(deleted_task_descendants)
-	# descendant_ingredients = descendant_ingredient_details(deleted_task_descendants, tasks)
-	# if tasks[deleted_task]['children'] != {None}:
-	# 	batch_size = tasks[deleted_task]['batch_size']
-	# 	cost = tasks[deleted_task]['cost']
-	# 	prev_unit_cost = get_unit_cost(cost, batch_size)
-	# 	new_unit_cost = 0
-	# 	update_children(new_unit_cost, prev_unit_cost, deleted_task, tasks, descendant_ingredients)
-
-
-def update_parents_of_deleted_task(updated_task_id):
-	return
-	# # get all the ids of ingredients used and parents who contribute those ingredients
-	# qs = Task.objects.filter(is_trashed=False, pk=updated_task_id).annotate(
-	# 	task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'),
-	# 	ingredients=ArrayAgg('task_ingredients__ingredient')
-	# )
-	# if qs.count() != 1 or qs[0].ingredients == [None]:
-	# 	return
-	# updated_task = qs[0]
-	# parent_ids = updated_task.task_parent_ids
-	# updated_task_parents = Task.objects.filter(pk__in=set(parent_ids)).annotate(
-	# 	batch_size=Coalesce(Sum('items__amount'), 0))
-	#
-	# if updated_task_parents.count() == 0:
-	# 	return
-	#
-	# # map ingredients with parents
-	# ingredients_to_parents_map = {}
-	# print(updated_task.ingredients)
-	# for ingredient_id in updated_task.ingredients:
-	# 	ingredient = Ingredient.objects.get(pk=ingredient_id)
-	# 	parents_contributing_ingredient = {}
-	# 	for x in range(0, len(set(parent_ids))):
-	# 		if updated_task_parents[x].process_type_id == ingredient.process_type_id and \
-	# 						updated_task_parents[x].product_type_id == ingredient.product_type_id:
-	# 			parents_contributing_ingredient[updated_task_parents[x].id] = updated_task_parents[x]
-	# 	ingredients_to_parents_map[ingredient.id] = parents_contributing_ingredient
-	#
-	# # iterate over each ingredient
-	# print(ingredients_to_parents_map)
-	# for ingredient_id, parents_contributing_ingredient in ingredients_to_parents_map.iteritems():
-	# 	old_amount = TaskIngredient.objects.filter(ingredient_id=ingredient_id).values('actual_amount')[0]['actual_amount']
-	# 	new_amount = 0
-	# 	num_parents = len(parents_contributing_ingredient)
-	# 	update_parents_for_ingredient(parents_contributing_ingredient, old_amount, new_amount)
-
-
-def update_parents_for_ingredient(updated_child, parents_contributing_ingredient, old_amount, new_amount, input_added=False, input_deleted=False, creating_task_of_changed_input=-1):
-	for parent_tuple in parents_contributing_ingredient:
-		parent_id = parent_tuple[0]
-		parent_batch_size = parent_tuple[1]
-		parent_cost = parent_tuple[2]
-		if parent_cost is None:
-			continue
-		update_creating_task_and_all_its_children(
-			updated_child,
-			parent_id,
-			float(parent_batch_size),
-			previous_total_amount_of_ingredient_for_child=old_amount,
-			new_total_amount_of_ingredient_for_child=new_amount,
-			input_deleted=input_deleted,
-			input_added=input_added,
-			creating_task_of_changed_input=creating_task_of_changed_input,
-		)
 
 
 # UPDATE INPUT HELPERS
@@ -408,18 +334,26 @@ def get_amounts(task_ingredient__actual_amount, creating_task_batch_size, input_
 	return old_amount_of_ingredient, new_amount_of_ingredient
 
 
-# Used on each parent contributing to an ingredient type. Basically a prep-er/wrapper function.
-def update_creating_task_and_all_its_children(updated_task, creating_task_of_changed_input_id, creating_task_batch_size, previous_total_amount_of_ingredient_for_child, new_total_amount_of_ingredient_for_child, input_deleted, input_added, creating_task_of_changed_input=-1):
-	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=creating_task_of_changed_input_id)[0])
+# Used on each parent contributing to an ingredient type. Basically a prep-er/wrapper function that retrieves data.
+def update_creating_task_and_all_its_children(
+				updated_task,
+				parent_task,
+				creating_task_batch_size,
+				previous_total_amount_of_ingredient_for_child,
+				new_total_amount_of_ingredient_for_child,
+				input_deleted,
+				input_added,
+				creating_task_of_changed_input=-1):
+	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=parent_task)[0], include_even_if_deleted=updated_task)
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	cost = tasks[creating_task_of_changed_input_id]['cost']
+	cost = tasks[parent_task]['cost']
 	unit_cost = get_unit_cost(cost, creating_task_batch_size)
 
 	update_children_after_batch_size_or_child_ingredient_amount_change(
 			unit_cost,
 			unit_cost,
-			creating_task_of_changed_input_id,
+			parent_task,
 			tasks,
 			descendant_ingredients,
 			creating_task_batch_size,
@@ -456,10 +390,28 @@ def make_unique(my_list):
 	return new_list
 
 
-def update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, process_type, product_type, creating_task_of_changed_input=-1, input_added=False, input_deleted=False):
+def update_parents_for_ingredient_and_their_children(updated_task_id, old_amount, new_amount, process_type, product_type, creating_task_of_changed_input=-1, input_added=False, input_deleted=False, child_task_is_being_deleted_entirely=False):
 	parents_contributing_ingredient = get_parents_contributing_ingredient(updated_task_id, process_type, product_type)
-	old_updated_task_cost = Task.objects.get(is_trashed=False, pk=updated_task_id).cost
-	update_parents_for_ingredient(updated_task_id, parents_contributing_ingredient, old_amount, new_amount, input_added, input_deleted, creating_task_of_changed_input)
+	for parent_tuple in parents_contributing_ingredient:
+		parent_id = parent_tuple[0]
+		parent_batch_size = parent_tuple[1]
+		parent_cost = parent_tuple[2]
+		if parent_cost is None:
+			continue
+		# Delete every parent as an input to updated_task_id (deleted task)
+		if child_task_is_being_deleted_entirely:
+			creating_task_of_changed_input = parent_id
+
+		update_creating_task_and_all_its_children(
+			updated_task_id,
+			parent_id,
+			float(parent_batch_size),
+			previous_total_amount_of_ingredient_for_child=old_amount,
+			new_total_amount_of_ingredient_for_child=new_amount,
+			input_deleted=input_deleted,
+			input_added=input_added,
+			creating_task_of_changed_input=creating_task_of_changed_input,
+		)
 
 
 def remove_trashed_tasks(task_ids, trashed_task_ids_set):
