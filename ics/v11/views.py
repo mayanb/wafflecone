@@ -159,6 +159,35 @@ class PinRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Pin.objects.filter(is_trashed=False)
   serializer_class = BasicPinSerializer
 
+#####################
+# TAG-RELATED VIEWS #
+#####################
+class TagList(generics.ListAPIView):
+  serializer_class = BasicTagSerializer
+
+  def get_queryset(self):
+    queryset = Tag.objects.filter(is_trashed=False)
+
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(team=team)
+
+    process_type = self.request.query_params.get('process_type', None)
+    if process_type is not None:
+      queryset = queryset.filter(process_types=process_type)
+
+    product_type = self.request.query_params.get('product_type', None)
+    if product_type is not None:
+      queryset = queryset.filter(product_types=product_type)
+
+class TagGet(generics.RetrieveAPIView):
+  queryset = Tag.objects.filter(is_trashed=False)
+  serializer_class = BasicTagSerializer
+
+class TagCreate(generics.CreateAPIView):
+  queryset = Tag.objects.filter(is_trashed=False)
+  serializer_class = BasicPinSerializer
+
 ######################
 # USER-RELATED VIEWS #
 ######################

@@ -541,6 +541,12 @@ class TeamSerializer(serializers.ModelSerializer):
 		model = Team
 		fields = ('id', 'name', 'users', 'products', 'processes', 'task_label_type', 'time_format')
 
+class BasicTagSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = Tag
+		fields = ('id', 'name', 'team', 'process_types', 'product_types')
+
 class BasicPinSerializer(serializers.ModelSerializer):
 	process_name = serializers.CharField(source='process_type.name', read_only=True)
 	process_unit = serializers.CharField(source='process_type.unit', read_only=True)
