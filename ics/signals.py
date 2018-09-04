@@ -67,16 +67,16 @@ def input_changed(sender, instance, created, **kwargs):
 	check_anomalous_inputs_alerts(**kwargs)
 	if created:
 		kwargs2 = get_input_kwargs(instance, added=True)
-		input_update(**kwargs2)
+		if kwargs2:
+			input_update(**kwargs2)
 
 
 @receiver(pre_delete, sender=Input)
 def input_deleted_pre_delete(sender, instance, **kwargs):
 	kwargs2 = get_input_kwargs(instance)
-	print('pre_delete', kwargs2)
-	input_update(**kwargs2)
-
-	update_task_ingredient_after_input_delete(instance)
+	if kwargs2:
+		input_update(**kwargs2)
+		update_task_ingredient_after_input_delete(instance)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -100,12 +100,16 @@ def ingredient_updated(sender, instance, **kwargs):
 
 # HELPER FUNCTIONS
 
+# Returns None of if no TaskIngredient exists (eg for old tasks)
 def get_input_kwargs(instance, added=False):
-	task_ingredient = TaskIngredient.objects.get(
+	task_ingredient_qs = TaskIngredient.objects.filter(
 																			task=instance.task.id,
 																			ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
 																			ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
 																		)
+	task_ingredient = task_ingredient_qs.count() > 0 and task_ingredient_qs[0]
+	if not task_ingredient:  # Impossible to proceed
+		return
 
 	task_ingredient__actual_amount = float(task_ingredient.actual_amount)
 	process_type = task_ingredient.ingredient.process_type.id
