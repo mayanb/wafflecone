@@ -695,7 +695,7 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Goal
-		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'userprofile', 'total_inventory_amount')
+		fields = ('id', 'all_product_types', 'process_type', 'goal', 'actual', 'process_name', 'process_unit', 'process_icon', 'product_code', 'timerange', 'rank', 'is_trashed', 'trashed_time', 'userprofile_name', 'userprofile')
 
 
 class GoalCreateSerializer(serializers.ModelSerializer):
