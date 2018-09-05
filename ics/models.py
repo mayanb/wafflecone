@@ -368,14 +368,14 @@ class Task(models.Model):
 		if cycles == None:
 			return None
 		else:
-			return Task.objects.filter(id__in=list(cycles))
+			return Task.objects.filter(id__in=list(cycles)).order_by('created_at')
 
 	def ancestors(self):
 		cycles = check_for_cycles(self.id, "ancestors")
 		if cycles == None:
 			return None
 		else:
-			return Task.objects.filter(id__in=list(cycles))
+			return Task.objects.filter(id__in=list(cycles)).order_by('created_at')
 
 
 def has_cycle(time, u, low, disc, stackMember, st, direction, results):
