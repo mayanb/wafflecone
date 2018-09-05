@@ -9,6 +9,7 @@ class Command(BaseCommand):
 		for task in Task.objects.filter(is_flagged=True):
 			print(task)
 			desc = task.descendants()
-			print(desc.count())
-			desc.update(num_flagged_ancestors=F('num_flagged_ancestors') + 2)
-			self.stdout.write(self.style.SUCCESS('Successfully updated descendants for a task'))
+			if desc != None:
+				print(desc.count())
+				desc.update(num_flagged_ancestors=F('num_flagged_ancestors') + 2)
+				self.stdout.write(self.style.SUCCESS('Successfully updated descendants for a task'))
