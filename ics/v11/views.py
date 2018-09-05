@@ -180,6 +180,8 @@ class TagList(generics.ListAPIView):
     if product_type is not None:
       queryset = queryset.filter(product_types=product_type)
 
+    return queryset
+
 class TagGet(generics.RetrieveAPIView):
   queryset = Tag.objects.filter(is_trashed=False)
   serializer_class = BasicTagSerializer
