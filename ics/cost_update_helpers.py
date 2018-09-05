@@ -302,12 +302,8 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 
 
 def get_non_trashed_descendants(task):
-	desc = Task.objects.get(pk=task).descendants(True)
-	if desc != None:
-		return desc.filter(is_trashed=False)
-	else:
-		return Task.objects.none()
-
+	desc = Task.objects.get(pk=task).descendants(breakIfCycle=True)
+	return Task.objects.none() if desc is None else desc
 
 # BATCH SIZE UPDATE HELPERS
 
@@ -454,7 +450,7 @@ def get_amounts(task_ingredient__actual_amount, creating_task_batch_size, input_
 
 # Used on each parent contributing to an ingredient type. Basically a prep-er/wrapper function.
 def update_creating_task_and_all_its_children(updated_task, creating_task_of_changed_input_id, creating_task_batch_size, previous_total_amount_of_ingredient_for_child, new_total_amount_of_ingredient_for_child, input_deleted, input_added, creating_task_of_changed_input=-1):
-	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=creating_task_of_changed_input_id)[0])
+	updated_task_descendants = get_non_trashed_descendants(creating_task_of_changed_input_id)
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
 	cost = tasks[creating_task_of_changed_input_id]['cost']
@@ -518,7 +514,7 @@ def remove_trashed_tasks(task_ids, trashed_task_ids_set):
 
 def update_children_after_amount_update(updated_task_id, old_updated_task_cost):
 	print('update_children_after_amount_update')
-	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task_id)[0])
+	updated_task_descendants = get_non_trashed_descendants(updated_task_id)
 	if updated_task_descendants.count() == 0:
 		return
 	tasks = task_details(updated_task_descendants)
