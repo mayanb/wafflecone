@@ -32,7 +32,9 @@ def task_changed(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=Task)
 def task_changed_pre_save(sender, instance, **kwargs):
-	previously_was_not_trashed = not Task.objects.get(pk=instance.id).is_trashed
+	task_qs = Task.objects.filter(pk=instance.id)
+	task_in_db = task_qs.count() and task_qs[0]
+	previously_was_not_trashed = not task_in_db or not task_in_db.is_trashed
 	if instance.is_trashed and previously_was_not_trashed:
 		task_deleted_update_cost(instance.id)
 
