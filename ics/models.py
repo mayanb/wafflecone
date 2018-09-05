@@ -377,7 +377,8 @@ class Task(models.Model):
 		else:
 			return Task.objects.filter(id__in=list(cycles)).order_by('created_at')
 
-
+# modified from tarjan's strongly connected components algorithm
+# see https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/ for explanation
 def has_cycle(time, u, low, disc, stackMember, st, direction, results):
   disc[u] = time
   low[u] = time
