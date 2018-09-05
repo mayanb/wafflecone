@@ -40,13 +40,15 @@ def tasks(query_params):
 
 	parent = query_params.get('parent', None)
 	if parent is not None:
-		queryset = Task.objects.get(pk=parent).descendants()
+		# if you want it to raise an exception if there is a cycle instead, set the parameter to True
+		queryset = Task.objects.get(pk=parent).descendants(False)
 		if queryset == None:
 			raise APIException("Descendants contains cycles. Could not calculate.")
 
 	child = query_params.get('child', None)
 	if child is not None:
-		queryset = Task.objects.get(pk=child).ancestors()
+		# if you want it to raise an exception if there is a cycle instead, set the parameter to True
+		queryset = Task.objects.get(pk=child).ancestors(False)
 		if queryset == None:
 			raise APIException("Ancestors contains cycles. Could not calculate.")
 

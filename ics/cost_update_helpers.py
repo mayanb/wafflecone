@@ -302,7 +302,7 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 
 
 def get_non_trashed_descendants(task):
-	desc = Task.descendants(task)
+	desc = Task.objects.get(pk=task).descendants(True)
 	if desc != None:
 		return desc.filter(is_trashed=False)
 	else:

@@ -363,23 +363,25 @@ class Task(models.Model):
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
 	
-	def descendants(self):
-		cycles = check_for_cycles(self.id, "descendants")
+	def descendants(self, breakIfCycle):
+		# breakIfCycle = False
+		cycles = check_for_cycles(self.id, "descendants", breakIfCycle)
 		if cycles == None:
 			return None
 		else:
-			return Task.objects.filter(id__in=list(cycles)).order_by('created_at')
+			return Task.objects.filter(id__in=list(cycles), is_trashed=False).order_by('created_at')
 
-	def ancestors(self):
-		cycles = check_for_cycles(self.id, "ancestors")
+	def ancestors(self, breakIfCycle):
+		# breakIfCycle = False
+		cycles = check_for_cycles(self.id, "ancestors", breakIfCycle)
 		if cycles == None:
 			return None
 		else:
-			return Task.objects.filter(id__in=list(cycles)).order_by('created_at')
+			return Task.objects.filter(id__in=list(cycles), is_trashed=False).order_by('created_at')
 
 # modified from tarjan's strongly connected components algorithm
 # see https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/ for explanation
-def has_cycle(time, u, low, disc, stackMember, st, direction, results):
+def has_cycle(time, u, low, disc, stackMember, st, direction, results, breakIfCycle):
   disc[u] = time
   low[u] = time
   time += 1
@@ -408,7 +410,7 @@ def has_cycle(time, u, low, disc, stackMember, st, direction, results):
     if v not in stackMember:
       stackMember[v] = False
     if disc[v] == -1:
-      has_cycle(time, v, low, disc, stackMember, st, direction, results)
+      has_cycle(time, v, low, disc, stackMember, st, direction, results, breakIfCycle)
       low[u] = min(low[u], low[v])
     elif stackMember[v] == True:
       low[u] = min(low[u], disc[v])
@@ -416,7 +418,7 @@ def has_cycle(time, u, low, disc, stackMember, st, direction, results):
   if low[u] == disc[u]:
     count = 0
     while w != u:
-      if count > 0:
+      if count > 0 and breakIfCycle:
         return True
       w = st.pop()
       stackMember[w] = False
@@ -424,14 +426,14 @@ def has_cycle(time, u, low, disc, stackMember, st, direction, results):
       results.add(w)
   return False
 
-def check_for_cycles(root, direction):
+def check_for_cycles(root, direction, breakIfCycle):
   disc = {}
   low = {}
   stackMember = {}
   st = []
   disc[root] = -1
   results = set()
-  cycle = has_cycle(0, root, low, disc, stackMember, st, direction, results)
+  cycle = has_cycle(0, root, low, disc, stackMember, st, direction, results, breakIfCycle)
   if cycle:
   	return None
   else:
