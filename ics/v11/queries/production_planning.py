@@ -9,17 +9,25 @@ from datetime import datetime
 
 def get_conversion_map(base_process_type, base_product_type):
 	conversion_map = {}
-	# sample the 5 most recent tasks
+	# sample the 10 most recent tasks
 	tasks = Task.objects.filter(
 		process_type=base_process_type,
 		product_type=base_product_type
-	).order_by('-created_at')[:5]
-
+	).order_by('-created_at')[:10]
+	checking_task = 0
 	# The more tasks you sample, the more robust and accurate your conversion map will be. However, it can take a while
 	# to get all the ancestors of a task.
 	for task in tasks:
+		# once 5 tasks have been sampled, break
+		if checking_task > 5:
+			break
 		print('sampling task {}'.format(task.id))
-		ancestors = task.ancestors() | Task.objects.filter(pk=task.pk)
+		ancestors = task.ancestors(True)
+		if ancestors == None:
+			# skipping task due to cycle
+			continue
+		checking_task += 1
+		ancestors = ancestors | Task.objects.filter(pk=task.pk)
 		for a in ancestors:
 			# get all the children of ancestors who are also ancestors themselves
 			children = ancestors.filter(inputs__input_item__creating_task=a)
