@@ -42,13 +42,13 @@ def tasks(query_params):
 	if parent is not None:
 		queryset = Task.objects.get(pk=parent).descendants()
 		if queryset == None:
-			raise APIException("There was a problem!")
+			raise APIException("Descendants contains cycles. Could not calculate.")
 
 	child = query_params.get('child', None)
 	if child is not None:
 		queryset = Task.objects.get(pk=child).ancestors()
 		if queryset == None:
-			raise APIException("There was a problem!")
+			raise APIException("Ancestors contains cycles. Could not calculate.")
 
 	inv = query_params.get('team_inventory', None)
 	if inv is not None:
