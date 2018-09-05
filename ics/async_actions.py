@@ -18,10 +18,12 @@ def update_task_descendents_flag_number(**kwargs):
 	tasks = Task.objects.filter(**kwargs).distinct()
 	for task in tasks:
 		if (task.was_flag_changed):
-			if (task.is_flagged):
-				task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') + 1)
-			else:
-				task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') - 1)
+			desc = task.descendants()
+			if desc != None:
+				if (task.is_flagged):
+					desc.update(num_flagged_ancestors=F('num_flagged_ancestors') + 1)
+				else:
+					desc.update(num_flagged_ancestors=F('num_flagged_ancestors') - 1)
 
 
 # this gets called from a signal that only is triggered once so it's incrementing by 2 to keep pace
@@ -29,7 +31,9 @@ def update_task_descendents_flag_number(**kwargs):
 def unflag_task_descendants(**kwargs):
 	tasks = Task.objects.filter(**kwargs).distinct()
 	for task in tasks:
-		task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
+		desc = task.descendants()
+		if desc != None:
+			desc.update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
 
 
 @task

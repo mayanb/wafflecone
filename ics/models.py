@@ -11,6 +11,7 @@ from django.utils import timezone
 import pytz
 from django.db.models.expressions import RawSQL
 from django.db.models import F
+from django.contrib.postgres.aggregates import ArrayAgg
 # from ics.async_actions import *
 
 
@@ -387,7 +388,11 @@ class Task(models.Model):
 
 	
 	def descendants(self):
-		return Task.objects.filter(id__in=self.descendants_raw_query())
+		cycles = check_for_cycles(self.id, "descendants")
+		if cycles == None:
+			return None
+		else:
+			return Task.objects.filter(id__in=list(cycles))
 
 	def ancestors_raw_query(self):
 		return RawSQL("""WITH RECURSIVE descendants AS (
@@ -414,7 +419,71 @@ class Task(models.Model):
 
 
 	def ancestors(self):
-		return Task.objects.filter(id__in=self.ancestors_raw_query())
+		cycles = check_for_cycles(self.id, "ancestors")
+		if cycles == None:
+			return None
+		else:
+			return Task.objects.filter(id__in=list(cycles))
+
+
+def has_cycle(time, u, low, disc, stackMember, st, direction, results):
+  disc[u] = time
+  low[u] = time
+  time += 1
+  stackMember[u] = True
+  st.append(u)
+  if direction == "ancestors":
+  	matching_task = Task.objects.filter(pk=u).annotate(parent_list=ArrayAgg('inputs__input_item__creating_task__id'))
+  else:
+  	matching_task = Task.objects.filter(pk=u).annotate(children_list=ArrayAgg('items__inputs__task__id'))
+  if matching_task.count() > 0:
+    if direction == "ancestors":
+    	next_level_tasks = list(set(matching_task[0].parent_list))
+    else:
+    	next_level_tasks = list(set(matching_task[0].children_list))
+  else:
+    next_level_tasks = []
+  for v in next_level_tasks:
+    if v not in disc:
+      disc[v] = -1
+    if u not in low:
+      low[u] = -1
+    if v not in low:
+      low[v] = -1
+    if u not in disc:
+      disc[u] = -1
+    if v not in stackMember:
+      stackMember[v] = False
+    if disc[v] == -1:
+      has_cycle(time, v, low, disc, stackMember, st, direction, results)
+      low[u] = min(low[u], low[v])
+    elif stackMember[v] == True:
+      low[u] = min(low[u], disc[v])
+  w = -1
+  if low[u] == disc[u]:
+    count = 0
+    while w != u:
+      if count > 0:
+        return True
+      w = st.pop()
+      stackMember[w] = False
+      count += 1
+      results.add(w)
+  return False
+
+def check_for_cycles(root, direction):
+  disc = {}
+  low = {}
+  stackMember = {}
+  st = []
+  disc[root] = -1
+  results = set()
+  cycle = has_cycle(0, root, low, disc, stackMember, st, direction, results)
+  if cycle:
+  	return None
+  else:
+  	results.remove(root)
+  	return results
 
 class TaskFile(models.Model):
 	url = models.CharField(max_length=150, unique=True)
