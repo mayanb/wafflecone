@@ -3,6 +3,7 @@ from django.contrib.postgres.search import SearchQuery
 from ics.models import *
 import datetime
 import pytz
+from rest_framework.exceptions import APIException
 
 
 def filter_by_created_at_range(query_params, queryset):
@@ -39,11 +40,17 @@ def tasks(query_params):
 
 	parent = query_params.get('parent', None)
 	if parent is not None:
-		queryset = Task.objects.get(pk=parent).descendants()
+		# if you want it to raise an exception if there is a cycle instead, set the parameter to True
+		queryset = Task.objects.get(pk=parent).descendants(breakIfCycle=False)
+		if queryset == None:
+			raise APIException("Descendants contains cycles. Could not calculate.")
 
 	child = query_params.get('child', None)
 	if child is not None:
-		queryset = Task.objects.get(pk=child).ancestors()
+		# if you want it to raise an exception if there is a cycle instead, set the parameter to True
+		queryset = Task.objects.get(pk=child).ancestors(breakIfCycle=False)
+		if queryset == None:
+			raise APIException("Ancestors contains cycles. Could not calculate.")
 
 	inv = query_params.get('team_inventory', None)
 	if inv is not None:

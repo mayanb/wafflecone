@@ -282,9 +282,7 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
-    return tasks(self.request.query_params)\
-      .select_related('product_type', 'process_type')\
-      .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
+    return tasks(self.request.query_params)
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('team_inventory', None )
