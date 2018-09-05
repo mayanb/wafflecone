@@ -1086,6 +1086,12 @@ class InventoryList2(generics.ListAPIView):
       category_codes = category_types.strip().split(',')
       queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
 
+    tags = self.request.query_params.get('tags', None)
+    if tags is not None:
+      tag_names = tags.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__tags__name__in=tag_names) | \
+                 queryset.filter(creating_task__product_type__tags__name__in=tag_names)
+
     aggregate_products = self.request.query_params.get('aggregate_products', None)
 
     queryset_values = [
@@ -1124,11 +1130,6 @@ class InventoryList2Aggregate(generics.ListAPIView):
     # filter by team
     queryset = queryset.filter(team_inventory=team)
 
-    category_types = self.request.query_params.get('category_types', None)
-    if category_types is not None:
-      category_codes = category_types.strip().split(',')
-      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
-
     process_types = self.request.query_params.get('process_types', None)
     if process_types is not None:
       process_ids = process_types.strip().split(',')
@@ -1138,6 +1139,17 @@ class InventoryList2Aggregate(generics.ListAPIView):
     if product_types is not None:
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
+
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
+
+    tags = self.request.query_params.get('tags', None)
+    if tags is not None:
+      tag_names = tags.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__tags__name__in=tag_names) | \
+                 queryset.filter(creating_task__product_type__tags__name__in=tag_names)
 
     aggregate_products = self.request.query_params.get('aggregate_products', None)
 
