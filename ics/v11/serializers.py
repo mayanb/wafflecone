@@ -125,7 +125,7 @@ class EditTaskSerializer(serializers.ModelSerializer):
 	num_flagged_ancestors = serializers.IntegerField(read_only=True)
 	class Meta:
 		model = Task
-		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at')
+		fields = ('id', 'is_open', 'custom_display', 'is_trashed', 'is_flagged', 'num_flagged_ancestors', 'flag_update_time', 'display', 'process_type', 'product_type', 'created_at', 'cost', 'remaining_worth', 'cost_set_by_user')
 
 
 class DeleteTaskSerializer(serializers.ModelSerializer):
