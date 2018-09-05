@@ -362,30 +362,6 @@ class Task(models.Model):
 
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
-
-	def descendants_raw_query(self):
-		return RawSQL(""" WITH RECURSIVE descendants AS (
-	    (SELECT task.id, input.task_id as parent_id
-			FROM ics_task task
-		    JOIN ics_item item
-		      ON item.creating_task_id = task.id
-		    JOIN ics_input input
-		    ON  input.input_item_id = item.id 
-			WHERE task.id = %s AND task.is_trashed = false)
-		    UNION ALL
-		    SELECT ct.id, cin.task_id as parent_id
-		    FROM ics_task ct
-		    JOIN ics_item cit
-		      ON cit.creating_task_id = ct.id
-		    JOIN ics_input cin
-		      ON cin.input_item_id = cit.id
-		    JOIN descendants p ON p.parent_id = ct.id
-		    WHERE ct.is_trashed = false
-		  )
-		 SELECT distinct parent_id
-		 FROM descendants
-		 WHERE parent_id <> %s""", [str(self.id), str(self.id)])
-
 	
 	def descendants(self):
 		cycles = check_for_cycles(self.id, "descendants")
@@ -393,30 +369,6 @@ class Task(models.Model):
 			return None
 		else:
 			return Task.objects.filter(id__in=list(cycles))
-
-	def ancestors_raw_query(self):
-		return RawSQL("""WITH RECURSIVE descendants AS (
-			SELECT input.input_item_id as child_input_id, task.id as child_task_id
-			    FROM ics_input input
-			    JOIN ics_item item
-			    ON item.id = input.input_item_id
-			    JOIN ics_task task
-			     ON task.id = item.creating_task_id
-			    WHERE input.task_id = %s AND task.is_trashed = false
-			  UNION ALL
-			    SELECT cin.input_item_id as child_input_id, ct.id as child_task_id
-			    FROM ics_input cin
-			    JOIN ics_item cit
-			    ON cit.id = cin.input_item_id
-			    JOIN ics_task ct
-			     ON ct.id = cit.creating_task_id
-			    JOIN descendants d on d.child_task_id = cin.task_id
-			    WHERE ct.is_trashed = false
-			    )
-			SELECT distinct child_task_id
-			 FROM descendants
-			 WHERE child_task_id <> %s""", [str(self.id), str(self.id)])
-
 
 	def ancestors(self):
 		cycles = check_for_cycles(self.id, "ancestors")
