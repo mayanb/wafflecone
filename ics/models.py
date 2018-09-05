@@ -11,6 +11,7 @@ from django.utils import timezone
 import pytz
 from django.db.models.expressions import RawSQL
 from django.db.models import F
+from django.contrib.postgres.aggregates import ArrayAgg
 # from ics.async_actions import *
 
 
@@ -361,60 +362,83 @@ class Task(models.Model):
 
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
-
-	def descendants_raw_query(self):
-		return RawSQL(""" WITH RECURSIVE descendants AS (
-	    (SELECT task.id, input.task_id as parent_id
-			FROM ics_task task
-		    JOIN ics_item item
-		      ON item.creating_task_id = task.id
-		    JOIN ics_input input
-		    ON  input.input_item_id = item.id 
-			WHERE task.id = %s AND task.is_trashed = false)
-		    UNION ALL
-		    SELECT ct.id, cin.task_id as parent_id
-		    FROM ics_task ct
-		    JOIN ics_item cit
-		      ON cit.creating_task_id = ct.id
-		    JOIN ics_input cin
-		      ON cin.input_item_id = cit.id
-		    JOIN descendants p ON p.parent_id = ct.id
-		    WHERE ct.is_trashed = false
-		  )
-		 SELECT distinct parent_id
-		 FROM descendants
-		 WHERE parent_id <> %s""", [str(self.id), str(self.id)])
-
 	
-	def descendants(self):
-		return Task.objects.filter(id__in=self.descendants_raw_query())
+	def descendants(self, breakIfCycle):
+		# breakIfCycle = False
+		cycles = check_for_cycles(self.id, "descendants", breakIfCycle)
+		if cycles == None:
+			return None
+		else:
+			return Task.objects.filter(id__in=list(cycles), is_trashed=False).order_by('created_at')
 
-	def ancestors_raw_query(self):
-		return RawSQL("""WITH RECURSIVE descendants AS (
-			SELECT input.input_item_id as child_input_id, task.id as child_task_id
-			    FROM ics_input input
-			    JOIN ics_item item
-			    ON item.id = input.input_item_id
-			    JOIN ics_task task
-			     ON task.id = item.creating_task_id
-			    WHERE input.task_id = %s AND task.is_trashed = false
-			  UNION ALL
-			    SELECT cin.input_item_id as child_input_id, ct.id as child_task_id
-			    FROM ics_input cin
-			    JOIN ics_item cit
-			    ON cit.id = cin.input_item_id
-			    JOIN ics_task ct
-			     ON ct.id = cit.creating_task_id
-			    JOIN descendants d on d.child_task_id = cin.task_id
-			    WHERE ct.is_trashed = false
-			    )
-			SELECT distinct child_task_id
-			 FROM descendants
-			 WHERE child_task_id <> %s""", [str(self.id), str(self.id)])
+	def ancestors(self, breakIfCycle):
+		# breakIfCycle = False
+		cycles = check_for_cycles(self.id, "ancestors", breakIfCycle)
+		if cycles == None:
+			return None
+		else:
+			return Task.objects.filter(id__in=list(cycles), is_trashed=False).order_by('created_at')
 
+# modified from tarjan's strongly connected components algorithm
+# see https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/ for explanation
+def has_cycle(time, u, low, disc, stackMember, st, direction, results, breakIfCycle):
+  disc[u] = time
+  low[u] = time
+  time += 1
+  stackMember[u] = True
+  st.append(u)
+  if direction == "ancestors":
+  	matching_task = Task.objects.filter(pk=u).annotate(parent_list=ArrayAgg('inputs__input_item__creating_task__id'))
+  else:
+  	matching_task = Task.objects.filter(pk=u).annotate(children_list=ArrayAgg('items__inputs__task__id'))
+  if matching_task.count() > 0:
+    if direction == "ancestors":
+    	next_level_tasks = list(set(matching_task[0].parent_list))
+    else:
+    	next_level_tasks = list(set(matching_task[0].children_list))
+  else:
+    next_level_tasks = []
+  for v in next_level_tasks:
+    if v not in disc:
+      disc[v] = -1
+    if u not in low:
+      low[u] = -1
+    if v not in low:
+      low[v] = -1
+    if u not in disc:
+      disc[u] = -1
+    if v not in stackMember:
+      stackMember[v] = False
+    if disc[v] == -1:
+      has_cycle(time, v, low, disc, stackMember, st, direction, results, breakIfCycle)
+      low[u] = min(low[u], low[v])
+    elif stackMember[v] == True:
+      low[u] = min(low[u], disc[v])
+  w = -1
+  if low[u] == disc[u]:
+    count = 0
+    while w != u:
+      if count > 0 and breakIfCycle:
+        return True
+      w = st.pop()
+      stackMember[w] = False
+      count += 1
+      results.add(w)
+  return False
 
-	def ancestors(self):
-		return Task.objects.filter(id__in=self.ancestors_raw_query())
+def check_for_cycles(root, direction, breakIfCycle):
+  disc = {}
+  low = {}
+  stackMember = {}
+  st = []
+  disc[root] = -1
+  results = set()
+  cycle = has_cycle(0, root, low, disc, stackMember, st, direction, results, breakIfCycle)
+  if cycle:
+  	return None
+  else:
+  	results.remove(root)
+  	return results
 
 class TaskFile(models.Model):
 	url = models.CharField(max_length=150, unique=True)
