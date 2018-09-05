@@ -8,6 +8,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
+from ics.v11.queries.tags import *
 from ics.v11.queries.tasks import *
 from ics.v11.queries.processes_and_products import *
 import datetime
@@ -465,35 +466,7 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
   serializer_class = ProcessTypeWithUserSerializer
 
   def patch(self, request, *args, **kwargs):
-    pk = kwargs['pk']
-    team_id = request.data.get('team', None)
-    tagsData = request.data.get('tags', None)
-
-    # create a dict of the existing tags for this process_type that will be used to mark tags for removal
-    allProcessTags = Tag.objects.filter(team_id=team_id, process_types=pk).values()
-    tagsToRemove = {}
-    for t in allProcessTags:
-      name = t['name']
-      tagsToRemove[name] = True
-
-    # Add tags to database or update existing tags
-    for tagData in tagsData:
-      tag, created = Tag.objects.update_or_create(team_id=team_id, name=tagData['name'])
-
-      # If tag is in tagsData then mark it to not be removed
-      if tag.name in tagsToRemove:
-        tagsToRemove[tag.name] = False
-
-      # If the tag was just created or it does not exist for this process type, add the process_type to its tag
-      if created or not tag.process_types.filter(pk=pk).exists():
-        tag.process_types.add(pk)
-
-    # remove tags
-    for key in tagsToRemove:
-      if tagsToRemove[key]:
-        tagToRemove = Tag.objects.get(team_id=team_id, name=key)
-        tagToRemove.process_types.remove(pk)
-
+    patchTags(request, *args, patchType='process', **kwargs)
     return super(ProcessDetail, self).patch(request, *args, **kwargs)
 
 
@@ -783,6 +756,10 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)\
     .select_related('created_by')
   serializer_class = ProductTypeWithUserSerializer
+
+  def patch(self, request, *args, **kwargs):
+    patchTags(request, *args, patchType='product', **kwargs)
+    return super(ProductDetail, self).patch(request, *args, **kwargs)
 
 
 

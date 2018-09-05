@@ -92,6 +92,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+	tags = BasicTagSerializer(many=True, read_only=True)
 
 	def get_username(self, product):
 		username = product.created_by.username
@@ -99,13 +100,15 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search', 'tags')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
+	tags = BasicTagSerializer(many=True, read_only=True)
+
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description', 'search')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description', 'search', 'tags')
 
 
 class ProductCodeSerializer(serializers.ModelSerializer):
