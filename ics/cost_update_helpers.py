@@ -173,7 +173,7 @@ def parent_has_capacity_to_receive_returned_value(change_in_amount_child_uses, p
 
 
 def update_cost_and_remaining_worth_of_child(child, tasks, new_difference, parent_remaining_worth):
-	new_difference = new_difference if new_difference <= parent_remaining_worth else parent_remaining_worth
+	new_difference = min(new_difference, parent_remaining_worth)
 	tasks[child]['remaining_worth'] = add_dollar_values(tasks[child]['remaining_worth'], new_difference)
 	tasks[child]['cost'] = add_dollar_values(tasks[child]['cost'], new_difference)
 	Task.objects.filter(pk=child).update(cost=tasks[child]['cost'], remaining_worth=tasks[child]['remaining_worth'])
@@ -190,14 +190,10 @@ def update_remaining_worth_of_parent(task, tasks, new_difference):
 def add_dollar_values(curr_value, new_difference_to_add, upper_limit=None):
 	print('curr_value', curr_value, 'new_difference_to_add', new_difference_to_add, 'upper_limit', upper_limit)
 	new_dollar_value = float(curr_value or 0) + float(new_difference_to_add)
-	result = zero_or_greater(new_dollar_value)
+	result = max(new_dollar_value, 0)
 	if upper_limit is not None:
-		result = result if result <= upper_limit else upper_limit
+		result = min(result, upper_limit)
 	return result
-
-
-def zero_or_greater(number):
-	return number if number >= 0 else 0
 
 
 # function to recursively propagate data
