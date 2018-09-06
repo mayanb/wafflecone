@@ -27,4 +27,8 @@ def filter_results(queryset, query_params):
 	f = query_params.get('filter', None)
 	if f is not None:
 		queryset = queryset.filter(Q(search=SearchQuery(f)) | Q(name__icontains=f) | Q(code__icontains=f))
+
+	process = query_params.get('process', None)
+	if process is not None:
+		queryset = queryset.filter(task__process_type=process)
 	return queryset

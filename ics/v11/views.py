@@ -1,6 +1,10 @@
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.db.models.functions import Coalesce, Concat
+from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db.models.functions import Coalesce, Concat
+from django.http import HttpResponse, HttpResponseForbidden, QueryDict
+from django.utils import timezone
 from ics.v11.calculated_fields_serializers import *
 from rest_framework import generics
 import django_filters
@@ -10,17 +14,16 @@ from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
 from ics.v11.queries.tasks import *
 from ics.v11.queries.processes_and_products import *
-import datetime
-from django.http import HttpResponse, HttpResponseForbidden
+from ics.v11.queries.production_planning import *
+from ics.v11.queries.inventory import inventory_amounts
+from datetime import datetime, timedelta
 import pytz
 from ics import constants
 import json
-from rest_framework.decorators import api_view
-from ics.v11.queries.inventory import inventory_amounts
-from django.conf import settings
 import uuid
 import boto3
 import os
+from decimal import *
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -282,9 +285,7 @@ class TaskList(generics.ListAPIView):
   #pagination_class = SmallPagination
 
   def get_queryset(self):
-    return tasks(self.request.query_params)\
-      .select_related('product_type', 'process_type')\
-      .prefetch_related('task_ingredients', 'attribute_values', 'items', 'inputs')
+    return tasks(self.request.query_params)
 
   def get_serializer_context(self):
     inv = self.request.query_params.get('team_inventory', None )
@@ -592,6 +593,23 @@ class InventoryDetail(generics.ListAPIView):
 
 
 
+#############################
+# PRODUCTION PLANNING VIEWS #
+#############################
+
+# production-planning/
+class ProductionPlanning(generics.ListAPIView):
+  serializer_class = ProductionPlanningSerializer
+
+  def get_queryset(self):
+    # get process and product type as an int instead of unicode
+    selected_process_type = int(self.request.query_params.get('process', None))
+    selected_product_type = int(self.request.query_params.get('product', None))
+    conversion_map = get_conversion_map(selected_process_type, selected_product_type)
+    return get_queryset_info(conversion_map, (selected_process_type, selected_product_type))
+
+
+
 ##################
 # ACTIVITY VIEWS #
 ##################
@@ -665,7 +683,7 @@ class ActivityListDetail(generics.ListAPIView):
   serializer_class = ActivityListDetailSerializer
 
   def get_queryset(self):
-    dt = datetime.datetime
+    dt = datetime
     queryset = Task.objects.filter(is_trashed=False)
 
     team = self.request.query_params.get('team', None)
@@ -795,7 +813,7 @@ class GetRecentlyFlaggedTasks(generics.ListAPIView):
   def get_queryset(self):
     queryset = Task.objects.filter(is_flagged=True)
     team = self.request.query_params.get('team', None)
-    dt = datetime.datetime
+    dt = datetime
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
 
@@ -815,7 +833,7 @@ class GetRecentlyUnflaggedTasks(generics.ListAPIView):
   def get_queryset(self):
     queryset = Task.objects.filter(is_flagged=False)
     team = self.request.query_params.get('team', None)
-    dt = datetime.datetime
+    dt = datetime
     if team is not None:
       queryset = queryset.filter(process_type__team_created_by=team)
 
@@ -850,7 +868,7 @@ class GetIncompleteGoals(generics.ListAPIView):
     # get the goals that are either not trashed and were created before the start time
     # are trashed and were created before the start time and trashed after the end time
     # that were not fulfilled during that time period
-    dt = datetime.datetime
+    dt = datetime
     base = dt.utcnow() - timedelta(days=7)
 
     start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
@@ -889,7 +907,7 @@ class GetRecentAnomolousInputs(generics.ListAPIView):
   def get_queryset(self):
     queryset = Input.objects.filter(task__is_trashed=False, input_item__creating_task__is_trashed=False)
     team = self.request.query_params.get('team', None)
-    dt = datetime.datetime
+    dt = datetime
     if team is not None:
       queryset = queryset.filter(task__process_type__team_created_by=team)
 
@@ -924,7 +942,7 @@ class GetCompleteGoals(generics.ListAPIView):
     queryset = queryset.filter(timerange='w')
 
     complete_goals = []
-    dt = datetime.datetime
+    dt = datetime
     base = dt.utcnow() - timedelta(days=7)
 
     start = dt.combine(base - timedelta(days=base.weekday()), dt.min.time())
@@ -973,7 +991,7 @@ class AlertList(generics.ListAPIView):
     if userprofile is not None:
       queryset = queryset.filter(userprofile=userprofile)
 
-    dt = datetime.datetime
+    dt = datetime
 
     endDate = dt.today() + timedelta(days=1)
     startDate = dt.today() - timedelta(days=1)

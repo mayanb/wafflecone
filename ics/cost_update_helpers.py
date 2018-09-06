@@ -284,8 +284,11 @@ def descendant_ingredient_details(updated_task_descendants, tasks):
 
 
 def get_non_trashed_descendants(task, include_even_if_deleted=-1):
-	descendants = Task.descendants(task)
-	return descendants.filter(Q(is_trashed=False) | Q(id=include_even_if_deleted))
+	desc = Task.objects.get(pk=task).descendants(breakIfCycle=True)
+	if desc is None:
+		return Task.objects.none()
+	else:
+		return desc.union(Task.objects.filter(pk=include_even_if_deleted))
 
 
 # BATCH SIZE UPDATE HELPERS
@@ -344,7 +347,7 @@ def update_creating_task_and_all_its_children(
 				input_deleted,
 				input_added,
 				creating_task_of_changed_input=-1):
-	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=parent_task)[0], include_even_if_deleted=updated_task)
+	updated_task_descendants = get_non_trashed_descendants(parent_task, include_even_if_deleted=updated_task)
 	tasks = task_details(updated_task_descendants)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
 	cost = tasks[parent_task]['cost']

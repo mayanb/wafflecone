@@ -18,10 +18,12 @@ def update_task_descendents_flag_number(**kwargs):
 	tasks = Task.objects.filter(**kwargs).distinct()
 	for task in tasks:
 		if (task.was_flag_changed):
-			if (task.is_flagged):
-				task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') + 1)
-			else:
-				task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') - 1)
+			desc = task.descendants(breakIfCycle=False)
+			if desc != None:
+				if (task.is_flagged):
+					desc.update(num_flagged_ancestors=F('num_flagged_ancestors') + 1)
+				else:
+					desc.update(num_flagged_ancestors=F('num_flagged_ancestors') - 1)
 
 
 # this gets called from a signal that only is triggered once so it's incrementing by 2 to keep pace
@@ -29,7 +31,9 @@ def update_task_descendents_flag_number(**kwargs):
 def unflag_task_descendants(**kwargs):
 	tasks = Task.objects.filter(**kwargs).distinct()
 	for task in tasks:
-		task.descendants().update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
+		desc = task.descendants(breakIfCycle=False)
+		if desc != None:
+			desc.update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
 
 
 # This is nearly identical to ingredient_amount_update(), except with special flags to handle
@@ -85,7 +89,7 @@ def ingredient_amount_update(**kwargs):
 @task
 def batch_size_update(**kwargs):
 	updated_task = kwargs['pk']
-	updated_task_descendants = get_non_trashed_descendants(Task.objects.filter(pk=updated_task)[0])
+	updated_task_descendants = get_non_trashed_descendants(updated_task)
 	if updated_task_descendants.count() == 0:
 		return
 
