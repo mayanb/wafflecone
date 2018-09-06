@@ -286,23 +286,7 @@ def get_non_trashed_descendants(task, include_even_if_deleted=-1):
 		return desc.union(Task.objects.filter(pk=include_even_if_deleted))
 
 
-# BATCH SIZE UPDATE HELPERS
-
-def get_prev_and_new_unit_costs(task, kwargs):
-	new_batch_size = float(task['batch_size'])
-	amount_diff = kwargs['new_amount'] - kwargs['previous_amount']
-	old_batch_size = new_batch_size - amount_diff
-	cost = task['cost']
-	prev_unit_cost = get_unit_cost(cost, old_batch_size)
-	new_unit_cost = get_unit_cost(cost, new_batch_size)
-	print('prev_unit_cost, new_unit_cost')
-	print(prev_unit_cost, new_unit_cost)
-	return prev_unit_cost, new_unit_cost
-
-
 def get_unit_cost(cost, batch_size):
-	print('cost, batch_size')
-	print(cost, batch_size)
 	return float(cost) / float(batch_size)
 
 

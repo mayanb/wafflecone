@@ -88,17 +88,24 @@ def ingredient_amount_update(**kwargs):
 
 @task
 def batch_size_update(**kwargs):
-	updated_task = kwargs['pk']
-	updated_task_descendants = get_non_trashed_descendants(updated_task)
+	updated_task_id = kwargs['pk']
+	updated_task_descendants = get_non_trashed_descendants(updated_task_id)
 	if updated_task_descendants.count() == 0:
 		return
 
 	tasks = task_details(updated_task_descendants)
+	updated_task = tasks[updated_task_id]
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	prev_unit_cost, new_unit_cost = get_prev_and_new_unit_costs(tasks[updated_task], kwargs)
-	parent_previous_batch_size = float(kwargs['previous_amount'])
-	parent_new_batch_size = float(kwargs['new_amount'])
-	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size)
+
+	change_in_item_amount = kwargs['change_in_item_amount']
+	new_batch_size = float(updated_task['batch_size'])
+	previous_batch_size = new_batch_size - change_in_item_amount
+
+	cost = task['cost']
+	prev_unit_cost = get_unit_cost(cost, previous_batch_size)
+	new_unit_cost = get_unit_cost(cost, new_batch_size)
+
+	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, previous_batch_size, new_batch_size)
 
 
 @task

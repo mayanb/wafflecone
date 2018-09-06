@@ -64,12 +64,13 @@ def item_changed(sender, instance, **kwargs):
 
 	# No costs to update if amount hasn't changed.
 	previous_amount = instance.tracker.previous('amount')
-	if previous_amount == instance.amount:
+	new_amount = instance.amount
+	if previous_amount == new_amount:
 		return
 	# Don't update costs twice on create and save
 	if 'created' in kwargs and kwargs['created']:
 		return
-	kwargs3 = {'pk': instance.creating_task.id, 'new_amount': float(instance.amount), 'previous_amount': float(previous_amount)}
+	kwargs3 = {'pk': instance.creating_task.id, 'change_in_item_amount': float(new_amount) - float(previous_amount)}
 	batch_size_update(**kwargs3)
 
 
