@@ -102,6 +102,21 @@ def batch_size_update(**kwargs):
 
 
 @task
+def task_cost_update(updated_task_id, previous_cost, new_cost):
+	# Include updated_task in descendants for later use (not because it's deleted), e.g. its children, cost etc
+	updated_task_descendants = get_non_trashed_descendants(updated_task_id, include_even_if_deleted=updated_task_id)
+	if updated_task_descendants.count() == 0:
+		return
+
+	tasks = task_details(updated_task_descendants)
+	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
+	batch_size = float(tasks[updated_task_id]['batch_size'])
+	prev_unit_cost = get_unit_cost(previous_cost, batch_size)
+	new_unit_cost = get_unit_cost(new_cost, batch_size)
+	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients, batch_size, batch_size)
+
+
+@task
 def task_deleted_update_cost(deleted_task_id):
 	task_ingredients = TaskIngredient.objects.filter(task=deleted_task_id).annotate(batch_size=Coalesce(Sum('task__items__amount'), 0)) \
 		.values('actual_amount', 'ingredient__process_type__id', 'ingredient__product_type__id')

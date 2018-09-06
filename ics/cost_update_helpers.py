@@ -216,7 +216,7 @@ def rec_cost(parent, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, v
 
 # Fetch parents and children related tasks. Don't filter out trashed tasks, since we may be updating cost
 # for a newly deleted task, and we've already carefully filtered out unwanted tasks from updated_task_descendants.
-def task_details(updated_task_descendants):
+def task_details(updated_task_descendants, include_even_if_deleted=-1):
 	# contains task ids of descendants and ids of parents of descendants
 	related_tasks = set()
 	for task in list(updated_task_descendants):
@@ -228,7 +228,7 @@ def task_details(updated_task_descendants):
 	for parent in parents:
 		related_tasks = related_tasks.union(parent.task_parent_ids)
 
-	trashed_task_ids_set = get_trashed_task_ids_set()
+	trashed_task_ids_set = get_trashed_task_ids_set(exclude_even_if_deleted=include_even_if_deleted)
 
 	related_tasks_batch_size = Task.objects.filter(pk__in=related_tasks).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
@@ -252,8 +252,8 @@ def task_details(updated_task_descendants):
 
 
 #  Not a scalable solution, but even if we doubled our task count we'd likely still have only 3k deleted tasks
-def get_trashed_task_ids_set():
-	return set(Task.objects.filter(is_trashed=True).values_list('pk', flat=True))
+def get_trashed_task_ids_set(exclude_even_if_deleted=-1):
+	return set(Task.objects.filter(is_trashed=True).exclude(pk=exclude_even_if_deleted).values_list('pk', flat=True))
 
 
 # returns ingredient used by each descendant
@@ -348,7 +348,7 @@ def update_creating_task_and_all_its_children(
 				input_added,
 				creating_task_of_changed_input=-1):
 	updated_task_descendants = get_non_trashed_descendants(parent_task, include_even_if_deleted=updated_task)
-	tasks = task_details(updated_task_descendants)
+	tasks = task_details(updated_task_descendants, include_even_if_deleted=updated_task)
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
 	cost = tasks[parent_task]['cost']
 	unit_cost = get_unit_cost(cost, creating_task_batch_size)

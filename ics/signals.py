@@ -20,6 +20,7 @@ def taskattribute_changed(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.task.id }
 	update_task_search_vector(**kwargs)
 
+
 @receiver(post_save, sender=Task)
 def task_changed(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.id }
@@ -28,15 +29,25 @@ def task_changed(sender, instance, **kwargs):
 	#Don't create duplicate alerts after updating task search field
 	if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
 		check_flagged_tasks_alerts(**kwargs)
+	# >>> Handle Deleted Task
+	previously_was_trashed = instance.tracker.previous('is_trashed')
+	if previously_was_trashed is None:
+		return  # This is a newly created task, yet to be saved to the DB. There's no cost to update from it.
 
-
-@receiver(pre_save, sender=Task)
-def task_changed_pre_save(sender, instance, **kwargs):
-	task_qs = Task.objects.filter(pk=instance.id)
-	task_in_db = task_qs.count() and task_qs[0]
-	previously_was_not_trashed = not task_in_db or not task_in_db.is_trashed
-	if instance.is_trashed and previously_was_not_trashed:
+	task_was_trashed = instance.is_trashed and not previously_was_trashed
+	if task_was_trashed:
 		task_deleted_update_cost(instance.id)
+		return
+	# >>> Handle new cost_set_by_user for Task
+	previous_cost = instance.tracker.previous('cost')
+	previous_cost_set_by_user = instance.tracker.previous('cost_set_by_user')
+	new_cost_set_by_user = instance.cost_set_by_user
+	# Verify that A) user actually changed cost and B) change in cost_set_by_user actually deviates from the previous cost
+	user_changed_cost = new_cost_set_by_user != previous_cost_set_by_user and new_cost_set_by_user != previous_cost
+	if user_changed_cost:
+		change_in_remaining_worth = new_cost_set_by_user - previous_cost
+		# Task.objects.filter(pk=instance.id).update(remaining_worth=F('remaining_worth') + change_in_remaining_worth)
+		task_cost_update(instance.id, previous_cost, new_cost_set_by_user)
 
 
 @receiver(post_delete, sender=Task)
