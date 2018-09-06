@@ -67,8 +67,7 @@ def update_children_after_batch_size_or_child_ingredient_amount_change(
 
 		if direct_child in tasks:
 			print('recurse with:', direct_child)
-			visited = {}  # handles tasks with circular dependencies
-			rec_cost(direct_child, child_prev_unit_cost, child_new_unit_cost, tasks, visited, descendant_ingredients)
+			rec_cost(direct_child, child_prev_unit_cost, child_new_unit_cost, tasks, descendant_ingredients)
 
 
 def get_adjusted_num_parents(parent_obj, child_id, descendant_ingredients, is_a_new_input=False, is_a_deleted_input=False, previous=False):
@@ -205,13 +204,12 @@ def zero_or_greater(number):
 
 
 # function to recursively propagate data
-def rec_cost(parent, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, visited, descendant_ingredients):
+def rec_cost(parent, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, descendant_ingredients):
 	for child in tasks[parent]['children']:
-		if child is not None and child not in visited:
-			visited[child] = child
+		if child is not None:
 			prev_unit_cost_of_child, new_unit_cost_of_child = update_cost(parent, child, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, descendant_ingredients)
 			if child in tasks:
-				rec_cost(child, prev_unit_cost_of_child, new_unit_cost_of_child, tasks, visited, descendant_ingredients)
+				rec_cost(child, prev_unit_cost_of_child, new_unit_cost_of_child, tasks, descendant_ingredients)
 
 
 # Fetch parents and children related tasks. Don't filter out trashed tasks, since we may be updating cost
