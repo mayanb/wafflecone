@@ -25,17 +25,14 @@ def update_children_after_batch_size_or_child_ingredient_amount_change(
 				input_added=False,
 				creating_task_of_changed_input=-1):
 
-	parent = tasks[parent_task]
-	parent_task_direct_children = parent['children']
-	direct_children_in_input_order = get_direct_children_in_input_order(parent_task, parent_task_direct_children)
-
 	is_changed_inputs_parent = parent_task == creating_task_of_changed_input
 	an_input_was_added_from_this_parent = is_changed_inputs_parent and input_added
 	an_input_was_deleted_from_this_parent = is_changed_inputs_parent and input_deleted
 	print('****** NEW PARENT: %d ********' % parent_task)
 	print('an_input_was_added_from_this_parent', an_input_was_added_from_this_parent, 'an_input_was_deleted_from_this_parent', an_input_was_deleted_from_this_parent)
+	parent = tasks[parent_task]
 	parent['remaining_worth'] = parent['cost']
-	for direct_child in direct_children_in_input_order:
+	for direct_child in parent['direct_children_in_input_order']:
 		print('____NEW DIRECT_CHILD: %d, PARENT: %d' % (direct_child, parent_task))
 		is_a_deleted_input = child_is_a_deleted_input(direct_child, child_with_changed_ingredient_amount, input_deleted)
 		is_a_new_input = child_is_a_new_input(direct_child, child_with_changed_ingredient_amount, input_added)
@@ -205,7 +202,7 @@ def zero_or_greater(number):
 
 # function to recursively propagate data
 def rec_cost(parent, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, descendant_ingredients):
-	for child in tasks[parent]['children']:
+	for child in tasks[parent]['direct_children_in_input_order']:
 		if child is not None:
 			prev_unit_cost_of_child, new_unit_cost_of_child = update_cost(parent, child, prev_unit_cost_of_parent, new_unit_cost_of_parent, tasks, descendant_ingredients)
 			if child in tasks:
@@ -236,13 +233,17 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 		ingredients=ArrayAgg('task_ingredients__ingredient'))
 	tasks = {}
 	for x in range(0, related_tasks_with_parents_children.count()):
-		tasks[related_tasks_with_parents_children[x].id] = {
-			'children': set(related_tasks_with_parents_children[x].children_list) - trashed_task_ids_set,
+		task = related_tasks_with_parents_children[x]
+		non_trashed_direct_children = set(task.children_list) - trashed_task_ids_set
+		direct_children_in_input_order = get_direct_children_in_input_order(task.id, non_trashed_direct_children)
+
+		tasks[task.id] = {
+			'direct_children_in_input_order': direct_children_in_input_order,
 			'process_type': related_tasks_batch_size[x].process_type_id,
-			'ingredients': set(related_tasks_with_parents_children[x].ingredients),
+			'ingredients': set(task.ingredients),
 			'product_type': related_tasks_batch_size[x].product_type_id,
 			'cost': related_tasks_batch_size[x].cost,
-			'parents': set(related_tasks_with_parents_children[x].task_parent_ids) - trashed_task_ids_set,
+			'parents': set(task.task_parent_ids) - trashed_task_ids_set,
 			'remaining_worth': related_tasks_batch_size[x].remaining_worth,
 			'batch_size': related_tasks_batch_size[x].batch_size
 		}
