@@ -101,26 +101,16 @@ def batch_size_update(**kwargs):
 	new_batch_size = float(updated_task['batch_size'])
 	previous_batch_size = new_batch_size - change_in_item_amount
 
-	cost = task['cost']
+	cost = tasks[updated_task_id]['cost']
 	prev_unit_cost = get_unit_cost(cost, previous_batch_size)
 	new_unit_cost = get_unit_cost(cost, new_batch_size)
 
-	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, previous_batch_size, new_batch_size)
+	update_parent_and_children_recursively(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients, previous_batch_size, new_batch_size)
 
 
 @task
 def task_cost_update(updated_task_id, previous_cost, new_cost):
-	# Include updated_task in descendants for later use (not because it's deleted), e.g. its children, cost etc
-	updated_task_descendants = get_non_trashed_descendants(updated_task_id, include_even_if_deleted=updated_task_id)
-	if updated_task_descendants.count() == 0:
-		return
-
-	tasks = task_details(updated_task_descendants)
-	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	batch_size = float(tasks[updated_task_id]['batch_size'])
-	prev_unit_cost = get_unit_cost(previous_cost, batch_size)
-	new_unit_cost = get_unit_cost(new_cost, batch_size)
-	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients, batch_size, batch_size)
+	execute_task_cost_update(updated_task_id, previous_cost, new_cost)
 
 
 @task
