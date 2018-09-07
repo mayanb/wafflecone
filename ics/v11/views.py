@@ -186,14 +186,6 @@ class TagList(generics.ListAPIView):
 
     return queryset
 
-class TagGet(generics.RetrieveAPIView):
-  queryset = Tag.objects.filter(is_trashed=False)
-  serializer_class = BasicTagSerializer
-
-class TagCreate(generics.CreateAPIView):
-  queryset = Tag.objects.filter(is_trashed=False)
-  serializer_class = BasicPinSerializer
-
 ######################
 # USER-RELATED VIEWS #
 ######################

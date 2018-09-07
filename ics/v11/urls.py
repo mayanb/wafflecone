@@ -88,8 +88,6 @@ urlpatterns = [
     url(r'^pins/edit/(?P<pk>[0-9]+)/$', views.PinRetrieveUpdateDestroy.as_view(), name='pin_edit'),
 
     url(r'^tags/$', views.TagList.as_view(), name='tags'),
-    url(r'^tags/(?P<pk>[0-9]+)/$', views.TagGet.as_view(), name='tags'),
-    url(r'^tags/create/$', views.TagCreate.as_view(), 'create_tag'),
 
     url(r'^alerts/$', views.AlertList.as_view()),
     url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),
