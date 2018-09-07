@@ -69,6 +69,11 @@ urlpatterns = [
     url(r'^inventory/detail/$', views.InventoryDetail.as_view()),
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
 
+    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
+    url(r'^inventories/aggregate/$', views.InventoryList2Aggregate.as_view(), name='inventories-aggregate'),
+
+    url(r'^production-planning/$', views.ProductionPlanning.as_view(), name='production_planning'),
+
     url(r'^activity/$', views.ActivityList.as_view(), name='activity_log'),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
 
@@ -99,9 +104,6 @@ urlpatterns = [
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
-
-    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
-    url(r'^inventories/aggregate/$', views.InventoryList2Aggregate.as_view(), name='inventories-aggregate'),
 
     url(r'^adjustment-history/$', views.AdjustmentHistory.as_view(), name='adjustment-history'),
 

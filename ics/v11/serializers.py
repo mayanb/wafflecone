@@ -11,7 +11,9 @@ from ics.utilities import *
 import operator
 import pytz
 import re
+from datetime import datetime, timedelta
 from ics.v11.queries.inventory import *
+from ics.v11.queries.production_planning import *
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from ics.constants import POSITIVE_SMALL_INTEGER_FIELD_MAX
 
@@ -371,6 +373,79 @@ class InventoryDetailSerializer(serializers.ModelSerializer):
 		fields = ('id', 'items', 'display')
 
 
+
+###################################
+# PRODUCTION PLANNING SERIALIZERS #
+###################################
+
+class ProductionPlanningSerializer(serializers.Serializer):
+	process_type = serializers.SerializerMethodField()
+	product_type = serializers.SerializerMethodField()
+	adjusted_amount = serializers.DecimalField(max_digits=10, decimal_places=3)
+	can_make = serializers.SerializerMethodField()
+	date_exhausted = serializers.SerializerMethodField()
+	warning = serializers.SerializerMethodField()
+
+	def get_process_type(self, item_summary):
+		process = ProcessType.objects.get(id=item_summary['process_type'])
+		return {
+			'id': process.id,
+			'name': process.name,
+			'code': process.code,
+			'unit': process.unit,
+			'icon': process.icon,
+			'category': process.category,
+		}
+
+	def get_product_type(self, item_summary):
+		product = ProductType.objects.get(id=item_summary['product_type'])
+		return {
+			'id': product.id,
+			'name': product.name,
+			'code': product.code,
+		}
+
+	def get_can_make(self, item_summary):
+		conversion_rate = item_summary['conversion_rate']
+		amount = item_summary['adjusted_amount']
+		if (amount < 0):
+			return 0
+		return amount * conversion_rate
+
+	def get_date_exhausted(self, item_summary):
+		if not item_summary['active_in_last_month']:
+			return None
+		# compute the rate of consumption
+		amount_used_per_second = item_summary['amount_used_per_second']
+		amount_remaining = float(item_summary['adjusted_amount'])
+
+		# calculate the date in the future in which the amount will be exhausted
+		if amount_used_per_second != 0:
+			secondsUntilExhaused = amount_remaining / amount_used_per_second
+		else:
+			secondsUntilExhaused = 0
+		delta = timedelta(seconds=secondsUntilExhaused)
+		futureDate = timezone.now() + delta
+		return futureDate
+
+	def get_warning(self, item_summary):
+		adjusted_amount = item_summary['adjusted_amount']
+		if adjusted_amount <= 0:
+			return True
+
+		dateExhausted = self.get_date_exhausted(item_summary)
+		if dateExhausted is None:
+			return False
+		if dateExhausted < timezone.now() + constants.THIRTY_DAYS:
+			return True
+		return False
+
+
+
+########################
+# ACTIVITY SERIALIZERS #
+########################
+
 class ActivityListSerializer(serializers.ModelSerializer):
 	process_type = serializers.SerializerMethodField()
 	product_types = serializers.SerializerMethodField()
@@ -625,6 +700,8 @@ class BasicGoalSerializer(serializers.ModelSerializer):
 			creating_task__created_at__range=(start, end),
 			is_virtual=False,
 		).aggregate(amount_sum=Sum('amount'))['amount_sum']
+
+
 
 	class Meta:
 		model = Goal
