@@ -87,7 +87,10 @@ def input_changed(sender, instance, created, **kwargs):
 def input_deleted_pre_delete(sender, instance, **kwargs):
 	kwargs2 = get_input_kwargs(instance)
 	if kwargs2:
-		input_update(**kwargs2)
+		# Don't update cost when a we're deleting all a task's inputs/outputs along with itself. We've already done that.
+		if source_and_target_of_input_are_not_trashed(instance):
+			print('SPECIAL INPUT UPDATE CALLED (we should nOT be deleting a task)')
+			input_update(**kwargs2)
 		update_task_ingredient_after_input_delete(instance)
 
 
@@ -193,3 +196,9 @@ def update_task_ingredient_for_new_input(new_input):
 		matching_task_ings.exclude(ingredient__recipe=None).update(actual_amount=F('scaled_amount'))
 		# if the task ingredient doesn't have a recipe, add the new input's amount to the actual_amount
 		matching_task_ings.filter(ingredient__recipe=None).update(actual_amount=F('actual_amount')+new_input.input_item.amount)
+
+
+def source_and_target_of_input_are_not_trashed(instance):
+	source_is_trashed = instance.input_item.creating_task.is_trashed
+	target_is_trashed = instance.task.is_trashed
+	return not (target_is_trashed or source_is_trashed)
