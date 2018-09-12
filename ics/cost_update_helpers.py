@@ -206,7 +206,7 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 	for parent in parents:
 		related_tasks = related_tasks.union(parent.task_parent_ids)
 
-	trashed_task_ids_set = get_trashed_task_ids_set(exclude_even_if_deleted=include_even_if_deleted)
+
 
 	related_tasks_batch_size = Task.objects.filter(pk__in=related_tasks).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0)).annotate(
@@ -216,25 +216,21 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 
 	tasks = {}
 	for task in related_tasks_batch_size:
-		non_trashed_direct_children = set(task.children_list) - trashed_task_ids_set
+		non_trashed_direct_children = set(list(Task.objects.filter(is_trashed=False, pk__in=task.children_list).values_list('pk', flat=True)))
 		direct_children_in_input_order = get_direct_children_in_input_order(task.id, non_trashed_direct_children)
+		parent_ids = task.task_parent_ids
+		non_trashed_parents = set(list(Task.objects.filter(is_trashed=False, pk__in=parent_ids).values_list('pk', flat=True)))
 		tasks[task.id] = {
 			'direct_children_in_input_order': direct_children_in_input_order,
 			'process_type': task.process_type_id,
 			'ingredients': set(task.ingredients),
 			'product_type': task.product_type_id,
 			'cost': task.cost,
-			'parents': set(task.task_parent_ids) - trashed_task_ids_set,
+			'parents': non_trashed_parents,
 			'remaining_worth': task.remaining_worth,
 			'batch_size': task.batch_size
 		}
 	return tasks
-
-
-#  Not a scalable solution, but even if we doubled our task count we'd likely still have only 3k deleted tasks
-def get_trashed_task_ids_set(exclude_even_if_deleted=-1):
-	return set(Task.objects.filter(is_trashed=True).exclude(pk=exclude_even_if_deleted).values_list('pk', flat=True))
-
 
 # returns ingredient used by each descendant
 def descendant_ingredient_details(updated_task_descendants, tasks):
@@ -381,11 +377,6 @@ def update_parents_for_ingredient_and_their_children(updated_task_id, old_amount
 			input_added=input_added,
 			creating_task_of_changed_input=creating_task_of_changed_input,
 		)
-
-
-def remove_trashed_tasks(task_ids, trashed_task_ids_set):
-	return list(set(task_ids) - trashed_task_ids_set)
-
 
 # DELETE TASK HELPERS
 
