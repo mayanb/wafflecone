@@ -12,7 +12,6 @@ def execute_task_cost_update(updated_task_id, previous_cost, new_cost, tasks=Non
 		_updated_task_descendants = get_non_trashed_descendants(updated_task_id, include_even_if_deleted=updated_task_id)
 		if _updated_task_descendants.count() == 0:
 			return
-
 		tasks = task_details(_updated_task_descendants)
 		descendant_ingredients = descendant_ingredient_details(_updated_task_descendants, tasks)
 
@@ -210,26 +209,24 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 	trashed_task_ids_set = get_trashed_task_ids_set(exclude_even_if_deleted=include_even_if_deleted)
 
 	related_tasks_batch_size = Task.objects.filter(pk__in=related_tasks).annotate(
-		batch_size=Coalesce(Sum('items__amount'), 0))
-	related_tasks_with_parents_children = Task.objects.filter(pk__in=related_tasks).annotate(
+		batch_size=Coalesce(Sum('items__amount'), 0)).annotate(
 		children_list=ArrayAgg('items__inputs__task'),
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'),
-		ingredients=ArrayAgg('task_ingredients__ingredient'))
+		ingredients=ArrayAgg('task_ingredients__ingredient')).order_by('id')
+
 	tasks = {}
-	for x in range(0, related_tasks_with_parents_children.count()):
-		task = related_tasks_with_parents_children[x]
+	for task in related_tasks_batch_size:
 		non_trashed_direct_children = set(task.children_list) - trashed_task_ids_set
 		direct_children_in_input_order = get_direct_children_in_input_order(task.id, non_trashed_direct_children)
-
 		tasks[task.id] = {
 			'direct_children_in_input_order': direct_children_in_input_order,
-			'process_type': related_tasks_batch_size[x].process_type_id,
+			'process_type': task.process_type_id,
 			'ingredients': set(task.ingredients),
-			'product_type': related_tasks_batch_size[x].product_type_id,
-			'cost': related_tasks_batch_size[x].cost,
+			'product_type': task.product_type_id,
+			'cost': task.cost,
 			'parents': set(task.task_parent_ids) - trashed_task_ids_set,
-			'remaining_worth': related_tasks_batch_size[x].remaining_worth,
-			'batch_size': related_tasks_batch_size[x].batch_size
+			'remaining_worth': task.remaining_worth,
+			'batch_size': task.batch_size
 		}
 	return tasks
 
