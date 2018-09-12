@@ -252,6 +252,13 @@ class DeleteTask(generics.UpdateAPIView):
   serializer_class = DeleteTaskSerializer
 
 
+class CheckIfGraphHasCycles(APIView):
+  def get(self, request):
+    task = request.query_params.get('task', '')
+    graph_has_cycles = check_for_cycles(task, 'ancestors', breakIfCycle=True) is None or check_for_cycles(task, 'descendants', breakIfCycle=True) is None
+    return Response({'graph_has_cycles': graph_has_cycles})
+
+
 # tasks/search/?label=[str]
 class TaskSearch(generics.ListAPIView):
   serializer_class = NestedTaskSerializer
