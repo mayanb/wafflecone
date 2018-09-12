@@ -129,3 +129,5 @@ def task_deleted_update_cost(deleted_task_id):
 			input_deleted=True,
 			child_task_is_being_deleted_entirely=True,  # Flag signals removal of ALL parents as inputs to deleted_task
 		)
+
+	delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id)
