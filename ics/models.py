@@ -261,6 +261,7 @@ class Task(models.Model):
 	flag_update_time = models.DateTimeField(default='2017-01-01 23:25:26.835087+00:00')
 	old_is_flagged = models.BooleanField(default=False)
 	was_flag_changed = models.BooleanField(default=False)
+	flagged_ancestors_id_string = models.TextField(null=True, default='')
 	# all our signals are getting triggered twice for some reason so the num_flagged_ancestors is incremented and decremented by 2
 	num_flagged_ancestors = models.IntegerField(default=0)
 	experiment = models.CharField(max_length=25, blank=True)

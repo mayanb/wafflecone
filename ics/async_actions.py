@@ -1,7 +1,8 @@
 from ics.models import *
 from cost_update_helpers import *
 from zappa.async import task
-from django.db.models import F, Count, Sum
+from django.db.models import F, Count, Sum, Case, When, Value
+from django.db.models.functions import Concat
 
 
 @task
@@ -13,7 +14,7 @@ def update_task_search_vector(**kwargs):
 
 
 @task
-def update_task_descendents_flag_number(**kwargs):
+def handle_potential_flag_status_change(**kwargs):
 	# all our signals are getting triggered twice for some reason so the num_flagged_ancestors is incremented and decremented by 2
 	tasks = Task.objects.filter(**kwargs).distinct()
 	for task in tasks:
@@ -21,9 +22,35 @@ def update_task_descendents_flag_number(**kwargs):
 			desc = task.descendants(breakIfCycle=False)
 			if desc != None:
 				if (task.is_flagged):
-					desc.update(num_flagged_ancestors=F('num_flagged_ancestors') + 1)
-				else:
-					desc.update(num_flagged_ancestors=F('num_flagged_ancestors') - 1)
+					for pipe_surrounded_id in get_pipe_surrounded_ids(task.flagged_ancestors_id_string, newly_flagged_task_id=task.id):
+						# Add id to ancestor strings which don't already have it
+						id_with_pipe_on_right_side = pipe_surrounded_id[1:]
+						desc_without_this_id = desc.exclude(flagged_ancestors_id_string__contains=pipe_surrounded_id) \
+							.annotate(id_with_pipe_on_right_side=Value(id_with_pipe_on_right_side, output_field=models.TextField()))
+
+						desc_without_this_id.annotate(
+							new_flagged_ancestors_id_string=Case(
+								When(flagged_ancestors_id_string__contains='|', then=Concat(F('flagged_ancestors_id_string'), F('id_with_pipe_on_right_side'))),
+								default=Concat(Value('|'), F('id_with_pipe_on_right_side')),
+								output_field=models.TextField()
+							)
+						).update(flagged_ancestors_id_string=F('new_flagged_ancestors_id_string'))
+				else:  # Task has been un-flagged
+					print('Flag removed from task ', task.id)
+
+
+def get_pipe_surrounded_ids(flagged_ancestors_id_string, newly_flagged_task_id=''):
+	flagged_ancestors_id_string = flagged_ancestors_id_string or ''
+	id_array = flagged_ancestors_id_string.split('|')
+	pipe_surrounded_ids = [add_pipes(id_string) for id_string in id_array if id_string is not '']
+	if newly_flagged_task_id:
+		pipe_surrounded_ids.append(add_pipes(newly_flagged_task_id))
+	return pipe_surrounded_ids
+
+
+def add_pipes(task_id):
+	return '|' + str(task_id) + '|'
+
 
 
 # this gets called from a signal that only is triggered once so it's incrementing by 2 to keep pace
