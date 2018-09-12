@@ -91,7 +91,6 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 	if kwargs2:
 		# Don't update cost when a we're deleting all a task's inputs/outputs along with itself. We've already done that.
 		if source_and_target_of_input_are_not_trashed(instance):
-			print('SPECIAL INPUT UPDATE CALLED (we should nOT be deleting a task)')
 			input_update(**kwargs2)
 		update_task_ingredient_after_input_delete(instance)
 

@@ -49,17 +49,13 @@ def update_parent_and_children_recursively(
 	is_changed_inputs_parent = parent_id == creating_task_of_changed_input
 	an_input_was_added_from_this_parent = is_changed_inputs_parent and input_added
 	an_input_was_deleted_from_this_parent = is_changed_inputs_parent and input_deleted
-	print('****** NEW PARENT: %d ********' % parent_id)
-	print('an_input_was_added_from_this_parent', an_input_was_added_from_this_parent, 'an_input_was_deleted_from_this_parent', an_input_was_deleted_from_this_parent)
 
 	parent['remaining_worth'] = parent['cost']
 	for direct_child in direct_children_in_input_order:
-		print('____NEW DIRECT_CHILD: %d, PARENT: %d' % (direct_child, parent_id))
 		is_a_deleted_input = child_is_a_deleted_input(direct_child, child_with_changed_ingredient_amount, input_deleted)
 		is_a_new_input = child_is_a_new_input(direct_child, child_with_changed_ingredient_amount, input_added)
 		adding_this_parent_as_input = is_a_new_input and an_input_was_added_from_this_parent
 		deleting_this_parent_as_input = is_a_deleted_input and an_input_was_deleted_from_this_parent
-		print('is_a_new_input', is_a_new_input, 'is_a_deleted_input', is_a_deleted_input)
 
 		num_parents = {
 			'previous': get_adjusted_num_parents(parent, direct_child, descendant_ingredients, is_a_new_input, is_a_deleted_input, previous=True),
@@ -79,11 +75,9 @@ def update_parent_and_children_recursively(
 			deleting_this_parent_as_input, adding_this_parent_as_input
 		)
 
-		print('cost_previously_from_parent', cost_previously_from_parent, 'cost_now_from_parent', cost_now_from_parent, 'parent_previous_batch_size', parent_previous_batch_size,'parent_new_batch_size', parent_new_batch_size)
 		change_in_worth_child_uses = float(cost_now_from_parent - cost_previously_from_parent)
 		update_child_cost_in_db_and_parent_locally(parent_id, direct_child, tasks, change_in_worth_child_uses, cost_now_from_parent)
 
-		print('recurse with:', direct_child)
 		total_child_cost_now = tasks[direct_child]['cost']
 		total_child_cost_previously = total_child_cost_now - change_in_worth_child_uses
 		if direct_child in tasks:
@@ -106,7 +100,6 @@ def get_adjusted_num_parents(parent_obj, child_id, descendant_ingredients, is_a_
 		adjusted_num_parents = num_parents - 1 if previous else num_parents
 	else:
 		adjusted_num_parents = num_parents
-	print('num parents:', adjusted_num_parents if adjusted_num_parents > 0 else 1)
 	return adjusted_num_parents if adjusted_num_parents > 0 else 1
 
 
@@ -142,8 +135,6 @@ def get_previous_and_new_cost_for_child(updated_task, direct_child, tasks, desce
 
 def get_actual_amount_used_by_child(updated_task, direct_child, tasks, descendant_ingredients, parent_remaining_batch_size, num_parents_for_ingredient, total_amount_of_ingredient=None):
 	child_desired_ingredient_amount = get_child_desired_ingredient_amount(updated_task, direct_child, tasks, descendant_ingredients, num_parents_for_ingredient, total_amount_of_ingredient)
-	print(direct_child, 'parent_remaining_batch_size, child_desired_ingredient_amount')
-	print(parent_remaining_batch_size, child_desired_ingredient_amount)
 	return float(min(parent_remaining_batch_size, child_desired_ingredient_amount))
 
 
@@ -172,8 +163,6 @@ def task_is_trashed(task, maps_of_non_trashed_tasks):
 def update_child_cost_in_db_and_parent_locally(parent_id, child, tasks, change_in_worth_child_uses, cost_now_from_parent):
 	parent = tasks[parent_id]
 	parent_remaining_worth = parent['remaining_worth']
-	print ('_______ UPDATING CHILD: %d ________' % child)
-	print('change_in_worth_child_uses', change_in_worth_child_uses, 'parent_remaining_worth', parent_remaining_worth)
 	update_cost_and_remaining_worth_of_child(child, tasks, change_in_worth_child_uses, parent_remaining_worth)
 	update_remaining_worth_of_parent_locally(parent_id, tasks, cost_now_from_parent)
 
@@ -197,7 +186,6 @@ def update_remaining_worth_of_parent_locally(parent_id, tasks, cost_now_from_par
 
 # Returns 0 if difference makes value negative
 def add_dollar_values(curr_value, new_difference_to_add, upper_limit=None):
-	print('curr_value', curr_value, 'new_difference_to_add', new_difference_to_add, 'upper_limit', upper_limit)
 	new_dollar_value = float(curr_value or 0) + float(new_difference_to_add)
 	result = max(new_dollar_value, 0)
 	if upper_limit is not None:
