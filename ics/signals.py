@@ -40,6 +40,8 @@ def task_changed(sender, instance, **kwargs):
 		return
 	# >>> Handle new cost_set_by_user for Task
 	previous_cost = instance.tracker.previous('cost')
+	if previous_cost == None:
+		previous_cost = 0.000
 	previous_cost_set_by_user = instance.tracker.previous('cost_set_by_user')
 	new_cost_set_by_user = instance.cost_set_by_user
 	# Verify that A) user actually changed cost and B) change in cost_set_by_user actually deviates from the previous cost

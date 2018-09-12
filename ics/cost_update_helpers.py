@@ -287,6 +287,8 @@ def get_non_trashed_descendants(task, include_even_if_deleted=-1):
 
 
 def get_unit_cost(cost, batch_size):
+	if float(batch_size) == 0:
+		return 0.000
 	return float(cost) / float(batch_size)
 
 
