@@ -12,6 +12,7 @@ def execute_task_cost_update(updated_task_id, previous_cost, new_cost, tasks=Non
 		_updated_task_descendants = get_non_trashed_descendants(updated_task_id, include_even_if_deleted=updated_task_id)
 		if _updated_task_descendants.count() == 0:
 			return
+
 		tasks = task_details(_updated_task_descendants)
 		descendant_ingredients = descendant_ingredient_details(_updated_task_descendants, tasks)
 
@@ -206,31 +207,32 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 	for parent in parents:
 		related_tasks = related_tasks.union(parent.task_parent_ids)
 
-
-
 	related_tasks_batch_size = Task.objects.filter(pk__in=related_tasks).annotate(
-		batch_size=Coalesce(Sum('items__amount'), 0)).annotate(
+		batch_size=Coalesce(Sum('items__amount'), 0)).order_by('id')
+	related_tasks_with_parents_children = Task.objects.filter(pk__in=related_tasks).annotate(
 		children_list=ArrayAgg('items__inputs__task'),
 		task_parent_ids=ArrayAgg('inputs__input_item__creating_task__id'),
 		ingredients=ArrayAgg('task_ingredients__ingredient')).order_by('id')
-
 	tasks = {}
-	for task in related_tasks_batch_size:
+	for x in range(0, related_tasks_with_parents_children.count()):
+		task = related_tasks_with_parents_children[x]
 		non_trashed_direct_children = set(list(Task.objects.filter(is_trashed=False, pk__in=task.children_list).values_list('pk', flat=True)))
 		direct_children_in_input_order = get_direct_children_in_input_order(task.id, non_trashed_direct_children)
 		parent_ids = task.task_parent_ids
 		non_trashed_parents = set(list(Task.objects.filter(is_trashed=False, pk__in=parent_ids).values_list('pk', flat=True)))
+
 		tasks[task.id] = {
 			'direct_children_in_input_order': direct_children_in_input_order,
-			'process_type': task.process_type_id,
+			'process_type': related_tasks_batch_size[x].process_type_id,
 			'ingredients': set(task.ingredients),
-			'product_type': task.product_type_id,
-			'cost': task.cost,
+			'product_type': related_tasks_batch_size[x].product_type_id,
+			'cost': related_tasks_batch_size[x].cost,
 			'parents': non_trashed_parents,
-			'remaining_worth': task.remaining_worth,
-			'batch_size': task.batch_size
+			'remaining_worth': related_tasks_batch_size[x].remaining_worth,
+			'batch_size': related_tasks_batch_size[x].batch_size
 		}
 	return tasks
+
 
 # returns ingredient used by each descendant
 def descendant_ingredient_details(updated_task_descendants, tasks):
