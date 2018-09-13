@@ -3,7 +3,6 @@ from cost_update_helpers import *
 from zappa.async import task
 from django.db.models import F, Count, Sum, Case, When, Value
 from django.db.models.functions import Concat
-from django.db.models.expressions import RawSQL
 from django.db import connection
 
 
@@ -20,26 +19,29 @@ def handle_potential_flag_status_change(**kwargs):
 	# Signal may fire twice, but the function is idempotent: it only adds/removes ids if they are missing/exist
 	tasks = Task.objects.filter(**kwargs).distinct()
 	for task in tasks:
-		if (task.was_flag_changed):
-			desc = task.descendants(breakIfCycle=False)
-			if desc != None:
+		if task.was_flag_changed:
+			descendants = task.descendants(breakIfCycle=False)
+			if descendants is not None:
 				pipe_surrounded_id = add_pipes(task.id)
-				if (task.is_flagged):
-					# Add id to ancestor strings which don't already have it
-					id_with_pipe_on_right_side = pipe_surrounded_id[1:]
-					desc_without_this_id = desc.exclude(flagged_ancestors_id_string__contains=pipe_surrounded_id) \
-						.annotate(id_with_pipe_on_right_side=Value(id_with_pipe_on_right_side, output_field=models.TextField()))
-
-					desc_without_this_id.annotate(
-						new_flagged_ancestors_id_string=Case(
-							When(flagged_ancestors_id_string__contains='|', then=Concat(F('flagged_ancestors_id_string'), F('id_with_pipe_on_right_side'))),
-							default=Concat(Value('|'), F('id_with_pipe_on_right_side')),
-							output_field=models.TextField()
-						)
-					).update(flagged_ancestors_id_string=F('new_flagged_ancestors_id_string'))
+				if task.is_flagged:
+					add_new_id_to_descendants_ancestor_lists(descendants, pipe_surrounded_id)
 				else:  # Task has been un-flagged
-					print('Flag removed from task ', task.id)
 					delete_id_from_all_tasks_who_have_it_in_their_list(pipe_surrounded_id)
+
+
+def add_new_id_to_descendants_ancestor_lists(descendants, pipe_surrounded_id):
+	# Add id to ancestor strings which don't already have it
+	id_with_pipe_on_right_side = pipe_surrounded_id[1:]
+	desc_without_this_id = descendants.exclude(flagged_ancestors_id_string__contains=pipe_surrounded_id) \
+		.annotate(id_with_pipe_on_right_side=Value(id_with_pipe_on_right_side, output_field=models.TextField()))
+
+	desc_without_this_id.annotate(
+		new_flagged_ancestors_id_string=Case(
+			When(flagged_ancestors_id_string__contains='|', then=Concat(F('flagged_ancestors_id_string'), F('id_with_pipe_on_right_side'))),
+			default=Concat(Value('|'), F('id_with_pipe_on_right_side')),
+			output_field=models.TextField()
+		)
+	).update(flagged_ancestors_id_string=F('new_flagged_ancestors_id_string'))
 
 
 def delete_id_from_all_tasks_who_have_it_in_their_list(pipe_surrounded_id):
@@ -62,17 +64,21 @@ def delete_id_from_all_tasks_who_have_it_in_their_list(pipe_surrounded_id):
 							WHERE ics_task.id = task_with_ancestor_id.id""", [str(len(pipe_surrounded_id)), pipe_surrounded_id, pipe_surrounded_id])
 
 
-def get_pipe_surrounded_ids(flagged_ancestors_id_string, newly_flagged_task_id=''):
+def get_pipe_surrounded_ids(flagged_ancestors_id_string):
 	flagged_ancestors_id_string = flagged_ancestors_id_string or ''
 	id_array = flagged_ancestors_id_string.split('|')
-	pipe_surrounded_ids = [add_pipes(id_string) for id_string in id_array if id_string is not '']
-	if newly_flagged_task_id:
-		pipe_surrounded_ids.append(add_pipes(newly_flagged_task_id))
+	pipe_surrounded_ids = [add_pipes(id_string) for id_string in id_array if id_string]
 	return pipe_surrounded_ids
 
 
+def get_parent_ids_not_already_in_child(child_flagged_ancestors_id_string, parent_flagged_ancestors_id_string):
+	child_pipe_surrounded_ids = get_pipe_surrounded_ids(child_flagged_ancestors_id_string)
+	parent_pipe_surrounded_ids = get_pipe_surrounded_ids(parent_flagged_ancestors_id_string)
+	return set(parent_pipe_surrounded_ids) - set(child_pipe_surrounded_ids)
+
+
 def add_pipes(task_id):
-	return '|' + str(task_id) + '|'
+	return '|' + str(task_id) + '|' if task_id is not '' else ''
 
 
 
@@ -95,6 +101,22 @@ def input_update(**kwargs):
 		handle_input_change_with_recipe(kwargs, updated_task_id)
 	else:
 		handle_input_change_with_no_recipe(kwargs, updated_task_id)
+
+
+@task
+def handle_flag_update_after_input_add(**kwargs):
+	child_task_id = kwargs['taskID']
+	child_task_flagged_ancestors_id_string = kwargs['task_flagged_ancestors_id_string']
+	parent_task_flagged_ancestors_id_string = kwargs['creating_task_flagged_ancestors_id_string']
+
+	child_task_qs = Task.objects.filter(pk=child_task_id)
+	_descendants = child_task_qs[0].descendants(breakIfCycle=False) or Task.objects.none()
+	descendants = _descendants | child_task_qs  # union operator
+	parent_ids_not_already_in_child = get_parent_ids_not_already_in_child(child_task_flagged_ancestors_id_string, parent_task_flagged_ancestors_id_string)
+	for pipe_surrounded_id in parent_ids_not_already_in_child:
+		# descendants.exclude() returns a new query_set without mutating descendants
+		descendants_lacking_this_id = descendants.exclude(flagged_ancestors_id_string__contains=pipe_surrounded_id)
+		add_new_id_to_descendants_ancestor_lists(descendants_lacking_this_id, pipe_surrounded_id)
 
 
 @task

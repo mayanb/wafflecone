@@ -69,6 +69,7 @@ def input_changed(sender, instance, created, **kwargs):
 	if created:
 		kwargs2 = get_input_kwargs(instance, added=True)
 		input_update(**kwargs2)
+		handle_flag_update_after_input_add(**kwargs2)
 
 
 @receiver(pre_delete, sender=Input)
@@ -118,7 +119,9 @@ def get_input_kwargs(instance, added=False, actual_amount=True):
 
 	return {
 		'taskID': instance.task.id,
+		'task_flagged_ancestors_id_string': added and instance.task.flagged_ancestors_id_string,
 		'creatingTaskID': instance.input_item.creating_task.id,
+		'creating_task_flagged_ancestors_id_string': added and instance.input_item.creating_task.flagged_ancestors_id_string,
 		'added': added,
 		'recipe': instance.task.recipe and instance.task.recipe.id,
 		'process_type': process_type,
