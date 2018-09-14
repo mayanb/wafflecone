@@ -4,6 +4,7 @@ from zappa.async import task
 from django.db.models import F, Count, Sum, Case, When, Value
 from django.db.models.functions import Concat
 from django.db import connection
+from ics.raw_sql_queries import REMOVE_ID_FROM_ALL_TASKS_IN_DB_WHICH_HAVE_IT, REMOVE_ID_FROM_ALL_SPECIFIED_TASKS_WHICH_HAVE_IT
 
 
 @task
@@ -44,24 +45,14 @@ def add_new_id_to_descendants_ancestor_lists(descendants, pipe_surrounded_id):
 	).update(flagged_ancestors_id_string=F('new_flagged_ancestors_id_string'))
 
 
-def delete_id_from_all_tasks_who_have_it_in_their_list(pipe_surrounded_id):
+def delete_id_from_all_tasks_who_have_it_in_their_list(pipe_surrounded_id, ids_to_query_over=None):
+	parameters = [str(len(pipe_surrounded_id)), pipe_surrounded_id, pipe_surrounded_id]
 	cursor = connection.cursor()
-	cursor.execute("""UPDATE ics_task
-							SET flagged_ancestors_id_string = (CASE WHEN task_with_ancestor_id.new_ancestors_string = '|' THEN '' ELSE task_with_ancestor_id.new_ancestors_string END)
-							FROM (select
-										id,
-										flagged_ancestors_id_string,
-										substring(flagged_ancestors_id_string from 0 for ancestor_id_position) || '|' || substring(flagged_ancestors_id_string from ancestor_id_position + %s) as new_ancestors_string
-										from (
-										select
-											id,
-											flagged_ancestors_id_string,
-											strpos(flagged_ancestors_id_string, %s) AS ancestor_id_position
-										from ics_task
-										where strpos(flagged_ancestors_id_string, %s) > 0
-										) task
-							) task_with_ancestor_id
-							WHERE ics_task.id = task_with_ancestor_id.id""", [str(len(pipe_surrounded_id)), pipe_surrounded_id, pipe_surrounded_id])
+	if ids_to_query_over:
+		parameters.append(ids_to_query_over)
+		cursor.execute(REMOVE_ID_FROM_ALL_SPECIFIED_TASKS_WHICH_HAVE_IT, parameters)
+	else:
+		cursor.execute(REMOVE_ID_FROM_ALL_TASKS_IN_DB_WHICH_HAVE_IT, parameters)
 
 
 def get_pipe_surrounded_ids(flagged_ancestors_id_string):
@@ -79,7 +70,6 @@ def get_parent_ids_not_already_in_child(child_flagged_ancestors_id_string, paren
 
 def add_pipes(task_id):
 	return '|' + str(task_id) + '|' if task_id is not '' else ''
-
 
 
 # this gets called from a signal that only is triggered once so it's incrementing by 2 to keep pace
@@ -101,6 +91,39 @@ def input_update(**kwargs):
 		handle_input_change_with_recipe(kwargs, updated_task_id)
 	else:
 		handle_input_change_with_no_recipe(kwargs, updated_task_id)
+
+
+@task
+def handle_flag_update_after_input_delete(**kwargs):
+	child_task_id = kwargs['taskID']
+	former_parent_task_id = kwargs['creatingTaskID']
+	former_parent_task_flagged_ancestors_id_string = kwargs['creating_task_flagged_ancestors_id_string']
+
+	child_task = Task.objects.get(pk=child_task_id)
+	former_parent_task = Task.objects.get(pk=former_parent_task_id)
+
+	# Use qs.difference() to find descendants of child_task which are NOT descendants of former_parent_task
+	# because those tasks are the ones which can actually remove former_parent_id (the others are still its descendants)
+	child_descendants_qs = child_task.descendants(breakIfCycle=False) or Task.objects.none()
+	child_and_its_descendants_qs = child_descendants_qs | Task.objects.filter(pk=child_task_id)
+	child_and_its_unique_descendant_ids = list(child_and_its_descendants_qs\
+		.difference(former_parent_task.descendants(breakIfCycle=False))\
+		.values_list('id', flat=True))
+
+	# Remove from child_task + its descendants the flagged ancestors which are ancestors UNIQUE to former_parent_task
+	child_ancestors_qs = child_task.ancestors(breakIfCycle=False) or Task.objects.none()
+	child_flagged_ids = [add_pipes(task_id) for task_id in child_ancestors_qs.filter(is_flagged=True).values_list('id', flat=True)]
+	former_parent_flagged_ids = get_pipe_surrounded_ids(former_parent_task_flagged_ancestors_id_string)
+
+	flagged_ancestors_unique_to_former_parent = set(former_parent_flagged_ids) - set(child_flagged_ids)
+	if former_parent_task.is_flagged:  # since ancestors doesn't include the task itself
+		flagged_ancestors_unique_to_former_parent.add(add_pipes(former_parent_task_id))
+
+	for pipe_surrounded_id in flagged_ancestors_unique_to_former_parent:
+		delete_id_from_all_tasks_who_have_it_in_their_list(
+			pipe_surrounded_id,
+			ids_to_query_over=child_and_its_unique_descendant_ids
+		)
 
 
 @task
