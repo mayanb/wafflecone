@@ -10,7 +10,7 @@ class Command(BaseCommand):
 		# Zero everything
 		Task.objects.all().update(flagged_ancestors_id_string='')
 		# Cascade each flagged task's id to its descendants flagged_ancestors_id_string
-		for flagged_task in Task.objects.filter(process_type__team_created_by=24, is_flagged=True):
+		for flagged_task in Task.objects.filter(is_flagged=True):
 			print(flagged_task)
 			desc = flagged_task.descendants(breakIfCycle=False)
 			if desc is not None:
