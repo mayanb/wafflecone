@@ -2,6 +2,7 @@ from ics.models import *
 from cost_update_helpers import *
 from zappa.async import task
 from django.db.models import F, Count, Sum
+from update_costs_for_entire_graph import update_costs_for_entire_graph
 
 
 @task
@@ -109,8 +110,9 @@ def batch_size_update(**kwargs):
 
 
 @task
-def task_cost_update(updated_task_id, previous_cost, new_cost):
-	execute_task_cost_update(updated_task_id, previous_cost, new_cost)
+def task_cost_update(updated_task_id):
+	update_costs_for_entire_graph(updated_task_id)
+
 
 
 @task
