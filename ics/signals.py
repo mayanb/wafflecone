@@ -47,7 +47,7 @@ def task_changed(sender, instance, **kwargs):
 	# Verify that A) user actually changed cost and B) change in cost_set_by_user actually deviates from the previous cost
 	user_changed_cost = new_cost_set_by_user != previous_cost_set_by_user and new_cost_set_by_user != previous_cost
 	if user_changed_cost:
-		task_cost_update(instance.id)
+		task_cost_update(instance.id, previous_cost, new_cost_set_by_user)
 
 
 @receiver(post_delete, sender=Task)
