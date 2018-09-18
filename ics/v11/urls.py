@@ -51,7 +51,6 @@ urlpatterns = [
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
     url(r'^processes/duplicate/$', views.ProcessDuplicate.as_view(), name='process_duplicate'),
 
-
     url(r'^products/$', views.ProductList.as_view(), name='product_types'),
     url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view(), name='product_type_detail'),
     url(r'^products/codes/$', views.ProductCodes.as_view()),
@@ -88,6 +87,8 @@ urlpatterns = [
     url(r'^pins/$', views.PinList.as_view(), name='pins'),
     url(r'^pins/create/$', views.PinCreate.as_view(), name='create_pin'),
     url(r'^pins/edit/(?P<pk>[0-9]+)/$', views.PinRetrieveUpdateDestroy.as_view(), name='pin_edit'),
+
+    url(r'^tags/$', views.TagList.as_view(), name='tags'),
 
     url(r'^alerts/$', views.AlertList.as_view()),
     url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),

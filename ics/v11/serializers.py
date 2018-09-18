@@ -42,6 +42,11 @@ class AttributeSerializer(serializers.ModelSerializer):
 		model = Attribute
 		fields = ('id', 'process_type', 'process_name', 'name', 'rank', 'datatype', 'is_recurrent', 'is_trashed')
 
+class BasicTagSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = Tag
+		fields = ('id', 'name', 'team', 'process_types', 'product_types')
 
 class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	attributes = serializers.SerializerMethodField()
@@ -51,6 +56,7 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 	team_created_by_name = serializers.CharField(source='team_created_by.name', read_only=True)
 	created_at = serializers.DateTimeField(read_only=True)
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+	tags = BasicTagSerializer(many=True, read_only=True)
 
 	def get_attributes(self, process_type):
 		return AttributeSerializer(process_type.attribute_set.order_by('rank'), many=True).data
@@ -61,15 +67,16 @@ class ProcessTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search', 'category')
+		fields = ('id', 'username', 'name', 'code', 'icon', 'attributes', 'unit', 'created_by', 'output_desc', 'created_by_name', 'default_amount', 'team_created_by', 'team_created_by_name', 'is_trashed', 'created_at', 'last_used', 'search', 'category', 'tags')
 
 
 class ProcessTypeSerializer(serializers.ModelSerializer):
 	default_amount = serializers.DecimalField(max_digits=10, decimal_places=3, coerce_to_string=False)
+	tags = BasicTagSerializer(many=True, read_only=True)
 
 	class Meta:
 		model = ProcessType
-		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search', 'category')
+		fields = ('id', 'name', 'code', 'icon', 'unit', 'created_by', 'output_desc', 'default_amount', 'team_created_by', 'is_trashed', 'created_at', 'search', 'category', 'tags')
 
 
 class AttributeDetailSerializer(serializers.ModelSerializer):
@@ -87,6 +94,7 @@ class AttributeDetailSerializer(serializers.ModelSerializer):
 
 class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 	username = serializers.SerializerMethodField(source='get_username', read_only=True)
+	tags = BasicTagSerializer(many=True, read_only=True)
 
 	def get_username(self, product):
 		username = product.created_by.username
@@ -94,13 +102,15 @@ class ProductTypeWithUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'username', 'created_at', 'description', 'search', 'tags')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
+	tags = BasicTagSerializer(many=True, read_only=True)
+
 	class Meta:
 		model = ProductType
-		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description', 'search')
+		fields = ('id', 'name', 'code', 'created_by', 'is_trashed', 'team_created_by', 'created_at', 'description', 'search', 'tags')
 
 
 class ProductCodeSerializer(serializers.ModelSerializer):
