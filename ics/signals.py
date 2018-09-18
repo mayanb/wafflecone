@@ -70,8 +70,7 @@ def item_changed(sender, instance, **kwargs):
 	# Don't update costs twice on create and save
 	if 'created' in kwargs and kwargs['created']:
 		return
-	kwargs3 = {'pk': instance.creating_task.id, 'change_in_item_amount': float(new_amount) - float(previous_amount)}
-	batch_size_update(**kwargs3)
+	batch_size_update(instance.creating_task.id)
 
 
 @receiver(post_save, sender=Input)
@@ -79,20 +78,8 @@ def input_changed(sender, instance, created, **kwargs):
 	update_task_ingredient_for_new_input(instance)
 	kwargs = {'taskID': instance.task.id, 'creatingTaskID': instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs)
-	if created:
-		kwargs2 = get_input_kwargs(instance, added=True)
-		if kwargs2:
-			input_update(**kwargs2)
-
-
-@receiver(pre_delete, sender=Input)
-def input_deleted_pre_delete(sender, instance, **kwargs):
-	kwargs2 = get_input_kwargs(instance)
-	if kwargs2:
-		# Don't update cost when a we're deleting all a task's inputs/outputs along with itself. We've already done that.
-		if source_and_target_of_input_are_not_trashed(instance):
-			input_update(**kwargs2)
-		update_task_ingredient_after_input_delete(instance)
+	if created and input_has_task_ingredient(instance):
+		input_update(instance.task.id)
 
 
 # this signal only gets called once whereas all the others get called twice
@@ -103,80 +90,28 @@ def input_deleted(sender, instance, **kwargs):
 	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs2)
 
+	if input_has_task_ingredient(instance):  # old Inputs may not
+		# Don't update cost when a we're deleting all a task's inputs/outputs along with itself. We've already done that.
+		if source_and_target_of_input_are_not_trashed(instance):
+			input_update(instance.task.id)
+
 
 @receiver(post_save, sender=TaskIngredient)
 def ingredient_updated(sender, instance, **kwargs):
-	# get the previous value
-	previous_amount = instance.tracker.previous('actual_amount') and float(instance.tracker.previous('actual_amount'))
 	if instance.was_amount_changed:
-		kwargs = {'taskID': instance.task.id, 'process_type': instance.ingredient.process_type.id, 'product_type': instance.ingredient.product_type.id,
-				  'actual_amount': float(instance.actual_amount), 'task_ing_id': instance.id, 'previous_amount': previous_amount}
-		ingredient_amount_update(**kwargs)
+		ingredient_amount_update(instance.task.id, instance.id)
 
 
 # HELPER FUNCTIONS
 
-# Returns None of if no TaskIngredient exists (eg for old tasks)
-def get_input_kwargs(instance, added=False):
+# Returns False if no TaskIngredient exists (eg for old tasks)
+def input_has_task_ingredient(instance):
 	task_ingredient_qs = TaskIngredient.objects.filter(
-																			task=instance.task.id,
-																			ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
-																			ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
-																		)
-	task_ingredient = task_ingredient_qs.count() > 0 and task_ingredient_qs[0]
-	if not task_ingredient:  # Impossible to proceed
-		return
-
-	task_ingredient__actual_amount = float(task_ingredient.actual_amount)
-	process_type = task_ingredient.ingredient.process_type.id
-	product_type = task_ingredient.ingredient.product_type.id
-	recipe_exists_for_ingredient = instance.task.recipe and Ingredient.objects.filter(
-		recipe=instance.task.recipe,
-		process_type=process_type,
-		product_type=product_type,
-	).count()
-	num_similar_inputs = Input.objects.filter(
-		task=instance.task,
-		input_item__creating_task__product_type=instance.input_item.creating_task.product_type,
-		input_item__creating_task__process_type=instance.input_item.creating_task.process_type,
-	).count()
-	adding_first_or_deleting_last_input = num_similar_inputs == 1  # both cases same since we use pre_delete and post_save
-
-	return {
-		'taskID': instance.task.id,
-		'creatingTaskID': instance.input_item.creating_task.id,
-		'added': added,
-		'process_type': process_type,
-		'product_type': product_type,
-		'task_ingredient__actual_amount': task_ingredient__actual_amount,
-		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
-		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id,
-		'recipe_exists_for_ingredient': recipe_exists_for_ingredient,
-		'adding_first_or_deleting_last_input': adding_first_or_deleting_last_input,
-	}
-
-
-def update_task_ingredient_after_input_delete(instance):
-	similar_inputs = Input.objects.filter(task=instance.task, \
-	                                      input_item__creating_task__product_type=instance.input_item.creating_task.product_type, \
-	                                      input_item__creating_task__process_type=instance.input_item.creating_task.process_type)
-	task_ings = TaskIngredient.objects.filter(task=instance.task, \
-	                                          ingredient__product_type=instance.input_item.creating_task.product_type, \
-	                                          ingredient__process_type=instance.input_item.creating_task.process_type)
-	task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
-	task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
-	if similar_inputs.count() <= 1:
-		# if the input is the only one left for a taskingredient without a recipe, delete the taskingredient
-		if task_ings_without_recipe.count() > 0:
-			if task_ings_without_recipe[0].ingredient:
-				if not task_ings_without_recipe[0].ingredient.recipe:
-					task_ings_without_recipe.delete()
-		# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
-		if task_ings_with_recipe.count > 0:
-			task_ings_with_recipe.update(actual_amount=0)
-	else:
-		# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
-		task_ings_without_recipe.update(actual_amount=F('actual_amount') - instance.input_item.amount)
+		task=instance.task.id,
+		ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
+		ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
+	)
+	return task_ingredient_qs.count() > 0
 
 
 def update_task_ingredient_for_new_input(new_input):

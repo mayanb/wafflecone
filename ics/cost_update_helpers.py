@@ -380,9 +380,3 @@ def update_parents_for_ingredient_and_their_children(updated_task_id, old_amount
 			creating_task_of_changed_input=creating_task_of_changed_input,
 		)
 
-# DELETE TASK HELPERS
-
-def delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id):
-	Input.objects.filter(input_item__creating_task=deleted_task_id).delete()  # delete direct children
-	Input.objects.filter(task=deleted_task_id).delete()  # delete direct parents
-	Task.objects.filter(pk=deleted_task_id).update(cost=0, remaining_worth=0)  # zero cost

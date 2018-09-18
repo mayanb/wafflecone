@@ -10,15 +10,22 @@ def iterative_bfs(start_id, seen=[]):
 		v = q.pop(0)
 		if not v in seen:
 			seen = seen + [v]
-			children_and_parents = Task.objects.filter(pk=v).annotate(
-				chidren_list=ArrayAgg('items__inputs__task__id')).annotate(
-				parent_list=ArrayAgg('inputs__input_item__creating_task__id'))
-			if (children_and_parents.count() > 0):
-				children = children_and_parents[0].chidren_list
-				parents = children_and_parents[0].parent_list
-				neighbors = children + parents
-				q = q + neighbors
+			neighbors = get_task_neighbor_ids(v)
+			q = q + neighbors
 	return seen
+
+
+def get_task_neighbor_ids(task_id):
+	children_and_parents = Task.objects.filter(pk=task_id)\
+		.annotate(chidren_list=ArrayAgg('items__inputs__task__id'))\
+		.annotate(parent_list=ArrayAgg('inputs__input_item__creating_task__id'))
+	if children_and_parents.count() > 0:
+		children = children_and_parents[0].chidren_list
+		parents = children_and_parents[0].parent_list
+		neighbors = children + parents
+		return neighbors
+	else:
+		return []
 
 
 def edge_list(tasks):
@@ -37,10 +44,7 @@ def convert(z):
 	return z
 
 
-def update_costs_for_entire_graph(task_id, cost=None):
-	if cost:
-		Task.objects.filter(pk=task_id).update(cost_set_by_user=cost, cost=cost, remaining_worth=cost)
-
+def update_costs_for_entire_graph(task_id):
 	amt_per_parent_left = {}
 
 	task_ids_for_entire_graph = iterative_bfs(task_id)
