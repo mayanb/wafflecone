@@ -100,9 +100,11 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 # this signal only gets called once
 @receiver(post_delete, sender=Input)
 def input_deleted(sender, instance, **kwargs):
-	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
-	check_anomalous_inputs_alerts(**kwargs2)
-	handle_flag_update_after_input_delete(**get_input_kwargs(instance, actual_amount=False))
+	kwargs1 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
+	check_anomalous_inputs_alerts(**kwargs1)
+	kwargs2 = get_input_kwargs(instance)
+	if kwargs2:
+		handle_flag_update_after_input_delete(**kwargs2)
 
 
 @receiver(post_save, sender=TaskIngredient)
