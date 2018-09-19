@@ -269,6 +269,7 @@ class Task(models.Model):
 	remaining_worth = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 
 	objects = TaskManager()
+	tracker = FieldTracker()
 
 	class Meta:
 		indexes = [
@@ -626,6 +627,13 @@ class Pin(models.Model):
 	is_trashed = models.BooleanField(default=False, db_index=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	all_product_types = models.BooleanField(default=False)
+
+class Tag(models.Model):
+	name = models.CharField(max_length=50, db_index=True)
+	team = models.ForeignKey(Team, related_name='tags', on_delete=models.CASCADE)
+	process_types = models.ManyToManyField(ProcessType, related_name='tags', blank=True)
+	product_types = models.ManyToManyField(ProductType, related_name='tags', blank=True)
+	is_trashed = models.BooleanField(default=False, db_index=True)
 
 ##################################
 #                                #

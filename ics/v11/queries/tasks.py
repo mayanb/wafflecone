@@ -121,6 +121,12 @@ def simpleTaskSearch(query_params):
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
 
+	tags = query_params.get('tags', None)
+	if tags is not None:
+		tag_names = tags.strip().split(',')
+		queryset = queryset.filter(process_type__tags__name__in=tag_names) | \
+		           queryset.filter(product_type__tags__name__in=tag_names)
+
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
 	if label is not None and dashboard is not None:
