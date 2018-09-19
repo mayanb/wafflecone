@@ -24,7 +24,7 @@ def taskattribute_changed(sender, instance, **kwargs):
 @receiver(post_save, sender=Task)
 def task_changed(sender, instance, **kwargs):
 	kwargs = { 'pk' : instance.id }
-	update_task_descendents_flag_number(**kwargs)
+	handle_potential_flag_status_change(**kwargs)
 
 	#Don't create duplicate alerts after updating task search field
 	if 'update_fields' not in kwargs or not kwargs['update_fields'] or 'search' not in kwargs['update_fields']:
@@ -74,6 +74,7 @@ def item_changed(sender, instance, **kwargs):
 	batch_size_update(**kwargs3)
 
 
+# Signal mysteriously gets called twice (typically)
 @receiver(post_save, sender=Input)
 def input_changed(sender, instance, created, **kwargs):
 	update_task_ingredient_for_new_input(instance)
@@ -83,6 +84,7 @@ def input_changed(sender, instance, created, **kwargs):
 		kwargs2 = get_input_kwargs(instance, added=True)
 		if kwargs2:
 			input_update(**kwargs2)
+			handle_flag_update_after_input_add(**kwargs2)
 
 
 @receiver(pre_delete, sender=Input)
@@ -95,13 +97,12 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 		update_task_ingredient_after_input_delete(instance)
 
 
-# this signal only gets called once whereas all the others get called twice
+# this signal only gets called once
 @receiver(post_delete, sender=Input)
 def input_deleted(sender, instance, **kwargs):
-	kwargs = { 'pk' : instance.task.id }
-	unflag_task_descendants(**kwargs)
 	kwargs2 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs2)
+	handle_flag_update_after_input_delete(**get_input_kwargs(instance, actual_amount=False))
 
 
 @receiver(post_save, sender=TaskIngredient)
@@ -144,7 +145,9 @@ def get_input_kwargs(instance, added=False):
 
 	return {
 		'taskID': instance.task.id,
+		'task_flagged_ancestors_id_string': instance.task.flagged_ancestors_id_string,
 		'creatingTaskID': instance.input_item.creating_task.id,
+		'creating_task_flagged_ancestors_id_string': instance.input_item.creating_task.flagged_ancestors_id_string,
 		'added': added,
 		'process_type': process_type,
 		'product_type': product_type,
