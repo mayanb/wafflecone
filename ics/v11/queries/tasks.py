@@ -31,11 +31,10 @@ def tasks(query_params):
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
 
-	flagged_ancestors_id_string = query_params.get('flagged_ancestors_id_string', '')
-	flagged_ancestor_ids = [int(task_id) for task_id in flagged_ancestors_id_string.split('|') if task_id]
-	if flagged_ancestor_ids:
-		print(flagged_ancestor_ids)
-		queryset = queryset.filter(pk__in=flagged_ancestor_ids)
+	pipe_delimited_task_ids_string = query_params.get('pipe_delimited_task_ids_string', '')  # ie '|id1|id2|...|idn|'
+	task_ids = [int(task_id) for task_id in pipe_delimited_task_ids_string.split('|') if task_id]
+	if task_ids:
+		queryset = queryset.filter(pk__in=task_ids)
 
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
