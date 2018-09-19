@@ -31,6 +31,12 @@ def tasks(query_params):
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
 
+	flagged_ancestors_id_string = query_params.get('flagged_ancestors_id_string', '')
+	flagged_ancestor_ids = [int(task_id) for task_id in flagged_ancestors_id_string.split('|') if task_id]
+	if flagged_ancestor_ids:
+		print(flagged_ancestor_ids)
+		queryset = queryset.filter(pk__in=flagged_ancestor_ids)
+
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
 	if label is not None and dashboard is not None:
@@ -114,12 +120,6 @@ def simpleTaskSearch(query_params):
 	team = query_params.get('team', None)
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
-
-	tags = query_params.get('tags', None)
-	if tags is not None:
-		tag_names = tags.strip().split(',')
-		queryset = queryset.filter(process_type__tags__name__in=tag_names) | \
-		           queryset.filter(product_type__tags__name__in=tag_names)
 
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)

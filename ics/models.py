@@ -9,7 +9,6 @@ from model_utils import FieldTracker
 import constants
 from django.utils import timezone
 import pytz
-from django.db.models.expressions import RawSQL
 from django.db.models import F
 from django.contrib.postgres.aggregates import ArrayAgg
 # from ics.async_actions import *
@@ -261,8 +260,7 @@ class Task(models.Model):
 	flag_update_time = models.DateTimeField(default='2017-01-01 23:25:26.835087+00:00')
 	old_is_flagged = models.BooleanField(default=False)
 	was_flag_changed = models.BooleanField(default=False)
-	# all our signals are getting triggered twice for some reason so the num_flagged_ancestors is incremented and decremented by 2
-	num_flagged_ancestors = models.IntegerField(default=0)
+	flagged_ancestors_id_string = models.TextField(null=True, default='')
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
@@ -271,7 +269,6 @@ class Task(models.Model):
 	remaining_worth = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 
 	objects = TaskManager()
-	tracker = FieldTracker()
 
 	class Meta:
 		indexes = [
@@ -485,13 +482,6 @@ class Input(models.Model):
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
-	def delete(self):
-		# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
-		if self.input_item.creating_task.is_flagged or self.input_item.creating_task.num_flagged_ancestors > 0:
-			Task.objects.filter(id__in=[self.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors') - 2)
-
-		super(Input, self).delete()
-
 
 class FormulaAttribute(models.Model):
 	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
@@ -636,13 +626,6 @@ class Pin(models.Model):
 	is_trashed = models.BooleanField(default=False, db_index=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	all_product_types = models.BooleanField(default=False)
-
-class Tag(models.Model):
-	name = models.CharField(max_length=50, db_index=True)
-	team = models.ForeignKey(Team, related_name='tags', on_delete=models.CASCADE)
-	process_types = models.ManyToManyField(ProcessType, related_name='tags', blank=True)
-	product_types = models.ManyToManyField(ProductType, related_name='tags', blank=True)
-	is_trashed = models.BooleanField(default=False, db_index=True)
 
 ##################################
 #                                #
