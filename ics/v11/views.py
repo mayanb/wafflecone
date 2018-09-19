@@ -12,6 +12,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from ics.paginations import *
+from ics.v11.queries.tags import *
 from ics.v11.queries.tasks import *
 from ics.v11.queries.processes_and_products import *
 from ics.v11.queries.production_planning import *
@@ -162,6 +163,29 @@ class PinRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
   queryset = Pin.objects.filter(is_trashed=False)
   serializer_class = BasicPinSerializer
 
+#####################
+# TAG-RELATED VIEWS #
+#####################
+class TagList(generics.ListAPIView):
+  serializer_class = BasicTagSerializer
+
+  def get_queryset(self):
+    queryset = Tag.objects.filter(is_trashed=False)
+
+    team = self.request.query_params.get('team', None)
+    if team is not None:
+      queryset = queryset.filter(team=team)
+
+    process_type = self.request.query_params.get('process_type', None)
+    if process_type is not None:
+      queryset = queryset.filter(process_types=process_type)
+
+    product_type = self.request.query_params.get('product_type', None)
+    if product_type is not None:
+      queryset = queryset.filter(product_types=product_type)
+
+    return queryset
+
 ######################
 # USER-RELATED VIEWS #
 ######################
@@ -250,6 +274,13 @@ class TaskEdit(generics.RetrieveUpdateDestroyAPIView):
 class DeleteTask(generics.UpdateAPIView):
   queryset = Task.objects.filter(is_trashed=False)
   serializer_class = DeleteTaskSerializer
+
+
+class CheckIfGraphHasCycles(APIView):
+  def get(self, request):
+    task = request.query_params.get('task', '')
+    graph_has_cycles = check_for_cycles(task, 'ancestors', breakIfCycle=True) is None or check_for_cycles(task, 'descendants', breakIfCycle=True) is None
+    return Response({'graph_has_cycles': graph_has_cycles})
 
 
 # tasks/search/?label=[str]
@@ -433,6 +464,10 @@ class ProcessDetail(generics.RetrieveUpdateDestroyAPIView):
     .select_related('created_by', 'team_created_by')\
     .prefetch_related('attribute_set')
   serializer_class = ProcessTypeWithUserSerializer
+
+  def patch(self, request, *args, **kwargs):
+    patchTags(request, *args, patchType='process', **kwargs)
+    return super(ProcessDetail, self).patch(request, *args, **kwargs)
 
 
 # processes/duplicate
@@ -642,6 +677,12 @@ class ActivityList(generics.ListAPIView):
       process_ids = process_types.strip().split(',')
       queryset = queryset.filter(process_type__in=process_ids)
 
+    tags = self.request.query_params.get('tags', None)
+    if tags is not None:
+      tag_names = tags.strip().split(',')
+      queryset = queryset.filter(process_type__tags__name__in=tag_names) | \
+                 queryset.filter(product_type__tags__name__in=tag_names)
+
     category_types = self.request.query_params.get('category_types', None)
     if category_types is not None:
       category_codes = category_types.strip().split(',')
@@ -738,6 +779,10 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
   queryset = ProductType.objects.filter(is_trashed=False)\
     .select_related('created_by')
   serializer_class = ProductTypeWithUserSerializer
+
+  def patch(self, request, *args, **kwargs):
+    patchTags(request, *args, patchType='product', **kwargs)
+    return super(ProductDetail, self).patch(request, *args, **kwargs)
 
 
 
@@ -1060,6 +1105,12 @@ class InventoryList2(generics.ListAPIView):
       category_codes = category_types.strip().split(',')
       queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
 
+    tags = self.request.query_params.get('tags', None)
+    if tags is not None:
+      tag_names = tags.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__tags__name__in=tag_names) | \
+                 queryset.filter(creating_task__product_type__tags__name__in=tag_names)
+
     aggregate_products = self.request.query_params.get('aggregate_products', None)
 
     queryset_values = [
@@ -1098,11 +1149,6 @@ class InventoryList2Aggregate(generics.ListAPIView):
     # filter by team
     queryset = queryset.filter(team_inventory=team)
 
-    category_types = self.request.query_params.get('category_types', None)
-    if category_types is not None:
-      category_codes = category_types.strip().split(',')
-      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
-
     process_types = self.request.query_params.get('process_types', None)
     if process_types is not None:
       process_ids = process_types.strip().split(',')
@@ -1112,6 +1158,17 @@ class InventoryList2Aggregate(generics.ListAPIView):
     if product_types is not None:
       product_ids = product_types.strip().split(',')
       queryset = queryset.filter(creating_task__product_type__in=product_ids)
+
+    category_types = self.request.query_params.get('category_types', None)
+    if category_types is not None:
+      category_codes = category_types.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__category__in=category_codes)
+
+    tags = self.request.query_params.get('tags', None)
+    if tags is not None:
+      tag_names = tags.strip().split(',')
+      queryset = queryset.filter(creating_task__process_type__tags__name__in=tag_names) | \
+                 queryset.filter(creating_task__product_type__tags__name__in=tag_names)
 
     aggregate_products = self.request.query_params.get('aggregate_products', None)
 

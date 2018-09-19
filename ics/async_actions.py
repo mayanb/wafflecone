@@ -72,15 +72,42 @@ def add_pipes(task_id):
 	return '|' + str(task_id) + '|' if task_id is not '' else ''
 
 
+# This is nearly identical to ingredient_amount_update(), except with special flags to handle
+# special cases of introducing or exiting an input, since one is done post_save and the other pre_delete.
+# It also handles of tasks with recipes.
 @task
 def input_update(**kwargs):
-	recipe = kwargs['recipe']
 	updated_task_id = kwargs['taskID']
+	creating_task_of_changed_input_id = kwargs['creatingTaskID']
+	input_added = kwargs['added']
+	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
+	process_type = kwargs['process_type']
+	product_type = kwargs['product_type']
+	recipe_exists_for_ingredient = kwargs['recipe_exists_for_ingredient']
+	adding_first_or_deleting_last_input = kwargs['adding_first_or_deleting_last_input']
+	creating_task_of_changed_input = get_creating_task_of_changed_input(creating_task_of_changed_input_id)
 
-	if recipe:
-		handle_input_change_with_recipe(kwargs, updated_task_id)
-	else:
-		handle_input_change_with_no_recipe(kwargs, updated_task_id)
+	if not creating_task_of_changed_input or creating_task_of_changed_input.cost is None:
+		return
+
+	old_amount, new_amount = get_amounts(
+		task_ingredient__actual_amount,
+		float(creating_task_of_changed_input.batch_size),
+		input_added,
+		recipe_exists_for_ingredient,
+		adding_first_or_deleting_last_input,
+	)
+
+	update_parents_for_ingredient_and_their_children(
+		updated_task_id,
+		old_amount,
+		new_amount,
+		process_type,
+		product_type,
+		creating_task_of_changed_input=creating_task_of_changed_input.id,
+		input_added=input_added,
+		input_deleted=not input_added,  # Function is only ever called with input add/delete
+	)
 
 
 @task
@@ -141,25 +168,51 @@ def ingredient_amount_update(**kwargs):
 	new_amount = kwargs['actual_amount']
 	process_type = kwargs['process_type']
 	product_type = kwargs['product_type']
-	update_parents_for_ingredient_and_then_child(updated_task_id, old_amount, new_amount, process_type, product_type)
+	update_parents_for_ingredient_and_their_children(updated_task_id, old_amount, new_amount, process_type, product_type)
 
 
 @task
 def batch_size_update(**kwargs):
-	updated_task = kwargs['pk']
-	updated_task_descendants = get_non_trashed_descendants(updated_task)
+	updated_task_id = kwargs['pk']
+	updated_task_descendants = get_non_trashed_descendants(updated_task_id)
 	if updated_task_descendants.count() == 0:
 		return
 
 	tasks = task_details(updated_task_descendants)
+	updated_task = tasks[updated_task_id]
 	descendant_ingredients = descendant_ingredient_details(updated_task_descendants, tasks)
-	prev_unit_cost, new_unit_cost = get_prev_and_new_unit_costs(tasks[updated_task], kwargs)
-	parent_previous_batch_size = float(kwargs['previous_amount'])
-	parent_new_batch_size = float(kwargs['new_amount'])
-	update_children_after_batch_size_or_child_ingredient_amount_change(new_unit_cost, prev_unit_cost, updated_task, tasks, descendant_ingredients, parent_previous_batch_size, parent_new_batch_size)
+
+	change_in_item_amount = kwargs['change_in_item_amount']
+	new_batch_size = float(updated_task['batch_size'])
+	previous_batch_size = new_batch_size - change_in_item_amount
+
+	cost = tasks[updated_task_id]['cost']
+	prev_unit_cost = get_unit_cost(cost, previous_batch_size)
+	new_unit_cost = get_unit_cost(cost, new_batch_size)
+
+	update_parent_and_children_recursively(new_unit_cost, prev_unit_cost, updated_task_id, tasks, descendant_ingredients, previous_batch_size, new_batch_size)
+
+
+@task
+def task_cost_update(updated_task_id, previous_cost, new_cost):
+	execute_task_cost_update(updated_task_id, previous_cost, new_cost)
 
 
 @task
 def task_deleted_update_cost(deleted_task_id):
-	update_parents_of_deleted_task(deleted_task_id)
-	update_children_of_deleted_task(deleted_task_id)
+	task_ingredients = TaskIngredient.objects.filter(task=deleted_task_id).annotate(batch_size=Coalesce(Sum('task__items__amount'), 0)) \
+		.values('actual_amount', 'ingredient__process_type__id', 'ingredient__product_type__id')
+
+	for task_ingredient in task_ingredients:
+		update_parents_for_ingredient_and_their_children(  # use this to delete input from all parents
+			deleted_task_id,
+			old_amount=float(task_ingredient['actual_amount']),
+			new_amount=0,  # return worth to all inputs
+			process_type=task_ingredient['ingredient__process_type__id'],
+			product_type=task_ingredient['ingredient__product_type__id'],
+			input_added=False,
+			input_deleted=True,
+			child_task_is_being_deleted_entirely=True,  # Flag signals removal of ALL parents as inputs to deleted_task
+		)
+
+	delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id)
