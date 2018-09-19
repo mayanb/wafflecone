@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
     url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
+    url(r'^tasks/check-if-graph-has-cycles/$', views.CheckIfGraphHasCycles.as_view()),
 
     url(r'^files/$', views.FileList.as_view(), name='files'),
 

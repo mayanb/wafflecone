@@ -271,6 +271,7 @@ class Task(models.Model):
 	remaining_worth = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 
 	objects = TaskManager()
+	tracker = FieldTracker()
 
 	class Meta:
 		indexes = [
