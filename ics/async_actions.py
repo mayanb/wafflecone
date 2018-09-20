@@ -111,11 +111,7 @@ def input_update(**kwargs):
 
 
 @task
-def handle_flag_update_after_input_delete(**kwargs):
-	child_task_id = kwargs['taskID']
-	former_parent_task_id = kwargs['creatingTaskID']
-	former_parent_task_flagged_ancestors_id_string = kwargs['creating_task_flagged_ancestors_id_string']
-
+def handle_flag_update_after_input_delete(child_task_id, former_parent_task_id, former_parent_task_flagged_ancestors_id_string):
 	child_task = Task.objects.get(pk=child_task_id)
 	former_parent_task = Task.objects.get(pk=former_parent_task_id)
 
