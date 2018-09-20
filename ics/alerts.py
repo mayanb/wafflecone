@@ -13,20 +13,28 @@ from ics.v11.serializers import BasicGoalSerializer, AlertInputSerializer
 
 
 def create_alerts(team, objects, serializer, alert_type):
+	import logging
+	logger = logging.getLogger()
 	if len(objects) == 0:
 		return
 
 	serialized_objects = map(lambda t: serializer(t).data, objects)
+	logger.info(serialized_objects)
 	alerts = []
 	for userprofile in UserProfile.objects.filter(team=team).all():
+		logger.info(userprofile)
 		alert = Alert(
 			alert_type=alert_type,
 			variable_content=json.dumps(serialized_objects),
 			userprofile=userprofile,
 			is_displayed=True,
 		)
+		logger.info('made alert')
+		logger.info(alert)
 		alerts.append(alert)
 	Alert.objects.bulk_create(alerts)
+	logger.info('survived bulk alert')
+	logger.info('_______END_______')
 
 
 def is_local():
@@ -115,6 +123,9 @@ def check_goals_alerts(**kwargs):
 
 @task
 def check_anomalous_inputs_alerts(**kwargs):
+	import logging
+	logger = logging.getLogger()
+	logger.info('____start___________')
 	if is_local():
 		return
 	taskID = kwargs['taskID']
@@ -122,6 +133,8 @@ def check_anomalous_inputs_alerts(**kwargs):
 	task = Task.objects.get(pk=taskID)
 	creatingTask = Task.objects.get(pk=creatingTaskID)
 	team = task.product_type.team_created_by
+	logger.info(taskID)
+	logger.info(creatingTaskID)
 	if not is_dandelion(team):
 		return
 	if task.product_type == creatingTask.product_type:
@@ -130,7 +143,7 @@ def check_anomalous_inputs_alerts(**kwargs):
 	# for each input, if any of the items' creating tasks have a different product type from the input task
 	end_date = datetime.today() + timedelta(days=1)
 	start_date = datetime.today() - timedelta(days=14)
-
+	logger.info('before queryset...')
 	queryset = Input.objects.filter(
 		task__process_type__team_created_by=team,
 		task__is_trashed=False,
@@ -139,4 +152,6 @@ def check_anomalous_inputs_alerts(**kwargs):
 	) \
 		.exclude(Q(input_item__creating_task__product_type__id=F('task__product_type__id'))) \
 		.select_related('task', 'task__process_type', 'task__process_type', 'input_item', 'input_item__creating_task')
+	logger.info('... after queryset')
+	logger.info(queryset)
 	create_alerts(team, queryset.all(), AlertInputSerializer, 'ai')
