@@ -102,9 +102,11 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 def input_deleted(sender, instance, **kwargs):
 	kwargs1 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
 	check_anomalous_inputs_alerts(**kwargs1)
-	kwargs2 = get_input_kwargs(instance)
-	if kwargs2:
-		handle_flag_update_after_input_delete(**kwargs2)
+
+	child_task_id = instance.task.id
+	parent_task_id = instance.input_item.creating_task.id
+	former_parent_task_flagged_ancestors_id_string = instance.input_item.creating_task.flagged_ancestors_id_string
+	handle_flag_update_after_input_delete(child_task_id, parent_task_id, former_parent_task_flagged_ancestors_id_string)
 
 
 @receiver(post_save, sender=TaskIngredient)
