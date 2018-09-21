@@ -100,8 +100,8 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 # this signal only gets called once
 @receiver(post_delete, sender=Input)
 def input_deleted(sender, instance, **kwargs):
-	kwargs1 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
-	check_anomalous_inputs_alerts(**kwargs1)
+	# kwargs1 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
+	# check_anomalous_inputs_alerts(**kwargs1)
 
 	child_task_id = instance.task.id
 	parent_task_id = instance.input_item.creating_task.id
