@@ -112,36 +112,31 @@ def input_update(**kwargs):
 
 @task
 def handle_flag_update_after_input_delete(child_task_id, former_parent_task_id, former_parent_task_flagged_ancestors_id_string):
-	return "yay, all done (with nothing)"
-	# try:
-	# 	child_task = Task.objects.get(pk=child_task_id)
-	# 	former_parent_task = Task.objects.get(pk=former_parent_task_id)
-	#
-	# 	# Use qs.difference() to find descendants of child_task which are NOT descendants of former_parent_task
-	# 	# because those tasks are the ones which can actually remove former_parent_id (the others are still its descendants)
-	# 	child_descendants_qs = child_task.descendants(breakIfCycle=False) or Task.objects.none()
-	# 	child_and_its_descendants_qs = child_descendants_qs | Task.objects.filter(pk=child_task_id)
-	# 	child_and_its_unique_descendant_ids = list(child_and_its_descendants_qs\
-	# 		.difference(former_parent_task.descendants(breakIfCycle=False))\
-	# 		.values_list('id', flat=True))
-	#
-	# 	# Remove from child_task + its descendants the flagged ancestors which are ancestors UNIQUE to former_parent_task
-	# 	child_ancestors_qs = child_task.ancestors(breakIfCycle=False) or Task.objects.none()
-	# 	child_flagged_ids = [add_pipes(task_id) for task_id in child_ancestors_qs.filter(is_flagged=True).values_list('id', flat=True)]
-	# 	former_parent_flagged_ids = get_pipe_surrounded_ids(former_parent_task_flagged_ancestors_id_string)
-	#
-	# 	flagged_ancestors_unique_to_former_parent = set(former_parent_flagged_ids) - set(child_flagged_ids)
-	# 	if former_parent_task.is_flagged:  # since ancestors doesn't include the task itself
-	# 		flagged_ancestors_unique_to_former_parent.add(add_pipes(former_parent_task_id))
-	#
-	# 	for pipe_surrounded_id in flagged_ancestors_unique_to_former_parent:
-	# 		delete_id_from_all_tasks_who_have_it_in_their_list(
-	# 			pipe_surrounded_id,
-	# 			ids_to_query_over=child_and_its_unique_descendant_ids
-	# 		)
-	# except Exception as e:
-	# 	print('_______EXCEPTION CAUGHT_________')
-	# 	print(e)
+	child_task = Task.objects.get(pk=child_task_id)
+	former_parent_task = Task.objects.get(pk=former_parent_task_id)
+
+	# Use qs.difference() to find descendants of child_task which are NOT descendants of former_parent_task
+	# because those tasks are the ones which can actually remove former_parent_id (the others are still its descendants)
+	child_descendants_qs = child_task.descendants(breakIfCycle=False) or Task.objects.none()
+	child_and_its_descendants_qs = child_descendants_qs | Task.objects.filter(pk=child_task_id)
+	child_and_its_unique_descendant_ids = list(child_and_its_descendants_qs\
+		.difference(former_parent_task.descendants(breakIfCycle=False))\
+		.values_list('id', flat=True))
+
+	# Remove from child_task + its descendants the flagged ancestors which are ancestors UNIQUE to former_parent_task
+	child_ancestors_qs = child_task.ancestors(breakIfCycle=False) or Task.objects.none()
+	child_flagged_ids = [add_pipes(task_id) for task_id in child_ancestors_qs.filter(is_flagged=True).values_list('id', flat=True)]
+	former_parent_flagged_ids = get_pipe_surrounded_ids(former_parent_task_flagged_ancestors_id_string)
+
+	flagged_ancestors_unique_to_former_parent = set(former_parent_flagged_ids) - set(child_flagged_ids)
+	if former_parent_task.is_flagged:  # since ancestors doesn't include the task itself
+		flagged_ancestors_unique_to_former_parent.add(add_pipes(former_parent_task_id))
+
+	for pipe_surrounded_id in flagged_ancestors_unique_to_former_parent:
+		delete_id_from_all_tasks_who_have_it_in_their_list(
+			pipe_surrounded_id,
+			ids_to_query_over=child_and_its_unique_descendant_ids
+		)
 
 
 @task

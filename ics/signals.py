@@ -44,6 +44,8 @@ def task_changed(sender, instance, **kwargs):
 		previous_cost = 0.000
 	previous_cost_set_by_user = instance.tracker.previous('cost_set_by_user')
 	new_cost_set_by_user = instance.cost_set_by_user
+	if new_cost_set_by_user is None:
+		return  # Task is being reset, not updated
 	# Verify that A) user actually changed cost and B) change in cost_set_by_user actually deviates from the previous cost
 	user_changed_cost = new_cost_set_by_user != previous_cost_set_by_user and new_cost_set_by_user != previous_cost
 	if user_changed_cost:
@@ -100,8 +102,8 @@ def input_deleted_pre_delete(sender, instance, **kwargs):
 # this signal only gets called once
 @receiver(post_delete, sender=Input)
 def input_deleted(sender, instance, **kwargs):
-	# kwargs1 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
-	# check_anomalous_inputs_alerts(**kwargs1)
+	kwargs1 = { 'taskID' : instance.task.id, 'creatingTaskID' : instance.input_item.creating_task.id}
+	check_anomalous_inputs_alerts(**kwargs1)
 
 	child_task_id = instance.task.id
 	parent_task_id = instance.input_item.creating_task.id
