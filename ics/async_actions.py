@@ -81,6 +81,7 @@ def input_update(**kwargs):
 	creating_task_of_changed_input_id = kwargs['creatingTaskID']
 	input_added = kwargs['added']
 	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
+	input_item__amount = kwargs['input_item__amount']
 	process_type = kwargs['process_type']
 	product_type = kwargs['product_type']
 	recipe_exists_for_ingredient = kwargs['recipe_exists_for_ingredient']
@@ -92,7 +93,7 @@ def input_update(**kwargs):
 
 	old_amount, new_amount = get_amounts(
 		task_ingredient__actual_amount,
-		float(creating_task_of_changed_input.batch_size),
+		float(input_item__amount),
 		input_added,
 		recipe_exists_for_ingredient,
 		adding_first_or_deleting_last_input,
@@ -108,6 +109,9 @@ def input_update(**kwargs):
 		input_added=input_added,
 		input_deleted=not input_added,  # Function is only ever called with input add/delete
 	)
+
+	if not input_added:  # Update TaskIngredient only AFTER we've finished all other input delete updates
+		update_task_ingredient_after_input_delete(**kwargs)
 
 
 @task

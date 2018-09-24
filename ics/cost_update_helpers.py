@@ -285,16 +285,16 @@ def get_creating_task_of_changed_input(creating_task_of_changed_input_id):
 
 # Adding inputs adds its batch size. Deleting inputs subtracts its batch size.
 # Note: this can produce negative amounts in special cases, matching codebase.
-def get_amounts(task_ingredient__actual_amount, creating_task_batch_size, input_added, recipe_exists_for_ingredient, adding_first_or_deleting_last_input):
+def get_amounts(task_ingredient__actual_amount, input_item__amount, input_added, recipe_exists_for_ingredient, adding_first_or_deleting_last_input):
 	if input_added:  # which happens post_save
 		new_amount_of_ingredient = task_ingredient__actual_amount  # we've already updated TaskIngredient
-		old_amount_of_ingredient = new_amount_of_ingredient - creating_task_batch_size  # New inputs add full batch_size
+		old_amount_of_ingredient = new_amount_of_ingredient - input_item__amount  # New inputs add input item's amount
 		if recipe_exists_for_ingredient:
 			old_amount_of_ingredient = 0 if adding_first_or_deleting_last_input else new_amount_of_ingredient
 
 	else:  # Input Deleted, which happens pre_delete (so the TaskIngredient still exists)
 		old_amount_of_ingredient = task_ingredient__actual_amount  # We've yet to update TaskIngredient
-		new_amount_of_ingredient = old_amount_of_ingredient - creating_task_batch_size  # Deleting subtracts full batch_size
+		new_amount_of_ingredient = old_amount_of_ingredient - input_item__amount  # Deleting subtracts input item's amount
 		if recipe_exists_for_ingredient:
 			new_amount_of_ingredient = 0 if adding_first_or_deleting_last_input else old_amount_of_ingredient
 
@@ -386,3 +386,31 @@ def delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id):
 	Input.objects.filter(input_item__creating_task=deleted_task_id).delete()  # delete direct children
 	Input.objects.filter(task=deleted_task_id).delete()  # delete direct parents
 	Task.objects.filter(pk=deleted_task_id).update(cost=0, remaining_worth=0)  # zero cost
+
+
+def update_task_ingredient_after_input_delete(**kwargs):
+	child_task_id = kwargs['taskID']
+	process_type = kwargs['process_type']
+	product_type = kwargs['product_type']
+	input_item__amount = kwargs['input_item__amount']
+
+	similar_inputs = Input.objects.filter(task=child_task_id,
+																				input_item__creating_task__product_type=product_type,
+																				input_item__creating_task__process_type=process_type)
+	task_ings = TaskIngredient.objects.filter(task=child_task_id,
+																						ingredient__product_type=product_type,
+																						ingredient__process_type=process_type)
+	task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
+	task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
+	if similar_inputs.count() <= 1:
+		# if the input is the only one left for a taskingredient without a recipe, delete the taskingredient
+		if task_ings_without_recipe.count() > 0:
+			if task_ings_without_recipe[0].ingredient:
+				if not task_ings_without_recipe[0].ingredient.recipe:
+					task_ings_without_recipe.delete()
+		# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
+		if task_ings_with_recipe.count > 0:
+			task_ings_with_recipe.update(actual_amount=0)
+	else:
+		# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
+		task_ings_without_recipe.update(actual_amount=F('actual_amount') - input_item__amount)
