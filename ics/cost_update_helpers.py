@@ -216,10 +216,10 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 	tasks = {}
 	for x in range(0, related_tasks_with_parents_children.count()):
 		task = related_tasks_with_parents_children[x]
-		non_trashed_direct_children = set(list(Task.objects.filter(is_trashed=False, pk__in=task.children_list).values_list('pk', flat=True)))
-		direct_children_in_input_order = get_direct_children_in_input_order(task.id, non_trashed_direct_children)
+		direct_children = set(list(Task.objects.filter(pk__in=task.children_list).values_list('pk', flat=True)))
+		direct_children_in_input_order = get_direct_children_in_input_order(task.id, direct_children)
 		parent_ids = task.task_parent_ids
-		non_trashed_parents = set(list(Task.objects.filter(is_trashed=False, pk__in=parent_ids).values_list('pk', flat=True)))
+		parents = set(list(Task.objects.filter(pk__in=parent_ids).values_list('pk', flat=True)))
 
 		tasks[task.id] = {
 			'direct_children_in_input_order': direct_children_in_input_order,
@@ -227,7 +227,7 @@ def task_details(updated_task_descendants, include_even_if_deleted=-1):
 			'ingredients': set(task.ingredients),
 			'product_type': related_tasks_batch_size[x].product_type_id,
 			'cost': related_tasks_batch_size[x].cost,
-			'parents': non_trashed_parents,
+			'parents': parents,
 			'remaining_worth': related_tasks_batch_size[x].remaining_worth,
 			'batch_size': related_tasks_batch_size[x].batch_size
 		}
@@ -278,9 +278,9 @@ def get_unit_cost(cost, batch_size):
 # UPDATE INPUT HELPERS
 
 def get_creating_task_of_changed_input(creating_task_of_changed_input_id):
-	query_set = Task.objects.filter(is_trashed=False, pk=creating_task_of_changed_input_id).annotate(
+	query_set = Task.objects.filter(pk=creating_task_of_changed_input_id).annotate(
 		batch_size=Coalesce(Sum('items__amount'), 0))
-	return False if query_set.count() == 0 else query_set[0]  # It's possible the parent is a deleted tasks.
+	return False if query_set.count() == 0 else query_set[0]
 
 
 # Adding inputs adds its batch size. Deleting inputs subtracts its batch size.

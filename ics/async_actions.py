@@ -80,6 +80,7 @@ def input_update(**kwargs):
 	updated_task_id = kwargs['taskID']
 	creating_task_of_changed_input_id = kwargs['creatingTaskID']
 	input_added = kwargs['added']
+	input_id = kwargs['input_id']
 	task_ingredient__actual_amount = kwargs['task_ingredient__actual_amount']
 	process_type = kwargs['process_type']
 	product_type = kwargs['product_type']
@@ -87,27 +88,28 @@ def input_update(**kwargs):
 	adding_first_or_deleting_last_input = kwargs['adding_first_or_deleting_last_input']
 	creating_task_of_changed_input = get_creating_task_of_changed_input(creating_task_of_changed_input_id)
 
-	if not creating_task_of_changed_input or creating_task_of_changed_input.cost is None:
-		return
+	if creating_task_of_changed_input and creating_task_of_changed_input.cost is not None:
+		old_amount, new_amount = get_amounts(
+			task_ingredient__actual_amount,
+			float(creating_task_of_changed_input.batch_size),
+			input_added,
+			recipe_exists_for_ingredient,
+			adding_first_or_deleting_last_input,
+		)
 
-	old_amount, new_amount = get_amounts(
-		task_ingredient__actual_amount,
-		float(creating_task_of_changed_input.batch_size),
-		input_added,
-		recipe_exists_for_ingredient,
-		adding_first_or_deleting_last_input,
-	)
+		update_parents_for_ingredient_and_their_children(
+			updated_task_id,
+			old_amount,
+			new_amount,
+			process_type,
+			product_type,
+			creating_task_of_changed_input=creating_task_of_changed_input.id,
+			input_added=input_added,
+			input_deleted=not input_added,  # Function is only ever called with input add/delete
+		)
 
-	update_parents_for_ingredient_and_their_children(
-		updated_task_id,
-		old_amount,
-		new_amount,
-		process_type,
-		product_type,
-		creating_task_of_changed_input=creating_task_of_changed_input.id,
-		input_added=input_added,
-		input_deleted=not input_added,  # Function is only ever called with input add/delete
-	)
+	if not input_added:  # Delete Input only AFTER we've finished all the input delete cost updates
+		Input.objects.filter(pk=input_id).delete()
 
 
 @task

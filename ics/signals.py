@@ -87,13 +87,13 @@ def input_changed(sender, instance, created, **kwargs):
 			handle_flag_update_after_input_add(**kwargs2)
 
 
+# NOTE: We manually call update_input async in the view when a user deletes an input, deleting the input at the end.
+# For a deleted task, we already handle input-deletion cost updates via task_deleted_update_cost,
+# so a call to input_update is not needed.
 @receiver(pre_delete, sender=Input)
 def input_deleted_pre_delete(sender, instance, **kwargs):
 	kwargs2 = get_input_kwargs(instance)
 	if kwargs2:
-		# Don't update cost when a we're deleting all a task's inputs/outputs along with itself. We've already done that.
-		if source_and_target_of_input_are_not_trashed(instance):
-			input_update(**kwargs2)
 		update_task_ingredient_after_input_delete(instance)
 
 
@@ -153,6 +153,7 @@ def get_input_kwargs(instance, added=False):
 		'creatingTaskID': instance.input_item.creating_task.id,
 		'creating_task_flagged_ancestors_id_string': instance.input_item.creating_task.flagged_ancestors_id_string,
 		'added': added,
+		'input_id': instance.id,
 		'process_type': process_type,
 		'product_type': product_type,
 		'task_ingredient__actual_amount': task_ingredient__actual_amount,
@@ -163,13 +164,13 @@ def get_input_kwargs(instance, added=False):
 	}
 
 
-def update_task_ingredient_after_input_delete(instance):
+# NOTE: This logic, identical to original implementation, can produce negative actual_amounts since it blindly subtracts
+# the input_item's full amount, for example even if the ingredient amount for the ingredient has been reduced.
+def update_task_ingredient_after_input_delete(instance, just_calculate_new_amount=False):
 	similar_inputs = Input.objects.filter(task=instance.task, \
 	                                      input_item__creating_task__product_type=instance.input_item.creating_task.product_type, \
 	                                      input_item__creating_task__process_type=instance.input_item.creating_task.process_type)
-	task_ings = TaskIngredient.objects.filter(task=instance.task, \
-	                                          ingredient__product_type=instance.input_item.creating_task.product_type, \
-	                                          ingredient__process_type=instance.input_item.creating_task.process_type)
+	task_ings = get_task_ingredient_qs_for_input(instance)
 	task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
 	task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
 	if similar_inputs.count() <= 1:
@@ -177,13 +178,24 @@ def update_task_ingredient_after_input_delete(instance):
 		if task_ings_without_recipe.count() > 0:
 			if task_ings_without_recipe[0].ingredient:
 				if not task_ings_without_recipe[0].ingredient.recipe:
-					task_ings_without_recipe.delete()
+					return None if just_calculate_new_amount else task_ings_without_recipe.delete()
 		# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
 		if task_ings_with_recipe.count > 0:
-			task_ings_with_recipe.update(actual_amount=0)
+			return 0 if just_calculate_new_amount else task_ings_with_recipe.update(actual_amount=0)
 	else:
 		# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
-		task_ings_without_recipe.update(actual_amount=F('actual_amount') - instance.input_item.amount)
+		if just_calculate_new_amount:
+			return task_ings_without_recipe[0].actual_amount - instance.input_item.amount
+		else:
+			task_ings_without_recipe.update(actual_amount=F('actual_amount') - instance.input_item.amount)
+
+
+def get_task_ingredient_qs_for_input(input_object):
+	return TaskIngredient.objects.filter(
+		task=input_object.task,
+		ingredient__product_type=input_object.input_item.creating_task.product_type,
+		ingredient__process_type=input_object.input_item.creating_task.process_type
+	)
 
 
 def update_task_ingredient_for_new_input(new_input):
