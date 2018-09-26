@@ -77,6 +77,10 @@ def add_pipes(task_id):
 # It also handles of tasks with recipes.
 @task
 def input_update(**kwargs):
+	synchronous_input_update(**kwargs)
+
+
+def synchronous_input_update(**kwargs):
 	updated_task_id = kwargs['taskID']
 	creating_task_of_changed_input_id = kwargs['creatingTaskID']
 	input_added = kwargs['added']
@@ -198,25 +202,33 @@ def task_cost_update(updated_task_id, previous_cost, new_cost):
 
 @task
 def task_deleted_update_cost(deleted_task_id):
-	task_ingredients = TaskIngredient.objects.filter(task=deleted_task_id).annotate(batch_size=Coalesce(Sum('task__items__amount'), 0)) \
+	task_ingredients_from_parent_inputs = TaskIngredient.objects.filter(task=deleted_task_id)\
+		.annotate(batch_size=Coalesce(Sum('task__items__amount'), 0))\
 		.values('actual_amount', 'ingredient__process_type__id', 'ingredient__product_type__id')
 
-	for task_ingredient in task_ingredients:
-		update_parents_for_ingredient_and_their_children(  # use this to delete input from all parents
-			deleted_task_id,
-			old_amount=float(task_ingredient['actual_amount']),
-			new_amount=0,  # return worth to all inputs
-			process_type=task_ingredient['ingredient__process_type__id'],
-			product_type=task_ingredient['ingredient__product_type__id'],
-			input_added=False,
-			input_deleted=True,
-			child_task_is_being_deleted_entirely=True,  # Flag signals removal of ALL parents as inputs to deleted_task
-		)
-
 	# If deleted_task has no parents to simulate input deletes with (which conveniently cascades to update all children),
-	# then propagate the change by setting its cost to zero, which will also update the orphan's children.
-	if task_ingredients.count() == 0:
-		deleted_task_cost = Task.objects.get(pk=deleted_task_id).cost
-		execute_task_cost_update(deleted_task_id, deleted_task_cost, 0)
+	# then just delete the input to each direct child.
+	if task_ingredients_from_parent_inputs.count() == 0:
+		direct_children = Task.objects.filter(pk=deleted_task_id).annotate(children_list=ArrayAgg('items__inputs__task'))[0].children_list
+		ordered_inputs_to_direct_children = get_inputs_to_direct_children_in_input_order(deleted_task_id, direct_children)
 
-	delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id)
+		for input_to_direct_child in ordered_inputs_to_direct_children:
+			input_kwargs = get_input_kwargs(input_to_direct_child)  # defaults to setting kwargs for an input delete
+			synchronous_input_update(**input_kwargs)  # updates cost, then deletes input
+		# All inputs have been deleted, since the are no parents.
+		Task.objects.filter(pk=deleted_task_id).update(cost=0, remaining_worth=0)  # zero cost
+
+	else:
+		for task_ingredient in task_ingredients_from_parent_inputs:
+			update_parents_for_ingredient_and_their_children(  # use this to delete input from all parents
+				deleted_task_id,
+				old_amount=float(task_ingredient['actual_amount']),
+				new_amount=0,  # return worth to all inputs
+				process_type=task_ingredient['ingredient__process_type__id'],
+				product_type=task_ingredient['ingredient__product_type__id'],
+				input_added=False,
+				input_deleted=True,
+				child_task_is_being_deleted_entirely=True,  # Flag signals removal of ALL parents as inputs to deleted_task
+			)
+
+		delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id)
