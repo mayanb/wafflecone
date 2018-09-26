@@ -434,13 +434,17 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
     new_task_ingredient_actual_amount = update_task_ingredient_after_input_delete(input, just_calculate_new_amount=True)
 
     # Edit serialized data to reflect optimistic update of TaskIngredient.actual_amount
+    index_to_delete = None
     for i, serialized_task_ingredient in enumerate(serialized_task_ingredients):
       if serialized_task_ingredient['id'] == task_ingredient_to_update.id:
-        print(serialized_task_ingredient)
         if new_task_ingredient_actual_amount is None:  # signals TaskIngredient will be deleted
-          del serialized_task_ingredients[i]
+          index_to_delete = i
+          break
         else:
           serialized_task_ingredient['actual_amount'] = new_task_ingredient_actual_amount
+          break
+    if index_to_delete is not None:
+      del serialized_task_ingredients[index_to_delete]
 
     # Fire async cost update function, which will actually the delete the input once it finishes updating costs.
     # (TaskIngredient is updated in Input pre_delete signal)
