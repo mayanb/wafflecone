@@ -1,5 +1,4 @@
 from ics.v11.serializers import *
-from django.db.models import F
 
 
 # serializes all fields of the task, with nested items, inputs, and attributes
@@ -16,7 +15,7 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 	total_amount = serializers.CharField(read_only=True)
 
 	task_ingredients = serializers.SerializerMethodField()
-	num_flagged_ancestors = serializers.IntegerField(read_only=True)
+	flagged_ancestors_id_string = serializers.CharField(read_only=True)
 	recipe_instructions = serializers.SerializerMethodField()
 
 	def get_recipe_instructions(self, task):
@@ -50,8 +49,10 @@ class NestedTaskSerializer(serializers.ModelSerializer):
 			'display',
 			'is_trashed',
 			'task_ingredients',
-			'num_flagged_ancestors',
-			'recipe_instructions'
+			'flagged_ancestors_id_string',
+			'recipe_instructions',
+			'cost',
+			'remaining_worth'
 		)
 
 
@@ -62,7 +63,7 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 	total_amount = serializers.CharField(read_only=True)
 	product_type = ProductTypeSerializer(many=False, read_only=True)
 	process_type = ProcessTypeSerializer(many=False, read_only=True)
-	num_flagged_ancestors = serializers.IntegerField(read_only=True)
+	flagged_ancestors_id_string = serializers.CharField(read_only=True)
 
 	class Meta:
 		model = Task
@@ -82,7 +83,7 @@ class FlatTaskSerializer(serializers.ModelSerializer):
 			'is_trashed',
 			'process_type',
 			'product_type',
-			'num_flagged_ancestors'
+			'flagged_ancestors_id_string'
 		)
 
 

@@ -1,9 +1,9 @@
-from django.contrib.auth.models import User
-from django.db.models import F, Q, Count, Case, When, Min, Value, Subquery, OuterRef, Sum, DecimalField
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.db.models import Case, DecimalField, F, OuterRef, Q, Subquery, Sum, Value, When
+from django.contrib.postgres.search import SearchQuery
 from ics.models import *
 import datetime
 import pytz
+from rest_framework.exceptions import APIException
 
 
 def filter_by_created_at_range(query_params, queryset):
@@ -31,6 +31,11 @@ def tasks(query_params):
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
 
+	pipe_delimited_task_ids_string = query_params.get('pipe_delimited_task_ids_string', '')  # ie '|id1|id2|...|idn|'
+	task_ids = [int(task_id) for task_id in pipe_delimited_task_ids_string.split('|') if task_id]
+	if task_ids:
+		queryset = queryset.filter(pk__in=task_ids)
+
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)
 	if label is not None and dashboard is not None:
@@ -40,11 +45,17 @@ def tasks(query_params):
 
 	parent = query_params.get('parent', None)
 	if parent is not None:
-		queryset = Task.objects.get(pk=parent).descendants()
+		# if you want it to raise an exception if there is a cycle instead, set the parameter to True
+		queryset = Task.objects.get(pk=parent).descendants(breakIfCycle=False)
+		if queryset == None:
+			raise APIException("Descendants contains cycles. Could not calculate.")
 
 	child = query_params.get('child', None)
 	if child is not None:
-		queryset = Task.objects.get(pk=child).ancestors()
+		# if you want it to raise an exception if there is a cycle instead, set the parameter to True
+		queryset = Task.objects.get(pk=child).ancestors(breakIfCycle=False)
+		if queryset == None:
+			raise APIException("Ancestors contains cycles. Could not calculate.")
 
 	inv = query_params.get('team_inventory', None)
 	if inv is not None:
@@ -108,6 +119,12 @@ def simpleTaskSearch(query_params):
 	team = query_params.get('team', None)
 	if team is not None:
 		queryset = queryset.filter(process_type__team_created_by=team)
+
+	tags = query_params.get('tags', None)
+	if tags is not None:
+		tag_names = tags.strip().split(',')
+		queryset = queryset.filter(process_type__tags__name__in=tag_names) | \
+		           queryset.filter(product_type__tags__name__in=tag_names)
 
 	label = query_params.get('label', None)
 	dashboard = query_params.get('dashboard', None)

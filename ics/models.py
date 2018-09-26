@@ -4,13 +4,13 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.indexes import GinIndex
-from uuid import uuid4
 from django.db.models import Max
+from model_utils import FieldTracker
 import constants
 from django.utils import timezone
 import pytz
-from django.db.models.expressions import RawSQL
 from django.db.models import F
+from django.contrib.postgres.aggregates import ArrayAgg
 # from ics.async_actions import *
 
 
@@ -260,13 +260,16 @@ class Task(models.Model):
 	flag_update_time = models.DateTimeField(default='2017-01-01 23:25:26.835087+00:00')
 	old_is_flagged = models.BooleanField(default=False)
 	was_flag_changed = models.BooleanField(default=False)
-	# all our signals are getting triggered twice for some reason so the num_flagged_ancestors is incremented and decremented by 2
-	num_flagged_ancestors = models.IntegerField(default=0)
+	flagged_ancestors_id_string = models.TextField(null=True, default='')
 	experiment = models.CharField(max_length=25, blank=True)
 	keywords = models.CharField(max_length=200, blank=True)
 	search = SearchVectorField(null=True)
+	cost = models.DecimalField(max_digits=10, decimal_places=3, null=True)
+	cost_set_by_user = models.DecimalField(max_digits=10, decimal_places=3, null=True)
+	remaining_worth = models.DecimalField(max_digits=10, decimal_places=3, null=True)
 
 	objects = TaskManager()
+	tracker = FieldTracker()
 
 	class Meta:
 		indexes = [
@@ -358,60 +361,83 @@ class Task(models.Model):
 
 		self.keywords = " ".join([p1, p2, p3, p4])[:200]
 		#self.search = SearchVector('label', 'custom_display')
-
-	def descendants_raw_query(self):
-		return RawSQL(""" WITH RECURSIVE descendants AS (
-	    (SELECT task.id, input.task_id as parent_id
-			FROM ics_task task
-		    JOIN ics_item item
-		      ON item.creating_task_id = task.id
-		    JOIN ics_input input
-		    ON  input.input_item_id = item.id 
-			WHERE task.id = %s AND task.is_trashed = false)
-		    UNION ALL
-		    SELECT ct.id, cin.task_id as parent_id
-		    FROM ics_task ct
-		    JOIN ics_item cit
-		      ON cit.creating_task_id = ct.id
-		    JOIN ics_input cin
-		      ON cin.input_item_id = cit.id
-		    JOIN descendants p ON p.parent_id = ct.id
-		    WHERE ct.is_trashed = false
-		  )
-		 SELECT distinct parent_id
-		 FROM descendants
-		 WHERE parent_id <> %s""", [str(self.id), str(self.id)])
-
 	
-	def descendants(self):
-		return Task.objects.filter(id__in=self.descendants_raw_query())
+	def descendants(self, breakIfCycle):
+		# breakIfCycle = False
+		cycles = check_for_cycles(self.id, "descendants", breakIfCycle)
+		if cycles == None:
+			return None
+		else:
+			return Task.objects.filter(id__in=list(cycles), is_trashed=False).order_by('created_at')
 
-	def ancestors_raw_query(self):
-		return RawSQL("""WITH RECURSIVE descendants AS (
-			SELECT input.input_item_id as child_input_id, task.id as child_task_id
-			    FROM ics_input input
-			    JOIN ics_item item
-			    ON item.id = input.input_item_id
-			    JOIN ics_task task
-			     ON task.id = item.creating_task_id
-			    WHERE input.task_id = %s AND task.is_trashed = false
-			  UNION ALL
-			    SELECT cin.input_item_id as child_input_id, ct.id as child_task_id
-			    FROM ics_input cin
-			    JOIN ics_item cit
-			    ON cit.id = cin.input_item_id
-			    JOIN ics_task ct
-			     ON ct.id = cit.creating_task_id
-			    JOIN descendants d on d.child_task_id = cin.task_id
-			    WHERE ct.is_trashed = false
-			    )
-			SELECT distinct child_task_id
-			 FROM descendants
-			 WHERE child_task_id <> %s""", [str(self.id), str(self.id)])
+	def ancestors(self, breakIfCycle):
+		# breakIfCycle = False
+		cycles = check_for_cycles(self.id, "ancestors", breakIfCycle)
+		if cycles == None:
+			return None
+		else:
+			return Task.objects.filter(id__in=list(cycles), is_trashed=False).order_by('created_at')
 
+# modified from tarjan's strongly connected components algorithm
+# see https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/ for explanation
+def has_cycle(time, u, low, disc, stackMember, st, direction, results, breakIfCycle):
+  disc[u] = time
+  low[u] = time
+  time += 1
+  stackMember[u] = True
+  st.append(u)
+  if direction == "ancestors":
+  	matching_task = Task.objects.filter(pk=u).annotate(parent_list=ArrayAgg('inputs__input_item__creating_task__id'))
+  else:
+  	matching_task = Task.objects.filter(pk=u).annotate(children_list=ArrayAgg('items__inputs__task__id'))
+  if matching_task.count() > 0:
+    if direction == "ancestors":
+    	next_level_tasks = list(set(matching_task[0].parent_list))
+    else:
+    	next_level_tasks = list(set(matching_task[0].children_list))
+  else:
+    next_level_tasks = []
+  for v in next_level_tasks:
+    if v not in disc:
+      disc[v] = -1
+    if u not in low:
+      low[u] = -1
+    if v not in low:
+      low[v] = -1
+    if u not in disc:
+      disc[u] = -1
+    if v not in stackMember:
+      stackMember[v] = False
+    if disc[v] == -1:
+      has_cycle(time, v, low, disc, stackMember, st, direction, results, breakIfCycle)
+      low[u] = min(low[u], low[v])
+    elif stackMember[v] == True:
+      low[u] = min(low[u], disc[v])
+  w = -1
+  if low[u] == disc[u]:
+    count = 0
+    while w != u:
+      if count > 0 and breakIfCycle:
+        return True
+      w = st.pop()
+      stackMember[w] = False
+      count += 1
+      results.add(w)
+  return False
 
-	def ancestors(self):
-		return Task.objects.filter(id__in=self.ancestors_raw_query())
+def check_for_cycles(root, direction, breakIfCycle):
+  disc = {}
+  low = {}
+  stackMember = {}
+  st = []
+  disc[root] = -1
+  results = set()
+  cycle = has_cycle(0, root, low, disc, stackMember, st, direction, results, breakIfCycle)
+  if cycle:
+  	return None
+  else:
+  	results.remove(root)
+  	return results
 
 class TaskFile(models.Model):
 	url = models.CharField(max_length=150, unique=True)
@@ -437,6 +463,7 @@ class Item(models.Model):
 
 	objects = models.Manager()
 	active_objects = ActiveItemsManager()
+	tracker = FieldTracker()
 
 	def __str__(self):
 		return str(self.creating_task) + " - " + self.item_qr[-6:]
@@ -456,33 +483,6 @@ class Input(models.Model):
 	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="inputs")
 	amount = models.DecimalField(null=True, max_digits=10, decimal_places=3)
 
-	def delete(self):
-		# if an input's creating task is flagged, decrement the flags on the input's task and it's descendents when it's deleted
-		if self.input_item.creating_task.is_flagged or self.input_item.creating_task.num_flagged_ancestors > 0:
-			Task.objects.filter(id__in=[self.task.id]).update(num_flagged_ancestors=F('num_flagged_ancestors')-2)
-		
-		similar_inputs = Input.objects.filter(task=self.task, \
-			input_item__creating_task__product_type=self.input_item.creating_task.product_type, \
-			input_item__creating_task__process_type=self.input_item.creating_task.process_type)
-		task_ings = TaskIngredient.objects.filter(task=self.task, \
-			ingredient__product_type=self.input_item.creating_task.product_type, \
-			ingredient__process_type=self.input_item.creating_task.process_type)
-		task_ings_without_recipe = task_ings.filter(ingredient__recipe=None)
-		task_ings_with_recipe = task_ings.exclude(ingredient__recipe=None)
-		if similar_inputs.count() <= 1:
-			# if the input is the only one left for a taskingredient without a recipe, delete the taskingredient
-			if task_ings_without_recipe.count() > 0:
-				if task_ings_without_recipe[0].ingredient:
-					if not task_ings_without_recipe[0].ingredient.recipe:
-						task_ings_without_recipe.delete()
-			# if the input is the only one left for a taskingredient with a recipe, reset the actual_amount of the taskingredient to 0
-			if task_ings_with_recipe.count > 0:
-				task_ings_with_recipe.update(actual_amount=0)
-		else:
-			# if there are other inputs left for a taskingredient without a recipe, decrement the actual_amount by the removed item's amount
-			task_ings_without_recipe.update(actual_amount=F('actual_amount')-self.input_item.amount)
-
-		super(Input, self).delete()
 
 class FormulaAttribute(models.Model):
 	attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
@@ -628,6 +628,13 @@ class Pin(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 	all_product_types = models.BooleanField(default=False)
 
+class Tag(models.Model):
+	name = models.CharField(max_length=50, db_index=True)
+	team = models.ForeignKey(Team, related_name='tags', on_delete=models.CASCADE)
+	process_types = models.ManyToManyField(ProcessType, related_name='tags', blank=True)
+	product_types = models.ManyToManyField(ProductType, related_name='tags', blank=True)
+	is_trashed = models.BooleanField(default=False, db_index=True)
+
 ##################################
 #                                #
 #    POLYMER SECOENDARY MODELS   #
@@ -728,3 +735,5 @@ class TaskIngredient(models.Model):
 	actual_amount = models.DecimalField(default=0, max_digits=10, decimal_places=3)
 	ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="task_ingredients")
 	task = models.ForeignKey(Task, related_name="task_ingredients", on_delete=models.CASCADE)
+	was_amount_changed = models.BooleanField(default=False)
+	tracker = FieldTracker()

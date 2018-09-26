@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^tasks/search/$', views.TaskSearch.as_view()),
     url(r'^tasks/simple/$', views.SimpleTaskSearch.as_view()),
     url(r'^tasks/delete/(?P<pk>[0-9]+)/$', views.DeleteTask.as_view()),
+    url(r'^tasks/check-if-graph-has-cycles/$', views.CheckIfGraphHasCycles.as_view()),
 
     url(r'^files/$', views.FileList.as_view(), name='files'),
 
@@ -49,7 +50,6 @@ urlpatterns = [
     url(r'^processes/$', views.ProcessList.as_view(), name='process_types'),
     url(r'^processes/(?P<pk>[0-9]+)/$', views.ProcessDetail.as_view(), name='process_type_detail'),
     url(r'^processes/duplicate/$', views.ProcessDuplicate.as_view(), name='process_duplicate'),
-
 
     url(r'^products/$', views.ProductList.as_view(), name='product_types'),
     url(r'^products/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view(), name='product_type_detail'),
@@ -70,6 +70,11 @@ urlpatterns = [
     url(r'^inventory/detail/$', views.InventoryDetail.as_view()),
     url(r'^inventory/detail-test/$', views.InventoryDetailTest2.as_view()), # this is the one in production!!!!
 
+    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
+    url(r'^inventories/aggregate/$', views.InventoryList2Aggregate.as_view(), name='inventories-aggregate'),
+
+    url(r'^production-planning/$', views.ProductionPlanning.as_view(), name='production_planning'),
+
     url(r'^activity/$', views.ActivityList.as_view(), name='activity_log'),
     url(r'^activity/detail/$', views.ActivityListDetail.as_view()),
 
@@ -82,6 +87,8 @@ urlpatterns = [
     url(r'^pins/$', views.PinList.as_view(), name='pins'),
     url(r'^pins/create/$', views.PinCreate.as_view(), name='create_pin'),
     url(r'^pins/edit/(?P<pk>[0-9]+)/$', views.PinRetrieveUpdateDestroy.as_view(), name='pin_edit'),
+
+    url(r'^tags/$', views.TagList.as_view(), name='tags'),
 
     url(r'^alerts/$', views.AlertList.as_view()),
     url(r'^alerts/(?P<pk>[0-9]+)/$', views.AlertGet.as_view()),
@@ -96,8 +103,6 @@ urlpatterns = [
     url(r'^alerts/recent-anomolous-inputs/$', views.GetRecentAnomolousInputs.as_view()),
 
     url(r'^adjustments/$', views.CreateAdjustment.as_view(), name='adjustments'),
-
-    url(r'^inventories/$', views.InventoryList2.as_view(), name='inventories'),
 
     url(r'^adjustment-history/$', views.AdjustmentHistory.as_view(), name='adjustment-history'),
 

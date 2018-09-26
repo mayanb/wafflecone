@@ -2,7 +2,7 @@ import os
 import sys
 import boto3
 
-waffle_envs = {k: v for k, v in os.environ.iteritems() if k.startswith('WAFFLE_')}
+waffle_envs = {k: v for k, v in os.environ.iteritems() if (k.startswith('WAFFLE_') or k.startswith('OAUTHLIB'))}
 
 env = sys.argv[1]
 
