@@ -213,4 +213,10 @@ def task_deleted_update_cost(deleted_task_id):
 			child_task_is_being_deleted_entirely=True,  # Flag signals removal of ALL parents as inputs to deleted_task
 		)
 
+	# If deleted_task has no parents to simulate input deletes with (which conveniently cascades to update all children),
+	# then propagate the change by setting its cost to zero, which will also update the orphan's children.
+	if task_ingredients.count() == 0:
+		deleted_task_cost = Task.objects.get(pk=deleted_task_id).cost
+		execute_task_cost_update(deleted_task_id, deleted_task_cost, 0)
+
 	delete_inputs_and_outputs_and_zero_cost_for_deleted_task(deleted_task_id)
