@@ -25,6 +25,8 @@ import uuid
 import boto3
 import os
 from decimal import *
+from ics.signals import input_update, get_input_kwargs, update_task_ingredient_after_input_delete, get_task_ingredient_qs_for_input
+
 
 class IsCodeAvailable(generics.ListAPIView):
   queryset = InviteCode.objects.filter(is_used=False)
@@ -425,12 +427,28 @@ class InputDetail(generics.RetrieveUpdateDestroyAPIView):
 
   def delete(self, request, pk, **kwargs):
     input = self.get_object()
-    task = input.task
-    input.delete()
-    task_ingredients = TaskIngredient.objects.filter(task=task)
+    # Serialize TaskIngredients (BEFORE calling async input_update, which would update at an un-predictable time)
+    task_ingredients = TaskIngredient.objects.filter(task=input.task)
     serialized_task_ingredients = BasicTaskIngredientSerializer(task_ingredients, many=True, read_only=True).data
-    return Response({'input_task_ingredients': serialized_task_ingredients})
+    task_ingredient_to_update = get_task_ingredient_qs_for_input(input)[0]
+    new_task_ingredient_actual_amount = update_task_ingredient_after_input_delete(input, just_calculate_new_amount=True)
 
+    # Edit serialized data to reflect optimistic update of TaskIngredient.actual_amount
+    for i, serialized_task_ingredient in enumerate(serialized_task_ingredients):
+      if serialized_task_ingredient['id'] == task_ingredient_to_update.id:
+        print(serialized_task_ingredient)
+        if new_task_ingredient_actual_amount is None:  # signals TaskIngredient will be deleted
+          del serialized_task_ingredients[i]
+        else:
+          serialized_task_ingredient['actual_amount'] = new_task_ingredient_actual_amount
+
+    # Fire async cost update function, which will actually the delete the input once it finishes updating costs.
+    # (TaskIngredient is updated in Input pre_delete signal)
+    input_kwargs = get_input_kwargs(input)
+    if input_kwargs:
+        input_update(**input_kwargs)
+
+    return Response({'input_task_ingredients': serialized_task_ingredients})
 
 #########################
 # PROCESS-RELATED VIEWS #
