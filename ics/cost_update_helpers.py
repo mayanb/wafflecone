@@ -147,8 +147,12 @@ def get_child_desired_ingredient_amount(parent, child, tasks, descendant_ingredi
 	return float(total_amount_of_ingredient / num_parents_for_ingredient)
 
 
+def get_inputs_to_direct_children_in_input_order(parent, direct_children):
+	return Input.objects.filter(input_item__creating_task=parent, task__in=direct_children).order_by('id')
+
+
 def get_direct_children_in_input_order(parent, direct_children):
-	return Input.objects.filter(input_item__creating_task=parent, task__in=direct_children).order_by('id').values_list('task', flat=True)
+	return get_inputs_to_direct_children_in_input_order(parent, direct_children).values_list('task', flat=True)
 
 
 # Make-shift solution: we're unable to filter out rashed tasks in Array Aggs, so we just have to skip em
@@ -276,6 +280,49 @@ def get_unit_cost(cost, batch_size):
 
 
 # UPDATE INPUT HELPERS
+
+# Returns None of if no TaskIngredient exists (eg for old tasks)
+def get_input_kwargs(instance, added=False):
+	task_ingredient_qs = TaskIngredient.objects.filter(
+																			task=instance.task.id,
+																			ingredient__process_type_id=instance.input_item.creating_task.process_type_id,
+																			ingredient__product_type_id=instance.input_item.creating_task.product_type_id,
+																		)
+	task_ingredient = task_ingredient_qs.count() > 0 and task_ingredient_qs[0]
+	if not task_ingredient:  # Impossible to proceed
+		return
+
+	task_ingredient__actual_amount = float(task_ingredient.actual_amount)
+	process_type = task_ingredient.ingredient.process_type.id
+	product_type = task_ingredient.ingredient.product_type.id
+	recipe_exists_for_ingredient = instance.task.recipe and Ingredient.objects.filter(
+		recipe=instance.task.recipe,
+		process_type=process_type,
+		product_type=product_type,
+	).count()
+	num_similar_inputs = Input.objects.filter(
+		task=instance.task,
+		input_item__creating_task__product_type=instance.input_item.creating_task.product_type,
+		input_item__creating_task__process_type=instance.input_item.creating_task.process_type,
+	).count()
+	adding_first_or_deleting_last_input = num_similar_inputs == 1  # both cases same since we use pre_delete and post_save
+
+	return {
+		'taskID': instance.task.id,
+		'task_flagged_ancestors_id_string': instance.task.flagged_ancestors_id_string,
+		'creatingTaskID': instance.input_item.creating_task.id,
+		'creating_task_flagged_ancestors_id_string': instance.input_item.creating_task.flagged_ancestors_id_string,
+		'added': added,
+		'input_id': instance.id,
+		'process_type': process_type,
+		'product_type': product_type,
+		'task_ingredient__actual_amount': task_ingredient__actual_amount,
+		'input_item__creating_task__product_type': instance.input_item.creating_task.product_type_id,
+		'input_item__creating_task__process_type': instance.input_item.creating_task.process_type_id,
+		'recipe_exists_for_ingredient': recipe_exists_for_ingredient,
+		'adding_first_or_deleting_last_input': adding_first_or_deleting_last_input,
+	}
+
 
 def get_creating_task_of_changed_input(creating_task_of_changed_input_id):
 	query_set = Task.objects.filter(pk=creating_task_of_changed_input_id).annotate(
