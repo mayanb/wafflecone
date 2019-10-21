@@ -107,7 +107,7 @@ urllib3==1.22
 virtualenv==15.1.0
 virtualenv-clone==0.2.6
 watchdog==0.8.3
-Werkzeug==0.12
+Werkzeug==0.15.3
 whitenoise==2.0.6
 wsgi-request-logger==0.4.6
 zappa==0.44.3
