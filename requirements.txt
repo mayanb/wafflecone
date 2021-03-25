@@ -83,7 +83,7 @@ python-slugify==1.2.4
 python-social-auth==0.3.6
 pythonz-bd==1.11.4
 pytz==2017.2
-PyYAML==3.12
+PyYAML==5.4
 qrcode==5.3
 requests==2.18.4
 requests-oauthlib==0.8.0
