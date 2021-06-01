@@ -103,7 +103,7 @@ tqdm==4.15.0
 troposphere==2.0.0
 Unidecode==0.4.21
 uritemplate==3.0.0
-urllib3==1.22
+urllib3==1.26.5
 virtualenv==15.1.0
 virtualenv-clone==0.2.6
 watchdog==0.8.3
