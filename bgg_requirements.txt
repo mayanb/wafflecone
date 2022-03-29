@@ -55,7 +55,7 @@ mock==2.0.0
 oauth2client==4.1.2
 oauthlib==2.0.3
 olefile==0.44
-paramiko==2.2.1
+paramiko==2.10.1
 pathlib==1.0.1
 pathtools==0.1.2
 pbr==3.1.1
